@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../router.dart';
+import '../orders/commerce_copy.dart';
 import '../visits/visit_copy.dart';
 
 /// Farmers captured today (IST), live.
@@ -41,6 +42,12 @@ class HomeScreen extends ConsumerWidget {
     final controller = ref.read(dutyControllerProvider.notifier);
     final farmersToday = ref.watch(farmersAddedTodayProvider).value ?? 0;
     final verifiedToday = ref.watch(verifiedVisitsTodayProvider).value ?? 0;
+    final collectedToday =
+        ref
+            .watch(collectionsProvider(CollectionsRange.today))
+            .value
+            ?.collectedPaise ??
+        0;
     final blocked = policy.loaded && !policy.accepted;
     final autoEnd = controller.autoEndAt;
 
@@ -148,7 +155,8 @@ class HomeScreen extends ConsumerWidget {
                       const SizedBox(width: Tokens.space2),
                       Expanded(
                         child: StatTile(
-                          value: formatInr(0, showPaise: false),
+                          key: const Key('home-collections'),
+                          value: formatInr(collectedToday, showPaise: false),
                           label: l10n.statCollections,
                           icon: Icons.payments_outlined,
                         ),
@@ -204,11 +212,14 @@ class HomeScreen extends ConsumerWidget {
                         onPressed: null,
                       ),
                       AppButton(
+                        key: const Key('home-collect-payment'),
                         label: l10n.actionCollectPayment,
                         icon: Icons.currency_rupee,
                         variant: AppButtonVariant.secondary,
                         size: AppButtonSize.medium,
-                        onPressed: null,
+                        onPressed: () => context.push(
+                          CommerceRoutes.pickFarmer(PickPurpose.collect),
+                        ),
                       ),
                     ],
                   ),
@@ -233,8 +244,7 @@ class HomeScreen extends ConsumerWidget {
             case 4:
               context.go(AppRoutes.settings);
             case 3:
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(l10n.comingSoon)));
+              context.go(CommerceRoutes.orders);
             default:
               break;
           }

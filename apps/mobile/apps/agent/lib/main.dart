@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'app.dart';
+import 'widgets/share_plus_invoice_sharer.dart';
 
 /// App version sent with duty sessions and policy acceptances (pubspec).
 const String agentAppVersion = '0.1.0+1';
@@ -55,6 +56,11 @@ Future<void> main() async {
   // persisted so the next duty start / point carries the last known drift.
   final drift = ClockDriftTracker(
     onChanged: (d) => db.setValue(clockDriftKey, '$d'),
+  );
+  final rest = RestJsonClient(
+    store: store,
+    refreshSession: auth.refresh,
+    onServerDate: drift.record,
   );
   final copy = DutyCopy.forLocale(
     (await KvSettingsStore(db).load()).locale ?? const Locale('en'),
@@ -107,6 +113,13 @@ Future<void> main() async {
       ),
       cameraSourceProvider.overrideWithValue(ImagePickerCameraSource()),
       photoStoreProvider.overrideWithValue(const DocumentsPhotoStore()),
+      // FA-020 .. FA-022: catalogue, nearest store, UPI QR / payment link,
+      // A53 polling, invoice links and the khata (online reads; writes go
+      // through the outbox).
+      catalogApiProvider.overrideWithValue(HttpCatalogApi(rest)),
+      paymentsApiProvider.overrideWithValue(HttpPaymentsApi(rest)),
+      khataApiProvider.overrideWithValue(HttpKhataApi(rest)),
+      invoiceSharerProvider.overrideWithValue(const SharePlusInvoiceSharer()),
       // FA-016: confirmation request / officer-side OTP (online only).
       visitConfirmApiProvider.overrideWithValue(
         HttpVisitConfirmApi(

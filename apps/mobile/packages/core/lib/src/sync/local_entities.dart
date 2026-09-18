@@ -4,6 +4,8 @@ import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart' show immutable;
 
 import '../db/app_database.dart';
+import '../orders/order_codec.dart';
+import '../payments/payment_codec.dart';
 import 'sync_models.dart';
 
 /// A synced row read back as JSON plus its sync flags.
@@ -56,7 +58,9 @@ class LocalRow {
 /// | visit          | server_wins (score fields; notes last writer) |
 /// | visit_photo    | server_wins       |
 /// | visit_confirmation | server_wins   |
-/// | khata, payment | server_wins (M3)  |
+/// | order          | server_wins (FA-020; lines replaced by the server's) |
+/// | payment        | server_wins (FA-021) |
+/// | khata_entry    | server_wins (pull only, `synced_refs`) |
 class LocalEntities {
   /// Creates the accessor over [db].
   LocalEntities(this.db);
@@ -76,9 +80,27 @@ class LocalEntities {
     SyncEntities.visit: 'server_wins',
     SyncEntities.visitPhoto: 'server_wins',
     SyncEntities.visitConfirmation: 'server_wins',
-    'khata_entry': 'server_wins',
-    'payment': 'server_wins',
+    SyncEntities.order: 'server_wins',
+    SyncEntities.payment: 'server_wins',
+    SyncEntities.khataEntry: 'server_wins',
   };
+
+  LocalRow? _row(String entity, String id, Map<String, Object?>? data) {
+    if (data == null) return null;
+    return LocalRow(
+      entity: entity,
+      id: id,
+      version: (data['version'] as num?)?.toInt() ?? 0,
+      dirty: data[_dirtyKey] == true,
+      deleted: data[_deletedKey] == true,
+      data: <String, Object?>{...data}
+        ..remove(_dirtyKey)
+        ..remove(_deletedKey),
+    );
+  }
+
+  static const String _dirtyKey = '__dirty';
+  static const String _deletedKey = '__deleted';
 
   /// Whether [entity] has a typed table here.
   static bool isKnown(String entity) => SyncEntities.writable.contains(entity);
@@ -198,6 +220,26 @@ class LocalEntities {
                 deleted: row.deleted,
                 data: visitConfirmationToData(row),
               );
+      case SyncEntities.order:
+        final row = await (db.select(
+          db.orders,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (row == null) return null;
+        return _row(entity, id, <String, Object?>{
+          ...?await OrderCodec.read(db, id),
+          _dirtyKey: row.dirty,
+          _deletedKey: row.deleted,
+        });
+      case SyncEntities.payment:
+        final row = await (db.select(
+          db.payments,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (row == null) return null;
+        return _row(entity, id, <String, Object?>{
+          ...PaymentCodec.toData(row),
+          _dirtyKey: row.dirty,
+          _deletedKey: row.deleted,
+        });
       default:
         if (!isKnown(entity)) {
           throw ArgumentError.value(entity, 'entity', 'no local table');
@@ -334,6 +376,26 @@ class LocalEntities {
                 now: now,
               ),
             );
+      case SyncEntities.order:
+        await OrderCodec.write(
+          db,
+          id,
+          data,
+          version: version,
+          dirty: dirty,
+          deleted: deleted,
+          now: now,
+        );
+      case SyncEntities.payment:
+        await PaymentCodec.write(
+          db,
+          id,
+          data,
+          version: version,
+          dirty: dirty,
+          deleted: deleted,
+          now: now,
+        );
       default:
         if (!isKnown(entity)) {
           throw ArgumentError.value(entity, 'entity', 'no local table');
@@ -501,6 +563,10 @@ class LocalEntities {
         await (db.delete(
           db.visitConfirmations,
         )..where((t) => t.id.equals(id))).go();
+      case SyncEntities.order:
+        await OrderCodec.delete(db, id);
+      case SyncEntities.payment:
+        await PaymentCodec.delete(db, id);
       default:
         if (!isKnown(entity)) {
           throw ArgumentError.value(entity, 'entity', 'no local table');
@@ -521,6 +587,10 @@ class LocalEntities {
     required int version,
     required DateTime now,
   }) async {
+    if (entity == SyncEntities.orderLine) {
+      await OrderCodec.writeLine(db, id, data);
+      return;
+    }
     if (entity == SyncEntities.village) {
       final existing = await (db.select(
         db.villages,
@@ -567,6 +637,9 @@ class LocalEntities {
 
   /// Deletes a generic row.
   Future<void> deleteRef(String entity, String id) {
+    if (entity == SyncEntities.orderLine) {
+      return (db.delete(db.orderLines)..where((t) => t.id.equals(id))).go();
+    }
     if (entity == SyncEntities.village) {
       return (db.delete(db.villages)..where((t) => t.id.equals(id))).go();
     }

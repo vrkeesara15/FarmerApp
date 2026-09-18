@@ -1846,4 +1846,571 @@ class CoreLocalizationsKn extends CoreLocalizations {
 
   @override
   String get syncEntityVisitConfirmation => 'ರೈತರ ದೃಢೀಕರಣ';
+
+  @override
+  String get catalogTitle => 'ಉತ್ಪನ್ನಗಳು';
+
+  @override
+  String catalogForFarmer(String name) {
+    return '$name ಅವರಿಗಾಗಿ';
+  }
+
+  @override
+  String get catalogSearchHint => 'ಹೆಸರು, ಬ್ರಾಂಡ್ ಅಥವಾ ಘಟಕ ಹುಡುಕಿ';
+
+  @override
+  String get catalogCategoryAll => 'ಎಲ್ಲಾ';
+
+  @override
+  String get catalogCategorySeed => 'ಬೀಜಗಳು';
+
+  @override
+  String get catalogCategoryFertiliser => 'ರಸಗೊಬ್ಬರಗಳು';
+
+  @override
+  String get catalogCategoryPesticide => 'ಕೀಟನಾಶಕಗಳು';
+
+  @override
+  String get catalogCategoryFungicide => 'ಶಿಲೀಂಧ್ರನಾಶಕಗಳು';
+
+  @override
+  String get catalogCategoryHerbicide => 'ಕಳೆನಾಶಕಗಳು';
+
+  @override
+  String get catalogCategoryGrowth => 'ಬೆಳವಣಿಗೆ ವರ್ಧಕಗಳು';
+
+  @override
+  String get catalogCategoryTool => 'ಉಪಕರಣಗಳು';
+
+  @override
+  String get catalogCategoryOther => 'ಇತರೆ';
+
+  @override
+  String catalogAsOf(String time) {
+    return '$time ರ ಬೆಲೆ ಮತ್ತು ದಾಸ್ತಾನು';
+  }
+
+  @override
+  String catalogStale(String time) {
+    return 'ಬೆಲೆ ಮತ್ತು ದಾಸ್ತಾನು ಹಳೆಯದಿರಬಹುದು ($time ರದು). ಇಂಟರ್ನೆಟ್ ಇದ್ದಾಗ ರಿಫ್ರೆಶ್ ಮಾಡಿ.';
+  }
+
+  @override
+  String get catalogNeverLoaded => 'ಉತ್ಪನ್ನ ಪಟ್ಟಿ ಇನ್ನೂ ಈ ಫೋನ್‌ನಲ್ಲಿ ಇಲ್ಲ';
+
+  @override
+  String get catalogNeverLoadedHelp =>
+      'ಉತ್ಪನ್ನಗಳು ಮತ್ತು ಬೆಲೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಲು ಇಂಟರ್ನೆಟ್‌ಗೆ ಸಂಪರ್ಕಿಸಿ.';
+
+  @override
+  String get catalogRefresh => 'ರಿಫ್ರೆಶ್ ಮಾಡಿ';
+
+  @override
+  String get catalogRefreshFailed =>
+      'ರಿಫ್ರೆಶ್ ಆಗಲಿಲ್ಲ. ಉಳಿಸಿದ ಉತ್ಪನ್ನಗಳನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ.';
+
+  @override
+  String get catalogEmpty => 'ಹೊಂದುವ ಉತ್ಪನ್ನಗಳಿಲ್ಲ';
+
+  @override
+  String get catalogEmptyHelp => 'ಬೇರೆ ಹೆಸರು ಅಥವಾ ವರ್ಗ ಪ್ರಯತ್ನಿಸಿ.';
+
+  @override
+  String get catalogStoreUnknown =>
+      'ಅಂಗಡಿ ಇನ್ನೂ ತಿಳಿದಿಲ್ಲ. ಮುಂದಿನ ಸಿಂಕ್ ನಂತರ ದಾಸ್ತಾನು ಕಾಣುತ್ತದೆ.';
+
+  @override
+  String get productPriceEstimate => 'ಅಂದಾಜು ಬೆಲೆ';
+
+  @override
+  String productStockNearest(int count) {
+    return 'ಹತ್ತಿರದ ಅಂಗಡಿಯಲ್ಲಿ $count ದಾಸ್ತಾನಿನಲ್ಲಿವೆ';
+  }
+
+  @override
+  String productStockAsOf(String time) {
+    return '$time ಕ್ಕೆ';
+  }
+
+  @override
+  String productInCart(int count) {
+    return 'ಕಾರ್ಟ್‌ನಲ್ಲಿ $count';
+  }
+
+  @override
+  String get cartEstimatedTotal => 'ಅಂದಾಜು ಒಟ್ಟು';
+
+  @override
+  String get cartViewCart => 'ಕಾರ್ಟ್ ನೋಡಿ';
+
+  @override
+  String get cartTitle => 'ಕಾರ್ಟ್';
+
+  @override
+  String get cartEmpty => 'ಕಾರ್ಟ್ ಖಾಲಿಯಾಗಿದೆ';
+
+  @override
+  String get cartEmptyHelp => 'ಪಟ್ಟಿಯಿಂದ ಉತ್ಪನ್ನಗಳನ್ನು ಸೇರಿಸಿ.';
+
+  @override
+  String get cartAddMore => 'ಇನ್ನಷ್ಟು ಉತ್ಪನ್ನ ಸೇರಿಸಿ';
+
+  @override
+  String get cartSubtotal => 'ಉಪ ಮೊತ್ತ (ಅಂದಾಜು)';
+
+  @override
+  String get cartTax => 'GST (ಅಂದಾಜು)';
+
+  @override
+  String get cartEstimateNote =>
+      'ಬೆಲೆಗಳು ಉಳಿಸಿದ ಬೆಲೆ ಪಟ್ಟಿಯ ಅಂದಾಜು. ಆರ್ಡರ್ ಸಿಂಕ್ ಆದಾಗ ಅಂಗಡಿ ಅಂತಿಮ ಮೊತ್ತ ಖಚಿತಪಡಿಸುತ್ತದೆ.';
+
+  @override
+  String get cartFulfilment => 'ರೈತರಿಗೆ ಸರಕು ಹೇಗೆ ತಲುಪುತ್ತದೆ?';
+
+  @override
+  String get fulfilmentPickup => 'ಅಂಗಡಿಯಿಂದ ಪಡೆಯುವುದು';
+
+  @override
+  String get fulfilmentDelivery => 'ಮನೆಗೆ ಡೆಲಿವರಿ';
+
+  @override
+  String get cartChoosePayment => 'ಪಾವತಿ ಆಯ್ಕೆಮಾಡಿ';
+
+  @override
+  String get cartDecrease => 'ಒಂದು ಕಡಿಮೆ ಮಾಡಿ';
+
+  @override
+  String get cartIncrease => 'ಒಂದು ಹೆಚ್ಚಿಸಿ';
+
+  @override
+  String cartShortLine(String available, String requested) {
+    return 'ಅಂಗಡಿಯಲ್ಲಿ $available ಮಾತ್ರ ಲಭ್ಯ ($requested ಕೇಳಲಾಗಿದೆ).';
+  }
+
+  @override
+  String cartUseAvailable(String available) {
+    return '$available ಇಡಿ';
+  }
+
+  @override
+  String get cartShortTitle =>
+      'ಅಂಗಡಿಯಲ್ಲಿ ಕೆಲವು ಸರಕು ಕಡಿಮೆ ಇದೆ. ಪ್ರಮಾಣ ಬದಲಿಸಿ ಮತ್ತೆ ಕಳುಹಿಸಿ.';
+
+  @override
+  String get checkoutTitle => 'ಪಾವತಿ';
+
+  @override
+  String get checkoutOrderAmount => 'ಆರ್ಡರ್ ಒಟ್ಟು (ಅಂದಾಜು)';
+
+  @override
+  String get checkoutDuesAmount => 'ವಸೂಲಿ ಮಾಡಬೇಕಾದ ಮೊತ್ತ (₹)';
+
+  @override
+  String checkoutDuesBalance(String amount) {
+    return 'ಬಾಕಿ $amount';
+  }
+
+  @override
+  String checkoutDuesTooMuch(String amount) {
+    return '$amount ವರೆಗಿನ ಮೊತ್ತ ನಮೂದಿಸಿ';
+  }
+
+  @override
+  String get checkoutDuesInvalid => 'ಮೊತ್ತ ನಮೂದಿಸಿ';
+
+  @override
+  String get checkoutPlaceOrder => 'ಆರ್ಡರ್ ಮಾಡಿ';
+
+  @override
+  String get checkoutCollect => 'ವಸೂಲಿ ಮಾಡಿ';
+
+  @override
+  String get checkoutNeedsInternet => 'ಇಂಟರ್ನೆಟ್ ಬೇಕು: ನಗದು ಅಥವಾ ಸಾಲ ಬಳಸಿ';
+
+  @override
+  String get checkoutCreditOrdersOnly => 'ಸಾಲ ಆರ್ಡರ್‌ಗಳಿಗೆ ಮಾತ್ರ';
+
+  @override
+  String checkoutCreditLeft(String amount) {
+    return 'ಉಳಿದ ಮಿತಿ $amount';
+  }
+
+  @override
+  String get checkoutOfflineNote =>
+      'ನೀವು ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿದ್ದೀರಿ. ನಗದು ಮತ್ತು ಸಾಲ ಫೋನ್‌ನಲ್ಲಿ ಉಳಿದು ಇಂಟರ್ನೆಟ್ ಬಂದಾಗ ಕಳುಹಿಸಲಾಗುತ್ತದೆ.';
+
+  @override
+  String get checkoutOrderNotSynced =>
+      'ಆರ್ಡರ್ ಇನ್ನೂ ಸರ್ವರ್ ತಲುಪಿಲ್ಲ. ಇಂಟರ್ನೆಟ್ ಇದ್ದಾಗ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ ಅಥವಾ ನಗದು ಪಡೆಯಿರಿ.';
+
+  @override
+  String get checkoutNetworkError =>
+      'ಸರ್ವರ್ ತಲುಪಲಾಗಲಿಲ್ಲ. ಇಂಟರ್ನೆಟ್ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.';
+
+  @override
+  String get checkoutAlreadyPaid => 'ಈ ಆರ್ಡರ್‌ಗೆ ಈಗಾಗಲೇ ಪಾವತಿಯಾಗಿದೆ.';
+
+  @override
+  String get checkoutAmountMismatch =>
+      'ಸರ್ವರ್‌ನಲ್ಲಿ ಮೊತ್ತ ಬದಲಾಗಿದೆ. ಆರ್ಡರ್ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.';
+
+  @override
+  String get checkoutNothingDue => 'ಈ ರೈತರ ಬಾಕಿ ಏನೂ ಇಲ್ಲ.';
+
+  @override
+  String checkoutRefused(String code) {
+    return 'ಪಾವತಿ ರಚಿಸಲಾಗಲಿಲ್ಲ ($code).';
+  }
+
+  @override
+  String get paymentCard => 'ಕಾರ್ಡ್';
+
+  @override
+  String get paymentDone => 'ಮುಗಿಯಿತು';
+
+  @override
+  String get upiTitle => 'UPI QR';
+
+  @override
+  String get upiExpired => 'QR ಅವಧಿ ಮುಗಿದಿದೆ';
+
+  @override
+  String get upiCollectCash => 'ಬದಲಿಗೆ ನಗದು ಪಡೆಯಿರಿ';
+
+  @override
+  String get linkTitle => 'ಪಾವತಿ ಲಿಂಕ್';
+
+  @override
+  String get linkSentTitle => 'ಪಾವತಿ ಲಿಂಕ್ ಕಳುಹಿಸಲಾಗಿದೆ';
+
+  @override
+  String linkSentVia(String channel) {
+    return '$channel ಮೂಲಕ ಕಳುಹಿಸಲಾಗಿದೆ. ಲಿಂಕ್ ತೆರೆದು ಪಾವತಿಸಲು ರೈತರಿಗೆ ಹೇಳಿ.';
+  }
+
+  @override
+  String get channelSms => 'SMS';
+
+  @override
+  String get channelWhatsapp => 'WhatsApp';
+
+  @override
+  String get linkResend => 'ಲಿಂಕ್ ಮತ್ತೆ ಕಳುಹಿಸಿ';
+
+  @override
+  String get linkResent => 'ಲಿಂಕ್ ಮತ್ತೆ ಕಳುಹಿಸಲಾಗಿದೆ';
+
+  @override
+  String get linkCheckStatus => 'ಪಾವತಿ ಪರಿಶೀಲಿಸಿ';
+
+  @override
+  String linkValidUntil(String time) {
+    return '$time ವರೆಗೆ ಮಾನ್ಯ';
+  }
+
+  @override
+  String get cashTitle => 'ನಗದು ರಸೀದಿ';
+
+  @override
+  String get cashAmount => 'ಪಡೆದ ನಗದು';
+
+  @override
+  String get cashTakePhoto => 'ರಸೀದಿ ಫೋಟೋ ತೆಗೆಯಿರಿ';
+
+  @override
+  String get cashRetake => 'ಮತ್ತೆ ತೆಗೆಯಿರಿ';
+
+  @override
+  String get cashSave => 'ನಗದು ಪಾವತಿ ಉಳಿಸಿ';
+
+  @override
+  String get cashPhotoHelp =>
+      'ರೈತರಿಗೆ ನೀಡಿದ ರಸೀದಿಯ ಫೋಟೋ ತೆಗೆಯಿರಿ. ಆ್ಯಪ್ ಕ್ಯಾಮೆರಾ ಮಾತ್ರ ಬಳಸಬಹುದು.';
+
+  @override
+  String get cashPhotoBad =>
+      'ಫೋಟೋ ಮಸುಕು ಅಥವಾ ಕತ್ತಲಾಗಿದೆ. ಉತ್ತಮ ಬೆಳಕಿನಲ್ಲಿ ಮತ್ತೆ ತೆಗೆಯಿರಿ.';
+
+  @override
+  String get cashSaved => 'ನಗದು ಉಳಿಸಲಾಗಿದೆ. ಅಂಗಡಿ ಹೊಂದಾಣಿಕೆ ಬಾಕಿ ಇದೆ.';
+
+  @override
+  String get cashPendingReconciliation =>
+      'ಅಂಗಡಿ ಹೊಂದಾಣಿಕೆ ಬಾಕಿ: ದಿನದ ಕೊನೆಯಲ್ಲಿ ಅಂಗಡಿ ನಗದು ಪರಿಶೀಲಿಸುತ್ತದೆ.';
+
+  @override
+  String get creditTitle => 'ಸಾಲದ ಮಾರಾಟ';
+
+  @override
+  String get creditQueued =>
+      'ಫೋನ್‌ನಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ. ಇಂಟರ್ನೆಟ್ ಬಂದಾಗ ಸಾಲದ ಮಿತಿ ಪರಿಶೀಲಿಸಲಾಗುತ್ತದೆ.';
+
+  @override
+  String get creditApprovedTitle => 'ರೈತರ ಖಾತೆಗೆ ಸೇರಿಸಲಾಗಿದೆ';
+
+  @override
+  String get creditNeedsApprovalTitle => 'ಅನುಮೋದನೆ ಬೇಕು';
+
+  @override
+  String get creditNeedsApprovalBody =>
+      'ಈ ಮಾರಾಟ ರೈತರ ಸಾಲದ ಮಿತಿ ಮೀರಿದೆ. ಅನುಮೋದನೆಗಾಗಿ ಕ್ಲಸ್ಟರ್ ಹೆಡ್‌ಗೆ ಕಳುಹಿಸಲಾಗಿದೆ.';
+
+  @override
+  String get creditLimit => 'ಸಾಲದ ಮಿತಿ';
+
+  @override
+  String get creditBalance => 'ಈಗಿನ ಬಾಕಿ';
+
+  @override
+  String get creditShortfall => 'ಮಿತಿ ಮೀರಿದ ಮೊತ್ತ';
+
+  @override
+  String get creditSentToClusterHead => 'ಕ್ಲಸ್ಟರ್ ಹೆಡ್‌ಗೆ ಕಳುಹಿಸಲಾಗಿದೆ';
+
+  @override
+  String get creditCheckAgain => 'ಅನುಮೋದನೆ ಪರಿಶೀಲಿಸಿ';
+
+  @override
+  String get creditStillPending =>
+      'ಇನ್ನೂ ಅನುಮೋದನೆ ಸಿಕ್ಕಿಲ್ಲ. ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.';
+
+  @override
+  String get creditOfflineCheck =>
+      'ಅನುಮೋದನೆ ಪರಿಶೀಲಿಸಲು ಇಂಟರ್ನೆಟ್‌ಗೆ ಸಂಪರ್ಕಿಸಿ.';
+
+  @override
+  String get creditUseCash => 'ಬದಲಿಗೆ ನಗದು ಪಡೆಯಿರಿ';
+
+  @override
+  String get orderTitle => 'ಆರ್ಡರ್';
+
+  @override
+  String get orderPlacedTitle => 'ಆರ್ಡರ್ ಮಾಡಲಾಗಿದೆ';
+
+  @override
+  String get orderQueuedTitle => 'ಆರ್ಡರ್ ಉಳಿಸಲಾಗಿದೆ, ಸಿಂಕ್‌ಗಾಗಿ ಕಾಯುತ್ತಿದೆ';
+
+  @override
+  String get orderQueuedHelp =>
+      'ಫೋನ್‌ಗೆ ಇಂಟರ್ನೆಟ್ ಬಂದ ತಕ್ಷಣ ಇದು ಅಂಗಡಿಗೆ ಹೋಗುತ್ತದೆ.';
+
+  @override
+  String get orderRejectedTitle => 'ಅಂಗಡಿ ಈ ಆರ್ಡರ್ ತೆಗೆದುಕೊಳ್ಳಲಾಗಲಿಲ್ಲ';
+
+  @override
+  String get orderInsufficientStock => 'ಅಂಗಡಿಯಲ್ಲಿ ಕೆಲವು ಸರಕು ಕಡಿಮೆ:';
+
+  @override
+  String orderShortLine(String product, String available, String requested) {
+    return '$product: $available ಲಭ್ಯ, $requested ಕೇಳಲಾಗಿದೆ';
+  }
+
+  @override
+  String get orderSkuNotRecommendable =>
+      'ಒಂದು ಉತ್ಪನ್ನಕ್ಕೆ ಈ ಬೆಳೆ ಮತ್ತು ಕೀಟಕ್ಕೆ ಅನುಮೋದನೆ ಇಲ್ಲ (ಲೇಬಲ್ ಕ್ಲೇಮ್). ಅದನ್ನು ತೆಗೆದು ಮತ್ತೆ ಕಳುಹಿಸಿ.';
+
+  @override
+  String get orderEditAndResend => 'ಬದಲಿಸಿ ಮತ್ತೆ ಕಳುಹಿಸಿ';
+
+  @override
+  String get orderSummary => 'ಸಾರಾಂಶ';
+
+  @override
+  String get orderSubtotal => 'ಉಪ ಮೊತ್ತ';
+
+  @override
+  String get orderTax => 'GST';
+
+  @override
+  String get orderTotal => 'ಒಟ್ಟು';
+
+  @override
+  String get orderTotalEstimate => 'ಒಟ್ಟು (ಅಂದಾಜು)';
+
+  @override
+  String get orderStatusTitle => 'ಸ್ಥಿತಿ';
+
+  @override
+  String get orderStatusPlaced => 'ಆರ್ಡರ್ ಆಗಿದೆ';
+
+  @override
+  String get orderStatusReserved => 'ದಾಸ್ತಾನು ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ';
+
+  @override
+  String get orderStatusPacked => 'ಪ್ಯಾಕ್ ಆಗಿದೆ';
+
+  @override
+  String get orderStatusReady => 'ಸಿದ್ಧ';
+
+  @override
+  String get orderStatusHandedOver => 'ಹಸ್ತಾಂತರಿಸಲಾಗಿದೆ';
+
+  @override
+  String get orderStatusDelivered => 'ತಲುಪಿಸಲಾಗಿದೆ';
+
+  @override
+  String get orderStatusCancelled => 'ರದ್ದಾಗಿದೆ';
+
+  @override
+  String get orderPayments => 'ಪಾವತಿಗಳು';
+
+  @override
+  String get orderNoPayments => 'ಇನ್ನೂ ಪಾವತಿ ಇಲ್ಲ';
+
+  @override
+  String get orderShareInvoice => 'WhatsAppನಲ್ಲಿ ಬಿಲ್ ಹಂಚಿಕೊಳ್ಳಿ';
+
+  @override
+  String get orderShareOffline => 'ಬಿಲ್ ಹಂಚಿಕೊಳ್ಳಲು ಇಂಟರ್ನೆಟ್‌ಗೆ ಸಂಪರ್ಕಿಸಿ.';
+
+  @override
+  String get orderShareNoInvoice =>
+      'ಅಂಗಡಿ ಆರ್ಡರ್ ಹಸ್ತಾಂತರಿಸುವಾಗ ಬಿಲ್ ನೀಡುತ್ತದೆ.';
+
+  @override
+  String get orderShareFailed => 'ಬಿಲ್ ಲಿಂಕ್ ಸಿಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.';
+
+  @override
+  String orderShareText(String number, String url) {
+    return 'ಬಿಲ್ $number: $url';
+  }
+
+  @override
+  String orderInvoiceNo(String number) {
+    return 'ಬಿಲ್ $number';
+  }
+
+  @override
+  String get orderCollectPayment => 'ಪಾವತಿ ಪಡೆಯಿರಿ';
+
+  @override
+  String get orderPendingSync => 'ಸಿಂಕ್‌ಗಾಗಿ ಕಾಯುತ್ತಿದೆ';
+
+  @override
+  String get orderRejected => 'ಗಮನಿಸಬೇಕು';
+
+  @override
+  String get ordersTitle => 'ಆರ್ಡರ್‌ಗಳು';
+
+  @override
+  String get ordersEmpty => 'ಇನ್ನೂ ಆರ್ಡರ್‌ಗಳಿಲ್ಲ';
+
+  @override
+  String get ordersEmptyHelp =>
+      'ರೈತರಿಗಾಗಿ ನೀವು ಮಾಡಿದ ಆರ್ಡರ್‌ಗಳು ಇಲ್ಲಿ ಕಾಣುತ್ತವೆ.';
+
+  @override
+  String get ordersNew => 'ಹೊಸ ಆರ್ಡರ್';
+
+  @override
+  String get ordersCollections => 'ವಸೂಲಿಗಳು';
+
+  @override
+  String get ordersPickFarmer => 'ರೈತರನ್ನು ಆಯ್ಕೆಮಾಡಿ';
+
+  @override
+  String get khataTitle => 'ಖಾತೆ';
+
+  @override
+  String khataAsOf(String time) {
+    return '$time ಕ್ಕೆ';
+  }
+
+  @override
+  String khataOfflineAsOf(String time) {
+    return 'ಆಫ್‌ಲೈನ್: $time ರಂದು ಉಳಿಸಿದ ಖಾತೆ ತೋರಿಸಲಾಗುತ್ತಿದೆ';
+  }
+
+  @override
+  String get khataNotLoaded => 'ಖಾತೆ ಇನ್ನೂ ಈ ಫೋನ್‌ನಲ್ಲಿ ಇಲ್ಲ';
+
+  @override
+  String get khataNotLoadedHelp => 'ರೈತರ ಖಾತೆ ತರಲು ಇಂಟರ್ನೆಟ್‌ಗೆ ಸಂಪರ್ಕಿಸಿ.';
+
+  @override
+  String khataOverdue(String amount) {
+    return 'ಅವಧಿ ಮೀರಿದ ಬಾಕಿ $amount';
+  }
+
+  @override
+  String get khataBucket0to30 => '0–30 ದಿನ';
+
+  @override
+  String get khataBucket31to60 => '31–60 ದಿನ';
+
+  @override
+  String get khataBucket61to90 => '61–90 ದಿನ';
+
+  @override
+  String get khataBucket90plus => '90+ ದಿನ';
+
+  @override
+  String khataDueHarvest(String date, String month) {
+    return 'ಬಾಕಿ ದಿನಾಂಕ $date · ಕೊಯ್ಲು $month';
+  }
+
+  @override
+  String get khataEntryOrder => 'ಸಾಲದ ಮಾರಾಟ';
+
+  @override
+  String get khataEntryPayment => 'ಪಾವತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ';
+
+  @override
+  String get khataEntryAdjustment => 'ಹೊಂದಾಣಿಕೆ';
+
+  @override
+  String get khataPaymentHistory => 'ಪಾವತಿ ಇತಿಹಾಸ';
+
+  @override
+  String get khataNoPayments => 'ಇನ್ನೂ ಪಾವತಿಗಳಿಲ್ಲ';
+
+  @override
+  String get khataPendingCollections => 'ವಸೂಲಿಯಾಗಿದೆ, ಇನ್ನೂ ಖಾತೆಯಲ್ಲಿ ಇಲ್ಲ';
+
+  @override
+  String get collectionsTitle => 'ವಸೂಲಿಗಳು';
+
+  @override
+  String get collectionsToday => 'ಇಂದು';
+
+  @override
+  String get collectionsWeek => 'ಈ ವಾರ';
+
+  @override
+  String get collectionsTotal => 'ಒಟ್ಟು ವಸೂಲಿ';
+
+  @override
+  String get collectionsEmpty => 'ಇನ್ನೂ ವಸೂಲಿ ಇಲ್ಲ';
+
+  @override
+  String get collectionsEmptyHelp =>
+      'ನೀವು ವಸೂಲಿ ಮಾಡಿದ ಪಾವತಿಗಳು ಇಲ್ಲಿ ಕಾಣುತ್ತವೆ.';
+
+  @override
+  String get collectionStateWaitingToSync => 'ಸಿಂಕ್‌ಗಾಗಿ ಕಾಯುತ್ತಿದೆ';
+
+  @override
+  String get collectionStatePendingReconciliation => 'ಹೊಂದಾಣಿಕೆ ಬಾಕಿ';
+
+  @override
+  String get collectionStateWaiting => 'ಪಾವತಿಗಾಗಿ ಕಾಯುತ್ತಿದೆ';
+
+  @override
+  String get collectionStatePaid => 'ಪಾವತಿಯಾಗಿದೆ';
+
+  @override
+  String get collectionStateOnKhata => 'ಖಾತೆಯಲ್ಲಿ';
+
+  @override
+  String get collectionStateApprovalNeeded => 'ಅನುಮೋದನೆ ಬೇಕು';
+
+  @override
+  String get collectionStateFailed => 'ವಿಫಲವಾಗಿದೆ';
+
+  @override
+  String get syncEntityOrder => 'ಆರ್ಡರ್';
+
+  @override
+  String get syncEntityPayment => 'ಪಾವತಿ';
 }

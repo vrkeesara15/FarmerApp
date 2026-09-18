@@ -1078,5 +1078,335 @@
   "visitDone": "Done",
   "syncEntityVisit": "Visit",
   "syncEntityVisitPhoto": "Visit photo",
-  "syncEntityVisitConfirmation": "Farmer confirmation"
+  "syncEntityVisitConfirmation": "Farmer confirmation",
+  "catalogTitle": "Products",
+  "catalogForFarmer": "For {name}",
+  "@catalogForFarmer": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogSearchHint": "Search name, brand or ingredient",
+  "catalogCategoryAll": "All",
+  "catalogCategorySeed": "Seeds",
+  "catalogCategoryFertiliser": "Fertilisers",
+  "catalogCategoryPesticide": "Pesticides",
+  "catalogCategoryFungicide": "Fungicides",
+  "catalogCategoryHerbicide": "Herbicides",
+  "catalogCategoryGrowth": "Growth promoters",
+  "catalogCategoryTool": "Tools",
+  "catalogCategoryOther": "Other",
+  "catalogAsOf": "Prices and stock as of {time}",
+  "@catalogAsOf": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogStale": "Prices and stock may be out of date (as of {time}). Refresh when online.",
+  "@catalogStale": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "catalogNeverLoaded": "The catalogue is not on this phone yet",
+  "catalogNeverLoadedHelp": "Connect to the internet to download products and prices.",
+  "catalogRefresh": "Refresh",
+  "catalogRefreshFailed": "Could not refresh. Showing saved products.",
+  "catalogEmpty": "No products match",
+  "catalogEmptyHelp": "Try another name or category.",
+  "catalogStoreUnknown": "Store not known yet. Stock shows after the next sync.",
+  "productPriceEstimate": "Estimated price",
+  "productStockNearest": "{count} in stock at the nearest store",
+  "@productStockNearest": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "productStockAsOf": "as of {time}",
+  "@productStockAsOf": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "productInCart": "{count} in cart",
+  "@productInCart": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cartEstimatedTotal": "Estimated total",
+  "cartViewCart": "View cart",
+  "cartTitle": "Cart",
+  "cartEmpty": "The cart is empty",
+  "cartEmptyHelp": "Add products from the catalogue.",
+  "cartAddMore": "Add more products",
+  "cartSubtotal": "Subtotal (estimate)",
+  "cartTax": "GST (estimate)",
+  "cartEstimateNote": "Prices are estimates from the saved price list. The store confirms the final amount when the order syncs.",
+  "cartFulfilment": "How will the farmer get it?",
+  "fulfilmentPickup": "Pickup at store",
+  "fulfilmentDelivery": "Delivery",
+  "cartChoosePayment": "Choose payment",
+  "cartDecrease": "Remove one",
+  "cartIncrease": "Add one",
+  "cartShortLine": "Only {available} available at the store (asked {requested}).",
+  "@cartShortLine": {
+    "placeholders": {
+      "available": {
+        "type": "String"
+      },
+      "requested": {
+        "type": "String"
+      }
+    }
+  },
+  "cartUseAvailable": "Use {available}",
+  "@cartUseAvailable": {
+    "placeholders": {
+      "available": {
+        "type": "String"
+      }
+    }
+  },
+  "cartShortTitle": "Some items are short at the store. Change the quantities and send again.",
+  "checkoutTitle": "Payment",
+  "checkoutOrderAmount": "Order total (estimate)",
+  "checkoutDuesAmount": "Amount to collect (₹)",
+  "checkoutDuesBalance": "Balance due {amount}",
+  "@checkoutDuesBalance": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutDuesTooMuch": "Enter an amount up to {amount}",
+  "@checkoutDuesTooMuch": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutDuesInvalid": "Enter an amount",
+  "checkoutPlaceOrder": "Place order",
+  "checkoutCollect": "Collect",
+  "checkoutNeedsInternet": "Needs internet: use cash or credit",
+  "checkoutCreditOrdersOnly": "Credit is only for orders",
+  "checkoutCreditLeft": "Limit left {amount}",
+  "@checkoutCreditLeft": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "checkoutOfflineNote": "You are offline. Cash and credit are saved on the phone and sent when online.",
+  "checkoutOrderNotSynced": "The order has not reached the server yet. Try again when online, or collect cash.",
+  "checkoutNetworkError": "Could not reach the server. Check the internet and try again.",
+  "checkoutAlreadyPaid": "This order is already paid.",
+  "checkoutAmountMismatch": "The amount changed on the server. Check the order and try again.",
+  "checkoutNothingDue": "Nothing is due for this farmer.",
+  "checkoutRefused": "The payment could not be created ({code}).",
+  "@checkoutRefused": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentCard": "Card",
+  "paymentDone": "Done",
+  "upiTitle": "UPI QR",
+  "upiExpired": "QR expired",
+  "upiCollectCash": "Collect cash instead",
+  "linkTitle": "Payment link",
+  "linkSentTitle": "Payment link sent",
+  "linkSentVia": "Sent by {channel}. Ask the farmer to open the link and pay.",
+  "@linkSentVia": {
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      }
+    }
+  },
+  "channelSms": "SMS",
+  "channelWhatsapp": "WhatsApp",
+  "linkResend": "Resend the link",
+  "linkResent": "Link sent again",
+  "linkCheckStatus": "Check payment",
+  "linkValidUntil": "Valid until {time}",
+  "@linkValidUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cashTitle": "Cash receipt",
+  "cashAmount": "Cash collected",
+  "cashTakePhoto": "Take receipt photo",
+  "cashRetake": "Retake",
+  "cashSave": "Save cash payment",
+  "cashPhotoHelp": "Photograph the receipt you gave the farmer. Only the in-app camera can be used.",
+  "cashPhotoBad": "The photo is blurry or dark. Retake it in good light.",
+  "cashSaved": "Cash saved. Pending store reconciliation.",
+  "cashPendingReconciliation": "Pending store reconciliation: the store checks the cash at day close.",
+  "creditTitle": "Credit sale",
+  "creditQueued": "Saved on the phone. The credit limit is checked when the phone is online.",
+  "creditApprovedTitle": "Added to the farmer’s khata",
+  "creditNeedsApprovalTitle": "Approval needed",
+  "creditNeedsApprovalBody": "This sale is over the farmer’s credit limit. It was sent to the cluster head for approval.",
+  "creditLimit": "Credit limit",
+  "creditBalance": "Balance due now",
+  "creditShortfall": "Over the limit by",
+  "creditSentToClusterHead": "Sent to cluster head",
+  "creditCheckAgain": "Check approval",
+  "creditStillPending": "Not approved yet. Try again later.",
+  "creditOfflineCheck": "Connect to the internet to check the approval.",
+  "creditUseCash": "Collect cash instead",
+  "orderTitle": "Order",
+  "orderPlacedTitle": "Order placed",
+  "orderQueuedTitle": "Order saved, waiting to sync",
+  "orderQueuedHelp": "It goes to the store as soon as the phone is online.",
+  "orderRejectedTitle": "The store could not take this order",
+  "orderInsufficientStock": "Some items are short at the store:",
+  "orderShortLine": "{product}: {available} available, {requested} asked",
+  "@orderShortLine": {
+    "placeholders": {
+      "product": {
+        "type": "String"
+      },
+      "available": {
+        "type": "String"
+      },
+      "requested": {
+        "type": "String"
+      }
+    }
+  },
+  "orderSkuNotRecommendable": "A product is not approved for this crop and pest (label claim). Remove it and send again.",
+  "orderEditAndResend": "Edit and send again",
+  "orderSummary": "Summary",
+  "orderSubtotal": "Subtotal",
+  "orderTax": "GST",
+  "orderTotal": "Total",
+  "orderTotalEstimate": "Total (estimate)",
+  "orderStatusTitle": "Status",
+  "orderStatusPlaced": "Placed",
+  "orderStatusReserved": "Stock reserved",
+  "orderStatusPacked": "Packed",
+  "orderStatusReady": "Ready",
+  "orderStatusHandedOver": "Handed over",
+  "orderStatusDelivered": "Delivered",
+  "orderStatusCancelled": "Cancelled",
+  "orderPayments": "Payments",
+  "orderNoPayments": "No payment yet",
+  "orderShareInvoice": "Share invoice on WhatsApp",
+  "orderShareOffline": "Connect to the internet to share the invoice.",
+  "orderShareNoInvoice": "The invoice is issued when the store hands over the order.",
+  "orderShareFailed": "Could not get the invoice link. Try again.",
+  "orderShareText": "Invoice {number}: {url}",
+  "@orderShareText": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "orderInvoiceNo": "Invoice {number}",
+  "@orderInvoiceNo": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "orderCollectPayment": "Collect payment",
+  "orderPendingSync": "Waiting to sync",
+  "orderRejected": "Needs attention",
+  "ordersTitle": "Orders",
+  "ordersEmpty": "No orders yet",
+  "ordersEmptyHelp": "Orders you place for farmers show here.",
+  "ordersNew": "New order",
+  "ordersCollections": "Collections",
+  "ordersPickFarmer": "Choose a farmer",
+  "khataTitle": "Khata",
+  "khataAsOf": "As of {time}",
+  "@khataAsOf": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "khataOfflineAsOf": "Offline: showing the khata saved at {time}",
+  "@khataOfflineAsOf": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "khataNotLoaded": "Khata not on this phone yet",
+  "khataNotLoadedHelp": "Connect to the internet to load the farmer’s khata.",
+  "khataOverdue": "Overdue {amount}",
+  "@khataOverdue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "khataBucket0to30": "0–30 days",
+  "khataBucket31to60": "31–60 days",
+  "khataBucket61to90": "61–90 days",
+  "khataBucket90plus": "90+ days",
+  "khataDueHarvest": "Due {date} · harvest {month}",
+  "@khataDueHarvest": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "khataEntryOrder": "Sale on credit",
+  "khataEntryPayment": "Payment received",
+  "khataEntryAdjustment": "Adjustment",
+  "khataPaymentHistory": "Payment history",
+  "khataNoPayments": "No payments yet",
+  "khataPendingCollections": "Collected, not yet on the khata",
+  "collectionsTitle": "Collections",
+  "collectionsToday": "Today",
+  "collectionsWeek": "This week",
+  "collectionsTotal": "Collected",
+  "collectionsEmpty": "No collections yet",
+  "collectionsEmptyHelp": "Payments you collect show here.",
+  "collectionStateWaitingToSync": "Waiting to sync",
+  "collectionStatePendingReconciliation": "Pending reconciliation",
+  "collectionStateWaiting": "Waiting for payment",
+  "collectionStatePaid": "Paid",
+  "collectionStateOnKhata": "On khata",
+  "collectionStateApprovalNeeded": "Approval needed",
+  "collectionStateFailed": "Failed",
+  "syncEntityOrder": "Order",
+  "syncEntityPayment": "Payment"
 }

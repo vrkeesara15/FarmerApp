@@ -1837,4 +1837,570 @@ class CoreLocalizationsEn extends CoreLocalizations {
 
   @override
   String get syncEntityVisitConfirmation => 'Farmer confirmation';
+
+  @override
+  String get catalogTitle => 'Products';
+
+  @override
+  String catalogForFarmer(String name) {
+    return 'For $name';
+  }
+
+  @override
+  String get catalogSearchHint => 'Search name, brand or ingredient';
+
+  @override
+  String get catalogCategoryAll => 'All';
+
+  @override
+  String get catalogCategorySeed => 'Seeds';
+
+  @override
+  String get catalogCategoryFertiliser => 'Fertilisers';
+
+  @override
+  String get catalogCategoryPesticide => 'Pesticides';
+
+  @override
+  String get catalogCategoryFungicide => 'Fungicides';
+
+  @override
+  String get catalogCategoryHerbicide => 'Herbicides';
+
+  @override
+  String get catalogCategoryGrowth => 'Growth promoters';
+
+  @override
+  String get catalogCategoryTool => 'Tools';
+
+  @override
+  String get catalogCategoryOther => 'Other';
+
+  @override
+  String catalogAsOf(String time) {
+    return 'Prices and stock as of $time';
+  }
+
+  @override
+  String catalogStale(String time) {
+    return 'Prices and stock may be out of date (as of $time). Refresh when online.';
+  }
+
+  @override
+  String get catalogNeverLoaded => 'The catalogue is not on this phone yet';
+
+  @override
+  String get catalogNeverLoadedHelp =>
+      'Connect to the internet to download products and prices.';
+
+  @override
+  String get catalogRefresh => 'Refresh';
+
+  @override
+  String get catalogRefreshFailed =>
+      'Could not refresh. Showing saved products.';
+
+  @override
+  String get catalogEmpty => 'No products match';
+
+  @override
+  String get catalogEmptyHelp => 'Try another name or category.';
+
+  @override
+  String get catalogStoreUnknown =>
+      'Store not known yet. Stock shows after the next sync.';
+
+  @override
+  String get productPriceEstimate => 'Estimated price';
+
+  @override
+  String productStockNearest(int count) {
+    return '$count in stock at the nearest store';
+  }
+
+  @override
+  String productStockAsOf(String time) {
+    return 'as of $time';
+  }
+
+  @override
+  String productInCart(int count) {
+    return '$count in cart';
+  }
+
+  @override
+  String get cartEstimatedTotal => 'Estimated total';
+
+  @override
+  String get cartViewCart => 'View cart';
+
+  @override
+  String get cartTitle => 'Cart';
+
+  @override
+  String get cartEmpty => 'The cart is empty';
+
+  @override
+  String get cartEmptyHelp => 'Add products from the catalogue.';
+
+  @override
+  String get cartAddMore => 'Add more products';
+
+  @override
+  String get cartSubtotal => 'Subtotal (estimate)';
+
+  @override
+  String get cartTax => 'GST (estimate)';
+
+  @override
+  String get cartEstimateNote =>
+      'Prices are estimates from the saved price list. The store confirms the final amount when the order syncs.';
+
+  @override
+  String get cartFulfilment => 'How will the farmer get it?';
+
+  @override
+  String get fulfilmentPickup => 'Pickup at store';
+
+  @override
+  String get fulfilmentDelivery => 'Delivery';
+
+  @override
+  String get cartChoosePayment => 'Choose payment';
+
+  @override
+  String get cartDecrease => 'Remove one';
+
+  @override
+  String get cartIncrease => 'Add one';
+
+  @override
+  String cartShortLine(String available, String requested) {
+    return 'Only $available available at the store (asked $requested).';
+  }
+
+  @override
+  String cartUseAvailable(String available) {
+    return 'Use $available';
+  }
+
+  @override
+  String get cartShortTitle =>
+      'Some items are short at the store. Change the quantities and send again.';
+
+  @override
+  String get checkoutTitle => 'Payment';
+
+  @override
+  String get checkoutOrderAmount => 'Order total (estimate)';
+
+  @override
+  String get checkoutDuesAmount => 'Amount to collect (₹)';
+
+  @override
+  String checkoutDuesBalance(String amount) {
+    return 'Balance due $amount';
+  }
+
+  @override
+  String checkoutDuesTooMuch(String amount) {
+    return 'Enter an amount up to $amount';
+  }
+
+  @override
+  String get checkoutDuesInvalid => 'Enter an amount';
+
+  @override
+  String get checkoutPlaceOrder => 'Place order';
+
+  @override
+  String get checkoutCollect => 'Collect';
+
+  @override
+  String get checkoutNeedsInternet => 'Needs internet: use cash or credit';
+
+  @override
+  String get checkoutCreditOrdersOnly => 'Credit is only for orders';
+
+  @override
+  String checkoutCreditLeft(String amount) {
+    return 'Limit left $amount';
+  }
+
+  @override
+  String get checkoutOfflineNote =>
+      'You are offline. Cash and credit are saved on the phone and sent when online.';
+
+  @override
+  String get checkoutOrderNotSynced =>
+      'The order has not reached the server yet. Try again when online, or collect cash.';
+
+  @override
+  String get checkoutNetworkError =>
+      'Could not reach the server. Check the internet and try again.';
+
+  @override
+  String get checkoutAlreadyPaid => 'This order is already paid.';
+
+  @override
+  String get checkoutAmountMismatch =>
+      'The amount changed on the server. Check the order and try again.';
+
+  @override
+  String get checkoutNothingDue => 'Nothing is due for this farmer.';
+
+  @override
+  String checkoutRefused(String code) {
+    return 'The payment could not be created ($code).';
+  }
+
+  @override
+  String get paymentCard => 'Card';
+
+  @override
+  String get paymentDone => 'Done';
+
+  @override
+  String get upiTitle => 'UPI QR';
+
+  @override
+  String get upiExpired => 'QR expired';
+
+  @override
+  String get upiCollectCash => 'Collect cash instead';
+
+  @override
+  String get linkTitle => 'Payment link';
+
+  @override
+  String get linkSentTitle => 'Payment link sent';
+
+  @override
+  String linkSentVia(String channel) {
+    return 'Sent by $channel. Ask the farmer to open the link and pay.';
+  }
+
+  @override
+  String get channelSms => 'SMS';
+
+  @override
+  String get channelWhatsapp => 'WhatsApp';
+
+  @override
+  String get linkResend => 'Resend the link';
+
+  @override
+  String get linkResent => 'Link sent again';
+
+  @override
+  String get linkCheckStatus => 'Check payment';
+
+  @override
+  String linkValidUntil(String time) {
+    return 'Valid until $time';
+  }
+
+  @override
+  String get cashTitle => 'Cash receipt';
+
+  @override
+  String get cashAmount => 'Cash collected';
+
+  @override
+  String get cashTakePhoto => 'Take receipt photo';
+
+  @override
+  String get cashRetake => 'Retake';
+
+  @override
+  String get cashSave => 'Save cash payment';
+
+  @override
+  String get cashPhotoHelp =>
+      'Photograph the receipt you gave the farmer. Only the in-app camera can be used.';
+
+  @override
+  String get cashPhotoBad =>
+      'The photo is blurry or dark. Retake it in good light.';
+
+  @override
+  String get cashSaved => 'Cash saved. Pending store reconciliation.';
+
+  @override
+  String get cashPendingReconciliation =>
+      'Pending store reconciliation: the store checks the cash at day close.';
+
+  @override
+  String get creditTitle => 'Credit sale';
+
+  @override
+  String get creditQueued =>
+      'Saved on the phone. The credit limit is checked when the phone is online.';
+
+  @override
+  String get creditApprovedTitle => 'Added to the farmer’s khata';
+
+  @override
+  String get creditNeedsApprovalTitle => 'Approval needed';
+
+  @override
+  String get creditNeedsApprovalBody =>
+      'This sale is over the farmer’s credit limit. It was sent to the cluster head for approval.';
+
+  @override
+  String get creditLimit => 'Credit limit';
+
+  @override
+  String get creditBalance => 'Balance due now';
+
+  @override
+  String get creditShortfall => 'Over the limit by';
+
+  @override
+  String get creditSentToClusterHead => 'Sent to cluster head';
+
+  @override
+  String get creditCheckAgain => 'Check approval';
+
+  @override
+  String get creditStillPending => 'Not approved yet. Try again later.';
+
+  @override
+  String get creditOfflineCheck =>
+      'Connect to the internet to check the approval.';
+
+  @override
+  String get creditUseCash => 'Collect cash instead';
+
+  @override
+  String get orderTitle => 'Order';
+
+  @override
+  String get orderPlacedTitle => 'Order placed';
+
+  @override
+  String get orderQueuedTitle => 'Order saved, waiting to sync';
+
+  @override
+  String get orderQueuedHelp =>
+      'It goes to the store as soon as the phone is online.';
+
+  @override
+  String get orderRejectedTitle => 'The store could not take this order';
+
+  @override
+  String get orderInsufficientStock => 'Some items are short at the store:';
+
+  @override
+  String orderShortLine(String product, String available, String requested) {
+    return '$product: $available available, $requested asked';
+  }
+
+  @override
+  String get orderSkuNotRecommendable =>
+      'A product is not approved for this crop and pest (label claim). Remove it and send again.';
+
+  @override
+  String get orderEditAndResend => 'Edit and send again';
+
+  @override
+  String get orderSummary => 'Summary';
+
+  @override
+  String get orderSubtotal => 'Subtotal';
+
+  @override
+  String get orderTax => 'GST';
+
+  @override
+  String get orderTotal => 'Total';
+
+  @override
+  String get orderTotalEstimate => 'Total (estimate)';
+
+  @override
+  String get orderStatusTitle => 'Status';
+
+  @override
+  String get orderStatusPlaced => 'Placed';
+
+  @override
+  String get orderStatusReserved => 'Stock reserved';
+
+  @override
+  String get orderStatusPacked => 'Packed';
+
+  @override
+  String get orderStatusReady => 'Ready';
+
+  @override
+  String get orderStatusHandedOver => 'Handed over';
+
+  @override
+  String get orderStatusDelivered => 'Delivered';
+
+  @override
+  String get orderStatusCancelled => 'Cancelled';
+
+  @override
+  String get orderPayments => 'Payments';
+
+  @override
+  String get orderNoPayments => 'No payment yet';
+
+  @override
+  String get orderShareInvoice => 'Share invoice on WhatsApp';
+
+  @override
+  String get orderShareOffline =>
+      'Connect to the internet to share the invoice.';
+
+  @override
+  String get orderShareNoInvoice =>
+      'The invoice is issued when the store hands over the order.';
+
+  @override
+  String get orderShareFailed => 'Could not get the invoice link. Try again.';
+
+  @override
+  String orderShareText(String number, String url) {
+    return 'Invoice $number: $url';
+  }
+
+  @override
+  String orderInvoiceNo(String number) {
+    return 'Invoice $number';
+  }
+
+  @override
+  String get orderCollectPayment => 'Collect payment';
+
+  @override
+  String get orderPendingSync => 'Waiting to sync';
+
+  @override
+  String get orderRejected => 'Needs attention';
+
+  @override
+  String get ordersTitle => 'Orders';
+
+  @override
+  String get ordersEmpty => 'No orders yet';
+
+  @override
+  String get ordersEmptyHelp => 'Orders you place for farmers show here.';
+
+  @override
+  String get ordersNew => 'New order';
+
+  @override
+  String get ordersCollections => 'Collections';
+
+  @override
+  String get ordersPickFarmer => 'Choose a farmer';
+
+  @override
+  String get khataTitle => 'Khata';
+
+  @override
+  String khataAsOf(String time) {
+    return 'As of $time';
+  }
+
+  @override
+  String khataOfflineAsOf(String time) {
+    return 'Offline: showing the khata saved at $time';
+  }
+
+  @override
+  String get khataNotLoaded => 'Khata not on this phone yet';
+
+  @override
+  String get khataNotLoadedHelp =>
+      'Connect to the internet to load the farmer’s khata.';
+
+  @override
+  String khataOverdue(String amount) {
+    return 'Overdue $amount';
+  }
+
+  @override
+  String get khataBucket0to30 => '0–30 days';
+
+  @override
+  String get khataBucket31to60 => '31–60 days';
+
+  @override
+  String get khataBucket61to90 => '61–90 days';
+
+  @override
+  String get khataBucket90plus => '90+ days';
+
+  @override
+  String khataDueHarvest(String date, String month) {
+    return 'Due $date · harvest $month';
+  }
+
+  @override
+  String get khataEntryOrder => 'Sale on credit';
+
+  @override
+  String get khataEntryPayment => 'Payment received';
+
+  @override
+  String get khataEntryAdjustment => 'Adjustment';
+
+  @override
+  String get khataPaymentHistory => 'Payment history';
+
+  @override
+  String get khataNoPayments => 'No payments yet';
+
+  @override
+  String get khataPendingCollections => 'Collected, not yet on the khata';
+
+  @override
+  String get collectionsTitle => 'Collections';
+
+  @override
+  String get collectionsToday => 'Today';
+
+  @override
+  String get collectionsWeek => 'This week';
+
+  @override
+  String get collectionsTotal => 'Collected';
+
+  @override
+  String get collectionsEmpty => 'No collections yet';
+
+  @override
+  String get collectionsEmptyHelp => 'Payments you collect show here.';
+
+  @override
+  String get collectionStateWaitingToSync => 'Waiting to sync';
+
+  @override
+  String get collectionStatePendingReconciliation => 'Pending reconciliation';
+
+  @override
+  String get collectionStateWaiting => 'Waiting for payment';
+
+  @override
+  String get collectionStatePaid => 'Paid';
+
+  @override
+  String get collectionStateOnKhata => 'On khata';
+
+  @override
+  String get collectionStateApprovalNeeded => 'Approval needed';
+
+  @override
+  String get collectionStateFailed => 'Failed';
+
+  @override
+  String get syncEntityOrder => 'Order';
+
+  @override
+  String get syncEntityPayment => 'Payment';
 }

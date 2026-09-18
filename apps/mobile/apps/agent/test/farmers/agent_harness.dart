@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:farmerapp_agent/app.dart';
@@ -40,7 +41,23 @@ class AgentDeps {
       permissions = FakePermissionGate(),
       tokens = InMemoryTokenStore(deviceId: 'device-1') {
     confirmApi = FakeVisitConfirmApi(clock: () => now);
+    payApi = FakePaymentsApi(clock: () => now);
   }
+
+  /// FA-020 catalogue / nearest store.
+  final FakeCatalogApi catalogApi = FakeCatalogApi();
+
+  /// FA-021 UPI QR / payment link / invoice link calls.
+  late final FakePaymentsApi payApi;
+
+  /// FA-022 khata endpoint.
+  final FakeKhataApi khataApi = FakeKhataApi();
+
+  /// A57 share sheet.
+  final FakeInvoiceSharer sharer = FakeInvoiceSharer();
+
+  /// A53 poll wait; never completes unless a test replaces it.
+  Future<void> Function(Duration) upiSleep = (_) => Completer<void>().future;
 
   /// FA-016 confirmation endpoints.
   late final FakeVisitConfirmApi confirmApi;
@@ -124,6 +141,12 @@ class AgentDeps {
     dutyTickerProvider.overrideWithValue(const Stream<void>.empty()),
     visitTickerProvider.overrideWithValue(const Stream<void>.empty()),
     visitConfirmApiProvider.overrideWithValue(confirmApi),
+    catalogApiProvider.overrideWithValue(catalogApi),
+    paymentsApiProvider.overrideWithValue(payApi),
+    khataApiProvider.overrideWithValue(khataApi),
+    invoiceSharerProvider.overrideWithValue(sharer),
+    paymentTickerProvider.overrideWithValue(const Stream<void>.empty()),
+    upiSleepProvider.overrideWithValue((d) => upiSleep(d)),
     fileReaderProvider.overrideWithValue((path) async => photos.files[path]!),
     settingsStoreProvider.overrideWithValue(
       InMemorySettingsStore(AppSettings(locale: locale, themeMode: theme)),

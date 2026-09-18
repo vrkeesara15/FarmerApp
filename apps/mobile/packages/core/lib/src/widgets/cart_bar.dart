@@ -15,6 +15,7 @@ class CartBar extends StatelessWidget {
     required this.totalPaise,
     required this.onCheckout,
     this.actionLabel,
+    this.estimate = false,
     super.key,
   });
 
@@ -29,6 +30,10 @@ class CartBar extends StatelessWidget {
 
   /// Override for the button label (defaults to "Checkout").
   final String? actionLabel;
+
+  /// The total is an estimate from cached prices (FA-020: the server
+  /// prices the order).
+  final bool estimate;
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +84,8 @@ class CartBar extends StatelessWidget {
                     ],
                   ),
                   Text(
-                    '${l10n.cartTotal} ${formatInr(totalPaise)}',
+                    '${estimate ? l10n.cartEstimatedTotal : l10n.cartTotal} '
+                    '${formatInr(totalPaise)}',
                     style: app.text.heading,
                   ),
                 ],

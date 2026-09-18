@@ -12,6 +12,7 @@ Source: `apps/mobile/packages/core/lib/src/widgets/cart_bar.dart` (exported from
 | `totalPaise` | `int` |  |
 | `onCheckout` | `VoidCallback?` | null disables |
 | `actionLabel` | `String?` | default 'Checkout' |
+| `estimate` | `bool` | label `cartEstimatedTotal` instead of `cartTotal` (device estimate from cached prices) |
 
 ## Variants
 
@@ -44,3 +45,6 @@ Source: `apps/mobile/packages/core/lib/src/widgets/cart_bar.dart` (exported from
 
 Golden: cart_bar_{light,sunlight}.png
 
+## Usage (FA-020 / FA-021 / FA-022)
+
+A50 (`cartViewCart` → A51) and A51 (`cartChoosePayment` → A52) with `estimate: true`; key `cart-bar`. `onCheckout: null` while a line is above what the store has (after `insufficient_stock`).

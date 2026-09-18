@@ -26,6 +26,8 @@ String syncEntityLabel(CoreLocalizations l10n, String entity) =>
       SyncEntities.visit => l10n.syncEntityVisit,
       SyncEntities.visitPhoto => l10n.syncEntityVisitPhoto,
       SyncEntities.visitConfirmation => l10n.syncEntityVisitConfirmation,
+      SyncEntities.order => l10n.syncEntityOrder,
+      SyncEntities.payment => l10n.syncEntityPayment,
       _ => l10n.syncEntityOther,
     };
 

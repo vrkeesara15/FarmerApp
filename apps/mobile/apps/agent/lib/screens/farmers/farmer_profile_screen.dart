@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../router.dart';
+import '../khata/khata_screen.dart';
+import '../orders/commerce_copy.dart';
+import '../orders/orders_screen.dart';
 import '../visits/visit_copy.dart';
 import '../visits/visits_list_screen.dart';
 import 'wizard_copy.dart';
@@ -110,21 +113,32 @@ class _Profile extends ConsumerWidget {
                     ),
                   ),
                 ),
-                for (final (label, icon) in <(String, IconData)>[
-                  (l10n.profileScout, Icons.search),
-                  (l10n.profileNewOrder, Icons.add_shopping_cart),
-                  (l10n.profileCollect, Icons.currency_rupee),
-                ])
-                  Tooltip(
-                    message: l10n.profileComingSoon,
-                    child: AppButton(
-                      label: label,
-                      variant: AppButtonVariant.secondary,
-                      size: AppButtonSize.medium,
-                      icon: icon,
-                      onPressed: null,
-                    ),
+                Tooltip(
+                  message: l10n.profileComingSoon,
+                  child: AppButton(
+                    label: l10n.profileScout,
+                    variant: AppButtonVariant.secondary,
+                    size: AppButtonSize.medium,
+                    icon: Icons.search,
+                    onPressed: null,
                   ),
+                ),
+                AppButton(
+                  key: const Key('profile-new-order'),
+                  label: l10n.profileNewOrder,
+                  variant: AppButtonVariant.secondary,
+                  size: AppButtonSize.medium,
+                  icon: Icons.add_shopping_cart,
+                  onPressed: () => context.push(CommerceRoutes.catalogue(f.id)),
+                ),
+                AppButton(
+                  key: const Key('profile-collect'),
+                  label: l10n.profileCollect,
+                  variant: AppButtonVariant.secondary,
+                  size: AppButtonSize.medium,
+                  icon: Icons.currency_rupee,
+                  onPressed: () => context.push(CommerceRoutes.collect(f.id)),
+                ),
               ],
             ),
           ),
@@ -204,14 +218,8 @@ class _Profile extends ConsumerWidget {
                       icon: Icons.biotech_outlined,
                       title: l10n.profileDiagnosesEmpty,
                     ),
-                    _Placeholder(
-                      icon: Icons.shopping_bag_outlined,
-                      title: l10n.profileOrdersEmpty,
-                    ),
-                    _Placeholder(
-                      icon: Icons.account_balance_wallet_outlined,
-                      title: l10n.profileKhataEmpty,
-                    ),
+                    _Orders(farmerId: f.id),
+                    KhataBody(farmerId: f.id),
                   ],
                 ),
               ),
@@ -510,6 +518,38 @@ class _Visits extends ConsumerWidget {
       itemCount: rows.length,
       separatorBuilder: (_, _) => const SizedBox(height: Tokens.space2),
       itemBuilder: (context, i) => VisitSummaryCard(summary: rows[i]),
+    );
+  }
+}
+
+class _Orders extends ConsumerWidget {
+  const _Orders({required this.farmerId});
+
+  final String farmerId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = CoreLocalizations.of(context);
+    final rows =
+        ref.watch(farmerOrdersProvider(farmerId)).value ?? const <OrderView>[];
+    if (rows.isEmpty) {
+      return Center(
+        child: EmptyState(
+          key: const Key('profile-orders-empty'),
+          icon: Icons.shopping_bag_outlined,
+          title: l10n.profileOrdersEmpty,
+          actionLabel: l10n.profileNewOrder,
+          onAction: () => context.push(CommerceRoutes.catalogue(farmerId)),
+        ),
+      );
+    }
+    return ListView.separated(
+      key: const Key('profile-orders'),
+      padding: const EdgeInsets.all(Tokens.spaceScreenPadding),
+      itemCount: rows.length,
+      separatorBuilder: (_, _) => const SizedBox(height: Tokens.space2),
+      itemBuilder: (context, i) =>
+          OrderSummaryTile(view: rows[i], showFarmer: false),
     );
   }
 }

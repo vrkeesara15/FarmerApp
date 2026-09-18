@@ -1833,4 +1833,566 @@ class CoreLocalizationsMr extends CoreLocalizations {
 
   @override
   String get syncEntityVisitConfirmation => 'शेतकऱ्याची पुष्टी';
+
+  @override
+  String get catalogTitle => 'उत्पादने';
+
+  @override
+  String catalogForFarmer(String name) {
+    return '$name साठी';
+  }
+
+  @override
+  String get catalogSearchHint => 'नाव, ब्रँड किंवा घटक शोधा';
+
+  @override
+  String get catalogCategoryAll => 'सर्व';
+
+  @override
+  String get catalogCategorySeed => 'बियाणे';
+
+  @override
+  String get catalogCategoryFertiliser => 'खते';
+
+  @override
+  String get catalogCategoryPesticide => 'कीटकनाशके';
+
+  @override
+  String get catalogCategoryFungicide => 'बुरशीनाशके';
+
+  @override
+  String get catalogCategoryHerbicide => 'तणनाशके';
+
+  @override
+  String get catalogCategoryGrowth => 'वाढ वर्धके';
+
+  @override
+  String get catalogCategoryTool => 'अवजारे';
+
+  @override
+  String get catalogCategoryOther => 'इतर';
+
+  @override
+  String catalogAsOf(String time) {
+    return '$time पर्यंतचे दर आणि साठा';
+  }
+
+  @override
+  String catalogStale(String time) {
+    return 'दर आणि साठा जुने असू शकतात ($time पर्यंतचे). इंटरनेट असताना रिफ्रेश करा.';
+  }
+
+  @override
+  String get catalogNeverLoaded => 'उत्पादन यादी अजून या फोनवर नाही';
+
+  @override
+  String get catalogNeverLoadedHelp =>
+      'उत्पादने आणि दर डाउनलोड करण्यासाठी इंटरनेटशी जोडा.';
+
+  @override
+  String get catalogRefresh => 'रिफ्रेश करा';
+
+  @override
+  String get catalogRefreshFailed =>
+      'रिफ्रेश झाले नाही. जतन केलेली उत्पादने दाखवत आहोत.';
+
+  @override
+  String get catalogEmpty => 'जुळणारे उत्पादन नाही';
+
+  @override
+  String get catalogEmptyHelp => 'दुसरे नाव किंवा प्रकार वापरून पाहा.';
+
+  @override
+  String get catalogStoreUnknown =>
+      'दुकान अजून माहीत नाही. पुढच्या सिंकनंतर साठा दिसेल.';
+
+  @override
+  String get productPriceEstimate => 'अंदाजे किंमत';
+
+  @override
+  String productStockNearest(int count) {
+    return 'जवळच्या दुकानात $count साठ्यात';
+  }
+
+  @override
+  String productStockAsOf(String time) {
+    return '$time पर्यंत';
+  }
+
+  @override
+  String productInCart(int count) {
+    return 'कार्टमध्ये $count';
+  }
+
+  @override
+  String get cartEstimatedTotal => 'अंदाजे एकूण';
+
+  @override
+  String get cartViewCart => 'कार्ट पाहा';
+
+  @override
+  String get cartTitle => 'कार्ट';
+
+  @override
+  String get cartEmpty => 'कार्ट रिकामी आहे';
+
+  @override
+  String get cartEmptyHelp => 'यादीतून उत्पादने जोडा.';
+
+  @override
+  String get cartAddMore => 'आणखी उत्पादने जोडा';
+
+  @override
+  String get cartSubtotal => 'उप-एकूण (अंदाज)';
+
+  @override
+  String get cartTax => 'GST (अंदाज)';
+
+  @override
+  String get cartEstimateNote =>
+      'दर जतन केलेल्या दरपत्रकातील अंदाज आहेत. ऑर्डर सिंक झाल्यावर दुकान अंतिम रक्कम निश्चित करते.';
+
+  @override
+  String get cartFulfilment => 'शेतकऱ्याला माल कसा मिळेल?';
+
+  @override
+  String get fulfilmentPickup => 'दुकानातून घेणे';
+
+  @override
+  String get fulfilmentDelivery => 'घरपोच';
+
+  @override
+  String get cartChoosePayment => 'पेमेंट निवडा';
+
+  @override
+  String get cartDecrease => 'एक कमी करा';
+
+  @override
+  String get cartIncrease => 'एक वाढवा';
+
+  @override
+  String cartShortLine(String available, String requested) {
+    return 'दुकानात फक्त $available उपलब्ध ($requested मागितले).';
+  }
+
+  @override
+  String cartUseAvailable(String available) {
+    return '$available ठेवा';
+  }
+
+  @override
+  String get cartShortTitle =>
+      'दुकानात काही माल कमी आहे. प्रमाण बदलून पुन्हा पाठवा.';
+
+  @override
+  String get checkoutTitle => 'पेमेंट';
+
+  @override
+  String get checkoutOrderAmount => 'ऑर्डर एकूण (अंदाज)';
+
+  @override
+  String get checkoutDuesAmount => 'वसूल करायची रक्कम (₹)';
+
+  @override
+  String checkoutDuesBalance(String amount) {
+    return 'थकबाकी $amount';
+  }
+
+  @override
+  String checkoutDuesTooMuch(String amount) {
+    return '$amount पर्यंत रक्कम टाका';
+  }
+
+  @override
+  String get checkoutDuesInvalid => 'रक्कम टाका';
+
+  @override
+  String get checkoutPlaceOrder => 'ऑर्डर द्या';
+
+  @override
+  String get checkoutCollect => 'वसूल करा';
+
+  @override
+  String get checkoutNeedsInternet => 'इंटरनेट हवे: रोख किंवा उधारी वापरा';
+
+  @override
+  String get checkoutCreditOrdersOnly => 'उधारी फक्त ऑर्डरसाठी';
+
+  @override
+  String checkoutCreditLeft(String amount) {
+    return 'उरलेली मर्यादा $amount';
+  }
+
+  @override
+  String get checkoutOfflineNote =>
+      'तुम्ही ऑफलाइन आहात. रोख आणि उधारी फोनवर जतन होऊन इंटरनेट आल्यावर पाठवली जाईल.';
+
+  @override
+  String get checkoutOrderNotSynced =>
+      'ऑर्डर अजून सर्व्हरवर पोहोचली नाही. इंटरनेट असताना पुन्हा प्रयत्न करा किंवा रोख घ्या.';
+
+  @override
+  String get checkoutNetworkError =>
+      'सर्व्हरशी संपर्क झाला नाही. इंटरनेट तपासून पुन्हा प्रयत्न करा.';
+
+  @override
+  String get checkoutAlreadyPaid => 'या ऑर्डरचे पेमेंट आधीच झाले आहे.';
+
+  @override
+  String get checkoutAmountMismatch =>
+      'सर्व्हरवर रक्कम बदलली आहे. ऑर्डर तपासून पुन्हा प्रयत्न करा.';
+
+  @override
+  String get checkoutNothingDue => 'या शेतकऱ्याची काहीही थकबाकी नाही.';
+
+  @override
+  String checkoutRefused(String code) {
+    return 'पेमेंट तयार झाले नाही ($code).';
+  }
+
+  @override
+  String get paymentCard => 'कार्ड';
+
+  @override
+  String get paymentDone => 'झाले';
+
+  @override
+  String get upiTitle => 'UPI QR';
+
+  @override
+  String get upiExpired => 'QR ची मुदत संपली';
+
+  @override
+  String get upiCollectCash => 'त्याऐवजी रोख घ्या';
+
+  @override
+  String get linkTitle => 'पेमेंट लिंक';
+
+  @override
+  String get linkSentTitle => 'पेमेंट लिंक पाठवली';
+
+  @override
+  String linkSentVia(String channel) {
+    return '$channel ने पाठवली. शेतकऱ्याला लिंक उघडून पैसे भरायला सांगा.';
+  }
+
+  @override
+  String get channelSms => 'SMS';
+
+  @override
+  String get channelWhatsapp => 'WhatsApp';
+
+  @override
+  String get linkResend => 'लिंक पुन्हा पाठवा';
+
+  @override
+  String get linkResent => 'लिंक पुन्हा पाठवली';
+
+  @override
+  String get linkCheckStatus => 'पेमेंट तपासा';
+
+  @override
+  String linkValidUntil(String time) {
+    return '$time पर्यंत वैध';
+  }
+
+  @override
+  String get cashTitle => 'रोख पावती';
+
+  @override
+  String get cashAmount => 'घेतलेली रोख';
+
+  @override
+  String get cashTakePhoto => 'पावतीचा फोटो घ्या';
+
+  @override
+  String get cashRetake => 'पुन्हा घ्या';
+
+  @override
+  String get cashSave => 'रोख पेमेंट जतन करा';
+
+  @override
+  String get cashPhotoHelp =>
+      'शेतकऱ्याला दिलेल्या पावतीचा फोटो घ्या. फक्त ॲपचा कॅमेरा वापरता येतो.';
+
+  @override
+  String get cashPhotoBad =>
+      'फोटो धूसर किंवा अंधारा आहे. चांगल्या प्रकाशात पुन्हा घ्या.';
+
+  @override
+  String get cashSaved => 'रोख जतन झाली. दुकानाची जुळवणी बाकी.';
+
+  @override
+  String get cashPendingReconciliation =>
+      'दुकानाची जुळवणी बाकी: दिवस संपताना दुकान रोख तपासेल.';
+
+  @override
+  String get creditTitle => 'उधारी विक्री';
+
+  @override
+  String get creditQueued =>
+      'फोनवर जतन झाले. इंटरनेट आल्यावर उधारी मर्यादा तपासली जाईल.';
+
+  @override
+  String get creditApprovedTitle => 'शेतकऱ्याच्या खात्यात जोडले';
+
+  @override
+  String get creditNeedsApprovalTitle => 'मंजुरी हवी';
+
+  @override
+  String get creditNeedsApprovalBody =>
+      'ही विक्री शेतकऱ्याच्या उधारी मर्यादेपेक्षा जास्त आहे. मंजुरीसाठी क्लस्टर हेडकडे पाठवली.';
+
+  @override
+  String get creditLimit => 'उधारी मर्यादा';
+
+  @override
+  String get creditBalance => 'सध्याची थकबाकी';
+
+  @override
+  String get creditShortfall => 'मर्यादेपेक्षा जास्त';
+
+  @override
+  String get creditSentToClusterHead => 'क्लस्टर हेडकडे पाठवले';
+
+  @override
+  String get creditCheckAgain => 'मंजुरी तपासा';
+
+  @override
+  String get creditStillPending =>
+      'अजून मंजुरी मिळाली नाही. नंतर पुन्हा तपासा.';
+
+  @override
+  String get creditOfflineCheck => 'मंजुरी तपासण्यासाठी इंटरनेटशी जोडा.';
+
+  @override
+  String get creditUseCash => 'त्याऐवजी रोख घ्या';
+
+  @override
+  String get orderTitle => 'ऑर्डर';
+
+  @override
+  String get orderPlacedTitle => 'ऑर्डर दिली';
+
+  @override
+  String get orderQueuedTitle => 'ऑर्डर जतन झाली, सिंकची वाट';
+
+  @override
+  String get orderQueuedHelp => 'फोनवर इंटरनेट येताच ही दुकानाकडे जाईल.';
+
+  @override
+  String get orderRejectedTitle => 'दुकान ही ऑर्डर घेऊ शकले नाही';
+
+  @override
+  String get orderInsufficientStock => 'दुकानात काही माल कमी आहे:';
+
+  @override
+  String orderShortLine(String product, String available, String requested) {
+    return '$product: $available उपलब्ध, $requested मागितले';
+  }
+
+  @override
+  String get orderSkuNotRecommendable =>
+      'एका उत्पादनाला या पिकासाठी व किडीसाठी मान्यता नाही (लेबल दावा). ते काढून पुन्हा पाठवा.';
+
+  @override
+  String get orderEditAndResend => 'बदलून पुन्हा पाठवा';
+
+  @override
+  String get orderSummary => 'सारांश';
+
+  @override
+  String get orderSubtotal => 'उप-एकूण';
+
+  @override
+  String get orderTax => 'GST';
+
+  @override
+  String get orderTotal => 'एकूण';
+
+  @override
+  String get orderTotalEstimate => 'एकूण (अंदाज)';
+
+  @override
+  String get orderStatusTitle => 'स्थिती';
+
+  @override
+  String get orderStatusPlaced => 'ऑर्डर दिली';
+
+  @override
+  String get orderStatusReserved => 'साठा राखीव';
+
+  @override
+  String get orderStatusPacked => 'पॅक झाले';
+
+  @override
+  String get orderStatusReady => 'तयार';
+
+  @override
+  String get orderStatusHandedOver => 'सुपूर्द केले';
+
+  @override
+  String get orderStatusDelivered => 'पोहोचवले';
+
+  @override
+  String get orderStatusCancelled => 'रद्द';
+
+  @override
+  String get orderPayments => 'पेमेंट';
+
+  @override
+  String get orderNoPayments => 'अजून पेमेंट नाही';
+
+  @override
+  String get orderShareInvoice => 'WhatsApp वर बिल पाठवा';
+
+  @override
+  String get orderShareOffline => 'बिल पाठवण्यासाठी इंटरनेटशी जोडा.';
+
+  @override
+  String get orderShareNoInvoice => 'दुकान ऑर्डर सुपूर्द करताना बिल देते.';
+
+  @override
+  String get orderShareFailed => 'बिलाची लिंक मिळाली नाही. पुन्हा प्रयत्न करा.';
+
+  @override
+  String orderShareText(String number, String url) {
+    return 'बिल $number: $url';
+  }
+
+  @override
+  String orderInvoiceNo(String number) {
+    return 'बिल $number';
+  }
+
+  @override
+  String get orderCollectPayment => 'पेमेंट घ्या';
+
+  @override
+  String get orderPendingSync => 'सिंकची वाट';
+
+  @override
+  String get orderRejected => 'लक्ष द्या';
+
+  @override
+  String get ordersTitle => 'ऑर्डर';
+
+  @override
+  String get ordersEmpty => 'अजून ऑर्डर नाहीत';
+
+  @override
+  String get ordersEmptyHelp => 'शेतकऱ्यांसाठी दिलेल्या ऑर्डर येथे दिसतील.';
+
+  @override
+  String get ordersNew => 'नवी ऑर्डर';
+
+  @override
+  String get ordersCollections => 'वसुली';
+
+  @override
+  String get ordersPickFarmer => 'शेतकरी निवडा';
+
+  @override
+  String get khataTitle => 'खाते';
+
+  @override
+  String khataAsOf(String time) {
+    return '$time पर्यंत';
+  }
+
+  @override
+  String khataOfflineAsOf(String time) {
+    return 'ऑफलाइन: $time ला जतन केलेले खाते दाखवत आहोत';
+  }
+
+  @override
+  String get khataNotLoaded => 'खाते अजून या फोनवर नाही';
+
+  @override
+  String get khataNotLoadedHelp => 'शेतकऱ्याचे खाते आणण्यासाठी इंटरनेटशी जोडा.';
+
+  @override
+  String khataOverdue(String amount) {
+    return 'मुदत संपलेली थकबाकी $amount';
+  }
+
+  @override
+  String get khataBucket0to30 => '0–30 दिवस';
+
+  @override
+  String get khataBucket31to60 => '31–60 दिवस';
+
+  @override
+  String get khataBucket61to90 => '61–90 दिवस';
+
+  @override
+  String get khataBucket90plus => '90+ दिवस';
+
+  @override
+  String khataDueHarvest(String date, String month) {
+    return 'देय $date · काढणी $month';
+  }
+
+  @override
+  String get khataEntryOrder => 'उधारी विक्री';
+
+  @override
+  String get khataEntryPayment => 'पेमेंट मिळाले';
+
+  @override
+  String get khataEntryAdjustment => 'समायोजन';
+
+  @override
+  String get khataPaymentHistory => 'पेमेंट इतिहास';
+
+  @override
+  String get khataNoPayments => 'अजून पेमेंट नाहीत';
+
+  @override
+  String get khataPendingCollections => 'वसूल झाले, अजून खात्यात नाही';
+
+  @override
+  String get collectionsTitle => 'वसुली';
+
+  @override
+  String get collectionsToday => 'आज';
+
+  @override
+  String get collectionsWeek => 'या आठवड्यात';
+
+  @override
+  String get collectionsTotal => 'एकूण वसुली';
+
+  @override
+  String get collectionsEmpty => 'अजून वसुली नाही';
+
+  @override
+  String get collectionsEmptyHelp => 'तुम्ही वसूल केलेले पेमेंट येथे दिसतील.';
+
+  @override
+  String get collectionStateWaitingToSync => 'सिंकची वाट';
+
+  @override
+  String get collectionStatePendingReconciliation => 'जुळवणी बाकी';
+
+  @override
+  String get collectionStateWaiting => 'पेमेंटची वाट';
+
+  @override
+  String get collectionStatePaid => 'भरले';
+
+  @override
+  String get collectionStateOnKhata => 'खात्यात';
+
+  @override
+  String get collectionStateApprovalNeeded => 'मंजुरी हवी';
+
+  @override
+  String get collectionStateFailed => 'अयशस्वी';
+
+  @override
+  String get syncEntityOrder => 'ऑर्डर';
+
+  @override
+  String get syncEntityPayment => 'पेमेंट';
 }

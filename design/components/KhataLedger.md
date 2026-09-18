@@ -13,6 +13,9 @@ Source: `apps/mobile/packages/core/lib/src/widgets/khata_ledger.dart` (exported 
 | `entries` | `List<KhataEntry>` | dateUtc, description, amountPaise, isCredit |
 | `actionLabel` | `String?` | 'Pay now' (farmer) / 'Collect' (agent) |
 | `onAction` | `VoidCallback?` | button hidden when null |
+| `now` | `DateTime?` | clock for the overdue colour (tests / goldens) |
+| `header` | `Widget?` | extra content under the balance (A58 overdue bucket pills) |
+| `KhataEntry.dueDateUtc / harvestMonthUtc` | `DateTime?` | per-entry `khataDueHarvest(date, month)` line on debits |
 
 ## Variants
 
@@ -25,6 +28,7 @@ Source: `apps/mobile/packages/core/lib/src/widgets/khata_ledger.dart` (exported 
 - due
 - overdue
 - settled
+- overdue buckets header (A58)
 
 ## Accessibility
 
@@ -54,3 +58,6 @@ Source: `apps/mobile/packages/core/lib/src/widgets/khata_ledger.dart` (exported 
 
 Golden: khata_ledger_{light,sunlight}.png
 
+## Usage (FA-020 / FA-021 / FA-022)
+
+A58 passes `balancePaise` = the sum of the entries it lists (FA-022 acceptance: the displayed balance equals the displayed entries; every page is fetched), the next due date, bucket pills 0–30 / 31–60 / 61–90 / 90+ as `header`, and `onAction` = Collect (A52 dues).

@@ -16,6 +16,9 @@ Source: `apps/mobile/packages/core/lib/src/widgets/product_card.dart` (exported 
 | `storeName` | `String?` |  |
 | `added` | `bool` | secondary 'Added' button |
 | `onAdd / onTap` | `VoidCallback?` |  |
+| `stockAsOf` | `DateTime?` | UTC time the stock figure was true; appends `productStockAsOf(HH:mm)` |
+| `priceIsEstimate` | `bool` | adds `productPriceEstimate` under the price (cached price list; the server prices the order) |
+| `quantity` | `int?` | units in the cart; the added button reads `productInCart(n)` |
 
 ## Variants
 
@@ -27,6 +30,7 @@ Source: `apps/mobile/packages/core/lib/src/widgets/product_card.dart` (exported 
 - in stock
 - out of stock (add disabled)
 - added
+- stock at the nearest store without a store name (`productStockNearest`)
 
 ## Accessibility
 
@@ -56,3 +60,6 @@ Source: `apps/mobile/packages/core/lib/src/widgets/product_card.dart` (exported 
 
 Golden: product_card_{light,sunlight}.png
 
+## Usage (FA-020 / FA-021 / FA-022)
+
+A50 shows one card per SKU from the offline catalogue cache: `stockCount` = whole available units at the farmer's order store (`StockLevel.wholeUnits`), `storeName` from the nearest-store answer, `stockAsOf` from the snapshot, `priceIsEstimate: true`. Keys `product-<skuId>`.

@@ -1,5 +1,10 @@
 import 'package:drift/drift.dart';
 
+import '../catalog/catalog_tables.dart';
+import '../khata/khata_tables.dart';
+import '../orders/order_tables.dart';
+import '../payments/payment_tables.dart';
+
 part 'app_database.g.dart';
 
 /// Simple key/value table used for settings and sync bookkeeping.
@@ -677,6 +682,9 @@ class VisitConfirmations extends Table with SyncedRow {
 /// * v4 (FA-010 / VV-001): duty_sessions, location_buffer, sync_docs.
 /// * v5 (FA-014 .. FA-017): visits, visit_photos, visit_confirmations;
 ///   villages gain the meeting point columns (VV-003).
+/// * v6 (FA-020 .. FA-022): catalog_products, catalog_skus, catalog_prices,
+///   stock_snapshots, catalog_stores, orders, order_lines, payments,
+///   khata_snapshots.
 @DriftDatabase(
   tables: <Type>[
     Kv,
@@ -695,6 +703,15 @@ class VisitConfirmations extends Table with SyncedRow {
     Visits,
     VisitPhotos,
     VisitConfirmations,
+    CatalogProducts,
+    CatalogSkus,
+    CatalogPrices,
+    StockSnapshots,
+    CatalogStores,
+    Orders,
+    OrderLines,
+    Payments,
+    KhataSnapshots,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -702,7 +719,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   /// Tables added in schema v2, in creation order.
   List<TableInfo<Table, Object?>> get _v2Tables => <TableInfo<Table, Object?>>[
@@ -750,6 +767,21 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(villages, villages.meetingPointLon);
           await m.addColumn(villages, villages.meetingPointRadiusM);
         }
+      }
+      if (from < 6) {
+        await m.createTable(catalogProducts);
+        await m.createTable(catalogSkus);
+        await m.createIndex(catalogSkusProduct);
+        await m.createTable(catalogPrices);
+        await m.createTable(stockSnapshots);
+        await m.createTable(catalogStores);
+        await m.createTable(orders);
+        await m.createIndex(ordersFarmer);
+        await m.createTable(orderLines);
+        await m.createIndex(orderLinesOrder);
+        await m.createTable(payments);
+        await m.createIndex(paymentsCollected);
+        await m.createTable(khataSnapshots);
       }
     },
   );

@@ -3397,6 +3397,1014 @@ abstract class CoreLocalizations {
   /// In en, this message translates to:
   /// **'Farmer confirmation'**
   String get syncEntityVisitConfirmation;
+
+  /// No description provided for @catalogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get catalogTitle;
+
+  /// No description provided for @catalogForFarmer.
+  ///
+  /// In en, this message translates to:
+  /// **'For {name}'**
+  String catalogForFarmer(String name);
+
+  /// No description provided for @catalogSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search name, brand or ingredient'**
+  String get catalogSearchHint;
+
+  /// No description provided for @catalogCategoryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get catalogCategoryAll;
+
+  /// No description provided for @catalogCategorySeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Seeds'**
+  String get catalogCategorySeed;
+
+  /// No description provided for @catalogCategoryFertiliser.
+  ///
+  /// In en, this message translates to:
+  /// **'Fertilisers'**
+  String get catalogCategoryFertiliser;
+
+  /// No description provided for @catalogCategoryPesticide.
+  ///
+  /// In en, this message translates to:
+  /// **'Pesticides'**
+  String get catalogCategoryPesticide;
+
+  /// No description provided for @catalogCategoryFungicide.
+  ///
+  /// In en, this message translates to:
+  /// **'Fungicides'**
+  String get catalogCategoryFungicide;
+
+  /// No description provided for @catalogCategoryHerbicide.
+  ///
+  /// In en, this message translates to:
+  /// **'Herbicides'**
+  String get catalogCategoryHerbicide;
+
+  /// No description provided for @catalogCategoryGrowth.
+  ///
+  /// In en, this message translates to:
+  /// **'Growth promoters'**
+  String get catalogCategoryGrowth;
+
+  /// No description provided for @catalogCategoryTool.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get catalogCategoryTool;
+
+  /// No description provided for @catalogCategoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get catalogCategoryOther;
+
+  /// No description provided for @catalogAsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices and stock as of {time}'**
+  String catalogAsOf(String time);
+
+  /// No description provided for @catalogStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices and stock may be out of date (as of {time}). Refresh when online.'**
+  String catalogStale(String time);
+
+  /// No description provided for @catalogNeverLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'The catalogue is not on this phone yet'**
+  String get catalogNeverLoaded;
+
+  /// No description provided for @catalogNeverLoadedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the internet to download products and prices.'**
+  String get catalogNeverLoadedHelp;
+
+  /// No description provided for @catalogRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get catalogRefresh;
+
+  /// No description provided for @catalogRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not refresh. Showing saved products.'**
+  String get catalogRefreshFailed;
+
+  /// No description provided for @catalogEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No products match'**
+  String get catalogEmpty;
+
+  /// No description provided for @catalogEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another name or category.'**
+  String get catalogEmptyHelp;
+
+  /// No description provided for @catalogStoreUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Store not known yet. Stock shows after the next sync.'**
+  String get catalogStoreUnknown;
+
+  /// No description provided for @productPriceEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated price'**
+  String get productPriceEstimate;
+
+  /// No description provided for @productStockNearest.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} in stock at the nearest store'**
+  String productStockNearest(int count);
+
+  /// No description provided for @productStockAsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'as of {time}'**
+  String productStockAsOf(String time);
+
+  /// No description provided for @productInCart.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} in cart'**
+  String productInCart(int count);
+
+  /// No description provided for @cartEstimatedTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated total'**
+  String get cartEstimatedTotal;
+
+  /// No description provided for @cartViewCart.
+  ///
+  /// In en, this message translates to:
+  /// **'View cart'**
+  String get cartViewCart;
+
+  /// No description provided for @cartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart'**
+  String get cartTitle;
+
+  /// No description provided for @cartEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The cart is empty'**
+  String get cartEmpty;
+
+  /// No description provided for @cartEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Add products from the catalogue.'**
+  String get cartEmptyHelp;
+
+  /// No description provided for @cartAddMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more products'**
+  String get cartAddMore;
+
+  /// No description provided for @cartSubtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal (estimate)'**
+  String get cartSubtotal;
+
+  /// No description provided for @cartTax.
+  ///
+  /// In en, this message translates to:
+  /// **'GST (estimate)'**
+  String get cartTax;
+
+  /// No description provided for @cartEstimateNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices are estimates from the saved price list. The store confirms the final amount when the order syncs.'**
+  String get cartEstimateNote;
+
+  /// No description provided for @cartFulfilment.
+  ///
+  /// In en, this message translates to:
+  /// **'How will the farmer get it?'**
+  String get cartFulfilment;
+
+  /// No description provided for @fulfilmentPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup at store'**
+  String get fulfilmentPickup;
+
+  /// No description provided for @fulfilmentDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery'**
+  String get fulfilmentDelivery;
+
+  /// No description provided for @cartChoosePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose payment'**
+  String get cartChoosePayment;
+
+  /// No description provided for @cartDecrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove one'**
+  String get cartDecrease;
+
+  /// No description provided for @cartIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Add one'**
+  String get cartIncrease;
+
+  /// No description provided for @cartShortLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Only {available} available at the store (asked {requested}).'**
+  String cartShortLine(String available, String requested);
+
+  /// No description provided for @cartUseAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {available}'**
+  String cartUseAvailable(String available);
+
+  /// No description provided for @cartShortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Some items are short at the store. Change the quantities and send again.'**
+  String get cartShortTitle;
+
+  /// No description provided for @checkoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get checkoutTitle;
+
+  /// No description provided for @checkoutOrderAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Order total (estimate)'**
+  String get checkoutOrderAmount;
+
+  /// No description provided for @checkoutDuesAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount to collect (₹)'**
+  String get checkoutDuesAmount;
+
+  /// No description provided for @checkoutDuesBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance due {amount}'**
+  String checkoutDuesBalance(String amount);
+
+  /// No description provided for @checkoutDuesTooMuch.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount up to {amount}'**
+  String checkoutDuesTooMuch(String amount);
+
+  /// No description provided for @checkoutDuesInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount'**
+  String get checkoutDuesInvalid;
+
+  /// No description provided for @checkoutPlaceOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Place order'**
+  String get checkoutPlaceOrder;
+
+  /// No description provided for @checkoutCollect.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect'**
+  String get checkoutCollect;
+
+  /// No description provided for @checkoutNeedsInternet.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs internet: use cash or credit'**
+  String get checkoutNeedsInternet;
+
+  /// No description provided for @checkoutCreditOrdersOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit is only for orders'**
+  String get checkoutCreditOrdersOnly;
+
+  /// No description provided for @checkoutCreditLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit left {amount}'**
+  String checkoutCreditLeft(String amount);
+
+  /// No description provided for @checkoutOfflineNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You are offline. Cash and credit are saved on the phone and sent when online.'**
+  String get checkoutOfflineNote;
+
+  /// No description provided for @checkoutOrderNotSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'The order has not reached the server yet. Try again when online, or collect cash.'**
+  String get checkoutOrderNotSynced;
+
+  /// No description provided for @checkoutNetworkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server. Check the internet and try again.'**
+  String get checkoutNetworkError;
+
+  /// No description provided for @checkoutAlreadyPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'This order is already paid.'**
+  String get checkoutAlreadyPaid;
+
+  /// No description provided for @checkoutAmountMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The amount changed on the server. Check the order and try again.'**
+  String get checkoutAmountMismatch;
+
+  /// No description provided for @checkoutNothingDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is due for this farmer.'**
+  String get checkoutNothingDue;
+
+  /// No description provided for @checkoutRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'The payment could not be created ({code}).'**
+  String checkoutRefused(String code);
+
+  /// No description provided for @paymentCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Card'**
+  String get paymentCard;
+
+  /// No description provided for @paymentDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get paymentDone;
+
+  /// No description provided for @upiTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'UPI QR'**
+  String get upiTitle;
+
+  /// No description provided for @upiExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'QR expired'**
+  String get upiExpired;
+
+  /// No description provided for @upiCollectCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect cash instead'**
+  String get upiCollectCash;
+
+  /// No description provided for @linkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment link'**
+  String get linkTitle;
+
+  /// No description provided for @linkSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment link sent'**
+  String get linkSentTitle;
+
+  /// No description provided for @linkSentVia.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent by {channel}. Ask the farmer to open the link and pay.'**
+  String linkSentVia(String channel);
+
+  /// No description provided for @channelSms.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS'**
+  String get channelSms;
+
+  /// No description provided for @channelWhatsapp.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get channelWhatsapp;
+
+  /// No description provided for @linkResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend the link'**
+  String get linkResend;
+
+  /// No description provided for @linkResent.
+  ///
+  /// In en, this message translates to:
+  /// **'Link sent again'**
+  String get linkResent;
+
+  /// No description provided for @linkCheckStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Check payment'**
+  String get linkCheckStatus;
+
+  /// No description provided for @linkValidUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid until {time}'**
+  String linkValidUntil(String time);
+
+  /// No description provided for @cashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash receipt'**
+  String get cashTitle;
+
+  /// No description provided for @cashAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash collected'**
+  String get cashAmount;
+
+  /// No description provided for @cashTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take receipt photo'**
+  String get cashTakePhoto;
+
+  /// No description provided for @cashRetake.
+  ///
+  /// In en, this message translates to:
+  /// **'Retake'**
+  String get cashRetake;
+
+  /// No description provided for @cashSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save cash payment'**
+  String get cashSave;
+
+  /// No description provided for @cashPhotoHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Photograph the receipt you gave the farmer. Only the in-app camera can be used.'**
+  String get cashPhotoHelp;
+
+  /// No description provided for @cashPhotoBad.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo is blurry or dark. Retake it in good light.'**
+  String get cashPhotoBad;
+
+  /// No description provided for @cashSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash saved. Pending store reconciliation.'**
+  String get cashSaved;
+
+  /// No description provided for @cashPendingReconciliation.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending store reconciliation: the store checks the cash at day close.'**
+  String get cashPendingReconciliation;
+
+  /// No description provided for @creditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit sale'**
+  String get creditTitle;
+
+  /// No description provided for @creditQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on the phone. The credit limit is checked when the phone is online.'**
+  String get creditQueued;
+
+  /// No description provided for @creditApprovedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to the farmer’s khata'**
+  String get creditApprovedTitle;
+
+  /// No description provided for @creditNeedsApprovalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval needed'**
+  String get creditNeedsApprovalTitle;
+
+  /// No description provided for @creditNeedsApprovalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This sale is over the farmer’s credit limit. It was sent to the cluster head for approval.'**
+  String get creditNeedsApprovalBody;
+
+  /// No description provided for @creditLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit limit'**
+  String get creditLimit;
+
+  /// No description provided for @creditBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance due now'**
+  String get creditBalance;
+
+  /// No description provided for @creditShortfall.
+  ///
+  /// In en, this message translates to:
+  /// **'Over the limit by'**
+  String get creditShortfall;
+
+  /// No description provided for @creditSentToClusterHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to cluster head'**
+  String get creditSentToClusterHead;
+
+  /// No description provided for @creditCheckAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Check approval'**
+  String get creditCheckAgain;
+
+  /// No description provided for @creditStillPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Not approved yet. Try again later.'**
+  String get creditStillPending;
+
+  /// No description provided for @creditOfflineCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the internet to check the approval.'**
+  String get creditOfflineCheck;
+
+  /// No description provided for @creditUseCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect cash instead'**
+  String get creditUseCash;
+
+  /// No description provided for @orderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get orderTitle;
+
+  /// No description provided for @orderPlacedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Order placed'**
+  String get orderPlacedTitle;
+
+  /// No description provided for @orderQueuedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Order saved, waiting to sync'**
+  String get orderQueuedTitle;
+
+  /// No description provided for @orderQueuedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'It goes to the store as soon as the phone is online.'**
+  String get orderQueuedHelp;
+
+  /// No description provided for @orderRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The store could not take this order'**
+  String get orderRejectedTitle;
+
+  /// No description provided for @orderInsufficientStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Some items are short at the store:'**
+  String get orderInsufficientStock;
+
+  /// No description provided for @orderShortLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{product}: {available} available, {requested} asked'**
+  String orderShortLine(String product, String available, String requested);
+
+  /// No description provided for @orderSkuNotRecommendable.
+  ///
+  /// In en, this message translates to:
+  /// **'A product is not approved for this crop and pest (label claim). Remove it and send again.'**
+  String get orderSkuNotRecommendable;
+
+  /// No description provided for @orderEditAndResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit and send again'**
+  String get orderEditAndResend;
+
+  /// No description provided for @orderSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get orderSummary;
+
+  /// No description provided for @orderSubtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get orderSubtotal;
+
+  /// No description provided for @orderTax.
+  ///
+  /// In en, this message translates to:
+  /// **'GST'**
+  String get orderTax;
+
+  /// No description provided for @orderTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get orderTotal;
+
+  /// No description provided for @orderTotalEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Total (estimate)'**
+  String get orderTotalEstimate;
+
+  /// No description provided for @orderStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get orderStatusTitle;
+
+  /// No description provided for @orderStatusPlaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Placed'**
+  String get orderStatusPlaced;
+
+  /// No description provided for @orderStatusReserved.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock reserved'**
+  String get orderStatusReserved;
+
+  /// No description provided for @orderStatusPacked.
+  ///
+  /// In en, this message translates to:
+  /// **'Packed'**
+  String get orderStatusPacked;
+
+  /// No description provided for @orderStatusReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get orderStatusReady;
+
+  /// No description provided for @orderStatusHandedOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Handed over'**
+  String get orderStatusHandedOver;
+
+  /// No description provided for @orderStatusDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get orderStatusDelivered;
+
+  /// No description provided for @orderStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get orderStatusCancelled;
+
+  /// No description provided for @orderPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get orderPayments;
+
+  /// No description provided for @orderNoPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'No payment yet'**
+  String get orderNoPayments;
+
+  /// No description provided for @orderShareInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Share invoice on WhatsApp'**
+  String get orderShareInvoice;
+
+  /// No description provided for @orderShareOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the internet to share the invoice.'**
+  String get orderShareOffline;
+
+  /// No description provided for @orderShareNoInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'The invoice is issued when the store hands over the order.'**
+  String get orderShareNoInvoice;
+
+  /// No description provided for @orderShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not get the invoice link. Try again.'**
+  String get orderShareFailed;
+
+  /// No description provided for @orderShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice {number}: {url}'**
+  String orderShareText(String number, String url);
+
+  /// No description provided for @orderInvoiceNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice {number}'**
+  String orderInvoiceNo(String number);
+
+  /// No description provided for @orderCollectPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect payment'**
+  String get orderCollectPayment;
+
+  /// No description provided for @orderPendingSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to sync'**
+  String get orderPendingSync;
+
+  /// No description provided for @orderRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get orderRejected;
+
+  /// No description provided for @ordersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
+  String get ordersTitle;
+
+  /// No description provided for @ordersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders yet'**
+  String get ordersEmpty;
+
+  /// No description provided for @ordersEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders you place for farmers show here.'**
+  String get ordersEmptyHelp;
+
+  /// No description provided for @ordersNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New order'**
+  String get ordersNew;
+
+  /// No description provided for @ordersCollections.
+  ///
+  /// In en, this message translates to:
+  /// **'Collections'**
+  String get ordersCollections;
+
+  /// No description provided for @ordersPickFarmer.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a farmer'**
+  String get ordersPickFarmer;
+
+  /// No description provided for @khataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Khata'**
+  String get khataTitle;
+
+  /// No description provided for @khataAsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'As of {time}'**
+  String khataAsOf(String time);
+
+  /// No description provided for @khataOfflineAsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline: showing the khata saved at {time}'**
+  String khataOfflineAsOf(String time);
+
+  /// No description provided for @khataNotLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Khata not on this phone yet'**
+  String get khataNotLoaded;
+
+  /// No description provided for @khataNotLoadedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the internet to load the farmer’s khata.'**
+  String get khataNotLoadedHelp;
+
+  /// No description provided for @khataOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue {amount}'**
+  String khataOverdue(String amount);
+
+  /// No description provided for @khataBucket0to30.
+  ///
+  /// In en, this message translates to:
+  /// **'0–30 days'**
+  String get khataBucket0to30;
+
+  /// No description provided for @khataBucket31to60.
+  ///
+  /// In en, this message translates to:
+  /// **'31–60 days'**
+  String get khataBucket31to60;
+
+  /// No description provided for @khataBucket61to90.
+  ///
+  /// In en, this message translates to:
+  /// **'61–90 days'**
+  String get khataBucket61to90;
+
+  /// No description provided for @khataBucket90plus.
+  ///
+  /// In en, this message translates to:
+  /// **'90+ days'**
+  String get khataBucket90plus;
+
+  /// No description provided for @khataDueHarvest.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date} · harvest {month}'**
+  String khataDueHarvest(String date, String month);
+
+  /// No description provided for @khataEntryOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale on credit'**
+  String get khataEntryOrder;
+
+  /// No description provided for @khataEntryPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment received'**
+  String get khataEntryPayment;
+
+  /// No description provided for @khataEntryAdjustment.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustment'**
+  String get khataEntryAdjustment;
+
+  /// No description provided for @khataPaymentHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment history'**
+  String get khataPaymentHistory;
+
+  /// No description provided for @khataNoPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'No payments yet'**
+  String get khataNoPayments;
+
+  /// No description provided for @khataPendingCollections.
+  ///
+  /// In en, this message translates to:
+  /// **'Collected, not yet on the khata'**
+  String get khataPendingCollections;
+
+  /// No description provided for @collectionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Collections'**
+  String get collectionsTitle;
+
+  /// No description provided for @collectionsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get collectionsToday;
+
+  /// No description provided for @collectionsWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get collectionsWeek;
+
+  /// No description provided for @collectionsTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Collected'**
+  String get collectionsTotal;
+
+  /// No description provided for @collectionsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No collections yet'**
+  String get collectionsEmpty;
+
+  /// No description provided for @collectionsEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments you collect show here.'**
+  String get collectionsEmptyHelp;
+
+  /// No description provided for @collectionStateWaitingToSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to sync'**
+  String get collectionStateWaitingToSync;
+
+  /// No description provided for @collectionStatePendingReconciliation.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending reconciliation'**
+  String get collectionStatePendingReconciliation;
+
+  /// No description provided for @collectionStateWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for payment'**
+  String get collectionStateWaiting;
+
+  /// No description provided for @collectionStatePaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get collectionStatePaid;
+
+  /// No description provided for @collectionStateOnKhata.
+  ///
+  /// In en, this message translates to:
+  /// **'On khata'**
+  String get collectionStateOnKhata;
+
+  /// No description provided for @collectionStateApprovalNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval needed'**
+  String get collectionStateApprovalNeeded;
+
+  /// No description provided for @collectionStateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get collectionStateFailed;
+
+  /// No description provided for @syncEntityOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get syncEntityOrder;
+
+  /// No description provided for @syncEntityPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get syncEntityPayment;
 }
 
 class _CoreLocalizationsDelegate

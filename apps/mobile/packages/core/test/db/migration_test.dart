@@ -12,9 +12,17 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 /// FA-010 / VV-001: v3 upgrades to v4 adding `duty_sessions`,
 /// `location_buffer` and `sync_docs`; FA-014 .. FA-017: v4 upgrades to v5
 /// adding `visits`, `visit_photos`, `visit_confirmations` and the village
-/// meeting point columns.
+/// meeting point columns; FA-020 .. FA-022: v5 upgrades to v6 adding the
+/// catalogue cache, orders, order lines, payments and khata snapshots.
+/// Tables added in v6, dropped when a test fakes an older schema.
+const String _dropV6 =
+    'DROP TABLE catalog_products; DROP TABLE catalog_skus; '
+    'DROP TABLE catalog_prices; DROP TABLE stock_snapshots; '
+    'DROP TABLE catalog_stores; DROP TABLE orders; DROP TABLE order_lines; '
+    'DROP TABLE payments; DROP TABLE khata_snapshots;';
+
 void main() {
-  const currentVersion = 5;
+  const currentVersion = 6;
   const v2Tables = <String>{
     'kv',
     'farmers',
@@ -30,6 +38,18 @@ void main() {
   const v4Tables = <String>{'duty_sessions', 'location_buffer', 'sync_docs'};
 
   const v5Tables = <String>{'visits', 'visit_photos', 'visit_confirmations'};
+
+  const v6Tables = <String>{
+    'catalog_products',
+    'catalog_skus',
+    'catalog_prices',
+    'stock_snapshots',
+    'catalog_stores',
+    'orders',
+    'order_lines',
+    'payments',
+    'khata_snapshots',
+  };
 
   Future<Set<String>> columns(AppDatabase db, String table) async {
     final rows = await db.customSelect('PRAGMA table_info($table)').get();
@@ -153,6 +173,7 @@ void main() {
         ..execute('DROP TABLE visits')
         ..execute('DROP TABLE visit_photos')
         ..execute('DROP TABLE visit_confirmations')
+        ..execute(_dropV6)
         ..execute('PRAGMA user_version = 2')
         ..close();
 
@@ -217,6 +238,7 @@ void main() {
       ..execute('ALTER TABLE villages DROP COLUMN meeting_point_lat')
       ..execute('ALTER TABLE villages DROP COLUMN meeting_point_lon')
       ..execute('ALTER TABLE villages DROP COLUMN meeting_point_radius_m')
+      ..execute(_dropV6)
       ..execute('PRAGMA user_version = 3')
       ..close();
 
@@ -306,6 +328,7 @@ void main() {
       ..execute('ALTER TABLE villages DROP COLUMN meeting_point_lat')
       ..execute('ALTER TABLE villages DROP COLUMN meeting_point_lon')
       ..execute('ALTER TABLE villages DROP COLUMN meeting_point_radius_m')
+      ..execute(_dropV6)
       ..execute('PRAGMA user_version = 4')
       ..close();
 
@@ -380,6 +403,91 @@ void main() {
     );
   });
 
+  test('a v5 database migrates to v6: catalogue, order, payment and khata '
+      'tables added, visits and outbox rows kept', () async {
+    final file = File('${dir.path}/v5-to-v6.db');
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.setValue('settings.locale', 'te');
+    await seed
+        .into(seed.visits)
+        .insert(
+          VisitsCompanion.insert(
+            id: 'visit-1',
+            farmerId: 'f-1',
+            checkinAt: DateTime.utc(2026, 9, 21, 4),
+            checkinLat: 17.4,
+            checkinLon: 78.4,
+            updatedAt: DateTime.utc(2026, 9, 21, 4),
+          ),
+        );
+    await seed
+        .into(seed.outboxTable)
+        .insert(
+          OutboxTableCompanion.insert(
+            opId: 'op-9',
+            seq: 1,
+            entity: 'visit',
+            action: 'create',
+            entityId: 'visit-1',
+            payload: '{}',
+            clientTs: '2026-09-21T04:00:00.000Z',
+          ),
+        );
+    await seed.close();
+    final raw = sqlite.sqlite3.open(file.path);
+    for (final t in v6Tables) {
+      raw.execute('DROP TABLE $t');
+    }
+    raw
+      ..execute('PRAGMA user_version = 5')
+      ..close();
+
+    final db = AppDatabase(NativeDatabase(file));
+    addTearDown(db.close);
+    expect(await userVersion(db), currentVersion);
+    expect(await tables(db), containsAll(v6Tables));
+    expect(await db.getValue('settings.locale'), 'te');
+    expect((await db.select(db.visits).getSingle()).id, 'visit-1');
+    expect((await db.select(db.outboxTable).getSingle()).opId, 'op-9');
+    final indexes = await db
+        .customSelect("SELECT name FROM sqlite_master WHERE type = 'index'")
+        .get();
+    expect(
+      indexes.map((r) => r.read<String>('name')),
+      containsAll(<String>[
+        'catalog_skus_product',
+        'orders_farmer',
+        'order_lines_order',
+        'payments_collected',
+      ]),
+    );
+    // The new tables work: an order with a line and a payment round-trip.
+    final entities = LocalEntities(db);
+    await entities.write(
+      'order',
+      'o-1',
+      <String, Object?>{
+        'farmer_id': 'f-1',
+        'lines': <Object?>[
+          <String, Object?>{'sku_id': 's-1', 'qty': 2},
+        ],
+      },
+      version: 0,
+      dirty: true,
+      now: DateTime.utc(2026, 9, 21, 5),
+    );
+    await entities.write(
+      'payment',
+      'pay-1',
+      <String, Object?>{'order_id': 'o-1', 'mode': 'cash'},
+      version: 0,
+      dirty: true,
+      now: DateTime.utc(2026, 9, 21, 5),
+    );
+    expect((await db.select(db.orderLines).getSingle()).qty, 2);
+    expect((await db.select(db.payments).getSingle()).status, 'queued');
+  });
+
   test(
     'a fresh database is created at the current version with every table',
     () async {
@@ -393,6 +501,7 @@ void main() {
           'villages',
           ...v4Tables,
           ...v5Tables,
+          ...v6Tables,
         }),
       );
     },

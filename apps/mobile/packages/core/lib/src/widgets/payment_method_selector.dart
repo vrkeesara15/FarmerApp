@@ -33,6 +33,7 @@ class PaymentMethodSelector extends StatelessWidget {
       PaymentMethod.credit,
     },
     this.creditHint,
+    this.unavailableReasons = const <PaymentMethod, String>{},
     super.key,
   });
 
@@ -48,6 +49,10 @@ class PaymentMethodSelector extends StatelessWidget {
   /// Override for the credit hint (e.g. "Limit ₹5,000 left").
   final String? creditHint;
 
+  /// Why a method is not available (e.g. "Needs internet"); replaces the
+  /// hint of a disabled option.
+  final Map<PaymentMethod, String> unavailableReasons;
+
   @override
   Widget build(BuildContext context) {
     final l10n = CoreLocalizations.of(context);
@@ -55,6 +60,7 @@ class PaymentMethodSelector extends StatelessWidget {
       children: <Widget>[
         for (final m in PaymentMethod.values) ...<Widget>[
           _Option(
+            key: Key('payment-method-${m.name}'),
             method: m,
             title: switch (m) {
               PaymentMethod.upiQr => l10n.paymentUpiQr,
@@ -62,12 +68,15 @@ class PaymentMethodSelector extends StatelessWidget {
               PaymentMethod.cash => l10n.paymentCash,
               PaymentMethod.credit => l10n.paymentCredit,
             },
-            hint: switch (m) {
-              PaymentMethod.upiQr => l10n.paymentUpiQrHint,
-              PaymentMethod.paymentLink => l10n.paymentLinkHint,
-              PaymentMethod.cash => l10n.paymentCashHint,
-              PaymentMethod.credit => creditHint ?? l10n.paymentCreditHint,
-            },
+            hint: !available.contains(m) && unavailableReasons[m] != null
+                ? unavailableReasons[m]!
+                : switch (m) {
+                    PaymentMethod.upiQr => l10n.paymentUpiQrHint,
+                    PaymentMethod.paymentLink => l10n.paymentLinkHint,
+                    PaymentMethod.cash => l10n.paymentCashHint,
+                    PaymentMethod.credit =>
+                      creditHint ?? l10n.paymentCreditHint,
+                  },
             icon: switch (m) {
               PaymentMethod.upiQr => Icons.qr_code_2,
               PaymentMethod.paymentLink => Icons.link,
@@ -95,6 +104,7 @@ class _Option extends StatelessWidget {
     required this.selected,
     required this.enabled,
     required this.onTap,
+    super.key,
   });
 
   final PaymentMethod method;

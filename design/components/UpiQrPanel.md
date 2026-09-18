@@ -13,6 +13,7 @@ Source: `apps/mobile/packages/core/lib/src/widgets/upi_qr_panel.dart` (exported 
 | `qrPayload` | `String` | UPI intent; replace `UpiQrPlaceholderPainter` with a real encoder |
 | `remaining` | `Duration?` | countdown in waiting state |
 | `onRetry` | `VoidCallback?` | 'Show a new QR' in failed state |
+| `statusText` | `String?` | overrides the state heading (e.g. `upiExpired`) |
 
 ## Variants
 
@@ -23,6 +24,7 @@ Source: `apps/mobile/packages/core/lib/src/widgets/upi_qr_panel.dart` (exported 
 - waiting
 - paid (overlay check)
 - failed (overlay error + retry)
+- expired (failed state with `upiExpired`)
 
 ## Accessibility
 
@@ -53,3 +55,6 @@ Source: `apps/mobile/packages/core/lib/src/widgets/upi_qr_panel.dart` (exported 
 
 Goldens: upi_qr_panel{,_paid,_failed}_{light,sunlight}.png
 
+## Usage (FA-020 / FA-021 / FA-022)
+
+The QR is rendered from the provider's `qr_payload` with `qr_flutter`, always black on white so scanners read it in Sunlight too; an empty payload falls back to the placeholder painter (previews). A53 drives `state` from `UpiPoller` (3 s, backing off to 10 s, stop at expiry) and `remaining` from `expires_at` − now.

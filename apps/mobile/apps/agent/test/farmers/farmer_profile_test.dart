@@ -34,7 +34,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('overview shows facts, crops, farm map and disabled actions', (
+  testWidgets('overview shows facts, crops, farm map and the primary actions', (
     tester,
   ) async {
     usePhoneSurface(tester);
@@ -53,17 +53,20 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Cotton'), findsWidgets);
-    // FA-014: Start visit is live; the other actions arrive later.
-    final start = tester.widget<AppButton>(
-      find.byKey(const Key('profile-start-visit')),
-    );
-    expect(start.onPressed, isNotNull);
-    for (final label in <String>['Scout', 'New order', 'Collect']) {
-      final button = tester.widget<AppButton>(
-        find.ancestor(of: find.text(label), matching: find.byType(AppButton)),
-      );
-      expect(button.onPressed, isNull, reason: label);
+    // FA-014 Start visit, FA-020 New order and FA-021 Collect are live;
+    // Scout arrives with the crop doctor.
+    for (final key in <String>[
+      'profile-start-visit',
+      'profile-new-order',
+      'profile-collect',
+    ]) {
+      final button = tester.widget<AppButton>(find.byKey(Key(key)));
+      expect(button.onPressed, isNotNull, reason: key);
     }
+    final scout = tester.widget<AppButton>(
+      find.ancestor(of: find.text('Scout'), matching: find.byType(AppButton)),
+    );
+    expect(scout.onPressed, isNull);
     expect(find.byKey(const Key('profile-pending-sync')), findsNothing);
     expect(find.byKey(const Key('profile-duplicate')), findsNothing);
 

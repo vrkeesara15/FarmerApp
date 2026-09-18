@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import '../auth/token_store.dart' show generateUuidV4;
 import '../db/app_database.dart';
 import '../photo/chunked_upload_planner.dart';
+import 'local_entities.dart';
 import 'sync_models.dart';
 import 'sync_store.dart';
 
@@ -82,11 +83,17 @@ class Outbox {
   }
 
   /// Queues a create: writes the row (version 0, dirty) and the op.
+  ///
+  /// [local] holds device-only fields for the row (estimates, display
+  /// labels); they are stored under `LocalEntities.localKey` and never
+  /// sent. Entities in [SyncEntities.createPayloadWithoutId] send the
+  /// payload without `id` (the server takes it from `entity_id`).
   Future<SyncOp> enqueueCreate(
     String entity,
     String id,
-    Map<String, Object?> payload,
-  ) async {
+    Map<String, Object?> payload, {
+    Map<String, Object?>? local,
+  }) async {
     _check(entity);
     final now = _now();
     final op = SyncOp(
@@ -95,14 +102,20 @@ class Outbox {
       action: SyncAction.create,
       entityId: id,
       baseVersion: 0,
-      payload: <String, Object?>{...payload, 'id': id},
+      payload: SyncEntities.createPayloadWithoutId.contains(entity)
+          ? <String, Object?>{...payload}
+          : <String, Object?>{...payload, 'id': id},
       clientTs: now,
     );
     await store.db.transaction(() async {
       await store.entities.write(
         entity,
         id,
-        op.payload,
+        <String, Object?>{
+          ...op.payload,
+          'id': id,
+          LocalEntities.localKey: ?local,
+        },
         version: 0,
         dirty: true,
         now: now,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../i18n/generated/core_localizations.dart';
 import '../theme/app_theme.dart';
@@ -21,8 +22,9 @@ enum UpiPaymentState {
 /// UPI QR with amount, countdown and waiting/paid/failed states
 /// (SPEC 13.1 `UpiQrPanel`).
 ///
-/// The QR itself is a placeholder painter seeded from [qrPayload]; a real QR
-/// encoder replaces [UpiQrPlaceholderPainter] without changing this API.
+/// The QR is rendered from [qrPayload] (the provider's UPI intent) with
+/// `qr_flutter`; an empty payload falls back to [UpiQrPlaceholderPainter]
+/// (previews only).
 class UpiQrPanel extends StatelessWidget {
   /// Creates the panel.
   const UpiQrPanel({
@@ -31,6 +33,7 @@ class UpiQrPanel extends StatelessWidget {
     this.qrPayload = '',
     this.remaining,
     this.onRetry,
+    this.statusText,
     super.key,
   });
 
@@ -48,6 +51,9 @@ class UpiQrPanel extends StatelessWidget {
 
   /// Handler for "Show a new QR" (failed state).
   final VoidCallback? onRetry;
+
+  /// Overrides the state heading (e.g. "QR expired").
+  final String? statusText;
 
   @override
   Widget build(BuildContext context) {
@@ -103,12 +109,24 @@ class UpiQrPanel extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: <Widget>[
-                  CustomPaint(
-                    painter: UpiQrPlaceholderPainter(
-                      payload: qrPayload,
-                      color: p.text,
+                  if (qrPayload.isEmpty)
+                    CustomPaint(
+                      painter: UpiQrPlaceholderPainter(
+                        payload: qrPayload,
+                        color: p.text,
+                      ),
+                    )
+                  else
+                    QrImageView(
+                      data: qrPayload,
+                      padding: EdgeInsets.zero,
+                      // Black on white in every theme: scanners need it.
+                      backgroundColor: Colors.white,
+                      eyeStyle: const QrEyeStyle(color: Colors.black),
+                      dataModuleStyle: const QrDataModuleStyle(
+                        color: Colors.black,
+                      ),
                     ),
-                  ),
                   if (state != UpiPaymentState.waiting)
                     ColoredBox(
                       color: p.surface.withValues(alpha: 0.85),
@@ -130,7 +148,7 @@ class UpiQrPanel extends StatelessWidget {
               const SizedBox(width: Tokens.space2),
               Flexible(
                 child: Text(
-                  label,
+                  statusText ?? label,
                   textAlign: TextAlign.center,
                   style: app.text.heading.copyWith(color: color),
                 ),

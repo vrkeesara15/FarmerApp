@@ -15,6 +15,8 @@ class KhataEntry {
     required this.description,
     required this.amountPaise,
     required this.isCredit,
+    this.dueDateUtc,
+    this.harvestMonthUtc,
   });
 
   /// Entry time in UTC.
@@ -28,6 +30,12 @@ class KhataEntry {
 
   /// Credit (payment received) or debit (sale on credit).
   final bool isCredit;
+
+  /// Due date of a debit (harvest-linked, FA-022).
+  final DateTime? dueDateUtc;
+
+  /// Harvest month the due date follows.
+  final DateTime? harvestMonthUtc;
 }
 
 /// Farmer khata: balance header, due date and debit/credit entries
@@ -40,6 +48,8 @@ class KhataLedger extends StatelessWidget {
     this.entries = const <KhataEntry>[],
     this.actionLabel,
     this.onAction,
+    this.now,
+    this.header,
     super.key,
   });
 
@@ -58,13 +68,20 @@ class KhataLedger extends StatelessWidget {
   /// Primary action handler; the button is hidden when `null`.
   final VoidCallback? onAction;
 
+  /// Now (UTC) for the overdue colour; defaults to the wall clock.
+  final DateTime? now;
+
+  /// Extra content under the balance (e.g. overdue bucket chips).
+  final Widget? header;
+
   @override
   Widget build(BuildContext context) {
     final app = context.app;
     final p = app.palette;
     final l10n = CoreLocalizations.of(context);
     final overdue =
-        dueDateUtc != null && dueDateUtc!.isBefore(DateTime.now().toUtc());
+        dueDateUtc != null &&
+        dueDateUtc!.isBefore(now ?? DateTime.now().toUtc());
     final balanceColor = balancePaise > 0
         ? (overdue ? p.statusDanger : p.statusWarning)
         : p.statusSuccess;
@@ -115,6 +132,10 @@ class KhataLedger extends StatelessWidget {
                       ),
                     ],
                   ),
+                ],
+                if (header != null) ...<Widget>[
+                  const SizedBox(height: Tokens.space3),
+                  header!,
                 ],
                 if (onAction != null) ...<Widget>[
                   const SizedBox(height: Tokens.space3),
@@ -187,6 +208,16 @@ class _EntryRow extends StatelessWidget {
                   '${entry.isCredit ? l10n.khataCredit : l10n.khataDebit}',
                   style: app.text.caption.copyWith(color: p.textSecondary),
                 ),
+                if (entry.dueDateUtc != null)
+                  Text(
+                    entry.harvestMonthUtc == null
+                        ? l10n.khataDueDate(formatDateIst(entry.dueDateUtc!))
+                        : l10n.khataDueHarvest(
+                            formatDateIst(entry.dueDateUtc!),
+                            formatMonthYear(entry.harvestMonthUtc!),
+                          ),
+                    style: app.text.caption.copyWith(color: p.textSecondary),
+                  ),
               ],
             ),
           ),

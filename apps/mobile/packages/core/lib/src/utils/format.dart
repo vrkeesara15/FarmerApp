@@ -59,6 +59,10 @@ String formatDateIst(DateTime utc) {
   return '$d-$m-${ist.year}';
 }
 
+/// Formats a calendar month as `MM-YYYY` (harvest month on the khata).
+String formatMonthYear(DateTime date) =>
+    '${date.month.toString().padLeft(2, '0')}-${date.year}';
+
 /// Formats [utc] in IST as `DD-MM-YYYY HH:mm` (24-hour clock).
 String formatDateTimeIst(DateTime utc) {
   final ist = utc.toUtc().add(istOffset);

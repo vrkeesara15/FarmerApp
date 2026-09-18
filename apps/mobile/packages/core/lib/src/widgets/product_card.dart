@@ -22,6 +22,9 @@ class ProductCard extends StatelessWidget {
     this.added = false,
     this.onAdd,
     this.onTap,
+    this.stockAsOf,
+    this.priceIsEstimate = false,
+    this.quantity,
     super.key,
   });
 
@@ -54,6 +57,15 @@ class ProductCard extends StatelessWidget {
 
   /// Card tap handler (opens detail).
   final VoidCallback? onTap;
+
+  /// When the stock figure was true (UTC); shows "as of HH:mm".
+  final DateTime? stockAsOf;
+
+  /// Labels the price as an estimate (cached price list, FA-020).
+  final bool priceIsEstimate;
+
+  /// Units already in the cart (shown on the added button).
+  final int? quantity;
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +124,13 @@ class ProductCard extends StatelessWidget {
                     ),
                     const SizedBox(height: Tokens.space1),
                     Text(formatInr(pricePaise), style: app.text.title),
+                    if (priceIsEstimate)
+                      Text(
+                        l10n.productPriceEstimate,
+                        style: app.text.caption.copyWith(
+                          color: p.textSecondary,
+                        ),
+                      ),
                     if (stockCount != null) ...<Widget>[
                       const SizedBox(height: Tokens.space1),
                       Row(
@@ -128,12 +147,22 @@ class ProductCard extends StatelessWidget {
                           const SizedBox(width: Tokens.space1),
                           Expanded(
                             child: Text(
-                              outOfStock
-                                  ? l10n.productOutOfStock
-                                  : l10n.productStockAtStore(
-                                      stockCount!,
-                                      storeName ?? '',
-                                    ),
+                              <String>[
+                                if (outOfStock)
+                                  l10n.productOutOfStock
+                                else if (storeName == null ||
+                                    storeName!.isEmpty)
+                                  l10n.productStockNearest(stockCount!)
+                                else
+                                  l10n.productStockAtStore(
+                                    stockCount!,
+                                    storeName!,
+                                  ),
+                                if (stockAsOf != null)
+                                  l10n.productStockAsOf(
+                                    formatTimeIst(stockAsOf!),
+                                  ),
+                              ].join(', '),
                               style: app.text.caption.copyWith(
                                 color: outOfStock
                                     ? p.statusDanger
@@ -148,7 +177,11 @@ class ProductCard extends StatelessWidget {
                     ],
                     const SizedBox(height: Tokens.space2),
                     AppButton(
-                      label: added ? l10n.productAdded : l10n.productAdd,
+                      label: added
+                          ? (quantity == null
+                                ? l10n.productAdded
+                                : l10n.productInCart(quantity!))
+                          : l10n.productAdd,
                       icon: added ? Icons.check : Icons.add_shopping_cart,
                       variant: added
                           ? AppButtonVariant.secondary

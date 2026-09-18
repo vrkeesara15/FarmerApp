@@ -8,11 +8,23 @@ import 'screens/farmers/farmer_list_screen.dart';
 import 'screens/farmers/farmer_profile_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/home/my_day_screen.dart';
+import 'screens/khata/khata_screen.dart';
 import 'screens/language_screen.dart';
 import 'screens/onboarding/device_registered_screen.dart';
 import 'screens/onboarding/disclosure_screen.dart';
 import 'screens/onboarding/permissions_screen.dart';
+import 'screens/orders/cart_screen.dart';
+import 'screens/orders/catalog_screen.dart';
+import 'screens/orders/commerce_copy.dart';
+import 'screens/orders/order_screen.dart';
+import 'screens/orders/orders_screen.dart';
 import 'screens/otp_screen.dart';
+import 'screens/payments/cash_screen.dart';
+import 'screens/payments/checkout_screen.dart';
+import 'screens/payments/collections_screen.dart';
+import 'screens/payments/credit_screen.dart';
+import 'screens/payments/link_screen.dart';
+import 'screens/payments/upi_screen.dart';
 import 'screens/phone_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/splash_screen.dart';
@@ -159,6 +171,18 @@ GoRouter buildRouter({String initialLocation = AppRoutes.splash}) {
                   farmId: state.pathParameters['farmId'],
                 ),
               ),
+              // FA-022 A58 khata, FA-021 A52 in dues mode.
+              GoRoute(
+                path: 'khata',
+                builder: (context, state) =>
+                    KhataScreen(farmerId: state.pathParameters['farmerId']!),
+              ),
+              GoRoute(
+                path: 'collect',
+                builder: (context, state) => CheckoutScreen(
+                  duesFarmerId: state.pathParameters['farmerId'],
+                ),
+              ),
             ],
           ),
         ],
@@ -192,6 +216,75 @@ GoRouter buildRouter({String initialLocation = AppRoutes.splash}) {
             ],
           ),
         ],
+      ),
+      // FA-020 / FA-021: orders (A50, A51, A52, A57) and payments
+      // (A53–A56), A59 collections.
+      GoRoute(
+        path: CommerceRoutes.orders,
+        builder: (context, state) => const OrdersScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: 'pick',
+            builder: (context, state) => FarmerPickerScreen(
+              purpose: state.uri.queryParameters['for'] == 'collect'
+                  ? PickPurpose.collect
+                  : PickPurpose.order,
+            ),
+          ),
+          GoRoute(
+            path: 'new',
+            builder: (context, state) {
+              final farmerId = state.uri.queryParameters['farmerId'];
+              return farmerId == null
+                  ? const FarmerPickerScreen(purpose: PickPurpose.order)
+                  : CatalogScreen(farmerId: farmerId);
+            },
+          ),
+          GoRoute(
+            path: 'cart',
+            builder: (context, state) => const CartScreen(),
+          ),
+          GoRoute(
+            path: 'checkout',
+            builder: (context, state) => const CheckoutScreen(),
+          ),
+          GoRoute(
+            path: ':orderId',
+            builder: (context, state) =>
+                OrderScreen(orderId: state.pathParameters['orderId']!),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/payments/cash',
+        builder: (context, state) {
+          final q = state.uri.queryParameters;
+          return CashScreen(
+            orderId: q['orderId'],
+            farmerId: q['farmerId'],
+            storeId: q['storeId'],
+            amountPaise: int.tryParse(q['amount'] ?? ''),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/payments/:paymentId/upi',
+        builder: (context, state) =>
+            UpiScreen(paymentId: state.pathParameters['paymentId']!),
+      ),
+      GoRoute(
+        path: '/payments/:paymentId/link',
+        builder: (context, state) =>
+            LinkScreen(paymentId: state.pathParameters['paymentId']!),
+      ),
+      GoRoute(
+        path: '/payments/:paymentId/credit',
+        builder: (context, state) =>
+            CreditScreen(paymentId: state.pathParameters['paymentId']!),
+      ),
+      GoRoute(
+        path: CommerceRoutes.collections,
+        builder: (context, state) => const CollectionsScreen(),
       ),
       GoRoute(
         path: AppRoutes.settings,

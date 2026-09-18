@@ -40,6 +40,22 @@ abstract final class SyncEntities {
   /// FA-016 farmer confirmation (typed `visit_confirmations` table).
   static const String visitConfirmation = 'visit_confirmation';
 
+  /// FA-020 order (typed `orders` + `order_lines` tables; server wins).
+  static const String order = 'order';
+
+  /// FA-020 order line (pull only: written inside the `order` create).
+  static const String orderLine = 'order_line';
+
+  /// FA-021 payment (typed `payments` table; server wins).
+  static const String payment = 'payment';
+
+  /// FA-022 khata entry (pull only; `synced_refs`, append-only).
+  static const String khataEntry = 'khata_entry';
+
+  /// Entities whose create payload must not repeat the id (the server
+  /// validates the body strictly and takes the id from `entity_id`).
+  static const Set<String> createPayloadWithoutId = <String>{payment};
+
   /// Entities with a local table and outbox support.
   static const Set<String> writable = <String>{
     farmer,
@@ -52,6 +68,8 @@ abstract final class SyncEntities {
     visit,
     visitPhoto,
     visitConfirmation,
+    order,
+    payment,
   };
 }
 
@@ -141,6 +159,7 @@ class SyncError {
     this.code, [
     this.detail = '',
     this.extra = const <String, Object?>{},
+    this.errors = const <Map<String, Object?>>[],
   ]);
 
   /// Keys of the problem envelope that are not extra data.
@@ -186,6 +205,11 @@ class SyncError {
       (json['code'] as String?) ?? 'error',
       (json['detail'] as String?) ?? '',
       extra,
+      <Map<String, Object?>>[
+        if (errors is List)
+          for (final item in errors)
+            if (item is Map) Map<String, Object?>.from(item),
+      ],
     );
   }
 
@@ -197,6 +221,10 @@ class SyncError {
 
   /// Extra problem fields (e.g. `distance_m`).
   final Map<String, Object?> extra;
+
+  /// The problem's `errors[]` entries as sent (e.g. one per short line of
+  /// an `insufficient_stock` order: `{index, sku_id, requested, available}`).
+  final List<Map<String, Object?>> errors;
 
   static final RegExp _metresInDetail = RegExp(r'(\d+(?:\.\d+)?)\s*m\b');
 
@@ -220,6 +248,7 @@ class SyncError {
     'code': code,
     'detail': detail,
     if (extra.isNotEmpty) ...extra,
+    if (errors.isNotEmpty) 'errors': errors,
   };
 
   @override
