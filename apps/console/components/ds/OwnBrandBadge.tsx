@@ -1,6 +1,8 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 
 export interface OwnBrandBadgeProps {
@@ -11,6 +13,7 @@ export interface OwnBrandBadgeProps {
 }
 
 export function OwnBrandBadge({ brandName, compact, className }: OwnBrandBadgeProps) {
+  const t = useT();
   const label = brandName ?? t("ownBrand.label");
   return (
     <Badge

@@ -1,4 +1,6 @@
-import { t } from "@/lib/i18n";
+"use client";
+
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 
 export type VisitStatus = "verified" | "partial" | "unverified";
@@ -30,6 +32,7 @@ export function VisitScoreBadge({
   size = "md",
   className,
 }: VisitScoreBadgeProps) {
+  const t = useT();
   const clamped = Math.max(0, Math.min(100, Math.round(score)));
   const status = visitStatusFor(clamped);
   return (

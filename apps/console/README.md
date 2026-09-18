@@ -26,7 +26,11 @@ Next.js 15 (App Router) · TypeScript strict (`noUncheckedIndexedAccess`) · Tai
 
 ## i18n
 
-All UI strings live in `messages/en.json` (source of truth and the type). `te/kn/hi/mr.json` may be partial; `t()` from `lib/i18n.ts` falls back to English per key.
+All UI strings live in `messages/en.json` (source of truth and the type). `te/kn/hi/mr.json` carry every key (`lib/i18n.test.ts` fails otherwise, FA-004); `t()` from `lib/i18n.ts` still falls back to English per key.
+
+- Server components and `metadata` call `t(key)` (English).
+- Client components call `const t = useT()` from `lib/i18n-client.ts`; it re-renders on `setLocale()` so the language switches without a reload. `useLocale()` gives the current code.
+- The choice lives in `localStorage` (`farmerapp.console.locale`, best effort) and is stamped on `<html lang>` before hydration by `localeInitScript`; `globals.css` maps `:lang(te|kn|hi|mr)` to the Noto script fonts and the +15% line height. Users switch from the TopBar profile menu (five languages in their own script); there is no separate language screen (SPEC 13.4).
 
 `npm run lint:strings` fails on raw JSX text and on string literals in `placeholder`, `title`, `aria-label`, `alt`, `label`. Allowlist by:
 

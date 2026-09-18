@@ -561,5 +561,8 @@ class CoreLocalizationsEn extends CoreLocalizations {
   String get settingsTitle => 'Settings';
 
   @override
+  String get settingsLanguage => 'Language';
+
+  @override
   String get skeletonLoading => 'Loading content';
 }

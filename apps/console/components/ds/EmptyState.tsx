@@ -1,6 +1,8 @@
+"use client";
+
 import * as React from "react";
 import { Inbox } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 
 export interface EmptyStateProps {
@@ -15,6 +17,7 @@ export interface EmptyStateProps {
 }
 
 export function EmptyState({ title, help, illustration, action, className }: EmptyStateProps) {
+  const t = useT();
   return (
     <div
       role="status"

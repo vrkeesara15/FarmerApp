@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Clock } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 import { formatDateTimeIst } from "@/lib/format";
 import { AppButton } from "./AppButton";
@@ -46,6 +46,7 @@ export function FlagCard({
   loading,
   className,
 }: FlagCardProps) {
+  const t = useT();
   if (loading) {
     return (
       <div

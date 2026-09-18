@@ -28,6 +28,10 @@ class LanguageOption {
 
 /// Large language tiles with the script name and an audio play button
 /// (SPEC 13.1 `LanguagePicker`).
+///
+/// Each tile is fully in its own language (script name + "Listen" label) so
+/// a user who cannot read the current UI language can still find theirs;
+/// only the small caption (English name) follows the current locale.
 class LanguagePicker extends StatelessWidget {
   /// Creates the picker.
   const LanguagePicker({
@@ -50,6 +54,9 @@ class LanguagePicker extends StatelessWidget {
   /// Called when the speaker button is tapped; hidden when `null`.
   final ValueChanged<Locale>? onPlayAudio;
 
+  /// Tile height: script name, caption and a 48 dp "Listen" row.
+  static const double tileExtent = 144;
+
   @override
   Widget build(BuildContext context) {
     final l10n = CoreLocalizations.of(context);
@@ -60,7 +67,7 @@ class LanguagePicker extends StatelessWidget {
         crossAxisCount: 2,
         mainAxisSpacing: Tokens.space3,
         crossAxisSpacing: Tokens.space3,
-        mainAxisExtent: 128,
+        mainAxisExtent: tileExtent,
       ),
       itemCount: languages.length,
       itemBuilder: (context, index) {
@@ -68,6 +75,7 @@ class LanguagePicker extends StatelessWidget {
         return _LanguageTile(
           option: option,
           englishName: _englishName(l10n, option.locale),
+          listenLabel: _ownLocalizations(option.locale, l10n).languagePlayAudio,
           selected: option.locale == selected,
           onTap: () => onSelected(option.locale),
           onPlay: onPlayAudio == null
@@ -87,12 +95,25 @@ class LanguagePicker extends StatelessWidget {
       _ => l10n.languageEnglishName,
     };
   }
+
+  /// Strings in the tile's own language; [fallback] for unsupported locales.
+  static CoreLocalizations _ownLocalizations(
+    Locale locale,
+    CoreLocalizations fallback,
+  ) {
+    try {
+      return lookupCoreLocalizations(locale);
+    } on FlutterError {
+      return fallback;
+    }
+  }
 }
 
 class _LanguageTile extends StatelessWidget {
   const _LanguageTile({
     required this.option,
     required this.englishName,
+    required this.listenLabel,
     required this.selected,
     required this.onTap,
     required this.onPlay,
@@ -100,6 +121,7 @@ class _LanguageTile extends StatelessWidget {
 
   final LanguageOption option;
   final String englishName;
+  final String listenLabel;
   final bool selected;
   final VoidCallback onTap;
   final VoidCallback? onPlay;
@@ -108,13 +130,19 @@ class _LanguageTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = context.app;
     final p = app.palette;
-    final l10n = CoreLocalizations.of(context);
     final borderColor = selected ? p.primary : p.border;
     final width = selected ? app.borderWidth + 1 : app.borderWidth;
+    // Two explicit accessibility nodes per tile: the tile itself
+    // ("<native>, <english>", button, selected) and the speaker button
+    // ("<Listen> <native>", button). Texts and icons are excluded because
+    // the labels already carry them.
     return Semantics(
+      container: true,
+      explicitChildNodes: true,
       button: true,
       selected: selected,
       label: '${option.nativeName}, $englishName',
+      onTap: onTap,
       child: Material(
         color: selected ? app.tint(p.primaryContainer) : p.surface,
         shape: RoundedRectangleBorder(
@@ -124,46 +152,72 @@ class _LanguageTile extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
+          excludeFromSemantics: true,
           child: Padding(
             padding: const EdgeInsets.all(Tokens.space3),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    if (selected)
-                      Icon(Icons.check_circle, color: p.primary)
-                    else
-                      Icon(Icons.translate, color: p.textSecondary),
-                    const Spacer(),
-                    if (onPlay != null)
-                      Semantics(
-                        button: true,
-                        label: '${l10n.languagePlayAudio} ${option.nativeName}',
-                        child: SizedBox.square(
-                          dimension: Tokens.sizeTouchTargetMin,
-                          child: IconButton(
-                            onPressed: onPlay,
-                            color: p.primary,
-                            tooltip: l10n.languagePlayAudio,
-                            icon: const Icon(Icons.volume_up_outlined),
-                          ),
-                        ),
-                      ),
-                  ],
+                ExcludeSemantics(
+                  child: Text(
+                    option.nativeName,
+                    style: app.text.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                ExcludeSemantics(
+                  child: Text(
+                    englishName,
+                    style: app.text.caption.copyWith(color: p.textSecondary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 const Spacer(),
-                Text(
-                  option.nativeName,
-                  style: app.text.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  englishName,
-                  style: app.text.caption.copyWith(color: p.textSecondary),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: onPlay == null
+                            ? const SizedBox(height: Tokens.sizeTouchTargetMin)
+                            : Semantics(
+                                container: true,
+                                button: true,
+                                label: '$listenLabel ${option.nativeName}',
+                                excludeSemantics: true,
+                                onTap: onPlay,
+                                child: TextButton.icon(
+                                  onPressed: onPlay,
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: p.primary,
+                                    minimumSize: const Size(
+                                      Tokens.sizeTouchTargetMin,
+                                      Tokens.sizeTouchTargetMin,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: Tokens.space2,
+                                    ),
+                                    textStyle: app.text.label,
+                                  ),
+                                  icon: const Icon(Icons.volume_up_outlined),
+                                  label: Text(
+                                    listenLabel,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(width: Tokens.space1),
+                    ExcludeSemantics(
+                      child: selected
+                          ? Icon(Icons.check_circle, color: p.primary)
+                          : Icon(Icons.translate, color: p.textSecondary),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -1,5 +1,8 @@
+"use client";
+
 import { EmptyState } from "@/components/ds/EmptyState";
-import { t, type MessageKey } from "@/lib/i18n";
+import { type MessageKey } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 
 export function PlaceholderPage({
   screenId,
@@ -10,6 +13,7 @@ export function PlaceholderPage({
   titleKey: MessageKey;
   emptyKey: MessageKey;
 }) {
+  const t = useT();
   return (
     <div className="flex flex-col gap-6" data-screen={screenId}>
       <h1 className="text-display">{t(titleKey)}</h1>

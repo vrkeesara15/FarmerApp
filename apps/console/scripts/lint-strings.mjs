@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * lint-strings: fails when JSX contains user-facing string literals that are not
- * routed through `t()` from lib/i18n.ts (CLAUDE.md: "Strings go in i18n files, never hard-coded").
+ * routed through `t()` / `useT()` from lib/i18n.ts (CLAUDE.md: "Strings go in i18n files, never hard-coded").
  *
  * What it flags
  *   - JSX text children containing letters:      <p>Hello</p>
@@ -14,7 +14,9 @@
  *   2. Add a glob-ish path prefix to ALLOW_PATHS below (gallery + tests + shadcn primitives are allowed).
  *   3. Punctuation-only / numeric text (e.g. "+91", "—", "%") is never flagged.
  *
- * Usage: node scripts/lint-strings.mjs [--verbose]
+ * Usage: node scripts/lint-strings.mjs [--verbose] [file-or-dir ...]
+ *   Without paths the app/, components/ and lib/ trees are scanned; with paths only those
+ *   files or directories are (used by scripts/lint-strings.test.ts on fixtures).
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, resolve, dirname } from "node:path";
@@ -33,7 +35,9 @@ const TEXT_ATTRS = new Set([
   "label",
   "aria-description",
 ]);
-const verbose = process.argv.includes("--verbose");
+const argv = process.argv.slice(2);
+const verbose = argv.includes("--verbose");
+const explicitTargets = argv.filter((a) => !a.startsWith("--")).map((a) => resolve(a));
 
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir)) {
@@ -64,10 +68,12 @@ function hasIgnoreComment(sf, node) {
 const problems = [];
 let scanned = 0;
 
-for (const dir of SCAN_DIRS) {
+const targets = explicitTargets.length ? explicitTargets : SCAN_DIRS.map((d) => join(root, d));
+
+for (const target of targets) {
   let files = [];
   try {
-    files = walk(join(root, dir));
+    files = statSync(target).isDirectory() ? walk(target) : [target];
   } catch {
     continue;
   }

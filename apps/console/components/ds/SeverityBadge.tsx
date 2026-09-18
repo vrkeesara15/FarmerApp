@@ -1,5 +1,7 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 
 export type Severity = "critical" | "high" | "medium" | "low";
@@ -17,6 +19,7 @@ const variantFor = {
 } as const;
 
 export function SeverityBadge({ severity, className }: SeverityBadgeProps) {
+  const t = useT();
   return (
     <Badge
       variant={variantFor[severity]}

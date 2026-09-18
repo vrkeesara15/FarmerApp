@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 
 export interface AppTextFieldProps extends Omit<React.ComponentProps<"input">, "prefix" | "id"> {
   id?: string;
@@ -24,6 +24,7 @@ export const AppTextField = React.forwardRef<HTMLInputElement, AppTextFieldProps
     { id, label, helper, error, prefix, suffix, optional, phone, className, disabled, ...props },
     ref,
   ) => {
+    const t = useT();
     const autoId = React.useId();
     const inputId = id ?? autoId;
     const helperId = `${inputId}-helper`;

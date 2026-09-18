@@ -2,7 +2,7 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 import { applyTheme, readStoredTheme, storeTheme, systemTheme, type Theme } from "./theme";
 
@@ -28,6 +28,7 @@ export function useTheme(): [Theme, (t: Theme) => void] {
 }
 
 export function ThemeToggle({ className, value, onChange }: ThemeToggleProps) {
+  const t = useT();
   const [theme, setTheme] = useTheme();
   const current = value ?? theme;
   const next: Theme = current === "dark" ? "light" : "dark";

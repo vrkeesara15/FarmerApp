@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'screens/language_screen.dart';
 import 'screens/otp_screen.dart';
 import 'screens/phone_screen.dart';
+import 'screens/settings_screen.dart';
 
 /// Route paths for the onboarding shells (SPEC 13.3).
 abstract final class AppRoutes {
@@ -15,6 +16,9 @@ abstract final class AppRoutes {
 
   /// F03 OTP.
   static const String otp = '/login/otp';
+
+  /// F70 Me.
+  static const String settings = '/me';
 }
 
 /// The app router.
@@ -38,6 +42,10 @@ GoRouter buildRouter({String initialLocation = AppRoutes.language}) {
       GoRoute(
         path: AppRoutes.otp,
         builder: (context, state) => const OtpScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settings,
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'screens/language_screen.dart';
 import 'screens/otp_screen.dart';
 import 'screens/phone_screen.dart';
+import 'screens/settings_screen.dart';
 import 'screens/splash_screen.dart';
 
 /// Route paths for the onboarding shells (SPEC 13.2).
@@ -19,6 +20,9 @@ abstract final class AppRoutes {
 
   /// A04 OTP entry.
   static const String otp = '/login/otp';
+
+  /// A63 Profile and settings.
+  static const String settings = '/settings';
 }
 
 /// The app router.
@@ -46,6 +50,10 @@ GoRouter buildRouter({String initialLocation = AppRoutes.splash}) {
       GoRoute(
         path: AppRoutes.otp,
         builder: (context, state) => const OtpScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settings,
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );

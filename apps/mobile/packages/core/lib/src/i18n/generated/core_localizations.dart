@@ -104,13 +104,13 @@ abstract class CoreLocalizations {
     Locale('te'),
   ];
 
-  /// No description provided for @appNameAgent.
+  /// Field agent app name (brand, transliterate only)
   ///
   /// In en, this message translates to:
   /// **'Mitra'**
   String get appNameAgent;
 
-  /// No description provided for @appNameFarmer.
+  /// Farmer app name (brand, transliterate only)
   ///
   /// In en, this message translates to:
   /// **'Kisan'**
@@ -188,43 +188,43 @@ abstract class CoreLocalizations {
   /// **'Tap the speaker to hear it'**
   String get languagePickerSubtitle;
 
-  /// No description provided for @languagePlayAudio.
+  /// Label next to the speaker icon on a language tile; shown in that tile's own language
   ///
   /// In en, this message translates to:
   /// **'Listen'**
   String get languagePlayAudio;
 
-  /// No description provided for @languageEnglish.
+  /// Script name; identical in every locale
   ///
   /// In en, this message translates to:
   /// **'English'**
   String get languageEnglish;
 
-  /// No description provided for @languageTelugu.
+  /// Script name; identical in every locale
   ///
   /// In en, this message translates to:
   /// **'తెలుగు'**
   String get languageTelugu;
 
-  /// No description provided for @languageKannada.
+  /// Script name; identical in every locale
   ///
   /// In en, this message translates to:
   /// **'ಕನ್ನಡ'**
   String get languageKannada;
 
-  /// No description provided for @languageHindi.
+  /// Script name; identical in every locale
   ///
   /// In en, this message translates to:
   /// **'हिन्दी'**
   String get languageHindi;
 
-  /// No description provided for @languageMarathi.
+  /// Script name; identical in every locale
   ///
   /// In en, this message translates to:
   /// **'मराठी'**
   String get languageMarathi;
 
-  /// No description provided for @languageEnglishName.
+  /// Name of the English language in the current UI language (tile caption)
   ///
   /// In en, this message translates to:
   /// **'English'**
@@ -332,7 +332,7 @@ abstract class CoreLocalizations {
   /// **'Verify'**
   String get otpVerify;
 
-  /// No description provided for @otpDigitLabel.
+  /// Screen-reader label of one OTP box
   ///
   /// In en, this message translates to:
   /// **'Digit {index} of 6'**
@@ -554,19 +554,19 @@ abstract class CoreLocalizations {
   /// **'Advisory'**
   String get visitPurposeAdvisory;
 
-  /// No description provided for @visitPurposeScouting.
+  /// Visit purpose: walking the field to look for pests and disease
   ///
   /// In en, this message translates to:
   /// **'Scouting'**
   String get visitPurposeScouting;
 
-  /// No description provided for @visitPurposeDemo.
+  /// Visit purpose: product demonstration plot
   ///
   /// In en, this message translates to:
   /// **'Demo'**
   String get visitPurposeDemo;
 
-  /// No description provided for @visitPurposeCollection.
+  /// Visit purpose: collecting a payment
   ///
   /// In en, this message translates to:
   /// **'Collection'**
@@ -680,7 +680,7 @@ abstract class CoreLocalizations {
   /// **'Medium confidence'**
   String get confidenceMedium;
 
-  /// No description provided for @confidenceLow.
+  /// Diagnosis not yet confirmed by an expert
   ///
   /// In en, this message translates to:
   /// **'Provisional'**
@@ -758,13 +758,13 @@ abstract class CoreLocalizations {
   /// **'Goggles'**
   String get treatmentPpeGoggles;
 
-  /// No description provided for @treatmentPpeTitle.
+  /// Heading before the protective-equipment icons
   ///
   /// In en, this message translates to:
   /// **'Wear'**
   String get treatmentPpeTitle;
 
-  /// No description provided for @ownBrand.
+  /// Badge on products of the shop's own brand
   ///
   /// In en, this message translates to:
   /// **'Own brand'**
@@ -794,7 +794,7 @@ abstract class CoreLocalizations {
   /// **'Out of stock'**
   String get productOutOfStock;
 
-  /// No description provided for @productPack.
+  /// Pack size label, e.g. 500 ml
   ///
   /// In en, this message translates to:
   /// **'Pack'**
@@ -860,7 +860,7 @@ abstract class CoreLocalizations {
   /// **'Collect cash and give a receipt'**
   String get paymentCashHint;
 
-  /// No description provided for @paymentCredit.
+  /// Pay later; amount goes to the farmer's khata (ledger)
   ///
   /// In en, this message translates to:
   /// **'Credit'**
@@ -932,7 +932,7 @@ abstract class CoreLocalizations {
   /// **'Debit'**
   String get khataDebit;
 
-  /// No description provided for @khataCredit.
+  /// Ledger column: money received from the farmer
   ///
   /// In en, this message translates to:
   /// **'Credit'**
@@ -1106,7 +1106,7 @@ abstract class CoreLocalizations {
   /// **'Light'**
   String get themeLight;
 
-  /// No description provided for @themeSunlight.
+  /// High-contrast theme for use outdoors in bright sun
   ///
   /// In en, this message translates to:
   /// **'Sunlight'**
@@ -1117,6 +1117,12 @@ abstract class CoreLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get settingsTitle;
+
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
 
   /// No description provided for @skeletonLoading.
   ///

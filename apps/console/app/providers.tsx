@@ -4,6 +4,7 @@ import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toasts } from "@/components/ds/Toasts";
 import { ApiError } from "@/lib/api";
+import { initLocaleFromStorage } from "@/lib/i18n";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -22,11 +23,20 @@ function makeQueryClient() {
   });
 }
 
-/** Client layout wrapper: TanStack Query + toasts. Used by the root layout. */
+/** Applies the persisted language after hydration (FA-004); `<html lang>` + subscribers. */
+function LocaleBoot() {
+  React.useEffect(() => {
+    initLocaleFromStorage();
+  }, []);
+  return null;
+}
+
+/** Client layout wrapper: TanStack Query + toasts + locale boot. Used by the root layout. */
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = React.useState(makeQueryClient);
   return (
     <QueryClientProvider client={queryClient}>
+      <LocaleBoot />
       {children}
       <Toasts />
     </QueryClientProvider>

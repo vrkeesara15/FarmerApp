@@ -1,6 +1,8 @@
+"use client";
+
 import * as React from "react";
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "./Skeleton";
 import { trendColorClass, type Trend } from "./StatTile";
@@ -40,6 +42,7 @@ export function KpiCard({
   onClick,
   className,
 }: KpiCardProps) {
+  const t = useT();
   const Icon = trend === "up" ? ArrowUpRight : trend === "down" ? ArrowDownRight : Minus;
   const clamped = progress === undefined ? undefined : Math.max(0, Math.min(1, progress));
   const Wrapper: React.ElementType = onClick ? "button" : "div";

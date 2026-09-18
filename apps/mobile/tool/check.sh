@@ -16,8 +16,17 @@ flutter pub get
 
 step "code generation: tokens, l10n, drift"
 (cd packages/core && dart run tool/gen_tokens.dart)
-(cd packages/core && flutter gen-l10n)
+(cd packages/core && rm -f build/untranslated.json && flutter gen-l10n)
 (cd packages/core && dart run build_runner build --delete-conflicting-outputs)
+
+step "l10n: every ARB key translated in all five languages (FA-004)"
+UNTRANSLATED="packages/core/build/untranslated.json"
+if [[ -s "$UNTRANSLATED" ]] && ! grep -qx '{}' "$UNTRANSLATED"; then
+  echo "Untranslated messages (see $UNTRANSLATED):" >&2
+  cat "$UNTRANSLATED" >&2
+  exit 1
+fi
+echo "l10n: no untranslated messages"
 
 step "dart format --set-exit-if-changed"
 dart format --output=none --set-exit-if-changed .
@@ -27,7 +36,9 @@ for pkg in packages/core apps/agent apps/farmer; do
   (cd "$pkg" && flutter analyze --no-pub)
 done
 
-step "i18n string lint"
+step "i18n string lint (rules in lib/string_lint.dart, self-tested)"
+dart analyze lib test tool
+dart test
 dart run tool/lint_strings.dart
 
 step "flutter test"

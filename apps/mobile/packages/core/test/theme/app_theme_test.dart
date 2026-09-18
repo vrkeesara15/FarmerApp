@@ -2,7 +2,33 @@ import 'package:farmerapp_core/farmerapp_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/harness.dart';
+
 void main() {
+  testWidgets('themed app gives Indic locales +15% line height', (
+    tester,
+  ) async {
+    for (final code in <String>['te', 'kn', 'hi', 'mr']) {
+      await tester.pumpWidget(
+        harness(const SizedBox.shrink(), locale: Locale(code)),
+      );
+      // MaterialApp animates theme changes; settle before reading.
+      await tester.pumpAndSettle();
+      final ctx = tester.element(find.byType(SizedBox));
+      expect(ctx.app.text.body.height, closeTo(24 * 1.15 / 16, 1e-9));
+      expect(ctx.app.text.title.height, closeTo(30 * 1.15 / 22, 1e-9));
+      expect(
+        Theme.of(ctx).textTheme.bodyMedium!.height,
+        closeTo(24 * 1.15 / 16, 1e-9),
+        reason: 'Material text theme must carry the Indic multiplier ($code)',
+      );
+    }
+    await tester.pumpWidget(harness(const SizedBox.shrink()));
+    await tester.pumpAndSettle();
+    final en = tester.element(find.byType(SizedBox));
+    expect(en.app.text.body.height, closeTo(24 / 16, 1e-9));
+  });
+
   test('type scale matches SPEC 13.1 and uses weights 400/600 only', () {
     final t = AppTextStyles.forLocale(const Locale('en'), color: Colors.black);
     expect(t.display.fontSize, 28);

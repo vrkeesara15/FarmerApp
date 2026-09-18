@@ -1,5 +1,5 @@
 name: farmerapp_mobile
-description: FarmerApp mobile monorepo (pub workspace). Not a package itself.
+description: FarmerApp mobile monorepo (pub workspace root). Only hosts the workspace tooling (lib/string_lint.dart, tool/); apps and packages live below.
 publish_to: none
 
 environment:
@@ -9,3 +9,6 @@ workspace:
   - packages/core
   - apps/agent
   - apps/farmer
+
+dev_dependencies:
+  test: ^1.31.1

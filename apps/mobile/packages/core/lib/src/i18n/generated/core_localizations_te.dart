@@ -243,313 +243,312 @@ class CoreLocalizationsTe extends CoreLocalizations {
       'మీరు ఆఫ్‌లైన్‌లో ఉన్నారు. మీ పని సేవ్ అయింది, తర్వాత సింక్ అవుతుంది.';
 
   @override
-  String get visitVerified => 'Verified';
+  String get visitVerified => 'ధృవీకరించబడింది';
 
   @override
-  String get visitPartial => 'Partial';
+  String get visitPartial => 'పాక్షికం';
 
   @override
-  String get visitUnverified => 'Unverified';
+  String get visitUnverified => 'ధృవీకరించలేదు';
 
   @override
   String visitScore(int score) {
-    return 'Score $score of 100';
+    return '100కు $score స్కోరు';
   }
 
   @override
   String visitDurationMinutes(int minutes) {
-    return '$minutes min';
+    return '$minutes నిమి';
   }
 
   @override
-  String get visitPurposeAdvisory => 'Advisory';
+  String get visitPurposeAdvisory => 'సలహా';
 
   @override
-  String get visitPurposeScouting => 'Scouting';
+  String get visitPurposeScouting => 'పొలం పరిశీలన';
 
   @override
-  String get visitPurposeDemo => 'Demo';
+  String get visitPurposeDemo => 'డెమో';
 
   @override
-  String get visitPurposeCollection => 'Collection';
+  String get visitPurposeCollection => 'వసూలు';
 
   @override
-  String get visitPurposeSale => 'Sale';
+  String get visitPurposeSale => 'అమ్మకం';
 
   @override
-  String get visitPurposeMeeting => 'Meeting';
+  String get visitPurposeMeeting => 'సమావేశం';
 
   @override
-  String get proofGeofence => 'Inside farm boundary';
+  String get proofGeofence => 'పొలం హద్దుల లోపల';
 
   @override
-  String get proofGeofenceMissing => 'You were outside the farm boundary';
+  String get proofGeofenceMissing => 'మీరు పొలం హద్దుల బయట ఉన్నారు';
 
   @override
-  String get proofPhoto => 'Photo taken';
+  String get proofPhoto => 'ఫోటో తీశారు';
 
   @override
-  String get proofPhotoMissing => 'No photo taken during the visit';
+  String get proofPhotoMissing => 'సందర్శనలో ఫోటో తీయలేదు';
 
   @override
-  String get proofFarmerConfirmed => 'Farmer confirmed';
+  String get proofFarmerConfirmed => 'రైతు ధృవీకరించారు';
 
   @override
-  String get proofFarmerConfirmedMissing => 'Farmer did not confirm the visit';
+  String get proofFarmerConfirmedMissing => 'రైతు సందర్శనను ధృవీకరించలేదు';
 
   @override
-  String get proofDuration => 'Minimum time on farm met';
+  String get proofDuration => 'పొలంలో కనీస సమయం పూర్తయింది';
 
   @override
-  String get proofDurationMissing => 'Visit was shorter than 10 minutes';
+  String get proofDurationMissing => 'సందర్శన 10 నిమిషాల కంటే తక్కువ';
 
   @override
-  String get proofDone => 'Done';
+  String get proofDone => 'పూర్తి';
 
   @override
-  String get proofMissing => 'Missing';
+  String get proofMissing => 'లేదు';
 
   @override
-  String get cameraHoldSteady => 'Hold steady';
+  String get cameraHoldSteady => 'కదలకుండా పట్టుకోండి';
 
   @override
-  String get cameraGoodLight => 'Good light';
+  String get cameraGoodLight => 'మంచి వెలుతురు';
 
   @override
-  String get cameraFillFrame => 'Fill the frame';
+  String get cameraFillFrame => 'ఫ్రేమ్ నింపండి';
 
   @override
-  String get cameraLeafFrame => 'Place the leaf inside the frame';
+  String get cameraLeafFrame => 'ఆకును ఫ్రేమ్ లోపల ఉంచండి';
 
   @override
-  String get confidenceHigh => 'High confidence';
+  String get confidenceHigh => 'అధిక నమ్మకం';
 
   @override
-  String get confidenceMedium => 'Medium confidence';
+  String get confidenceMedium => 'మధ్యస్థ నమ్మకం';
 
   @override
-  String get confidenceLow => 'Provisional';
+  String get confidenceLow => 'తాత్కాలికం';
 
   @override
-  String get diagnosisSymptomsTitle => 'Check these signs';
+  String get diagnosisSymptomsTitle => 'ఈ లక్షణాలు చూడండి';
 
   @override
-  String get diagnosisProvisionalNote =>
-      'Our expert will confirm within 24 hours';
+  String get diagnosisProvisionalNote => 'మా నిపుణులు 24 గంటల్లో ధృవీకరిస్తారు';
 
   @override
-  String get diagnosisProblem => 'Problem';
+  String get diagnosisProblem => 'సమస్య';
 
   @override
-  String get treatmentOrganic => 'Organic';
+  String get treatmentOrganic => 'సేంద్రియ';
 
   @override
-  String get treatmentChemical => 'Chemical';
+  String get treatmentChemical => 'రసాయన';
 
   @override
-  String get treatmentActiveIngredient => 'Active ingredient';
+  String get treatmentActiveIngredient => 'క్రియాశీల పదార్థం';
 
   @override
-  String get treatmentDosePerAcre => 'Per acre';
+  String get treatmentDosePerAcre => 'ఎకరానికి';
 
   @override
-  String get treatmentDosePerTank => 'Per 15 L tank';
+  String get treatmentDosePerTank => '15 లీ ట్యాంకుకు';
 
   @override
   String treatmentSafetyInterval(int days) {
-    return 'Wait $days days before harvest';
+    return 'కోతకు ముందు $days రోజులు ఆగండి';
   }
 
   @override
-  String get treatmentPpeGloves => 'Gloves';
+  String get treatmentPpeGloves => 'చేతి తొడుగులు';
 
   @override
-  String get treatmentPpeMask => 'Mask';
+  String get treatmentPpeMask => 'మాస్క్';
 
   @override
-  String get treatmentPpeGoggles => 'Goggles';
+  String get treatmentPpeGoggles => 'కళ్ళజోడు';
 
   @override
-  String get treatmentPpeTitle => 'Wear';
+  String get treatmentPpeTitle => 'ధరించండి';
 
   @override
-  String get ownBrand => 'Own brand';
+  String get ownBrand => 'సొంత బ్రాండ్';
 
   @override
-  String get productAdd => 'Add';
+  String get productAdd => 'జోడించు';
 
   @override
-  String get productAdded => 'Added';
+  String get productAdded => 'జోడించారు';
 
   @override
   String productStockAtStore(int count, String store) {
-    return '$count in stock at $store';
+    return '$storeలో $count స్టాక్ ఉంది';
   }
 
   @override
-  String get productOutOfStock => 'Out of stock';
+  String get productOutOfStock => 'స్టాక్ లేదు';
 
   @override
-  String get productPack => 'Pack';
+  String get productPack => 'ప్యాక్';
 
   @override
   String cartItems(int count) {
-    return '$count items';
+    return '$count వస్తువులు';
   }
 
   @override
-  String get cartTotal => 'Total';
+  String get cartTotal => 'మొత్తం';
 
   @override
-  String get cartCheckout => 'Checkout';
+  String get cartCheckout => 'చెల్లించు';
 
   @override
-  String get paymentMethodTitle => 'How will you pay?';
+  String get paymentMethodTitle => 'ఎలా చెల్లిస్తారు?';
 
   @override
   String get paymentUpiQr => 'UPI QR';
 
   @override
-  String get paymentUpiQrHint => 'Scan and pay now';
+  String get paymentUpiQrHint => 'స్కాన్ చేసి ఇప్పుడే చెల్లించండి';
 
   @override
-  String get paymentLink => 'Payment link';
+  String get paymentLink => 'చెల్లింపు లింక్';
 
   @override
-  String get paymentLinkHint => 'Send by SMS or WhatsApp';
+  String get paymentLinkHint => 'SMS లేదా WhatsApp ద్వారా పంపండి';
 
   @override
-  String get paymentCash => 'Cash';
+  String get paymentCash => 'నగదు';
 
   @override
-  String get paymentCashHint => 'Collect cash and give a receipt';
+  String get paymentCashHint => 'నగదు తీసుకుని రసీదు ఇవ్వండి';
 
   @override
-  String get paymentCredit => 'Credit';
+  String get paymentCredit => 'అరువు';
 
   @override
-  String get paymentCreditHint => 'Add to farmer khata';
+  String get paymentCreditHint => 'రైతు ఖాతాలో వేయండి';
 
   @override
-  String get upiWaiting => 'Waiting for payment';
+  String get upiWaiting => 'చెల్లింపు కోసం వేచి ఉన్నాము';
 
   @override
-  String get upiPaid => 'Payment received';
+  String get upiPaid => 'చెల్లింపు అందింది';
 
   @override
-  String get upiFailed => 'Payment failed';
+  String get upiFailed => 'చెల్లింపు విఫలమైంది';
 
   @override
   String upiExpiresIn(String time) {
-    return 'Expires in $time';
+    return '$timeలో గడువు ముగుస్తుంది';
   }
 
   @override
-  String get upiAmount => 'Amount';
+  String get upiAmount => 'మొత్తం';
 
   @override
-  String get upiScanHint => 'Ask the farmer to scan with any UPI app';
+  String get upiScanHint => 'ఏదైనా UPI యాప్‌తో స్కాన్ చేయమని రైతును అడగండి';
 
   @override
-  String get upiRetry => 'Show a new QR';
+  String get upiRetry => 'కొత్త QR చూపించు';
 
   @override
-  String get khataBalance => 'Balance due';
+  String get khataBalance => 'బాకీ మొత్తం';
 
   @override
   String khataDueDate(String date) {
-    return 'Due on $date';
+    return '$date లోపు చెల్లించాలి';
   }
 
   @override
-  String get khataDebit => 'Debit';
+  String get khataDebit => 'ఇచ్చింది';
 
   @override
-  String get khataCredit => 'Credit';
+  String get khataCredit => 'వచ్చింది';
 
   @override
-  String get khataNoEntries => 'No entries yet';
+  String get khataNoEntries => 'ఇంకా ఎంట్రీలు లేవు';
 
   @override
-  String get khataPayNow => 'Pay now';
+  String get khataPayNow => 'ఇప్పుడే చెల్లించు';
 
   @override
-  String get khataCollect => 'Collect';
+  String get khataCollect => 'వసూలు చేయి';
 
   @override
-  String get emptyDefaultTitle => 'Nothing here yet';
+  String get emptyDefaultTitle => 'ఇంకా ఏమీ లేదు';
 
   @override
-  String get emptyDefaultHelp => 'Items will appear here once you add them.';
+  String get emptyDefaultHelp => 'మీరు జోడించాక ఇక్కడ కనిపిస్తాయి.';
 
   @override
-  String get errorTitle => 'Something went wrong';
+  String get errorTitle => 'ఏదో తప్పు జరిగింది';
 
   @override
-  String get errorHelp => 'Check your connection and try again.';
+  String get errorHelp => 'మీ కనెక్షన్ తనిఖీ చేసి మళ్ళీ ప్రయత్నించండి.';
 
   @override
-  String get ratingTitle => 'Rate your visit';
+  String get ratingTitle => 'మీ సందర్శనకు రేటింగ్ ఇవ్వండి';
 
   @override
-  String get rating1 => 'Very bad';
+  String get rating1 => 'చాలా చెడు';
 
   @override
-  String get rating2 => 'Bad';
+  String get rating2 => 'చెడు';
 
   @override
-  String get rating3 => 'Okay';
+  String get rating3 => 'పర్వాలేదు';
 
   @override
-  String get rating4 => 'Good';
+  String get rating4 => 'బాగుంది';
 
   @override
-  String get rating5 => 'Very good';
+  String get rating5 => 'చాలా బాగుంది';
 
   @override
   String stepperStepOf(int current, int total) {
-    return 'Step $current of $total';
+    return '$totalలో $currentవ దశ';
   }
 
   @override
   String farmerLastVisit(String date) {
-    return 'Last visit $date';
+    return 'చివరి సందర్శన $date';
   }
 
   @override
-  String get farmerNoVisit => 'No visit yet';
+  String get farmerNoVisit => 'ఇంకా సందర్శన లేదు';
 
   @override
   String farmerBalanceDue(String amount) {
-    return 'Due $amount';
+    return 'బాకీ $amount';
   }
 
   @override
-  String get farmerVillage => 'Village';
+  String get farmerVillage => 'గ్రామం';
 
   @override
-  String get statTrendUp => 'Up';
+  String get statTrendUp => 'పెరిగింది';
 
   @override
-  String get statTrendDown => 'Down';
+  String get statTrendDown => 'తగ్గింది';
 
   @override
-  String get statTrendFlat => 'No change';
+  String get statTrendFlat => 'మార్పు లేదు';
 
   @override
-  String get stageSowing => 'Sowing';
+  String get stageSowing => 'విత్తడం';
 
   @override
-  String get stageVegetative => 'Growing';
+  String get stageVegetative => 'పెరుగుదల';
 
   @override
-  String get stageFlowering => 'Flowering';
+  String get stageFlowering => 'పూత';
 
   @override
-  String get stageFruiting => 'Fruiting';
+  String get stageFruiting => 'కాత';
 
   @override
-  String get stageHarvest => 'Harvest';
+  String get stageHarvest => 'కోత';
 
   @override
   String get settingsTheme => 'థీమ్';
@@ -564,5 +563,8 @@ class CoreLocalizationsTe extends CoreLocalizations {
   String get settingsTitle => 'సెట్టింగ్‌లు';
 
   @override
-  String get skeletonLoading => 'Loading content';
+  String get settingsLanguage => 'భాష';
+
+  @override
+  String get skeletonLoading => 'కంటెంట్ లోడ్ అవుతోంది';
 }

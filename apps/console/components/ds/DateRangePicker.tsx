@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 
 /** ISO dates (YYYY-MM-DD), interpreted as IST calendar days by the API. */
@@ -34,6 +34,7 @@ export function DateRangePicker({
   max,
   className,
 }: DateRangePickerProps) {
+  const t = useT();
   const id = React.useId();
   const invalid = !isValidRange(value);
   return (

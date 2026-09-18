@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "./EmptyState";
 import { ErrorState } from "./ErrorState";
@@ -83,6 +83,7 @@ export function DataTable<Row>({
   skeletonRows = 5,
   className,
 }: DataTableProps<Row>) {
+  const t = useT();
   const [internalSort, setInternalSort] = React.useState<DataTableSort | undefined>();
   const activeSort = sort ?? internalSort;
 

@@ -2,7 +2,7 @@
 
 import { AlertTriangle } from "lucide-react";
 import { AppButton } from "./AppButton";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 
 export interface ErrorStateProps {
@@ -16,6 +16,7 @@ export interface ErrorStateProps {
 }
 
 export function ErrorState({ title, help, detail, onRetry, retrying, className }: ErrorStateProps) {
+  const t = useT();
   return (
     <div
       role="alert"

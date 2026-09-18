@@ -1,4 +1,6 @@
-import { t } from "@/lib/i18n";
+"use client";
+
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 
 export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -8,6 +10,7 @@ export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
 
 /** Shimmering placeholder block. Size it with width/height classes. */
 export function Skeleton({ className, announce, ...props }: SkeletonProps) {
+  const t = useT();
   return (
     <div
       className={cn("bg-border/70 animate-pulse rounded-input", className)}

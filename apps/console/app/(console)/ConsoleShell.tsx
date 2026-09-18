@@ -16,7 +16,7 @@ import { SideNav, type SideNavItem } from "@/components/ds/SideNav";
 import { TopBar } from "@/components/ds/TopBar";
 import type { DateRange } from "@/components/ds/DateRangePicker";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 
 const NAV_STORAGE_KEY = "farmerapp.console.nav.collapsed";
 
@@ -27,6 +27,7 @@ function isoDaysAgo(days: number): string {
 }
 
 export function ConsoleShell({ children }: { children: React.ReactNode }) {
+  const t = useT();
   const [collapsed, setCollapsed] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const [dateRange, setDateRange] = React.useState<DateRange>({

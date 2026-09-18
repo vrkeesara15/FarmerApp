@@ -11,6 +11,7 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { ApiError, auth, session } from "@/lib/api";
 import { normaliseIndianMobile } from "@/lib/format";
 import { t, type MessageKey } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 
 type Step =
   | { kind: "phone" }
@@ -56,6 +57,7 @@ export function loginErrorMessage(err: unknown): string | undefined {
 const isLocked = (err: unknown) => err instanceof ApiError && err.problem.code === "otp_locked";
 
 export function LoginForm() {
+  const t = useT();
   const router = useRouter();
   const [step, setStep] = React.useState<Step>({ kind: "phone" });
   const [phone, setPhone] = React.useState("");

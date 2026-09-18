@@ -1,5 +1,7 @@
+"use client";
+
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "./Skeleton";
 
@@ -32,6 +34,7 @@ export function StatTile({
   loading,
   className,
 }: StatTileProps) {
+  const t = useT();
   const Icon = trend === "up" ? ArrowUpRight : trend === "down" ? ArrowDownRight : Minus;
   const trendLabel =
     trend === "up"

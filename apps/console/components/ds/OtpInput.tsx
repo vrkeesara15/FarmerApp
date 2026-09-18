@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 
 export interface OtpInputProps {
   length?: number;
@@ -31,6 +31,7 @@ export function OtpInput({
   autoFocus,
   className,
 }: OtpInputProps) {
+  const t = useT();
   const refs = React.useRef<Array<HTMLInputElement | null>>([]);
   const [secondsLeft, setSecondsLeft] = React.useState(resendAfterSeconds);
   const errorId = React.useId();

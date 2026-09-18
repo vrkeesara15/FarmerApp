@@ -1,4 +1,6 @@
-import { t } from "@/lib/i18n";
+"use client";
+
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 
 export type Confidence = "high" | "medium" | "low";
@@ -17,6 +19,7 @@ const styles: Record<Confidence, string> = {
 };
 
 export function ConfidenceBand({ level, provisional, className }: ConfidenceBandProps) {
+  const t = useT();
   const label =
     level === "low" && provisional ? t("confidence.provisional") : t(`confidence.${level}`);
   return (

@@ -54,6 +54,37 @@ test.describe("console smoke (mock API)", () => {
     await expect(page.getByTestId("side-nav")).toHaveAttribute("data-collapsed", "true");
   });
 
+  test("language switch from the profile menu is live, sets html lang and persists", async ({
+    page,
+  }) => {
+    await page.goto("/home");
+    await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+
+    await page.getByTestId("profile-menu-trigger").click();
+    const items = page.getByRole("menuitemradio");
+    await expect(items).toHaveCount(5);
+    await expect(items.nth(1)).toContainText("తెలుగు");
+    await items.nth(1).click();
+
+    // No navigation or reload: the same page is Telugu now (FA-004).
+    await expect(page.getByRole("heading", { level: 1, name: "హోమ్" })).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("lang", "te");
+    await expect(page.getByRole("link", { name: "రైతులు" })).toBeVisible();
+
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("lang", "te");
+    await expect(page.getByRole("heading", { level: 1, name: "హోమ్" })).toBeVisible();
+
+    // Back to English through the menu (Hindi first, to prove Devanagari renders too).
+    await page.getByTestId("profile-menu-trigger").click();
+    await page.getByTestId("locale-hi").click();
+    await expect(page.getByRole("heading", { level: 1, name: "होम" })).toBeVisible();
+    await page.getByTestId("profile-menu-trigger").click();
+    await page.getByTestId("locale-en").click();
+    await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  });
+
   test("design gallery renders every component in both themes", async ({ page }) => {
     await page.goto("/design");
     await expect(page.getByRole("heading", { level: 1, name: "Design system" })).toBeVisible();

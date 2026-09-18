@@ -28,6 +28,14 @@
     "light": "Light",
     "dark": "Dark"
   },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "te": "Telugu",
+    "kn": "Kannada",
+    "hi": "Hindi",
+    "mr": "Marathi"
+  },
   "nav": {
     "home": "Home",
     "fieldTeam": "Field team",

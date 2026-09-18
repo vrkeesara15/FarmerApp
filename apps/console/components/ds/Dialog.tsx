@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 import { AppButton } from "./AppButton";
 
 export interface DialogProps {
@@ -47,6 +47,7 @@ export function Dialog({
   error,
   className,
 }: DialogProps) {
+  const t = useT();
   return (
     <DialogRoot open={open} onOpenChange={loading ? () => {} : onOpenChange}>
       {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}

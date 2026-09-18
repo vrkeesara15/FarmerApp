@@ -10,49 +10,49 @@ class CoreLocalizationsHi extends CoreLocalizations {
   CoreLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
-  String get appNameAgent => 'Mitra';
+  String get appNameAgent => 'मित्र';
 
   @override
-  String get appNameFarmer => 'Kisan';
+  String get appNameFarmer => 'किसान';
 
   @override
-  String get splashTagline => 'Trusted advice for your farm';
+  String get splashTagline => 'आपके खेत के लिए भरोसेमंद सलाह';
 
   @override
-  String get actionContinue => 'Continue';
+  String get actionContinue => 'आगे बढ़ें';
 
   @override
-  String get actionBack => 'Back';
+  String get actionBack => 'पीछे';
 
   @override
-  String get actionNext => 'Next';
+  String get actionNext => 'अगला';
 
   @override
-  String get actionRetry => 'Try again';
+  String get actionRetry => 'फिर से कोशिश करें';
 
   @override
-  String get actionCancel => 'Cancel';
+  String get actionCancel => 'रद्द करें';
 
   @override
-  String get actionDone => 'Done';
+  String get actionDone => 'हो गया';
 
   @override
-  String get actionSkip => 'Skip';
+  String get actionSkip => 'छोड़ें';
 
   @override
-  String get actionClose => 'Close';
+  String get actionClose => 'बंद करें';
 
   @override
-  String get loading => 'Loading';
+  String get loading => 'लोड हो रहा है';
 
   @override
-  String get languagePickerTitle => 'Choose your language';
+  String get languagePickerTitle => 'अपनी भाषा चुनें';
 
   @override
-  String get languagePickerSubtitle => 'Tap the speaker to hear it';
+  String get languagePickerSubtitle => 'सुनने के लिए स्पीकर दबाएँ';
 
   @override
-  String get languagePlayAudio => 'Listen';
+  String get languagePlayAudio => 'सुनें';
 
   @override
   String get languageEnglish => 'English';
@@ -70,496 +70,499 @@ class CoreLocalizationsHi extends CoreLocalizations {
   String get languageMarathi => 'मराठी';
 
   @override
-  String get languageEnglishName => 'English';
+  String get languageEnglishName => 'अंग्रेज़ी';
 
   @override
-  String get languageTeluguName => 'Telugu';
+  String get languageTeluguName => 'तेलुगु';
 
   @override
-  String get languageKannadaName => 'Kannada';
+  String get languageKannadaName => 'कन्नड़';
 
   @override
-  String get languageHindiName => 'Hindi';
+  String get languageHindiName => 'हिन्दी';
 
   @override
-  String get languageMarathiName => 'Marathi';
+  String get languageMarathiName => 'मराठी';
 
   @override
-  String get phoneLoginTitle => 'Enter your mobile number';
+  String get phoneLoginTitle => 'अपना मोबाइल नंबर डालें';
 
   @override
-  String get phoneLabel => 'Mobile number';
+  String get phoneLabel => 'मोबाइल नंबर';
 
   @override
   String get phonePrefix => '+91';
 
   @override
-  String get phoneHelper => 'We will send a 6-digit OTP by SMS';
+  String get phoneHelper => 'हम SMS से 6 अंकों का OTP भेजेंगे';
 
   @override
-  String get phoneInvalid => 'Enter a valid 10-digit mobile number';
+  String get phoneInvalid => 'सही 10 अंकों का मोबाइल नंबर डालें';
 
   @override
-  String get phoneSendOtp => 'Send OTP';
+  String get phoneSendOtp => 'OTP भेजें';
 
   @override
-  String get otpTitle => 'Enter the OTP';
+  String get otpTitle => 'OTP डालें';
 
   @override
   String otpSubtitle(String phone) {
-    return 'Sent to +91 $phone';
+    return '+91 $phone पर भेजा गया';
   }
 
   @override
-  String get otpLabel => '6-digit OTP';
+  String get otpLabel => '6 अंकों का OTP';
 
   @override
-  String get otpResend => 'Resend OTP';
+  String get otpResend => 'OTP दोबारा भेजें';
 
   @override
   String otpResendIn(int seconds) {
-    return 'Resend in $seconds s';
+    return '$seconds सेकंड में दोबारा भेजें';
   }
 
   @override
-  String get otpInvalid => 'Incorrect OTP. Please try again.';
+  String get otpInvalid => 'OTP गलत है। फिर से कोशिश करें।';
 
   @override
-  String get otpVerify => 'Verify';
+  String get otpVerify => 'जाँचें';
 
   @override
   String otpDigitLabel(int index) {
-    return 'Digit $index of 6';
+    return '6 में से $indexवाँ अंक';
   }
 
   @override
   String otpAttemptsLeft(int count) {
-    return '$count attempts left';
+    return '$count कोशिशें बाकी';
   }
 
   @override
   String otpLocked(int minutes) {
-    return 'Too many wrong attempts. Try again in $minutes min.';
+    return 'बहुत बार गलत OTP डाला। $minutes मिनट बाद फिर कोशिश करें।';
   }
 
   @override
   String otpRateLimited(int minutes) {
-    return 'Too many codes requested. Try again in $minutes min.';
+    return 'बहुत बार OTP माँगा गया। $minutes मिनट बाद फिर कोशिश करें।';
   }
 
   @override
-  String get otpExpired => 'This code has expired. Request a new one.';
+  String get otpExpired => 'यह OTP समाप्त हो गया है। नया माँगें।';
 
   @override
   String get phoneNotFound =>
-      'This number is not registered. Ask your manager to add you.';
+      'यह नंबर पंजीकृत नहीं है। अपने मैनेजर से जोड़ने को कहें।';
 
   @override
-  String get networkError => 'No connection. Check your network and try again.';
+  String get networkError =>
+      'कनेक्शन नहीं है। नेटवर्क जाँचें और फिर कोशिश करें।';
 
   @override
-  String get consentTitle => 'Your location and data';
+  String get consentTitle => 'आपकी लोकेशन और डेटा';
 
   @override
-  String get consentPoint1 => 'We collect your location and visit photos.';
+  String get consentPoint1 => 'हम आपकी लोकेशन और विज़िट की फ़ोटो लेते हैं।';
 
   @override
-  String get consentPoint2 =>
-      'Location is collected only while you are on duty.';
+  String get consentPoint2 => 'लोकेशन सिर्फ़ ड्यूटी के समय ली जाती है।';
 
   @override
   String get consentPoint3 =>
-      'It is used for travel allowance and visit credit.';
+      'इसका उपयोग यात्रा भत्ते और विज़िट क्रेडिट के लिए होता है।';
 
   @override
   String get consentPoint4 =>
-      'Your manager and owner can see it. Farmers cannot.';
+      'आपके मैनेजर और मालिक इसे देख सकते हैं। किसान नहीं।';
 
   @override
-  String get consentAgree => 'I agree';
+  String get consentAgree => 'मैं सहमत हूँ';
 
   @override
-  String get consentPolicyLink => 'Read the full policy';
+  String get consentPolicyLink => 'पूरी नीति पढ़ें';
 
   @override
-  String get consentDataCardTitle => 'Use my data to give crop advice';
+  String get consentDataCardTitle =>
+      'फ़सल की सलाह के लिए मेरा डेटा इस्तेमाल करें';
 
   @override
   String get consentDataCardBody =>
-      'We look at your crop photos and farm details to help you.';
+      'आपकी मदद के लिए हम आपकी फ़सल की फ़ोटो और खेत की जानकारी देखते हैं।';
 
   @override
-  String get consentRequired => 'Required';
+  String get consentRequired => 'ज़रूरी';
 
   @override
-  String get consentOffersCardTitle => 'Send me offers and tips';
+  String get consentOffersCardTitle => 'मुझे ऑफ़र और सुझाव भेजें';
 
   @override
-  String get consentOffersCardBody =>
-      'Messages about products and farming tips.';
+  String get consentOffersCardBody => 'उत्पादों और खेती के सुझावों के संदेश।';
 
   @override
-  String get consentOptional => 'Optional';
+  String get consentOptional => 'वैकल्पिक';
 
   @override
-  String get consentReadAloud => 'Read aloud';
+  String get consentReadAloud => 'पढ़कर सुनाएँ';
 
   @override
-  String get dutyOn => 'On duty';
+  String get dutyOn => 'ड्यूटी पर';
 
   @override
-  String get dutyOff => 'Off duty';
+  String get dutyOff => 'ड्यूटी पर नहीं';
 
   @override
-  String get dutyGoOn => 'Go on duty';
+  String get dutyGoOn => 'ड्यूटी शुरू करें';
 
   @override
-  String get dutyGoOff => 'Go off duty';
+  String get dutyGoOff => 'ड्यूटी खत्म करें';
 
   @override
   String dutyElapsed(String duration) {
-    return 'On duty for $duration';
+    return '$duration से ड्यूटी पर';
   }
 
   @override
-  String get dutyLocationNote => 'Location is on only while you are on duty';
+  String get dutyLocationNote => 'लोकेशन सिर्फ़ ड्यूटी के समय चालू रहती है';
 
   @override
-  String get syncSynced => 'Synced';
+  String get syncSynced => 'सिंक हो गया';
 
   @override
   String syncPending(int count) {
-    return 'Pending $count';
+    return '$count बाकी';
   }
 
   @override
-  String get syncFailed => 'Sync failed';
+  String get syncFailed => 'सिंक विफल';
 
   @override
   String get offlineBanner =>
-      'You are offline. Your work is saved and will sync later.';
+      'आप ऑफ़लाइन हैं। आपका काम सेव है और बाद में सिंक होगा।';
 
   @override
-  String get visitVerified => 'Verified';
+  String get visitVerified => 'सत्यापित';
 
   @override
-  String get visitPartial => 'Partial';
+  String get visitPartial => 'आंशिक';
 
   @override
-  String get visitUnverified => 'Unverified';
+  String get visitUnverified => 'असत्यापित';
 
   @override
   String visitScore(int score) {
-    return 'Score $score of 100';
+    return '100 में से $score अंक';
   }
 
   @override
   String visitDurationMinutes(int minutes) {
-    return '$minutes min';
+    return '$minutes मिनट';
   }
 
   @override
-  String get visitPurposeAdvisory => 'Advisory';
+  String get visitPurposeAdvisory => 'सलाह';
 
   @override
-  String get visitPurposeScouting => 'Scouting';
+  String get visitPurposeScouting => 'खेत निरीक्षण';
 
   @override
-  String get visitPurposeDemo => 'Demo';
+  String get visitPurposeDemo => 'डेमो';
 
   @override
-  String get visitPurposeCollection => 'Collection';
+  String get visitPurposeCollection => 'वसूली';
 
   @override
-  String get visitPurposeSale => 'Sale';
+  String get visitPurposeSale => 'बिक्री';
 
   @override
-  String get visitPurposeMeeting => 'Meeting';
+  String get visitPurposeMeeting => 'बैठक';
 
   @override
-  String get proofGeofence => 'Inside farm boundary';
+  String get proofGeofence => 'खेत की सीमा के अंदर';
 
   @override
-  String get proofGeofenceMissing => 'You were outside the farm boundary';
+  String get proofGeofenceMissing => 'आप खेत की सीमा से बाहर थे';
 
   @override
-  String get proofPhoto => 'Photo taken';
+  String get proofPhoto => 'फ़ोटो ली गई';
 
   @override
-  String get proofPhotoMissing => 'No photo taken during the visit';
+  String get proofPhotoMissing => 'विज़िट के दौरान फ़ोटो नहीं ली';
 
   @override
-  String get proofFarmerConfirmed => 'Farmer confirmed';
+  String get proofFarmerConfirmed => 'किसान ने पुष्टि की';
 
   @override
-  String get proofFarmerConfirmedMissing => 'Farmer did not confirm the visit';
+  String get proofFarmerConfirmedMissing => 'किसान ने विज़िट की पुष्टि नहीं की';
 
   @override
-  String get proofDuration => 'Minimum time on farm met';
+  String get proofDuration => 'खेत पर न्यूनतम समय पूरा';
 
   @override
-  String get proofDurationMissing => 'Visit was shorter than 10 minutes';
+  String get proofDurationMissing => 'विज़िट 10 मिनट से कम थी';
 
   @override
-  String get proofDone => 'Done';
+  String get proofDone => 'पूरा';
 
   @override
-  String get proofMissing => 'Missing';
+  String get proofMissing => 'नहीं';
 
   @override
-  String get cameraHoldSteady => 'Hold steady';
+  String get cameraHoldSteady => 'स्थिर रखें';
 
   @override
-  String get cameraGoodLight => 'Good light';
+  String get cameraGoodLight => 'अच्छी रोशनी';
 
   @override
-  String get cameraFillFrame => 'Fill the frame';
+  String get cameraFillFrame => 'फ़्रेम भरें';
 
   @override
-  String get cameraLeafFrame => 'Place the leaf inside the frame';
+  String get cameraLeafFrame => 'पत्ती को फ़्रेम के अंदर रखें';
 
   @override
-  String get confidenceHigh => 'High confidence';
+  String get confidenceHigh => 'उच्च भरोसा';
 
   @override
-  String get confidenceMedium => 'Medium confidence';
+  String get confidenceMedium => 'मध्यम भरोसा';
 
   @override
-  String get confidenceLow => 'Provisional';
+  String get confidenceLow => 'अस्थायी';
 
   @override
-  String get diagnosisSymptomsTitle => 'Check these signs';
+  String get diagnosisSymptomsTitle => 'ये लक्षण जाँचें';
 
   @override
   String get diagnosisProvisionalNote =>
-      'Our expert will confirm within 24 hours';
+      'हमारे विशेषज्ञ 24 घंटे में पुष्टि करेंगे';
 
   @override
-  String get diagnosisProblem => 'Problem';
+  String get diagnosisProblem => 'समस्या';
 
   @override
-  String get treatmentOrganic => 'Organic';
+  String get treatmentOrganic => 'जैविक';
 
   @override
-  String get treatmentChemical => 'Chemical';
+  String get treatmentChemical => 'रासायनिक';
 
   @override
-  String get treatmentActiveIngredient => 'Active ingredient';
+  String get treatmentActiveIngredient => 'सक्रिय तत्व';
 
   @override
-  String get treatmentDosePerAcre => 'Per acre';
+  String get treatmentDosePerAcre => 'प्रति एकड़';
 
   @override
-  String get treatmentDosePerTank => 'Per 15 L tank';
+  String get treatmentDosePerTank => 'प्रति 15 ली टंकी';
 
   @override
   String treatmentSafetyInterval(int days) {
-    return 'Wait $days days before harvest';
+    return 'कटाई से पहले $days दिन रुकें';
   }
 
   @override
-  String get treatmentPpeGloves => 'Gloves';
+  String get treatmentPpeGloves => 'दस्ताने';
 
   @override
-  String get treatmentPpeMask => 'Mask';
+  String get treatmentPpeMask => 'मास्क';
 
   @override
-  String get treatmentPpeGoggles => 'Goggles';
+  String get treatmentPpeGoggles => 'चश्मा';
 
   @override
-  String get treatmentPpeTitle => 'Wear';
+  String get treatmentPpeTitle => 'पहनें';
 
   @override
-  String get ownBrand => 'Own brand';
+  String get ownBrand => 'अपना ब्रांड';
 
   @override
-  String get productAdd => 'Add';
+  String get productAdd => 'जोड़ें';
 
   @override
-  String get productAdded => 'Added';
+  String get productAdded => 'जोड़ा गया';
 
   @override
   String productStockAtStore(int count, String store) {
-    return '$count in stock at $store';
+    return '$store में $count स्टॉक में';
   }
 
   @override
-  String get productOutOfStock => 'Out of stock';
+  String get productOutOfStock => 'स्टॉक नहीं';
 
   @override
-  String get productPack => 'Pack';
+  String get productPack => 'पैक';
 
   @override
   String cartItems(int count) {
-    return '$count items';
+    return '$count चीज़ें';
   }
 
   @override
-  String get cartTotal => 'Total';
+  String get cartTotal => 'कुल';
 
   @override
-  String get cartCheckout => 'Checkout';
+  String get cartCheckout => 'भुगतान करें';
 
   @override
-  String get paymentMethodTitle => 'How will you pay?';
+  String get paymentMethodTitle => 'आप कैसे भुगतान करेंगे?';
 
   @override
   String get paymentUpiQr => 'UPI QR';
 
   @override
-  String get paymentUpiQrHint => 'Scan and pay now';
+  String get paymentUpiQrHint => 'स्कैन करके अभी भुगतान करें';
 
   @override
-  String get paymentLink => 'Payment link';
+  String get paymentLink => 'भुगतान लिंक';
 
   @override
-  String get paymentLinkHint => 'Send by SMS or WhatsApp';
+  String get paymentLinkHint => 'SMS या WhatsApp से भेजें';
 
   @override
-  String get paymentCash => 'Cash';
+  String get paymentCash => 'नकद';
 
   @override
-  String get paymentCashHint => 'Collect cash and give a receipt';
+  String get paymentCashHint => 'नकद लें और रसीद दें';
 
   @override
-  String get paymentCredit => 'Credit';
+  String get paymentCredit => 'उधार';
 
   @override
-  String get paymentCreditHint => 'Add to farmer khata';
+  String get paymentCreditHint => 'किसान के खाते में जोड़ें';
 
   @override
-  String get upiWaiting => 'Waiting for payment';
+  String get upiWaiting => 'भुगतान का इंतज़ार है';
 
   @override
-  String get upiPaid => 'Payment received';
+  String get upiPaid => 'भुगतान मिल गया';
 
   @override
-  String get upiFailed => 'Payment failed';
+  String get upiFailed => 'भुगतान विफल';
 
   @override
   String upiExpiresIn(String time) {
-    return 'Expires in $time';
+    return '$time में समाप्त होगा';
   }
 
   @override
-  String get upiAmount => 'Amount';
+  String get upiAmount => 'राशि';
 
   @override
-  String get upiScanHint => 'Ask the farmer to scan with any UPI app';
+  String get upiScanHint => 'किसान से किसी भी UPI ऐप से स्कैन करने को कहें';
 
   @override
-  String get upiRetry => 'Show a new QR';
+  String get upiRetry => 'नया QR दिखाएँ';
 
   @override
-  String get khataBalance => 'Balance due';
+  String get khataBalance => 'बकाया राशि';
 
   @override
   String khataDueDate(String date) {
-    return 'Due on $date';
+    return '$date तक देय';
   }
 
   @override
-  String get khataDebit => 'Debit';
+  String get khataDebit => 'दिया';
 
   @override
-  String get khataCredit => 'Credit';
+  String get khataCredit => 'मिला';
 
   @override
-  String get khataNoEntries => 'No entries yet';
+  String get khataNoEntries => 'अभी कोई प्रविष्टि नहीं';
 
   @override
-  String get khataPayNow => 'Pay now';
+  String get khataPayNow => 'अभी भुगतान करें';
 
   @override
-  String get khataCollect => 'Collect';
+  String get khataCollect => 'वसूल करें';
 
   @override
-  String get emptyDefaultTitle => 'Nothing here yet';
+  String get emptyDefaultTitle => 'अभी यहाँ कुछ नहीं है';
 
   @override
-  String get emptyDefaultHelp => 'Items will appear here once you add them.';
+  String get emptyDefaultHelp => 'जोड़ने के बाद चीज़ें यहाँ दिखेंगी।';
 
   @override
-  String get errorTitle => 'Something went wrong';
+  String get errorTitle => 'कुछ गड़बड़ हो गई';
 
   @override
-  String get errorHelp => 'Check your connection and try again.';
+  String get errorHelp => 'कनेक्शन जाँचें और फिर कोशिश करें।';
 
   @override
-  String get ratingTitle => 'Rate your visit';
+  String get ratingTitle => 'अपनी विज़िट को रेटिंग दें';
 
   @override
-  String get rating1 => 'Very bad';
+  String get rating1 => 'बहुत खराब';
 
   @override
-  String get rating2 => 'Bad';
+  String get rating2 => 'खराब';
 
   @override
-  String get rating3 => 'Okay';
+  String get rating3 => 'ठीक';
 
   @override
-  String get rating4 => 'Good';
+  String get rating4 => 'अच्छा';
 
   @override
-  String get rating5 => 'Very good';
+  String get rating5 => 'बहुत अच्छा';
 
   @override
   String stepperStepOf(int current, int total) {
-    return 'Step $current of $total';
+    return '$total में से चरण $current';
   }
 
   @override
   String farmerLastVisit(String date) {
-    return 'Last visit $date';
+    return 'पिछली विज़िट $date';
   }
 
   @override
-  String get farmerNoVisit => 'No visit yet';
+  String get farmerNoVisit => 'अभी कोई विज़िट नहीं';
 
   @override
   String farmerBalanceDue(String amount) {
-    return 'Due $amount';
+    return 'बकाया $amount';
   }
 
   @override
-  String get farmerVillage => 'Village';
+  String get farmerVillage => 'गाँव';
 
   @override
-  String get statTrendUp => 'Up';
+  String get statTrendUp => 'बढ़ा';
 
   @override
-  String get statTrendDown => 'Down';
+  String get statTrendDown => 'घटा';
 
   @override
-  String get statTrendFlat => 'No change';
+  String get statTrendFlat => 'कोई बदलाव नहीं';
 
   @override
-  String get stageSowing => 'Sowing';
+  String get stageSowing => 'बुवाई';
 
   @override
-  String get stageVegetative => 'Growing';
+  String get stageVegetative => 'बढ़वार';
 
   @override
-  String get stageFlowering => 'Flowering';
+  String get stageFlowering => 'फूल';
 
   @override
-  String get stageFruiting => 'Fruiting';
+  String get stageFruiting => 'फल';
 
   @override
-  String get stageHarvest => 'Harvest';
+  String get stageHarvest => 'कटाई';
 
   @override
-  String get settingsTheme => 'Theme';
+  String get settingsTheme => 'थीम';
 
   @override
-  String get themeLight => 'Light';
+  String get themeLight => 'लाइट';
 
   @override
-  String get themeSunlight => 'Sunlight';
+  String get themeSunlight => 'धूप';
 
   @override
-  String get settingsTitle => 'Settings';
+  String get settingsTitle => 'सेटिंग';
 
   @override
-  String get skeletonLoading => 'Loading content';
+  String get settingsLanguage => 'भाषा';
+
+  @override
+  String get skeletonLoading => 'सामग्री लोड हो रही है';
 }

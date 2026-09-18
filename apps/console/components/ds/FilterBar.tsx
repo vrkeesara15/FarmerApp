@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Download, X } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
 import { AppButton } from "./AppButton";
 import { DateRangePicker, type DateRange } from "./DateRangePicker";
@@ -55,6 +55,7 @@ function Select({
   onChange: (v: string | undefined) => void;
   disabled?: boolean;
 }) {
+  const t = useT();
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="text-small font-semibold text-text-secondary">
@@ -88,6 +89,7 @@ export function FilterBar({
   disabled,
   className,
 }: FilterBarProps) {
+  const t = useT();
   const id = React.useId();
   const visible = { cluster: true, store: true, officer: true, crop: true, date: true, ...show };
   const active = Object.entries(value).filter(([k, v]) =>
