@@ -319,7 +319,11 @@ async def test_money_sync_writes_are_not_wired_yet(client: AsyncClient, ctx: Wri
     ops = [op(entity, "create", {"amount_paise": 100}) for entity in unwired]
     body = await sync(client, ctx, ops)
     assert [r["status"] for r in body["results"]] == ["rejected"] * len(unwired)
-    assert {r["error"]["code"] for r in body["results"]} == {"unsupported_action"}
+    codes = {entity: r["error"]["code"] for entity, r in zip(unwired, body["results"], strict=True)}
+    # FA-021 wired `payment` create (tests/payments/test_sync_and_ports.py): an incomplete
+    # payload is a validation error; the others still have no device write path.
+    assert codes.pop("payment") == "validation_error"
+    assert set(codes.values()) == {"unsupported_action"}
     body = await sync(client, ctx, [op("order", "create", {"amount_paise": 100})])
     assert body["results"][0]["error"]["code"] == "validation_error"  # wired: FA-020
 

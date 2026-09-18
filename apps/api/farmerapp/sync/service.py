@@ -111,6 +111,7 @@ from farmerapp.visits.schemas import VisitConfirmationOut, VisitOut, VisitPhotoO
 
 if TYPE_CHECKING:
     from farmerapp.auth.deps import AuthServices
+    from farmerapp.payments.service import PaymentServices
 
 log = get_logger("farmerapp.sync")
 
@@ -256,6 +257,7 @@ class OpContext:
     now: datetime
     services: AuthServices | None = None
     blobs: BlobStore | None = None
+    payments: PaymentServices | None = None  # FA-021 payment ops
 
     def visit_deps(self) -> tuple[AuthServices, BlobStore]:
         if self.services is None or self.blobs is None:
@@ -271,6 +273,21 @@ def _from_visit(op: SyncOpIn, applied: visit_sync.Applied) -> SyncResult:
 
 # --------------------------------------------------------------------------- dispatch
 async def _create(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpContext) -> SyncResult:
+    if op.entity == "payment":  # FA-021 officer offline cash / credit capture
+        from farmerapp.payments import sync_ops as payment_sync
+
+        paid = await payment_sync.create(
+            session,
+            actor,
+            op.entity_id,
+            dict(op.payload),
+            services=ctx.payments,
+            sms=ctx.services.sms if ctx.services else None,
+            whatsapp=ctx.services.whatsapp if ctx.services else None,
+            blobs=ctx.blobs,
+            now=ctx.now,
+        )
+        return (_conflict if paid.conflict else _applied)(op, paid.out, paid.out.version)
     _check_write_path(op)
     settings, now = ctx.settings, ctx.now
     if op.entity in visit_sync.ENTITIES:
@@ -493,11 +510,13 @@ async def apply_ops(
     now: datetime | None = None,
     services: AuthServices | None = None,
     blobs: BlobStore | None = None,
+    payments: PaymentServices | None = None,
 ) -> list[SyncResult]:
     """``now`` is the auth clock (phone verification tokens); defaults to the wall clock.
-    ``services`` (OTP) and ``blobs`` (photo bytes) are needed by the visit ops."""
+    ``services`` (OTP) and ``blobs`` (photo bytes) are needed by the visit ops, ``payments``
+    by the FA-021 payment op."""
     now = now or datetime.now(UTC)
-    ctx = OpContext(settings=settings, now=now, services=services, blobs=blobs)
+    ctx = OpContext(settings=settings, now=now, services=services, blobs=blobs, payments=payments)
     results: list[SyncResult] = []
     for op in ops:
         stored = (

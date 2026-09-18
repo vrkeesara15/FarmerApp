@@ -430,6 +430,40 @@ if not decision.allowed:
 from farmerapp.khata.ledger import post_credit
 
 await post_credit(
+
+  device writes return `unsupported_action` until FA-020 / FA-022 land (`payment` create is
+  live since FA-021, see below).
+- Seed: `jobs/seed_catalog.py` (static products, packs, problems, claims) and
+  `jobs/seed_m3.py` (`M3_FULL` / `M3_SMALL` via `SeedProfile.m3`).
+
+## Payments, webhooks, POS invoices and day close (FA-021 / SEC-023 / ST-001 / ST-002 / ST-006)
+
+Alembic `0013_payments_invoices` (branch label `payments`, on `0011`); PR notes in
+`docs/prs/FA-021-api.md`. Money is paise and **always recomputed server-side** (SEC-023).
+
+| Route | Roles | What |
+|---|---|---|
+| `POST /v1/payments` | owner, accountant, cluster head, store manager, field officer, farmer (UPI / link only) | order (`order_id`) or khata dues (`farmer_id` + `store_id`); `upi_qr` -> `{qr_payload, expires_at}`, `payment_link` -> `{short_url}` sent by SMS / WhatsApp, `cash` needs `receipt_uri` (-> `pending_reconciliation`), `card_terminal` needs `reference_note`, `credit` calls the ledger port; a differing `amount_paise` is 422 `amount_mismatch` |
+| `GET /v1/payments/{id}` | payment readers | `state` = waiting / paid / failed (A53 polls it) |
+| `POST /v1/webhooks/razorpay` | public (`x-public`) | HMAC-SHA256 of the raw body (`X-Razorpay-Signature`, constant time; bad -> 401, attempt stored), replay window (tenant `webhook_replay_window_s`, default 300 s -> 400 `webhook_stale`), idempotent by `X-Razorpay-Event-Id`, stored in `webhook_event` then applied inline or published to `payment.webhook` |
+| `POST /v1/stores/{id}/pos/sales` | store manager (own store), accountant | `pos` order handed over + stock sale movements (through `OrderPort`), GST invoice + PDF, payment — one transaction |
+| `GET /v1/invoices/{id}`, `/pdf`, `POST .../share` | readers of the order; share: owner, accountant, cluster head, store manager | invoice JSON, signed PDF URL, WhatsApp / SMS link |
+| `GET /v1/stores/{id}/day-summary?date=` | store readers | totals by mode, waiting, failed, refunds, expected cash (IST day) |
+| `POST /v1/stores/{id}/day-close`, `.../day-close/{close_id}/reopen` | close: owner, accountant, cluster head, store manager; reopen: owner, director, cluster head | cash count, variance, deposit slip; over `day_close_variance_threshold_paise` (default Rs 500) notifies auditors + `CashVarianceDetected` |
+
+```python
+# providers: one protocol, three adapters (payments/providers.py)
+provider: PaymentProvider = RazorpayProvider(
+    base_url=..., key_id=..., key_secret=..., webhook_secret=...
+)
+qr = await provider.create_upi_qr(
+    amount_paise=11800, reference=str(payment.id), description="Order", notes=notes, expires_at=exp
+)
+# ports the orders branch plugs into (payments/ports.py, invoices/ports.py)
+decision = await services.ledger.check_and_reserve_credit(
+    session, tenant_id=t, farmer_id=f, store_id=s, amount_paise=a, order_id=o, actor=actor
+)
+entry = await services.ledger.post_credit(
     session,
     tenant_id=t,
     farmer_id=f,
@@ -450,6 +484,30 @@ await post_credit(
 - Sync: `order` create = offline capture (entity id = order id; replay → `conflict`); a
   credit sale beyond the limit is `rejected` with `credit_limit_exceeded` (402) and the
   approval request id in `error.errors[0]`.
+
+    amount_paise=a,
+    ref_type="payment",
+    ref_id=p,
+    actor=actor,
+)
+# in-process events (payments/events.py): subscribe, never import payments internals
+bus.subscribe(PaymentCaptured, on_payment_captured)
+```
+
+- Settings: `PAYMENT_PROVIDER` (`razorpay` | `fake`), `PAYMENT_WEBHOOK_DELIVERY` (`inline` |
+  `pubsub`), `RAZORPAY_KEY_SECRET` / `RAZORPAY_WEBHOOK_SECRET` (Secret Manager in stg / prd;
+  the prd guard rail refuses the dev defaults). Tenant keys (`payments/config.py`):
+  `webhook_replay_window_s`, `day_close_variance_threshold_paise`, `legal_name`,
+  `gstin_by_state` (placeholder GSTIN until the owner enters the real ones — human gate),
+  `invoice_prefix`.
+- Invoice numbers `FCC/KND/2026-27/000123`: gapless per store and financial year via the
+  `invoice_counter` row locked `FOR UPDATE` (`invoices/numbering.py`); intra-state CGST +
+  SGST at half the rate each, inter-state IGST, round-off to the rupee, total in words
+  (Indian system); PDF by fpdf2 into the blob store.
+- Sync: `payment` **create** is live (officer offline cash / credit; `entity_id` = payment id;
+  UPI / link -> `rejected` `requires_network`).
+- Job: `python -m farmerapp.jobs reconcile-payments --tenant-id <id> [--date YYYY-MM-DD]`
+  (OPS-008 dry run: settlements vs paid payments; accountants notified on mismatches).
 
 ## Farmer registration writes (FA-012 / FA-013)
 

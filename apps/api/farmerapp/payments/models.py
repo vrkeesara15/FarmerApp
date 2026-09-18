@@ -9,8 +9,9 @@ ST-006, SEC-023, FM-010).
   (the provider's payment id) and ``provider_event_id`` (the webhook event that marked
   them paid; unique per tenant and provider so a replayed webhook cannot pay twice).
   ``status``: ``created`` -> ``pending`` (QR / link shown) -> ``paid`` (webhook) ->
-  ``reconciled`` (cash counted at day close, card matched to the terminal report) or
-  ``failed`` / ``refunded``. Amounts are integer paise and always recomputed server-side.
+  ``reconciled`` (card matched to the terminal report) or ``failed`` / ``refunded``; cash is
+  ``pending_reconciliation`` until the day close counts it (-> ``reconciled``, 0013).
+  Amounts are integer paise and always recomputed server-side.
 * ``webhook_event`` — every provider webhook as received (SEC-023): provider, the event id
   (unique per tenant and provider = idempotency, SPEC 8.3), whether the HMAC signature
   verified, the raw payload, when it arrived and when / how it was processed. Replays
@@ -64,6 +65,7 @@ class PaymentProvider(StrEnum):
 class PaymentStatus(StrEnum):
     CREATED = "created"
     PENDING = "pending"
+    PENDING_RECONCILIATION = "pending_reconciliation"  # cash until the day close (ST-006)
     PAID = "paid"
     FAILED = "failed"
     REFUNDED = "refunded"
@@ -75,12 +77,21 @@ class WebhookStatus(StrEnum):
     PROCESSED = "processed"
     IGNORED = "ignored"  # unknown event type / no matching payment
     FAILED = "failed"
+    FLAGGED = "flagged"  # verified but not applied: amount mismatch (SEC-023)
+    REJECTED = "rejected"  # signature did not verify (SEC-023)
+
+
+class DayCloseStatus(StrEnum):
+    CLOSED = "closed"
+    REOPENED = "reopened"  # by a cluster head; the next close updates the same row
 
 
 #: Modes that go through a provider (and therefore a webhook).
 PROVIDER_MODES = frozenset({PaymentMode.UPI_QR, PaymentMode.PAYMENT_LINK})
 #: Statuses that count as money received (ST-002 day-end totals, FM-010 balance).
 SETTLED_STATUSES = frozenset({PaymentStatus.PAID, PaymentStatus.RECONCILED})
+#: Statuses in which the money is in hand (settled or cash waiting for the day close).
+RECEIVED_STATUSES = SETTLED_STATUSES | {PaymentStatus.PENDING_RECONCILIATION}
 
 
 class Payment(Base, BaseColumns):
@@ -94,11 +105,17 @@ class Payment(Base, BaseColumns):
         CheckConstraint(
             "(mode IN ('upi_qr', 'payment_link')) = (provider <> 'none')", name="provider_mode"
         ),
-        CheckConstraint("order_id IS NOT NULL OR khata_entry_id IS NOT NULL", name="target"),
+        # A dues payment (FM-010) names the farmer until its khata credit entry exists.
+        CheckConstraint(
+            "order_id IS NOT NULL OR khata_entry_id IS NOT NULL OR farmer_id IS NOT NULL",
+            name="target",
+        ),
         Index("ix_payment_store_created", "tenant_id", "store_id", "created_at"),
         Index("ix_payment_order_id", "order_id"),
         Index("ix_payment_farmer_id", "farmer_id"),
         Index("ix_payment_collected_by", "collected_by"),
+        Index("ix_payment_provider_order_id", "tenant_id", "provider_order_id"),
+        Index("ix_payment_day_close_id", "day_close_id"),
     )
 
     order_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -118,13 +135,23 @@ class Payment(Base, BaseColumns):
     provider: Mapped[str] = mapped_column(String(16), nullable=False, default=PaymentProvider.NONE)
     provider_ref: Mapped[str | None] = mapped_column(String(64), nullable=True)  # pay_...
     provider_event_id: Mapped[str | None] = mapped_column(String(64), nullable=True)  # evt_...
-    status: Mapped[str] = mapped_column(String(16), nullable=False, default=PaymentStatus.CREATED)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default=PaymentStatus.CREATED)
     receipt_uri: Mapped[str | None] = mapped_column(String(512), nullable=True)  # cash photo
     collected_by: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("user.id", ondelete="SET NULL"), nullable=True
     )
     reference_note: Mapped[str | None] = mapped_column(String(200), nullable=True)  # terminal ref
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # 0013 (FA-021): the provider object (QR code / payment link / order id), what the
+    # device shows, when it expires, the day close that reconciled a cash payment.
+    provider_order_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    qr_payload: Mapped[str | None] = mapped_column(Text, nullable=True)
+    short_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    day_close_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("day_close.id", ondelete="SET NULL"), nullable=True
+    )
+    failure_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
 class WebhookEvent(Base, BaseColumns):
@@ -159,6 +186,7 @@ class DayClose(Base, BaseColumns):
         CheckConstraint(
             "variance_paise = cash_counted_paise - cash_expected_paise", name="variance"
         ),
+        CheckConstraint(f"status IN ({sql_in(DayCloseStatus)})", name="status"),
     )
 
     store_id: Mapped[uuid.UUID] = mapped_column(
@@ -174,12 +202,26 @@ class DayClose(Base, BaseColumns):
     )
     closed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # 0013 (ST-006): re-open by a cluster head, and whether the variance flagged the auditor.
+    status: Mapped[str] = mapped_column(
+        String(16), nullable=False, default=DayCloseStatus.CLOSED, server_default="closed"
+    )
+    reopened_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("user.id", ondelete="SET NULL"), nullable=True
+    )
+    reopened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reopen_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    variance_flagged: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
 
 
 __all__ = [
     "PROVIDER_MODES",
+    "RECEIVED_STATUSES",
     "SETTLED_STATUSES",
     "DayClose",
+    "DayCloseStatus",
     "Payment",
     "PaymentMode",
     "PaymentProvider",

@@ -64,7 +64,7 @@ def test_money_columns_are_integer_paise() -> None:
             name = column.name
             if not any(word in name for word in MONEY_WORDS):
                 continue
-            if name.endswith(("_at", "_id", "_uri", "_text", "_note", "_bp")):
+            if name.endswith(("_at", "_id", "_uri", "_text", "_note", "_bp", "_words")):
                 continue
             money_columns += 1
             if isinstance(column.type, Numeric | Float) or not isinstance(
@@ -75,8 +75,9 @@ def test_money_columns_are_integer_paise() -> None:
                 offenders.append(f"{table.name}.{name}: money column not named *_paise")
     assert offenders == []
     # every M3 money column was inspected (update when adding one): 15 in 0011, plus
-    # credit_approval_request amount / balance / limit / shortfall in 0012 (ST-007).
-    assert money_columns == 19
+    # credit_approval_request amount / balance / limit / shortfall in 0012 (ST-007),
+    # plus 6 on invoice in 0013 (ST-001).
+    assert money_columns == 25
 
 
 def test_every_m3_table_is_a_model_table() -> None:

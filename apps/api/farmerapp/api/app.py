@@ -25,12 +25,16 @@ from farmerapp.catalog import router as catalog_routes
 from farmerapp.db import models as _models  # noqa: F401  (registers models + audit listener)
 from farmerapp.duty import router as duty_routes
 from farmerapp.farmers import router as farmer_routes
+from farmerapp.invoices import router as invoice_routes
 from farmerapp.khata import router as khata_routes
 from farmerapp.location import batch_router as location_batch_routes
 from farmerapp.location import router as location_routes
 from farmerapp.logging import configure_logging, get_logger
 from farmerapp.orders import router as order_routes
+from farmerapp.payments import day_close as day_close_routes
 from farmerapp.payments import router as payment_routes
+from farmerapp.payments import webhooks as webhook_routes
+from farmerapp.payments.service import PaymentServices, build_payment_services
 from farmerapp.policies import router as policy_routes
 from farmerapp.settings import Settings, get_settings
 from farmerapp.stock import router as stock_routes
@@ -90,6 +94,7 @@ def create_app(
     *,
     auth_services: AuthServices | None = None,
     blob_store: BlobStore | None = None,
+    payment_services: PaymentServices | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(level=settings.log_level, json_logs=settings.log_json, service="api")
@@ -130,6 +135,7 @@ def create_app(
     install_error_handlers(app)
     app.state.auth = auth_services or build_auth_services(settings)
     app.state.blobs = blob_store or build_blob_store(settings)  # NF-003 / SEC-016
+    app.state.payments = payment_services or build_payment_services(settings)  # FA-021
 
     v1 = APIRouter(prefix=API_PREFIX)
     v1.include_router(health.router)
@@ -155,6 +161,12 @@ def create_app(
     v1.include_router(order_routes.router)
     v1.include_router(payment_routes.router)
     v1.include_router(khata_routes.router)
+    # FA-021 / SEC-023 / ST-001 / ST-002 / ST-006: collection, webhooks, POS + GST invoices,
+    # day summary and day close.
+    v1.include_router(webhook_routes.router)
+    v1.include_router(invoice_routes.pos_router)
+    v1.include_router(invoice_routes.router)
+    v1.include_router(day_close_routes.router)
     app.include_router(v1)
 
     # FA-002: refuse to start unless every route declares a role policy (or is public), and

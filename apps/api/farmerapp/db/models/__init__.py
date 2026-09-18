@@ -11,6 +11,7 @@ from farmerapp.catalog.models import LabelClaim, PestOrDisease, PriceList, Produ
 from farmerapp.db.models.audit_log import AuditLog
 from farmerapp.db.models.tenant import Tenant
 from farmerapp.farmers.models import ConsentRecord, CropPlot, Farm, Farmer, FarmPhoto
+from farmerapp.invoices.models import Invoice, InvoiceCounter
 from farmerapp.khata.models import CreditApprovalRequest, CreditLimit, KhataEntry
 from farmerapp.location.models import DutySession, LocationDailyAgg, LocationPoint, PolicyAcceptance
 from farmerapp.notifications.models import Notification
@@ -36,6 +37,8 @@ __all__ = [
     "FarmPhoto",
     "Farmer",
     "IdempotencyKey",
+    "Invoice",
+    "InvoiceCounter",
     "KhataEntry",
     "LabelClaim",
     "LocationDailyAgg",

@@ -23,7 +23,13 @@ def test_prd_rejects_default_secrets() -> None:
 
 def test_prd_accepts_strong_secrets() -> None:
     s = Settings(
-        app_env="prd", jwt_signing_key=STRONG, otp_pepper=STRONG, otp_provider="mockserver"
+        app_env="prd",
+        jwt_signing_key=STRONG,
+        otp_pepper=STRONG,
+        otp_provider="mockserver",
+        razorpay_key_secret=STRONG,  # FA-021 / SEC-023: Secret Manager in prd
+        razorpay_webhook_secret=STRONG,
+        payment_provider="razorpay",  # tests run with PAYMENT_PROVIDER=fake
     )
     assert s.otp_dev_code is None
 

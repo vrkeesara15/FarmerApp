@@ -93,6 +93,8 @@ class RouteFixture:
     path_params: Callable[[Ctx], dict[str, str]] = field(default=lambda _ctx: {})
     body: Callable[[Ctx], dict[str, Any] | None] = field(default=lambda _ctx: None)
     query: dict[str, str] = field(default_factory=dict)
+    # Raw body + extra headers (signed webhooks): used instead of ``body`` when set.
+    raw: Callable[[Ctx], tuple[bytes, dict[str, str]]] | None = None
 
 
 def _target_owner_id(ctx: Ctx) -> dict[str, str]:
@@ -141,6 +143,44 @@ def _farmer_body(ctx: Ctx) -> dict[str, Any]:
         "name": "Matrix Farmer",
         "village_id": str(ctx.target.farmer.village_id),
     }
+
+
+NO_SUCH_ID = "00000000-0000-0000-0000-000000000000"
+
+
+def _signed_webhook(ctx: Ctx) -> tuple[bytes, dict[str, str]]:
+    # SEC-023: a correctly signed, fresh event for an unknown payment -> 200 ignored.
+    import time
+
+    from farmerapp.payments.providers import hmac_sha256_hex
+    from farmerapp.settings import get_settings
+
+    body = json.dumps(
+        {
+            "entity": "event",
+            "event": "payment.captured",
+            "payload": {
+                "payment": {
+                    "entity": {
+                        "id": "pay_matrix",
+                        "amount": 100,
+                        "notes": {"tenant_id": str(ctx.target.tenant.id), "payment_id": NO_SUCH_ID},
+                    }
+                }
+            },
+            "created_at": int(time.time()),
+        }
+    ).encode()
+    signature = hmac_sha256_hex(get_settings().razorpay_webhook_secret, body)
+    return body, {
+        "Content-Type": "application/json",
+        "X-Razorpay-Signature": signature,
+        "X-Razorpay-Event-Id": f"evt_matrix_{int(time.time() * 1e6)}",
+    }
+
+
+def _store_id(ctx: Ctx) -> dict[str, str]:
+    return {"id": str(ctx.target.store_id)}
 
 
 ROUTE_FIXTURES: dict[str, RouteFixture] = {
@@ -398,6 +438,34 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
     "POST /v1/credit-approvals/{id}/reject": RouteFixture(
         path_params=lambda _ctx: {"id": str(uuid.uuid4())}
     ),
+    # FA-021 / SEC-023 / ST-001 / ST-002 / ST-006: business outcomes (amounts, stock, scope)
+    # are tested in tests/payments, tests/webhooks, tests/invoices and tests/dayclose.
+    "POST /v1/payments": RouteFixture(
+        body=lambda ctx: {"order_id": str(ctx.target.order_id), "mode": "upi_qr", "amount_paise": 1}
+    ),
+    "GET /v1/payments/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "POST /v1/webhooks/razorpay": RouteFixture(raw=_signed_webhook),
+    "GET /v1/invoices/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "GET /v1/invoices/{id}/pdf": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "POST /v1/invoices/{id}/share": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"channel": "sms"}
+    ),
+    "POST /v1/stores/{id}/pos/sales": RouteFixture(
+        path_params=_store_id,
+        body=lambda ctx: {
+            "lines": [{"sku_id": str(ctx.target.sku_id), "qty": "1"}],
+            "payment": {"mode": "card_terminal", "reference_note": "matrix"},
+        },
+    ),
+    "GET /v1/stores/{id}/day-summary": RouteFixture(path_params=_store_id),
+    "POST /v1/stores/{id}/day-close": RouteFixture(
+        path_params=_store_id,
+        body=lambda _ctx: {"business_date": "2026-01-01", "cash_counted_paise": 0},
+    ),
+    "POST /v1/stores/{id}/day-close/{close_id}/reopen": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.store_id), "close_id": NO_SUCH_ID},
+        body=lambda _ctx: {"reason": "matrix"},
+    ),
     "POST /v1/policies/location/accept": RouteFixture(
         body=lambda _ctx: {
             "version": "2026-09-v1",
@@ -429,6 +497,15 @@ async def call(
     fx = _fixture_for(op)
     params = path_params if path_params is not None else fx.path_params(ctx)
     url = op.path.format(**params)
+    if fx.raw is not None:
+        content, extra = fx.raw(ctx)
+        return await client.request(
+            op.method.upper(),
+            url,
+            params=fx.query or None,
+            content=content,
+            headers={**(headers or {}), **extra},
+        )
     body = fx.body(ctx)
     return await client.request(
         op.method.upper(), url, params=fx.query or None, json=body, headers=headers or {}
