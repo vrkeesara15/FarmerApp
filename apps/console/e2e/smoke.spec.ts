@@ -1,0 +1,71 @@
+import { expect, test } from "@playwright/test";
+
+test.describe("console smoke (mock API)", () => {
+  test("login page renders and OTP flow reaches the shell", async ({ page }) => {
+    await page.goto("/login");
+    await expect(page.getByRole("heading", { name: "Sign in to the console" })).toBeVisible();
+    await expect(page.getByTestId("login-phone-step")).toBeVisible();
+
+    await page.getByLabel("Mobile number").fill("9876543210");
+    await page.getByRole("button", { name: "Send OTP" }).click();
+    await expect(page.getByTestId("login-otp-step")).toBeVisible();
+
+    // Type the mock OTP box by box; onComplete submits automatically.
+    for (const [i, d] of [..."123456"].entries()) await page.getByTestId(`otp-${i}`).fill(d);
+    await page.waitForURL("**/home");
+
+    await expect(page.getByTestId("side-nav")).toBeVisible();
+    await expect(page.getByTestId("top-bar")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
+  });
+
+  test("wrong OTP shows an error from problem+json", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByLabel("Mobile number").fill("9876543210");
+    await page.getByRole("button", { name: "Send OTP" }).click();
+    for (const [i, d] of [..."000000"].entries()) await page.getByTestId(`otp-${i}`).fill(d);
+    await expect(page.getByRole("alert").filter({ hasText: "Sign-in failed" })).toBeVisible();
+  });
+
+  test("shell routes render EmptyState and theme toggles", async ({ page }) => {
+    for (const path of [
+      "/home",
+      "/field-team",
+      "/farmers",
+      "/stores",
+      "/products",
+      "/agronomist",
+      "/flags",
+      "/settings",
+    ]) {
+      await page.goto(path);
+      await expect(page.getByTestId("empty-state")).toBeVisible();
+    }
+    await page.goto("/home");
+    const html = page.locator("html");
+    await expect(html).toHaveAttribute("data-theme", /light|dark/);
+    const before = await html.getAttribute("data-theme");
+    await page.getByTestId("theme-toggle").first().click();
+    await expect(html).toHaveAttribute("data-theme", before === "dark" ? "light" : "dark");
+    await page.reload();
+    await expect(html).toHaveAttribute("data-theme", before === "dark" ? "light" : "dark");
+    // Collapse the nav.
+    await page.getByTestId("side-nav-toggle").click();
+    await expect(page.getByTestId("side-nav")).toHaveAttribute("data-collapsed", "true");
+  });
+
+  test("design gallery renders every component in both themes", async ({ page }) => {
+    await page.goto("/design");
+    await expect(page.getByRole("heading", { level: 1, name: "Design system" })).toBeVisible();
+    const light = page.getByTestId("gallery-light");
+    const dark = page.getByTestId("gallery-dark");
+    await expect(light).toBeVisible();
+    await expect(dark).toBeVisible();
+    await expect(dark).toHaveAttribute("data-theme", "dark");
+    for (const name of ["AppButton", "OtpInput", "DataTable", "FlagCard", "TopBar", "SideNav"]) {
+      await expect(light.getByRole("heading", { level: 2, name, exact: true })).toBeVisible();
+      await expect(dark.getByRole("heading", { level: 2, name, exact: true })).toBeVisible();
+    }
+    await expect(page.getByTestId("empty-state").first()).toBeVisible();
+  });
+});

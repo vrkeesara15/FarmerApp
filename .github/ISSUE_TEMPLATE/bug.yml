@@ -1,0 +1,48 @@
+name: Bug
+description: Something is broken or does not match SPEC / design.
+labels: [bug]
+body:
+  - type: input
+    id: ids
+    attributes:
+      label: Requirement ID(s)
+      description: From docs/SPEC.md (e.g. FA-012). Leave blank if unknown.
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options: [api, worker/jobs, console, agent app, farmer app, store mode, infra/CI, analytics, other]
+    validations:
+      required: true
+  - type: dropdown
+    id: env
+    attributes:
+      label: Environment
+      options: [local, dev, stg, prd]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: 1. … 2. … 3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Screenshots, log excerpts (no PII, no secrets), device model + Android version, app version / build number.
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity (SPEC 12.3)
+      options: ["Sev 1 – outage, payment failure, data leak", "Sev 2 – degraded, job failure", "Sev 3 – business signal, data quality"]
+    validations:
+      required: true

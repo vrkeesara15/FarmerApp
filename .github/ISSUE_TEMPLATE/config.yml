@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Specification
+    url: https://github.com/OWNER/farmerapp/blob/main/docs/SPEC.md
+    about: Requirement IDs and acceptance criteria live here.

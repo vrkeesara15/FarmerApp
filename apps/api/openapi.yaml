@@ -1,0 +1,77 @@
+openapi: 3.1.0
+info:
+  title: FarmerApp API
+  description: FarmerApp REST API. Errors are RFC 9457 problem+json with a stable `code`.
+  version: 0.1.0
+paths:
+  /v1/health:
+    get:
+      tags:
+      - health
+      summary: Liveness probe
+      operationId: getHealth
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+components:
+  schemas:
+    HealthResponse:
+      properties:
+        status:
+          type: string
+          const: ok
+          title: Status
+        service:
+          type: string
+          title: Service
+        version:
+          type: string
+          title: Version
+        env:
+          type: string
+          title: Env
+      type: object
+      required:
+      - status
+      - service
+      - version
+      - env
+      title: HealthResponse
+    Problem:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      - code
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        code:
+          type: string
+          description: Stable machine-readable error code.
+        trace_id:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object

@@ -1,0 +1,51 @@
+# Strict analysis shared by every package in the mobile workspace.
+# Each package's analysis_options.yaml includes this file.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  exclude:
+    - "**/*.g.dart"
+    - "**/generated/**"
+    - "**/build/**"
+    - "**/android/**"
+  errors:
+    avoid_print: error
+    prefer_const_constructors: error
+    prefer_const_constructors_in_immutables: error
+    prefer_const_declarations: error
+    prefer_const_literals_to_create_immutables: error
+    unused_import: error
+    unused_local_variable: error
+    dead_code: error
+
+formatter:
+  trailing_commas: automate
+
+linter:
+  rules:
+    - avoid_print
+    - prefer_const_constructors
+    - prefer_const_constructors_in_immutables
+    - prefer_const_declarations
+    - prefer_const_literals_to_create_immutables
+    - prefer_final_locals
+    - prefer_single_quotes
+    - always_declare_return_types
+    - avoid_dynamic_calls
+    - avoid_redundant_argument_values
+    - cast_nullable_to_non_nullable
+    - directives_ordering
+    - public_member_api_docs
+    - sort_pub_dependencies
+    - unawaited_futures
+    - use_super_parameters
+    - avoid_unused_constructor_parameters
+    - unnecessary_await_in_return
+    - unnecessary_lambdas
+    - unnecessary_parenthesis
+    - use_colored_box
+    - use_decorated_box

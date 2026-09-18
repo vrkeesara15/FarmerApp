@@ -1,0 +1,80 @@
+# SPEC 10.3 ci-console: eslint, tsc, vitest (via `npm run check`), Playwright
+# smoke against the mocked API, npm audit (SEC-003), bundle size check.
+name: ci-console
+
+on:
+  pull_request:
+    paths:
+      - "apps/console/**"
+      - ".github/workflows/ci-console.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/console/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-console-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  # Budget for client JS shipped on first load (.next/static/chunks), in KB.
+  BUNDLE_BUDGET_KB: "3072"
+
+defaults:
+  run:
+    working-directory: apps/console
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/console/package-lock.json
+
+      - run: npm ci
+
+      - name: eslint + tsc + vitest
+        run: npm run check
+
+      - name: npm audit (SEC-003, high/critical block)
+        run: npm audit --audit-level=high --omit=dev
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+      - name: Bundle size check
+        run: |
+          if [ ! -d .next/static/chunks ]; then echo "no .next/static/chunks (standalone build?)"; exit 0; fi
+          size_kb=$(du -sk .next/static/chunks | cut -f1)
+          echo "client chunks: ${size_kb} KB (budget ${BUNDLE_BUDGET_KB} KB)"
+          if [ "$size_kb" -gt "$BUNDLE_BUDGET_KB" ]; then
+            echo "::error::bundle size ${size_kb} KB exceeds budget ${BUNDLE_BUDGET_KB} KB"; exit 1
+          fi
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Playwright smoke (mocked API)
+        run: npx playwright test --project=chromium --grep @smoke
+        env:
+          CI: "true"
+          NEXT_PUBLIC_API_URL: http://localhost:4010 # mock API started by playwright webServer config
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/console/playwright-report
+          if-no-files-found: ignore

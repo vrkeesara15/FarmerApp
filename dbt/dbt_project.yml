@@ -1,0 +1,33 @@
+# FarmerApp analytics (SPEC 5). Models arrive in M7 (AN-010..016): staging over
+# the Datastream replica (farmerapp_raw) and marts for the KPIs in SPEC 5.2.
+name: farmerapp
+version: "0.1.0"
+config-version: 2
+
+profile: farmerapp
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+require-dbt-version: [">=1.8.0", "<2.0.0"]
+
+models:
+  farmerapp:
+    +materialized: view
+    staging:
+      +schema: staging
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table
+      +partition_by:
+        field: date_day
+        data_type: date
+      +cluster_by: [tenant_id]

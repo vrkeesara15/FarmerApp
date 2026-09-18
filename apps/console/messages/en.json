@@ -1,0 +1,168 @@
+{
+  "app": {
+    "name": "FarmerApp",
+    "tenantFallback": "FarmerApp Console",
+    "skipToContent": "Skip to content"
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "save": "Save",
+    "apply": "Apply",
+    "clear": "Clear",
+    "export": "Export",
+    "search": "Search",
+    "all": "All",
+    "from": "From",
+    "to": "To",
+    "none": "—",
+    "back": "Back",
+    "next": "Next",
+    "seconds": "{n}s"
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "nav": {
+    "home": "Home",
+    "fieldTeam": "Field team",
+    "farmers": "Farmers",
+    "stores": "Stores",
+    "products": "Products",
+    "agronomist": "Agronomist",
+    "flags": "Flags",
+    "settings": "Settings",
+    "design": "Design system",
+    "collapse": "Collapse navigation",
+    "expand": "Expand navigation",
+    "primary": "Primary navigation"
+  },
+  "topbar": {
+    "searchPlaceholder": "Search farmer phone or name, officer, order id",
+    "notifications": "Notifications",
+    "unreadCount": "{n} unread",
+    "profile": "Profile menu",
+    "dateRange": "Date range",
+    "signOut": "Sign out"
+  },
+  "login": {
+    "title": "Sign in to the console",
+    "subtitle": "Owners and managers sign in with the mobile number registered to their tenant.",
+    "phoneLabel": "Mobile number",
+    "phoneHelper": "10-digit Indian mobile number",
+    "phoneInvalid": "Enter a valid 10-digit mobile number",
+    "sendOtp": "Send OTP",
+    "otpTitle": "Enter the 6-digit code",
+    "otpSentTo": "We sent a code to +91 {phone}",
+    "otpLabel": "One-time password",
+    "otpInvalid": "Enter the 6-digit code",
+    "verify": "Verify and sign in",
+    "changeNumber": "Change number",
+    "resend": "Resend code",
+    "resendIn": "Resend in {n}s",
+    "sso": "Sign in with SSO",
+    "ssoSoon": "SSO is not available yet",
+    "failed": "Sign-in failed. Check the code and try again.",
+    "success": "Signed in",
+    "devHint": "Mock API: any 10-digit number, code 123456"
+  },
+  "home": {
+    "title": "Home",
+    "empty": "KPIs, trends and alerts will appear here once data flows in."
+  },
+  "fieldTeam": { "title": "Field team", "empty": "Officer scorecards will appear here." },
+  "farmers": { "title": "Farmers", "empty": "The farmer directory will appear here." },
+  "stores": { "title": "Stores", "empty": "Store performance will appear here." },
+  "products": {
+    "title": "Products",
+    "empty": "The product master and label claims will appear here."
+  },
+  "agronomist": { "title": "Agronomist", "empty": "The review queue will appear here." },
+  "flags": { "title": "Flags", "empty": "Validation flags will appear here." },
+  "settings": { "title": "Settings", "empty": "Tenant settings will appear here." },
+  "emptyState": {
+    "defaultTitle": "Nothing here yet",
+    "defaultHelp": "Data will appear once it is available."
+  },
+  "errorState": {
+    "defaultTitle": "Something went wrong",
+    "defaultHelp": "We could not load this. Check your connection and try again."
+  },
+  "dataTable": {
+    "empty": "No rows match the current filters.",
+    "error": "Could not load rows.",
+    "loading": "Loading rows",
+    "sortAsc": "Sorted ascending",
+    "sortDesc": "Sorted descending",
+    "sortBy": "Sort by {column}",
+    "rowCount": "{n} rows"
+  },
+  "filterBar": {
+    "cluster": "Cluster",
+    "store": "Store",
+    "officer": "Officer",
+    "crop": "Crop",
+    "date": "Date",
+    "label": "Filters"
+  },
+  "dateRange": {
+    "label": "Date range",
+    "start": "Start date",
+    "end": "End date",
+    "invalid": "End date must be after start date"
+  },
+  "otp": {
+    "label": "One-time password digit {n} of 6",
+    "resend": "Resend code",
+    "resendIn": "Resend in {n}s"
+  },
+  "textField": {
+    "optional": "Optional"
+  },
+  "severity": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "confidence": {
+    "high": "High confidence",
+    "medium": "Medium confidence",
+    "low": "Low confidence",
+    "provisional": "Provisional"
+  },
+  "visit": {
+    "verified": "Verified",
+    "partial": "Partial",
+    "unverified": "Unverified",
+    "score": "Visit score {n} of 100"
+  },
+  "ownBrand": { "label": "Own brand" },
+  "flagCard": {
+    "rule": "Rule",
+    "officer": "Officer",
+    "sla": "SLA",
+    "slaDue": "Due in {n}",
+    "slaBreached": "SLA breached",
+    "open": "Open flag",
+    "assign": "Assign"
+  },
+  "kpi": {
+    "target": "Target {value}",
+    "trendUp": "Up {value} vs previous period",
+    "trendDown": "Down {value} vs previous period",
+    "trendFlat": "No change vs previous period"
+  },
+  "dialog": { "close": "Close dialog" },
+  "searchBar": { "placeholder": "Search", "clear": "Clear search" },
+  "skeleton": { "loading": "Loading" },
+  "toast": {
+    "saved": "Saved",
+    "error": "Something went wrong"
+  }
+}

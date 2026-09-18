@@ -1,0 +1,93 @@
+# Local environment (SPEC 10.5). Dev-only credentials; nothing here is a real secret.
+name: farmerapp
+
+services:
+  db:
+    build: docker/postgres
+    image: farmerapp/postgres:16-3.4-pgvector
+    environment:
+      POSTGRES_DB: farmerapp
+      POSTGRES_USER: farmerapp
+      POSTGRES_PASSWORD: farmerapp
+    ports:
+      # Host port is configurable (DB_PORT in .env) for machines with a local Postgres on 5432.
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U farmerapp -d farmerapp"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  pubsub:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=farmerapp-local
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8085 || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  gcs:
+    image: fsouza/fake-gcs-server:latest
+    command: -scheme http -port 4443 -external-url http://localhost:4443 -public-host localhost:4443
+    ports:
+      - "4443:4443"
+    volumes:
+      - gcsdata:/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4443/storage/v1/b >/dev/null || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  mockserver:
+    build: docker/mockserver
+    image: farmerapp/mockserver:local
+    environment:
+      MOCK_RAZORPAY_WEBHOOK_SECRET: test_webhook_secret
+    ports:
+      - "8090:8090"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8090/health').status==200 else 1)\""]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build: apps/api
+    image: farmerapp/api:local
+    command: sh -c "alembic upgrade head && uvicorn farmerapp.api.app:app --host 0.0.0.0 --port 8000 --reload"
+    environment:
+      APP_ENV: local
+      SERVICE_NAME: api
+      LOG_LEVEL: INFO
+      LOG_JSON: "false"
+      DATABASE_URL: postgresql+asyncpg://farmerapp:farmerapp@db:5432/farmerapp
+      GCP_PROJECT: farmerapp-local
+      PUBSUB_EMULATOR_HOST: pubsub:8085
+      STORAGE_EMULATOR_HOST: http://gcs:4443
+      SMS_PROVIDER_URL: http://mockserver:8090/sms
+      WHATSAPP_PROVIDER_URL: http://mockserver:8090/whatsapp
+      RAZORPAY_BASE_URL: http://mockserver:8090/razorpay
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/api/farmerapp:/app/farmerapp
+      - ./apps/api/alembic:/app/alembic
+    depends_on:
+      db:
+        condition: service_healthy
+      pubsub:
+        condition: service_started
+      gcs:
+        condition: service_started
+      mockserver:
+        condition: service_started
+
+volumes:
+  pgdata:
+  gcsdata:

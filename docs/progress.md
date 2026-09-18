@@ -6,7 +6,7 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 ## M0 — Foundations (target 2026-10-09)
 | ID | Requirement | Status | Notes |
 |---|---|---|---|
-| M0-KICKOFF | Scaffold monorepo, docker compose, Makefile, Terraform dev+bootstrap, CI skeletons, design system in Flutter + React | todo | |
+| M0-KICKOFF | Scaffold monorepo, docker compose, Makefile, Terraform dev+bootstrap, CI skeletons, design system in Flutter + React | done | 2026-09-17. apps/api (FastAPI, Alembic 0001 extensions+tenant, worker/jobs entrypoints, 24 tests), docker/ + docker-compose.yml + Makefile, apps/console (Next.js 15, 23 DS components, 78 vitest + 4 Playwright), apps/mobile (pub workspace, farmerapp_core with 29 widgets + 5 ARB + 62 goldens, agent/farmer apps), infra/ (bootstrap + 11 modules + dev/stg/prd), .github/ (9 workflows). `make check` green. |
 | FA-001 | Phone + OTP login | todo | |
 | FA-002 | Role-based access | todo | |
 | FA-003 | Tenant isolation (RLS) | todo | |

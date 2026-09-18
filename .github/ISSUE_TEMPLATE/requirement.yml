@@ -1,0 +1,48 @@
+name: Requirement
+description: Track or refine a requirement ID from docs/SPEC.md.
+labels: [requirement]
+body:
+  - type: input
+    id: id
+    attributes:
+      label: Requirement ID
+      placeholder: FA-012
+    validations:
+      required: true
+  - type: input
+    id: milestone
+    attributes:
+      label: Milestone
+      placeholder: M2
+  - type: textarea
+    id: summary
+    attributes:
+      label: Requirement text (copy from SPEC)
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: From SPEC, plus anything clarified since. Each line becomes a test.
+    validations:
+      required: true
+  - type: textarea
+    id: design
+    attributes:
+      label: Design references
+      description: design/screens/<ID>.md, components, copy keys.
+  - type: textarea
+    id: notes
+    attributes:
+      label: Open questions / dependencies
+  - type: checkboxes
+    id: dod
+    attributes:
+      label: Definition of done (SPEC 14.5)
+      options:
+        - label: Tests cover acceptance criteria; `make check` green
+        - label: Matches design screen spec
+        - label: Strings externalised; English + one Indic language verified
+        - label: Role and tenant authorisation tests
+        - label: OpenAPI, progress.md, runbook updated

@@ -1,0 +1,63 @@
+# SEC-003: weekly dependency updates for every ecosystem in the monorepo.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /apps/api
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:00"
+      timezone: Asia/Kolkata
+    open-pull-requests-limit: 10
+    labels: [dependencies, api]
+    groups:
+      python-minor:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /apps/console
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:00"
+      timezone: Asia/Kolkata
+    open-pull-requests-limit: 10
+    labels: [dependencies, console]
+    groups:
+      npm-minor:
+        update-types: [minor, patch]
+
+  - package-ecosystem: pub
+    directories:
+      - /apps/mobile/packages/core
+      - /apps/mobile/apps/agent
+      - /apps/mobile/apps/farmer
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:00"
+      timezone: Asia/Kolkata
+    open-pull-requests-limit: 10
+    labels: [dependencies, mobile]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:00"
+      timezone: Asia/Kolkata
+    labels: [dependencies, ci]
+
+  - package-ecosystem: terraform
+    directories:
+      - /infra/bootstrap
+      - /infra/envs/dev
+      - /infra/envs/stg
+      - /infra/envs/prd
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:00"
+      timezone: Asia/Kolkata
+    labels: [dependencies, infra]

@@ -1,0 +1,167 @@
+# SPEC 10.3 mobile-release: on tag agent-v* / farmer-v*, build a signed AAB
+# (upload keystore from Secret Manager via WIF, no keys in GitHub), MobSF scan
+# (SEC-008), upload to the Play internal track. Promotion to closed/production
+# is manual in Play Console (human gate, SPEC 14.6).
+#
+# Secrets expected in farmerapp-ops Secret Manager (added by an admin):
+#   play-upload-keystore-<app>   base64 of the .jks
+#   play-upload-keystore-<app>-password, play-upload-key-<app>-alias, play-upload-key-<app>-password
+# The deployer SA must be invited to the Play Console as a release user.
+name: mobile-release
+
+on:
+  push:
+    tags:
+      - "agent-v*"
+      - "farmer-v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: mobile-release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  OPS_PROJECT: farmerapp-ops
+  MOBSF_HIGH_LIMIT: "0"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: play-internal
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve app from tag
+        id: app
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          app="${tag%%-v*}"
+          version="${tag#*-v}"
+          case "$app" in
+            agent)  package="in.farmerapp.agent" ;;
+            farmer) package="in.farmerapp.farmer" ;;
+            *) echo "::error::unknown app in tag $tag"; exit 1 ;;
+          esac
+          {
+            echo "app=$app"
+            echo "version=$version"
+            echo "package=$package"
+            echo "build_number=${GITHUB_RUN_NUMBER}"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - uses: google-github-actions/auth@v2
+        if: vars.WIF_PROVIDER != ''
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.DEPLOY_SA_PRD }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+        if: vars.WIF_PROVIDER != ''
+
+      - name: Fetch upload keystore from Secret Manager
+        if: vars.WIF_PROVIDER != ''
+        working-directory: apps/mobile/apps/${{ steps.app.outputs.app }}/android
+        run: |
+          app="${{ steps.app.outputs.app }}"
+          gcloud secrets versions access latest --project "$OPS_PROJECT" --secret "play-upload-keystore-${app}" | base64 -d > upload-keystore.jks
+          {
+            echo "storeFile=upload-keystore.jks"
+            echo "storePassword=$(gcloud secrets versions access latest --project "$OPS_PROJECT" --secret "play-upload-keystore-${app}-password")"
+            echo "keyAlias=$(gcloud secrets versions access latest --project "$OPS_PROJECT" --secret "play-upload-key-${app}-alias")"
+            echo "keyPassword=$(gcloud secrets versions access latest --project "$OPS_PROJECT" --secret "play-upload-key-${app}-password")"
+          } > key.properties
+          chmod 600 key.properties upload-keystore.jks
+
+      - name: Build signed AAB (obfuscated, SEC-008)
+        working-directory: apps/mobile/apps/${{ steps.app.outputs.app }}
+        run: |
+          flutter build appbundle --release \
+            --build-name "${{ steps.app.outputs.version }}" \
+            --build-number "${{ steps.app.outputs.build_number }}" \
+            --obfuscate --split-debug-info=build/symbols
+          ls -la build/app/outputs/bundle/release/
+
+      - name: Release build is not debuggable (SEC-008)
+        working-directory: apps/mobile/apps/${{ steps.app.outputs.app }}
+        run: |
+          aab=build/app/outputs/bundle/release/app-release.aab
+          unzip -p "$aab" base/manifest/AndroidManifest.xml > manifest.bin || true
+          if grep -aq 'debuggable' manifest.bin; then
+            echo "::error::android:debuggable found in release manifest"; exit 1
+          fi
+
+      - name: MobSF scan (SEC-008)
+        working-directory: apps/mobile/apps/${{ steps.app.outputs.app }}
+        run: |
+          set -euo pipefail
+          aab=build/app/outputs/bundle/release/app-release.aab
+          docker run -d --name mobsf -p 8000:8000 -e MOBSF_API_KEY=ci opensecurity/mobile-security-framework-mobsf:latest
+          for _ in $(seq 1 60); do curl -sf http://localhost:8000/api/v1/scans -H "Authorization: ci" >/dev/null && break; sleep 3; done
+          up=$(curl -sf -F "file=@${aab}" http://localhost:8000/api/v1/upload -H "Authorization: ci")
+          hash=$(echo "$up" | python3 -c 'import json,sys; print(json.load(sys.stdin)["hash"])')
+          curl -sf -X POST http://localhost:8000/api/v1/scan -H "Authorization: ci" -d "hash=${hash}" > /dev/null
+          curl -sf -X POST http://localhost:8000/api/v1/report_json -H "Authorization: ci" -d "hash=${hash}" > mobsf-report.json
+          python3 - <<'PY'
+          import json, os, sys
+          r = json.load(open("mobsf-report.json"))
+          high = [f for f in r.get("code_analysis", {}).get("findings", {}).values() if f.get("metadata", {}).get("severity") == "high"]
+          high += [f for f in r.get("manifest_analysis", {}).get("manifest_findings", []) if f.get("severity") == "high"]
+          secrets = r.get("secrets", [])
+          print(f"MobSF: {len(high)} high findings, {len(secrets)} possible hardcoded secrets, security score {r.get('appsec', {}).get('security_score')}")
+          limit = int(os.environ.get("MOBSF_HIGH_LIMIT", "0"))
+          if len(high) > limit or secrets:
+              for f in high: print("HIGH:", f.get("title") or f.get("metadata", {}).get("description"))
+              for s in secrets: print("SECRET:", s)
+              sys.exit(1)
+          PY
+          docker rm -f mobsf >/dev/null
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ steps.app.outputs.app }}-${{ steps.app.outputs.version }}
+          path: |
+            apps/mobile/apps/${{ steps.app.outputs.app }}/build/app/outputs/bundle/release/app-release.aab
+            apps/mobile/apps/${{ steps.app.outputs.app }}/build/symbols
+            apps/mobile/apps/${{ steps.app.outputs.app }}/mobsf-report.json
+          if-no-files-found: ignore
+          retention-days: 90
+
+      # Play Developer API via the WIF access token — no JSON key (SEC-010).
+      - name: Upload to Play internal track
+        if: vars.WIF_PROVIDER != ''
+        working-directory: apps/mobile/apps/${{ steps.app.outputs.app }}
+        env:
+          PACKAGE: ${{ steps.app.outputs.package }}
+          BUILD_NUMBER: ${{ steps.app.outputs.build_number }}
+        run: |
+          set -euo pipefail
+          token=$(gcloud auth print-access-token)
+          api="https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PACKAGE}"
+          edit=$(curl -sf -X POST "$api/edits" -H "Authorization: Bearer $token" -H "Content-Length: 0" | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+          curl -sf -X POST "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/${PACKAGE}/edits/${edit}/bundles?uploadType=media" \
+            -H "Authorization: Bearer $token" -H "Content-Type: application/octet-stream" \
+            --data-binary @build/app/outputs/bundle/release/app-release.aab > /dev/null
+          curl -sf -X PUT "$api/edits/${edit}/tracks/internal" -H "Authorization: Bearer $token" -H "Content-Type: application/json" \
+            -d "{\"track\":\"internal\",\"releases\":[{\"versionCodes\":[\"${BUILD_NUMBER}\"],\"status\":\"completed\"}]}" > /dev/null
+          curl -sf -X POST "$api/edits/${edit}:commit" -H "Authorization: Bearer $token" -H "Content-Length: 0" > /dev/null
+          echo "Uploaded versionCode ${BUILD_NUMBER} to internal track. Promote manually in Play Console."
+
+      - name: Remove signing material
+        if: always()
+        working-directory: apps/mobile/apps/${{ steps.app.outputs.app }}/android
+        run: rm -f upload-keystore.jks key.properties

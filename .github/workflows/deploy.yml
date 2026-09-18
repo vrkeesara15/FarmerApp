@@ -1,0 +1,152 @@
+# SPEC 10.4 deploy skeleton, dev only (M0). stg/prd promotion is added later
+# behind GitHub environments with required reviewers; prd is never deployed
+# without a human approval (CLAUDE.md "Never do").
+#
+# Flow: build api/console/worker with buildx → Artifact Registry (tag = git SHA)
+#       → migrate job on the new image → deploy dev → smoke.
+# Every GCP step is guarded with `vars.WIF_PROVIDER != ''` so the workflow is
+# a no-op (image builds only) until bootstrap has been applied.
+#
+# Assumption: each deployable has apps/<name>/Dockerfile built with the repo
+# root as context (worker imports the api domain package).
+name: deploy
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "design/**"
+      - "apps/mobile/**"
+      - "**/*.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+env:
+  REGISTRY: asia-south1-docker.pkg.dev/farmerapp-ops/apps
+  REGION: asia-south1
+  DEV_PROJECT: farmerapp-dev
+  DEV_API_URL: https://api.dev.farmerapp.in
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        name: [api, console, worker]
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - id: meta
+        run: echo "tag=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - uses: google-github-actions/auth@v2
+        if: vars.WIF_PROVIDER != ''
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.BUILD_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+        if: vars.WIF_PROVIDER != ''
+
+      - name: Configure docker for Artifact Registry
+        if: vars.WIF_PROVIDER != ''
+        run: gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+
+      - name: Build (and push when WIF is configured)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.name }}/Dockerfile
+          push: ${{ vars.WIF_PROVIDER != '' }}
+          load: ${{ vars.WIF_PROVIDER == '' }}
+          tags: ${{ env.REGISTRY }}/${{ matrix.name }}:${{ steps.meta.outputs.tag }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,scope=${{ matrix.name }},mode=max
+          provenance: false
+
+      - name: trivy image scan (SEC-004)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ matrix.name }}:${{ steps.meta.outputs.tag }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+  deploy-dev:
+    if: vars.WIF_PROVIDER != ''
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: dev
+      url: ${{ env.DEV_API_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.DEPLOY_SA_DEV }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      # The migrate job must use the new image before the service rolls (SPEC 10.4).
+      - name: Run migrations (Cloud Run Job)
+        run: |
+          gcloud run jobs update migrate \
+            --region "$REGION" --project "$DEV_PROJECT" \
+            --image "${REGISTRY}/api:${{ needs.build.outputs.tag }}"
+          gcloud run jobs execute migrate --region "$REGION" --project "$DEV_PROJECT" --wait
+
+      - name: Deploy api
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: api
+          region: ${{ env.REGION }}
+          project_id: ${{ env.DEV_PROJECT }}
+          image: ${{ env.REGISTRY }}/api:${{ needs.build.outputs.tag }}
+
+      - name: Deploy worker
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: worker
+          region: ${{ env.REGION }}
+          project_id: ${{ env.DEV_PROJECT }}
+          image: ${{ env.REGISTRY }}/worker:${{ needs.build.outputs.tag }}
+
+      - name: Deploy console
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: console
+          region: ${{ env.REGION }}
+          project_id: ${{ env.DEV_PROJECT }}
+          image: ${{ env.REGISTRY }}/console:${{ needs.build.outputs.tag }}
+
+      # Nightly jobs share the api image; point them at the new tag too.
+      - name: Update nightly job images
+        run: |
+          for job in nightly-validation nightly-evaluation exports retention-purge beat-plan; do
+            gcloud run jobs update "$job" --region "$REGION" --project "$DEV_PROJECT" \
+              --image "${REGISTRY}/api:${{ needs.build.outputs.tag }}" --quiet
+          done
+
+      - name: Smoke tests
+        run: ./scripts/smoke.sh "$DEV_API_URL"
+
+  # deploy-stg / deploy-prd: add with `environment: staging` / `environment: production`
+  # (required reviewers) and DEPLOY_SA_STG / DEPLOY_SA_PRD; prd deploys with
+  # --no-traffic then a 10% canary for 30 min → 100% (SPEC 10.3). Not in M0.

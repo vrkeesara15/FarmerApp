@@ -1,0 +1,21 @@
+# Two reviewers required for the paths below (SPEC 10.2). Placeholder team
+# handles: replace @farmerapp/platform and @farmerapp/security with real
+# GitHub teams once the org exists. Branch protection must require review
+# from code owners.
+
+*                                   @farmerapp/platform
+
+# Infrastructure and CI — 2 reviewers
+/infra/                             @farmerapp/platform @farmerapp/security
+/.github/                           @farmerapp/platform @farmerapp/security
+
+# Validation agent rules — 2 reviewers
+/rules/                             @farmerapp/platform @farmerapp/security
+
+# Payments and auth — 2 reviewers
+/apps/api/farmerapp/payments/**     @farmerapp/platform @farmerapp/security
+/apps/api/farmerapp/auth/**         @farmerapp/platform @farmerapp/security
+
+# Spec and design are product-owned
+/docs/SPEC.md                       @farmerapp/platform
+/design/                            @farmerapp/platform

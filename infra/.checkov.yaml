@@ -1,0 +1,19 @@
+# checkov config for infra/ (SEC-005). Skips are documented; do not add
+# skips without a comment explaining the accepted risk.
+framework:
+  - terraform
+directory:
+  - .
+download-external-modules: false
+compact: true
+quiet: true
+skip-check:
+  # CKV_GCP_62: bucket access logging — audit logs (SEC-017) cover Data Access; no separate log bucket per bucket.
+  - CKV_GCP_62
+  # CKV_GCP_78: bucket versioning — only tfstate and corpus are versioned by design (SPEC 9.2).
+  - CKV_GCP_78
+  # CKV_GCP_26 / CKV_GCP_76: VPC flow logs sampled in prd only (cost).
+  - CKV_GCP_26
+  - CKV_GCP_76
+  # CKV2_GCP_18: default deny-all ingress firewall exists; Cloud Run has no VM ingress.
+  - CKV2_GCP_18

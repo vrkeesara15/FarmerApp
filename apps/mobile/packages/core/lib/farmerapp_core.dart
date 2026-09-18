@@ -1,0 +1,41 @@
+/// FarmerApp shared mobile core: design tokens, themes, widgets, i18n,
+/// formatting utilities, local database and auth interfaces.
+library;
+
+export 'src/auth/auth_api.dart';
+export 'src/db/app_database.dart';
+export 'src/i18n/generated/core_localizations.dart';
+export 'src/state/auth_flow.dart';
+export 'src/state/settings.dart';
+export 'src/theme/app_theme.dart';
+export 'src/tokens/tokens.g.dart';
+export 'src/utils/format.dart';
+export 'src/widgets/app_button.dart';
+export 'src/widgets/app_stepper.dart';
+export 'src/widgets/app_text_field.dart';
+export 'src/widgets/camera_guide_overlay.dart';
+export 'src/widgets/cart_bar.dart';
+export 'src/widgets/confidence_band.dart';
+export 'src/widgets/crop_chip.dart';
+export 'src/widgets/diagnosis_result_card.dart';
+export 'src/widgets/duty_toggle.dart';
+export 'src/widgets/empty_state.dart';
+export 'src/widgets/error_state.dart';
+export 'src/widgets/farmer_card.dart';
+export 'src/widgets/khata_ledger.dart';
+export 'src/widgets/language_picker.dart';
+export 'src/widgets/offline_banner.dart';
+export 'src/widgets/otp_input.dart';
+export 'src/widgets/own_brand_badge.dart';
+export 'src/widgets/payment_method_selector.dart';
+export 'src/widgets/product_card.dart';
+export 'src/widgets/proof_checklist.dart';
+export 'src/widgets/rating.dart';
+export 'src/widgets/skeletons.dart';
+export 'src/widgets/stage_timeline.dart';
+export 'src/widgets/stat_tile.dart';
+export 'src/widgets/sync_status_pill.dart';
+export 'src/widgets/treatment_card.dart';
+export 'src/widgets/upi_qr_panel.dart';
+export 'src/widgets/visit_card.dart';
+export 'src/widgets/visit_score_badge.dart';

@@ -1,0 +1,13 @@
+[project]
+name = "farmerapp-mockserver"
+version = "0.1.0"
+description = "Local mock for SMS, WhatsApp and a Razorpay-like payment API."
+requires-python = ">=3.12"
+dependencies = ["fastapi>=0.115", "uvicorn[standard]>=0.30", "httpx>=0.27"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mockserver"]

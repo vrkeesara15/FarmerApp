@@ -1,0 +1,61 @@
+@import "./tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background font-sans text-body text-text;
+  }
+  h1 {
+    @apply text-display;
+  }
+  h2 {
+    @apply text-title;
+  }
+  h3 {
+    @apply text-heading;
+  }
+  /* Numbers always use tabular figures (tokens: font.features = tnum). */
+  .tnum,
+  [data-numeric],
+  td,
+  th {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: var(--font-features);
+  }
+  /* Indic scripts get ~15% extra line-height (tokens: text.mobile.indicLineHeightMultiplier). */
+  :lang(te),
+  :lang(kn),
+  :lang(hi),
+  :lang(mr) {
+    line-height: calc(1em * 1.15 + 0.35em);
+  }
+  :lang(te) {
+    @apply font-telugu;
+  }
+  :lang(kn) {
+    @apply font-kannada;
+  }
+  :lang(hi),
+  :lang(mr) {
+    @apply font-devanagari;
+  }
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer utilities {
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}

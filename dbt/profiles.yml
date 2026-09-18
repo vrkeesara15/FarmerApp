@@ -1,0 +1,28 @@
+# Profile used by ci-dbt.yml (DBT_PROFILES_DIR=dbt). Local runs use OAuth ADC;
+# CI authenticates through Workload Identity Federation — no key files.
+farmerapp:
+  target: "{{ env_var('DBT_TARGET', 'dev') }}"
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('DBT_PROJECT_ID', 'farmerapp-dev') }}"
+      dataset: farmerapp_marts
+      location: asia-south1
+      threads: 4
+      job_execution_timeout_seconds: 600
+      priority: interactive
+    stg:
+      type: bigquery
+      method: oauth
+      project: farmerapp-stg
+      dataset: farmerapp_marts
+      location: asia-south1
+      threads: 4
+    prd:
+      type: bigquery
+      method: oauth
+      project: farmerapp-prd
+      dataset: farmerapp_marts
+      location: asia-south1
+      threads: 8

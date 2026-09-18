@@ -1,0 +1,122 @@
+# SPEC 9.7 / 10.3 ci-infra: fmt, validate, tflint, checkov (SEC-005) on every PR
+# touching infra/; terraform plan for dev posted as a PR comment via WIF.
+# stg/prd are never planned or applied here (human-only, CLAUDE.md).
+name: ci-infra
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+      - ".github/workflows/ci-infra.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-infra-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TF_VERSION: "1.15.3"
+  TF_IN_AUTOMATION: "1"
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform fmt
+        working-directory: infra
+        run: terraform fmt -check -recursive -diff
+
+      - name: terraform validate (bootstrap + all envs)
+        working-directory: infra
+        run: |
+          for d in bootstrap envs/dev envs/stg envs/prd; do
+            echo "==> $d"
+            terraform -chdir="$d" init -backend=false -input=false -no-color >/dev/null
+            terraform -chdir="$d" validate -no-color
+          done
+
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: tflint
+        working-directory: infra
+        run: |
+          tflint --init
+          tflint --recursive --config "$PWD/.tflint.hcl" --format compact
+
+      - name: checkov (SEC-005)
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: infra
+          framework: terraform
+          config_file: infra/.checkov.yaml
+          quiet: true
+          soft_fail: false
+
+  plan-dev:
+    # Skips until bootstrap has been applied and WIF_PROVIDER / DEPLOY_SA_DEV
+    # are set as repository variables.
+    if: vars.WIF_PROVIDER != ''
+    needs: static
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.DEPLOY_SA_DEV }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform plan (dev)
+        id: plan
+        working-directory: infra/envs/dev
+        run: |
+          terraform init -input=false -no-color
+          set +e
+          terraform plan -input=false -no-color -lock-timeout=120s -out=tfplan -detailed-exitcode > plan.txt 2>&1
+          code=$?
+          set -e
+          echo "exitcode=$code" >> "$GITHUB_OUTPUT"
+          cat plan.txt
+          if [ "$code" -eq 1 ]; then exit 1; fi
+
+      - name: Post plan as PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let plan = fs.readFileSync('infra/envs/dev/plan.txt', 'utf8');
+            const max = 60000;
+            if (plan.length > max) plan = plan.slice(0, max) + '\n... (truncated, see job log)';
+            const marker = '<!-- terraform-plan-dev -->';
+            const changed = '${{ steps.plan.outputs.exitcode }}' === '2';
+            const body = `${marker}\n### Terraform plan — dev ${changed ? '(changes)' : '(no changes)'}\n<details><summary>Show plan</summary>\n\n\`\`\`hcl\n${plan}\n\`\`\`\n</details>`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number });
+            const existing = comments.find(c => c.body && c.body.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body });
+            }
