@@ -19,6 +19,7 @@ Entity = Literal[
     "visit_photo",
     "duty_session",
     "policy_acceptance",
+    "location_batch",
 ]
 Action = Literal["create", "update", "delete"]
 ResultStatus = Literal["applied", "duplicate", "conflict", "rejected"]

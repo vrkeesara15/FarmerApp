@@ -22,9 +22,12 @@ from farmerapp.auth.deps import AuthServices, build_auth_services, tick
 from farmerapp.auth.policy import install_policies
 from farmerapp.auth.scheduler import InProcessScheduler
 from farmerapp.db import models as _models  # noqa: F401  (registers models + audit listener)
+from farmerapp.duty import router as duty_routes
 from farmerapp.farmers import router as farmer_routes
+from farmerapp.location import batch_router as location_batch_routes
 from farmerapp.location import router as location_routes
 from farmerapp.logging import configure_logging, get_logger
+from farmerapp.policies import router as policy_routes
 from farmerapp.settings import Settings, get_settings
 from farmerapp.sync import router as sync_routes
 from farmerapp.uploads import router as upload_routes
@@ -134,6 +137,9 @@ def create_app(
     v1.include_router(visit_routes.router)
     v1.include_router(location_routes.duty_router)
     v1.include_router(location_routes.officer_router)
+    v1.include_router(duty_routes.router)
+    v1.include_router(location_batch_routes.batch_router)
+    v1.include_router(policy_routes.router)
     v1.include_router(sync_routes.router)
     v1.include_router(upload_routes.router)
     v1.include_router(upload_routes.blob_router)

@@ -63,6 +63,8 @@ from farmerapp.auth.scope import (
     officer_filters,
     visit_filters,
 )
+from farmerapp.duty import service as duty
+from farmerapp.duty.schemas import DutyEndIn, DutyStartIn
 from farmerapp.farmers import service as farmers
 from farmerapp.farmers.errors import UnsupportedActionError
 from farmerapp.farmers.models import ConsentRecord, CropPlot, Farm, Farmer
@@ -79,9 +81,12 @@ from farmerapp.farmers.schemas import (
     FarmOut,
     FarmUpdate,
 )
+from farmerapp.location.ingest import LocationBatchIn, ingest_batch
 from farmerapp.location.models import DutySession, PolicyAcceptance
 from farmerapp.location.schemas import DutySessionOut, PolicyAcceptanceOut
 from farmerapp.logging import get_logger
+from farmerapp.policies import service as policies
+from farmerapp.policies.schemas import PolicyAcceptIn
 from farmerapp.settings import Settings
 from farmerapp.sync.models import SyncChange, SyncOp
 from farmerapp.sync.schemas import SyncChangeOut, SyncError, SyncOpIn, SyncResult
@@ -108,6 +113,7 @@ CONFLICT_RULES: dict[str, Strategy] = {
     "visit_photo": Strategy.SERVER_WINS,  # immutable once uploaded (EXIF, hashes, server time)
     "duty_session": Strategy.MERGE_FIELDS,  # server wins for end_at once auto-ended (VV-007)
     "policy_acceptance": Strategy.SERVER_WINS,  # append-only (FA-011)
+    "location_batch": Strategy.SERVER_WINS,  # write-only telemetry batch (FA-010); no feed row
     # M3: "khata": Strategy.SERVER_WINS, "payment": Strategy.SERVER_WINS
 }
 
@@ -133,9 +139,7 @@ SERVER_OWNED_FIELDS: dict[str, frozenset[str]] = {
 
 #: ``duty_session`` end fields become server-owned once the server ended the session.
 _DUTY_END_FIELDS = frozenset({"end_at", "end_reason"})
-_ENTITIES_WITHOUT_WRITE_PATH = frozenset(
-    {"visit", "visit_photo", "duty_session", "policy_acceptance"}
-)
+_ENTITIES_WITHOUT_WRITE_PATH = frozenset({"visit", "visit_photo"})
 
 
 def server_owned_fields(entity: str, row: Any) -> frozenset[str]:
@@ -223,6 +227,32 @@ async def _create(
 ) -> SyncResult:
     _check_write_path(op)
     payload = {**op.payload, "id": str(op.entity_id)}
+    if op.entity == "duty_session":  # FA-010 start
+        if await session.get(DutySession, op.entity_id) is not None:
+            duty_row = await duty.own_session(session, actor, op.entity_id)
+            return _conflict(op, DutySessionOut.from_row(duty_row), duty_row.version)
+        duty_out = await duty.start_duty(
+            session, actor, DutyStartIn.model_validate(payload), now=now
+        )
+        return _applied(op, duty_out, duty_out.version)
+    if op.entity == "policy_acceptance":  # FA-011 offline first run
+        if await session.get(PolicyAcceptance, op.entity_id) is not None:
+            acceptance = await session.get_one(PolicyAcceptance, op.entity_id)
+            return _conflict(op, PolicyAcceptanceOut.from_row(acceptance), 1)
+        accepted = await policies.accept_policy(
+            session,
+            actor,
+            PolicyAcceptIn.model_validate({"accepted_at": op.client_ts, **payload}),
+            now=now,
+        )
+        return _applied(op, accepted, 1)
+    if op.entity == "location_batch":  # FA-010 / VV-001 on-duty points only
+        batch = await ingest_batch(
+            session, actor, LocationBatchIn.model_validate(payload), received_at=now
+        )
+        return SyncResult(
+            op_id=op.op_id, status="applied", entity_id=op.entity_id, server=_dump(batch)
+        )
     if op.entity == "farmer":
         existing = await session.get(Farmer, op.entity_id)
         if existing is not None:
@@ -261,8 +291,19 @@ async def _create(
     return _applied(op, consent, 1)
 
 
-async def _update(session: AsyncSession, actor: User, op: SyncOpIn) -> SyncResult:
+async def _update(
+    session: AsyncSession, actor: User, op: SyncOpIn, now: datetime | None = None
+) -> SyncResult:
     _check_write_path(op)
+    if op.entity == "duty_session":  # FA-010 end; server-owned end once auto-ended (VV-007)
+        duty_row = await duty.own_session(session, actor, op.entity_id)
+        if duty_row.end_at is not None:
+            return _conflict(op, DutySessionOut.from_row(duty_row), duty_row.version)
+        end_body = DutyEndIn.model_validate(merge_payload("duty_session", duty_row, op.payload))
+        duty_out = await duty.end_duty(
+            session, actor, end_body, now=now or datetime.now(UTC), duty=duty_row
+        )
+        return _applied(op, duty_out, duty_out.version)
     if op.entity == "farmer":
         farmer = await farmers.visible_farmer(session, actor, op.entity_id)
         if _loses_conflict(op, farmer):
@@ -286,7 +327,7 @@ async def _update(session: AsyncSession, actor: User, op: SyncOpIn) -> SyncResul
             session, plot, CropPlotUpdate.model_validate({**op.payload, "version": None})
         )
         return _applied(op, plot_out, plot_out.version)
-    raise UnsupportedActionError("Consent records are append-only: create a new record.")
+    raise UnsupportedActionError(f"{op.entity} records are append-only: create a new record.")
 
 
 async def _delete(session: AsyncSession, actor: User, op: SyncOpIn) -> SyncResult:
@@ -319,7 +360,7 @@ async def _dispatch(
     if op.action == "create":
         return await _create(session, actor, op, settings, now)
     if op.action == "update":
-        return await _update(session, actor, op)
+        return await _update(session, actor, op, now)
     return await _delete(session, actor, op)
 
 

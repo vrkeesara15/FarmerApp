@@ -11,6 +11,7 @@ from farmerapp.db.models.audit_log import AuditLog
 from farmerapp.db.models.tenant import Tenant
 from farmerapp.farmers.models import ConsentRecord, CropPlot, Farm, Farmer, FarmPhoto
 from farmerapp.location.models import DutySession, LocationDailyAgg, LocationPoint, PolicyAcceptance
+from farmerapp.notifications.models import Notification
 from farmerapp.sync.models import SyncChange, SyncOp
 from farmerapp.tenants.models import Cluster, Store, Village
 from farmerapp.uploads.models import UploadChunk, UploadSession
@@ -29,6 +30,7 @@ __all__ = [
     "IdempotencyKey",
     "LocationDailyAgg",
     "LocationPoint",
+    "Notification",
     "OtpChallenge",
     "PolicyAcceptance",
     "RefreshToken",

@@ -118,6 +118,10 @@ class DutySession(Base, BaseColumns):
     policy_version: Mapped[str] = mapped_column(String(32), nullable=False)  # VV-010
     device_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     app_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # FA-028 flags reported at duty start: {is_mock, is_rooted, clock_drift_s} (migration 0008).
+    device_integrity: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
+    )
     # Read helpers (no geometry parsing in Python).
     start_lon: Mapped[float | None] = column_property(func.ST_X(cast(start_point, _POINT_GEOM)))
     start_lat: Mapped[float | None] = column_property(func.ST_Y(cast(start_point, _POINT_GEOM)))

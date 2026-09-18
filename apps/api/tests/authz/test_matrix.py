@@ -195,6 +195,36 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
     "GET /v1/officers/{id}/track": RouteFixture(
         path_params=_target_officer_id, query={"day": "2026-09-18"}
     ),
+    # FA-010 / FA-011: valid bodies; business outcomes (policy, open session) are tested in
+    # tests/duty, tests/location/test_batch.py and tests/policies.
+    "POST /v1/duty/start": RouteFixture(
+        body=lambda _ctx: {
+            "device_id": "matrix",
+            "app_version": "0.2.0",
+            "policy_version": "2026-09-v1",
+            "start_at": "2026-09-18T04:30:00Z",
+            "start_point": {"lat": 18.02, "lon": 79.55, "accuracy_m": 10},
+        }
+    ),
+    "POST /v1/duty/end": RouteFixture(
+        body=lambda _ctx: {"end_at": "2026-09-18T12:30:00Z", "end_reason": "manual"}
+    ),
+    "POST /v1/location/batch": RouteFixture(
+        body=lambda _ctx: {
+            "duty_session_id": "00000000-0000-0000-0000-000000000000",
+            "device_id": "matrix",
+            "sent_at": "2026-09-18T05:00:00Z",
+            "points": [{"ts": "2026-09-18T04:59:00Z", "lat": 18.02, "lon": 79.55, "accuracy_m": 8}],
+        }
+    ),
+    "POST /v1/policies/location/accept": RouteFixture(
+        body=lambda _ctx: {
+            "version": "2026-09-v1",
+            "text_hash": "0" * 64,
+            "device_id": "matrix",
+            "app_version": "0.2.0",
+        }
+    ),
 }
 
 

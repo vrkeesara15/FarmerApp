@@ -30,6 +30,9 @@ class DutySessionOut(BaseModel):
     policy_version: str
     device_id: str | None
     app_version: str | None
+    device_integrity: dict[str, Any] = Field(
+        default_factory=dict, description="FA-028 flags at duty start (is_mock, is_rooted, drift)."
+    )
     duration_s: int | None
     created_at: datetime
     updated_at: datetime
@@ -52,6 +55,7 @@ class DutySessionOut(BaseModel):
             policy_version=row.policy_version,
             device_id=row.device_id,
             app_version=row.app_version,
+            device_integrity=dict(row.device_integrity or {}),
             duration_s=row.duration_s,
             created_at=row.created_at,
             updated_at=row.updated_at,

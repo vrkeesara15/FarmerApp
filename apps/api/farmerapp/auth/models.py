@@ -10,7 +10,9 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from enum import StrEnum
+from typing import Any
 
+from geoalchemy2 import Geography
 from sqlalchemy import (
     CheckConstraint,
     DateTime,
@@ -24,6 +26,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from farmerapp.db.base import Base, BaseColumns
+from farmerapp.db.geo import SRID
 
 
 class UserRole(StrEnum):
@@ -81,6 +84,10 @@ class User(Base, BaseColumns):
         String(16), nullable=False, server_default=text("'active'"), default=UserStatus.ACTIVE
     )
     device_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    # VV-007: where "idle at home" is measured for an officer (NULL -> their store's location).
+    home_point: Mapped[Any] = mapped_column(
+        Geography(geometry_type="POINT", srid=SRID, spatial_index=False), nullable=True
+    )
 
 
 class OtpChallenge(Base, BaseColumns):

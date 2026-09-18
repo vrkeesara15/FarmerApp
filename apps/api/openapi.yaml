@@ -1462,6 +1462,283 @@ paths:
       - field_officer
       - owner
       - tenant_admin
+  /v1/duty/start:
+    post:
+      tags:
+      - duty
+      summary: Start a duty session (needs the current location policy accepted)
+      operationId: startDuty
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DutyStartIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DutySessionOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: '`duty_already_active`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`policy_not_accepted`, `idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+  /v1/duty/end:
+    post:
+      tags:
+      - duty
+      summary: End the caller's open duty session; km and stops are computed from the points
+      operationId: endDuty
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DutyEndIn'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DutySessionOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: '`no_active_duty`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+  /v1/duty/current:
+    get:
+      tags:
+      - duty
+      summary: The caller's open duty session (null when off duty) and their policy state
+      operationId: getCurrentDuty
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DutyStatusOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+  /v1/duty/policy:
+    get:
+      tags:
+      - duty
+      summary: VV-001 sampling policy for the caller's tenant
+      operationId: getDutyPolicy
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DutyPolicyOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+  /v1/location/batch:
+    post:
+      tags:
+      - duty
+      summary: Upload up to 500 on-duty location points of the caller's duty session
+      operationId: uploadLocationBatch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationBatchIn'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationBatchOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - field_officer
+  /v1/policies/location:
+    get:
+      tags:
+      - policies
+      summary: The employee location policy the caller's tenant requires (text in 5 languages)
+      operationId: getLocationPolicy
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationPolicyOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/policies/location/accept:
+    post:
+      tags:
+      - policies
+      summary: Record the caller's acceptance of the current location policy version
+      operationId: acceptLocationPolicy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyAcceptIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyAcceptanceOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`policy_version_stale`, `idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
   /v1/sync:
     post:
       tags:
@@ -2304,6 +2581,23 @@ components:
       - maturity
       - harvested
       title: CropStage
+    DeviceIntegrityIn:
+      properties:
+        is_mock:
+          type: boolean
+          title: Is Mock
+          default: false
+        is_rooted:
+          type: boolean
+          title: Is Rooted
+          default: false
+        clock_drift_s:
+          type: integer
+          title: Clock Drift S
+          default: 0
+      type: object
+      title: DeviceIntegrityIn
+      description: FA-028 flags the app reports at duty start (never blocking, flagged to VA-E01).
     DeviceIntegrityOut:
       properties:
         is_mock:
@@ -2321,6 +2615,52 @@ components:
       - is_rooted
       - clock_drift_s
       title: DeviceIntegrityOut
+    DutyEndIn:
+      properties:
+        end_at:
+          type: string
+          format: date-time
+          title: End At
+          description: When the officer toggled duty off (device clock).
+        end_point:
+          anyOf:
+          - $ref: '#/components/schemas/PointIn'
+          - type: 'null'
+        end_reason:
+          type: string
+          enum:
+          - manual
+          - auto_time
+          - auto_idle
+          title: End Reason
+          description: '`auto_*` when the app ended it on the device (VV-007).'
+          default: manual
+      type: object
+      required:
+      - end_at
+      title: DutyEndIn
+    DutyPolicyOut:
+      properties:
+        moving_interval_s:
+          type: integer
+          title: Moving Interval S
+        stationary_interval_s:
+          type: integer
+          title: Stationary Interval S
+        upload_interval_s:
+          type: integer
+          title: Upload Interval S
+        upload_on_wifi_or_charging:
+          type: boolean
+          title: Upload On Wifi Or Charging
+          default: true
+      type: object
+      required:
+      - moving_interval_s
+      - stationary_interval_s
+      - upload_interval_s
+      title: DutyPolicyOut
+      description: VV-001 sampling policy served to the app, from the tenant settings.
     DutySessionOut:
       properties:
         id:
@@ -2384,6 +2724,11 @@ components:
           - type: string
           - type: 'null'
           title: App Version
+        device_integrity:
+          additionalProperties: true
+          type: object
+          title: Device Integrity
+          description: FA-028 flags at duty start (is_mock, is_rooted, drift).
         duration_s:
           anyOf:
           - type: integer
@@ -2426,6 +2771,69 @@ components:
       - updated_at
       - version
       title: DutySessionOut
+    DutyStartIn:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client id (sync); else server-set.
+        device_id:
+          type: string
+          maxLength: 128
+          minLength: 1
+          title: Device Id
+        app_version:
+          type: string
+          maxLength: 32
+          minLength: 1
+          title: App Version
+        policy_version:
+          type: string
+          maxLength: 32
+          minLength: 1
+          title: Policy Version
+          description: The location policy version the app holds.
+        start_at:
+          type: string
+          format: date-time
+          title: Start At
+          description: When the officer toggled duty on (device clock).
+        start_point:
+          $ref: '#/components/schemas/PointIn'
+        integrity:
+          $ref: '#/components/schemas/DeviceIntegrityIn'
+      type: object
+      required:
+      - device_id
+      - app_version
+      - policy_version
+      - start_at
+      - start_point
+      title: DutyStartIn
+    DutyStatusOut:
+      properties:
+        session:
+          anyOf:
+          - $ref: '#/components/schemas/DutySessionOut'
+          - type: 'null'
+          description: The caller's open session, if any.
+        policy_version:
+          type: string
+          title: Policy Version
+          description: Tenant `location_policy_version` to accept (VV-010).
+        policy_accepted:
+          type: boolean
+          title: Policy Accepted
+          description: Whether the caller has accepted that version.
+      type: object
+      required:
+      - session
+      - policy_version
+      - policy_accepted
+      title: DutyStatusOut
     FarmCreate:
       properties:
         id:
@@ -3081,6 +3489,138 @@ components:
       - lat
       - lon
       title: LatLon
+    LocationBatchIn:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client batch id (sync entity id).
+        duty_session_id:
+          type: string
+          format: uuid
+          title: Duty Session Id
+        device_id:
+          type: string
+          maxLength: 128
+          minLength: 1
+          title: Device Id
+        sent_at:
+          type: string
+          format: date-time
+          title: Sent At
+          description: Device clock when the batch was sent (VV-002 drift).
+        points:
+          items:
+            $ref: '#/components/schemas/LocationPointIn'
+          type: array
+          maxItems: 500
+          minItems: 1
+          title: Points
+      type: object
+      required:
+      - duty_session_id
+      - device_id
+      - sent_at
+      - points
+      title: LocationBatchIn
+    LocationBatchOut:
+      properties:
+        duty_session_id:
+          type: string
+          format: uuid
+          title: Duty Session Id
+        accepted:
+          type: integer
+          title: Accepted
+        rejected:
+          items:
+            $ref: '#/components/schemas/RejectedPoint'
+          type: array
+          title: Rejected
+        clock_drift_s:
+          type: integer
+          title: Clock Drift S
+          description: Device `sent_at` minus server `received_at`.
+        received_at:
+          type: string
+          format: date-time
+          title: Received At
+      type: object
+      required:
+      - duty_session_id
+      - accepted
+      - rejected
+      - clock_drift_s
+      - received_at
+      title: LocationBatchOut
+    LocationPointIn:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+          description: Sample time on the device (aware; naive is UTC).
+        lat:
+          type: number
+          maximum: 90.0
+          minimum: -90.0
+          title: Lat
+        lon:
+          type: number
+          maximum: 180.0
+          minimum: -180.0
+          title: Lon
+        accuracy_m:
+          type: number
+          minimum: 0.0
+          title: Accuracy M
+        speed_mps:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Speed Mps
+        bearing:
+          anyOf:
+          - type: number
+            maximum: 360.0
+            minimum: 0.0
+          - type: 'null'
+          title: Bearing
+        battery_pct:
+          anyOf:
+          - type: integer
+            maximum: 100.0
+            minimum: 0.0
+          - type: 'null'
+          title: Battery Pct
+        is_mock:
+          type: boolean
+          title: Is Mock
+          default: false
+        is_rooted:
+          type: boolean
+          title: Is Rooted
+          default: false
+        provider:
+          anyOf:
+          - type: string
+            enum:
+            - fused
+            - gps
+            - network
+          - type: 'null'
+          title: Provider
+      type: object
+      required:
+      - ts
+      - lat
+      - lon
+      - accuracy_m
+      title: LocationPointIn
     LocationPointOut:
       properties:
         ts:
@@ -3146,6 +3686,30 @@ components:
       - provider
       - duty_session_id
       title: LocationPointOut
+    LocationPolicyOut:
+      properties:
+        version:
+          type: string
+          title: Version
+          description: The tenant's `location_policy_version` (VV-010).
+        text_hash:
+          type: string
+          title: Text Hash
+          description: sha256 binding version and text; echo it on accept.
+        text:
+          additionalProperties:
+            items:
+              type: string
+            type: array
+          type: object
+          title: Text
+          description: 'Four short points per language: en, te, kn, hi, mr (SPEC 13.2 A05).'
+      type: object
+      required:
+      - version
+      - text_hash
+      - text
+      title: LocationPolicyOut
     LogoutRequest:
       properties:
         refresh_token:
@@ -3400,6 +3964,124 @@ components:
       - resend_after
       - resends_left
       title: PhoneVerifySendResponse
+    PointIn:
+      properties:
+        lat:
+          type: number
+          maximum: 90.0
+          minimum: -90.0
+          title: Lat
+        lon:
+          type: number
+          maximum: 180.0
+          minimum: -180.0
+          title: Lon
+        accuracy_m:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Accuracy M
+      type: object
+      required:
+      - lat
+      - lon
+      title: PointIn
+    PolicyAcceptIn:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client id (sync); else server-set.
+        version:
+          type: string
+          maxLength: 32
+          minLength: 1
+          title: Version
+        text_hash:
+          type: string
+          maxLength: 64
+          minLength: 64
+          pattern: ^[0-9a-f]{64}$
+          title: Text Hash
+        device_id:
+          type: string
+          maxLength: 128
+          minLength: 1
+          title: Device Id
+        app_version:
+          type: string
+          maxLength: 32
+          minLength: 1
+          title: App Version
+        accepted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Accepted At
+          description: When the user tapped agree (offline first run); default now.
+      type: object
+      required:
+      - version
+      - text_hash
+      - device_id
+      - app_version
+      title: PolicyAcceptIn
+    PolicyAcceptanceOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        policy_key:
+          type: string
+          title: Policy Key
+        version:
+          type: string
+          title: Version
+        accepted_at:
+          type: string
+          format: date-time
+          title: Accepted At
+        device_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Id
+        app_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: App Version
+        text_hash:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Text Hash
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - user_id
+      - policy_key
+      - version
+      - accepted_at
+      - device_id
+      - app_version
+      - text_hash
+      - created_at
+      title: PolicyAcceptanceOut
     RefreshRequest:
       properties:
         refresh_token:
@@ -3418,6 +4100,23 @@ components:
       required:
       - refresh_token
       title: RefreshRequest
+    RejectedPoint:
+      properties:
+        index:
+          type: integer
+          title: Index
+        reason:
+          type: string
+          enum:
+          - off_duty
+          - future
+          - duplicate
+          title: Reason
+      type: object
+      required:
+      - index
+      - reason
+      title: RejectedPoint
     Season:
       type: string
       enum:
@@ -3472,6 +4171,7 @@ components:
           - visit_photo
           - duty_session
           - policy_acceptance
+          - location_batch
           title: Entity
         action:
           type: string
@@ -3549,6 +4249,7 @@ components:
           - visit_photo
           - duty_session
           - policy_acceptance
+          - location_batch
           title: Entity
         action:
           type: string

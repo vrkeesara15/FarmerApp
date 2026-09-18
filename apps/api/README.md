@@ -40,7 +40,12 @@ farmerapp/
   worker/         Pub/Sub push receiver + dispatch table by topic (SPEC 9.2)
   jobs/           typer CLI (hello, seed = the Telangana demo tenant "fcc" + "gfl" (see "Seed data");
                   purge-audit-logs = NF-012 dry run; purge-expired; ensure-partitions and
-                  purge-location-points = SPEC 2.6 location retention); seed_m2.py = M2 rows
+                  purge-location-points = SPEC 2.6 location retention; auto-end-duty = VV-007;
+                  officer-sync-silence = OPS-006); seed_m2.py = M2 rows
+  duty/           FA-010 duty start / end service + /v1/duty routes, track.py (km, stops),
+                  auto_end.py (VV-007 auto end + OPS-006 sync silence jobs)
+  policies/       FA-011 / VV-010 location policy text (versioned JSON) + acceptance
+  notifications/  notification table (FA-007 groundwork; rows written by the duty jobs)
 alembic/          async Alembic env + migrations
 scripts/          export_openapi.py (writes/checks openapi.yaml)
 tests/            pytest (needs the compose db: `make db`)
@@ -163,8 +168,61 @@ the loop:
 - Sync: `visit`, `visit_photo`, `duty_session`, `policy_acceptance` are in `SYNC_ENTITIES`
   and the change feed; conflict rules `merge_fields` for visit / duty_session with
   `SERVER_OWNED_FIELDS` (score, status, confirmation, geofence decision; km, stops, and the
-  end of an auto-ended session), `server_wins` for photos and acceptances. Their write ops
-  are rejected `unsupported_action` until the FA-010 / FA-014 paths land.
+  end of an auto-ended session), `server_wins` for photos and acceptances. The visit /
+  visit_photo write ops are rejected `unsupported_action` until the FA-014 .. FA-017 paths
+  land; duty sessions, acceptances and location batches are live (next section).
+
+## Duty, location ingest and the location policy (FA-010 / FA-011 / VV-001 / VV-002 / VV-007 / VV-010)
+
+Location is collected only on duty: the server never stores a point outside a duty
+session's window, whatever a device sends.
+
+- **Policy first** (`farmerapp/policies/`): `GET /v1/policies/location` (any role) returns
+  `{version, text_hash, text: {en, te, kn, hi, mr}}` — the tenant's
+  `location_policy_version` with the four points of `location_policy_texts.json`
+  (TODO-LEGAL placeholder; a wording change is a new version, HR signs the same version
+  string — VV-010). `POST /v1/policies/location/accept {version, text_hash, device_id,
+  app_version}` (201) or the sync op `policy_acceptance create` (offline first run;
+  `accepted_at` = `client_ts`) writes the append-only acceptance; a version / hash that is
+  not the tenant's current one is `422 policy_version_stale`. Bumping the tenant setting
+  invalidates every earlier acceptance.
+- **Duty** (`farmerapp/duty/`): sync `duty_session create` = `POST /v1/duty/start` (201)
+  with `{id, device_id, app_version, policy_version, start_at, start_point, integrity}`
+  — `422 policy_not_accepted` (with `required_version`) until the current version is
+  accepted, `409 duty_already_active` (with the open session id) unless that session is
+  older than 24 h (then it is closed `forced` first). `duty_session update` =
+  `POST /v1/duty/end` with `{end_at, end_point, end_reason manual|auto_time|auto_idle}`
+  computes `km` and `stops` from the stored points (`duty/track.py`: points with accuracy
+  > 100 m ignored, jumps > 90 km/h dropped, a stop is ≥ 5 min within 100 m); an end op on
+  a session the server already ended is a `conflict` carrying the server state.
+  `GET /v1/duty/current` → `{session | null, policy_version, policy_accepted}`,
+  `GET /v1/duty/policy` → `{moving_interval_s, stationary_interval_s, upload_interval_s,
+  upload_on_wifi_or_charging}` (VV-001, tenant settings). Roles: field_officer,
+  cluster_head; sessions are always the caller's own.
+- **Points** (`farmerapp/location/ingest.py`): sync `location_batch create` =
+  `POST /v1/location/batch` (field_officer) with `{id, duty_session_id, device_id, sent_at,
+  points[≤ 500]{ts, lat, lon, accuracy_m, speed_mps, bearing, battery_pct, is_mock,
+  is_rooted, provider}}`. Each point is stored only when `ts` is inside
+  `[start_at − 2 min, end_at (or now) + 2 min]` of the caller's own session; the result is
+  `applied` with `server: {accepted, rejected: [{index, reason: off_duty | future |
+  duplicate}], clock_drift_s, received_at}`. `clock_drift_s` = device `sent_at` − server
+  `received_at` (rounded) is stored on every point (VV-002 / VA-E01). Duplicates by
+  `(officer_id, ts)` are ignored. A replay (same `op_id` or `Idempotency-Key`) stores
+  nothing twice.
+- **Auto end** (`farmerapp/duty/auto_end.py`): `python -m farmerapp.jobs auto-end-duty
+  --tenant-id <id> [--tenant-id …]` (Cloud Scheduler every 10 min) closes open sessions
+  at the tenant's `auto_duty_end_local_time` (IST; the first cutoff after `start_at`) with
+  `auto_time`, or after `idle_end_minutes` without movement (< 100 m across the window's
+  points, window covered by data) within 200 m of `user.home_point` (migration 0008;
+  fallback: the store's location) with `auto_idle`. Both write a `notification` row
+  (`kind duty_auto_ended`, i18n keys `notification.duty_auto_ended.*`, `data
+  {duty_session_id, end_reason, end_at}`) for the officer so the app can prompt (FA-007
+  delivers). After the end the ingest rejects every later point: no tracking beyond auto
+  end. `officer-sync-silence --tenant-id …` (OPS-006) notifies the cluster head(s) once per
+  session when an officer on duty has sent no batch for 2 h (`received_at`).
+- **Notifications** (`farmerapp/notifications/models.py`): `notification` (tenant, user,
+  kind, title_key, body_key, data jsonb, created_at, read_at), RLS, not audited; the FA-007
+  inbox and FCM delivery build on it.
 
 ## Farmer registration writes (FA-012 / FA-013)
 

@@ -21,6 +21,7 @@ USER_COLUMNS = BASE_COLUMNS | {
     "language",
     "status",
     "device_id",
+    "home_point",  # 0008 (VV-007 idle at home)
 }
 OTP_COLUMNS = BASE_COLUMNS | {
     "phone",

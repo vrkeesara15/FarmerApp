@@ -43,6 +43,7 @@ SYNC_ENTITIES: tuple[str, ...] = (
     "visit_photo",
     "duty_session",
     "policy_acceptance",
+    "location_batch",  # write-only: points land in location_point, which is never in the feed
 )
 #: Never in the change feed, whatever hook sees them: raw location points are high-volume
 #: telemetry the device already has (VV-001) and other officers must never receive (SPEC 2.6).

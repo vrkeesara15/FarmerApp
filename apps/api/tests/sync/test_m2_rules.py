@@ -97,16 +97,16 @@ def test_merge_fields_never_loses_a_conflict() -> None:
 async def test_m2_ops_validate_but_are_rejected_until_the_write_path_lands(
     client: AsyncClient, ctx: WriteCtx
 ) -> None:
+    # duty_session / policy_acceptance / location_batch writes landed with FA-010 (tests/duty,
+    # tests/location/test_batch.py, tests/policies); a duty session is never deleted by a device.
     ops = [
         op("visit", "create", {"purpose": "advisory"}),
-        op("duty_session", "create", {"start_at": T0.isoformat()}),
         op("visit_photo", "create", {"blob_uri": "gs://x/y"}),
-        op("policy_acceptance", "create", {"version": "2026-09-v1"}),
         op("visit", "update", {"notes": "x"}, base_version=1),
         op("duty_session", "delete", {}, base_version=1),
     ]
     body = await sync(client, ctx, ops)
-    assert [r["status"] for r in body["results"]] == ["rejected"] * 6
+    assert [r["status"] for r in body["results"]] == ["rejected"] * 4
     assert {r["error"]["code"] for r in body["results"]} == {"unsupported_action"}
     assert all(r["error"]["status"] == 422 for r in body["results"])
 

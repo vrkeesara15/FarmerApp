@@ -8,6 +8,7 @@ import uuid
 
 import typer
 
+from farmerapp.duty import auto_end as duty_jobs
 from farmerapp.jobs import purge_audit_logs as purge_mod
 from farmerapp.jobs import purge_expired as expired_mod
 from farmerapp.jobs import seed as seed_mod
@@ -140,6 +141,42 @@ def purge_location_points(
         typer.echo(
             f"  {row.partition} day={row.day} points={row.points} "
             f"officer_days={row.officer_days} {state}"
+        )
+
+
+@cli.command("auto-end-duty")
+def auto_end_duty(
+    tenant_id: list[uuid.UUID] = typer.Option(  # noqa: B008
+        ..., "--tenant-id", help="Tenant(s) to process (repeatable)."
+    ),
+) -> None:
+    """VV-007: end open duty sessions past the tenant's auto-end time (IST) or idle at home
+    for ``idle_end_minutes``; writes a notification for the officer. Run every 10 minutes."""
+    _setup()
+    results = asyncio.run(duty_jobs.run_auto_end(tenant_id))
+    typer.echo(f"auto-end-duty: tenants={len(tenant_id)} ended={len(results)}")
+    for r in results:
+        typer.echo(
+            f"  tenant={r.tenant_id} session={r.duty_session_id} officer={r.officer_id} "
+            f"{r.end_reason} at {r.end_at.isoformat()}"
+        )
+
+
+@cli.command("officer-sync-silence")
+def officer_sync_silence(
+    tenant_id: list[uuid.UUID] = typer.Option(  # noqa: B008
+        ..., "--tenant-id", help="Tenant(s) to process (repeatable)."
+    ),
+) -> None:
+    """OPS-006: notify cluster heads of officers on duty with no location batch for 2 h
+    (one notification per session). Run every 30 minutes."""
+    _setup()
+    results = asyncio.run(duty_jobs.run_sync_silence(tenant_id))
+    typer.echo(f"officer-sync-silence: tenants={len(tenant_id)} silent={len(results)}")
+    for r in results:
+        typer.echo(
+            f"  tenant={r.tenant_id} session={r.duty_session_id} officer={r.officer_id} "
+            f"last_contact={r.last_contact_at.isoformat()} notified={len(r.notified)}"
         )
 
 
