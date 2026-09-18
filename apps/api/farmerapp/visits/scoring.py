@@ -14,7 +14,8 @@ decision itself (``geofence_result``) was taken by PostGIS at check-in (FA-014).
 Assumptions recorded here (not in the SPEC text):
 
 * An approved override (``geofence_result = override``) earns ``OVERRIDE_POINTS`` (15) of
-  the geofence 30: the visit happened, but not where the polygon says.
+  the geofence 30: the visit happened, but not where the polygon says. While the override
+  request is pending or rejected (``override_approved`` false) the component is 0.
 * A photo matches when it was taken in-app, its EXIF time falls within the visit window
   (check-in .. check-out, each widened by ``PHOTO_TIME_TOLERANCE_S``; check-in plus the
   tolerance while the visit is open) and its EXIF GPS is within ``PHOTO_DISTANCE_M`` of the
@@ -117,12 +118,12 @@ def status_for(score: int) -> VisitStatus:
     return VisitStatus.UNVERIFIED
 
 
-def _geofence_points(result: GeofenceResult | str) -> int:
+def _geofence_points(result: GeofenceResult | str, *, override_approved: bool = True) -> int:
     match GeofenceResult(result):
         case GeofenceResult.INSIDE | GeofenceResult.MEETING_POINT:
             return GEOFENCE_POINTS
         case GeofenceResult.OVERRIDE:
-            return OVERRIDE_POINTS
+            return OVERRIDE_POINTS if override_approved else 0
         case GeofenceResult.OUTSIDE:
             return 0
 
@@ -160,13 +161,18 @@ def score_visit(
     checkin_lon: float,
     min_duration_s: int,
     integrity: DeviceIntegrity,
+    override_approved: bool = True,
 ) -> ScoreResult:
-    """VV-004 components and the VV-005 status for one visit."""
+    """VV-004 components and the VV-005 status for one visit.
+
+    ``override_approved`` only matters for ``geofence_result = override`` (FA-014): the
+    override credit is earned once the cluster head approved the request.
+    """
     duration_ok = (
         checkout_at is not None and (checkout_at - checkin_at).total_seconds() >= min_duration_s
     )
     components = {
-        "geofence": _geofence_points(geofence_result),
+        "geofence": _geofence_points(geofence_result, override_approved=override_approved),
         "confirmation": CONFIRMATION_POINTS if confirmed else 0,
         "photo": PHOTO_POINTS
         if any(
@@ -201,6 +207,7 @@ def score_visit_row(
         checkin_lon=visit.checkin_lon,
         min_duration_s=min_duration_s,
         integrity=DeviceIntegrity.from_dict(visit.device_integrity),
+        override_approved=visit.override_approved_by is not None,
     )
 
 

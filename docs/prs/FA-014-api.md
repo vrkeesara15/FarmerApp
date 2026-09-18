@@ -1,0 +1,77 @@
+# FA-014 (API half): visit check-in with geofence, capture, confirmation, check-out and scoring
+
+## Requirement IDs
+
+- FA-014 Visit check-in geofence — API: `POST /v1/visits/check-in` evaluates the farm polygon (buffered by the tenant `geofence_radius_m`) and the village meeting point in PostGIS; outside is `422 outside_geofence` with the distance and nearest target; an `override_note` creates the visit as `override` with an `override_request` the cluster head approves or rejects; **mobile A30 pending (mobile agent)**
+- FA-015 Visit capture — API: `PATCH /v1/visits/{id}` (notes, crop stage, purpose), `POST /v1/visits/{id}/photos` (in-app only, EXIF + server time, perceptual hash, VA-E08 flags); **A31 + in-app camera pending**
+- FA-016 Farmer confirmation — API: request / complete per channel (SMS OTP on the officer's phone, push prompt and QR completed by the farmer app with a signed token); the visit is confirmed only when one channel succeeds; **A32 + farmer prompt pending**
+- FA-017 Check-out and duration — API: `POST /v1/visits/{id}/check-out` computes the duration, flags `under_minimum`, scores; **A33 pending**
+- FA-028 Mock-location / root / time-tamper — API: recorded on the visit, `integrity_issues`, `integrity_signal` log and `IntegrityEvent` on the in-process bus; never blocks; **device-side detection pending**
+- VV-003 Geofence per farm / meeting point — done (`farmerapp/visits/geofence.py`, tested on sample polygons: inside, 100 m buffer, 500 m outside, meeting point radius per village and per tenant)
+- VV-004 Visit score — done: the write path stores `score` / `score_components` at check-out and rescores on later confirmation, photo and override decisions
+- VV-005 Visit status — done: set at check-out from the score; `open` before
+
+PR title: `feat(FA-014): visit check-in with geofence, capture, confirmation, check-out and scoring (FA-015, FA-016, FA-017, FA-028, VV-003, VV-004, VV-005)`
+
+Branch `feat/FA-014-visit-flow-api`, rebased onto the FA-010 duty / location API (main `4256223`); the mobile agent implements the same contract in `apps/mobile`. Nothing under `farmerapp/duty/`, `farmerapp/location/`, `farmerapp/policies/`, `apps/mobile`, `apps/console`, `infra` or `.github` is touched here; `sync/service.py` now dispatches both the duty and the visit entities (`_ENTITIES_WITHOUT_WRITE_PATH` is empty).
+
+## What changed
+
+- **Models** `apps/api/farmerapp/visits/models.py`: `OverrideRequest` (`override_request`: visit, note, requested_at / by, `approver_role` cluster_head, decision approved | rejected, decided_at / by, decision note; CHECKs), `visit.flags jsonb` (`under_minimum`), `visit_photo.photo_flags jsonb` (VA-E08), `visit_confirmation.status pending | confirmed | expired` + `requested_at` / `expires_at` / `token_hash` with `confirmed_at` nullable and a CHECK tying it to `status = confirmed`; `ConfirmationStatus`, `OverrideDecision`, flag constants. Registered in `db/models/__init__.py`.
+- **Migration** `apps/api/alembic/versions/0009_visits_flow.py` — `revision 0009`, `down_revision 0007`, `branch_labels ("visits",)`: the table (with `enable_rls`), the three defaulted / three nullable columns, the dropped NOT NULL and two CHECKs. Backward compatible; downgrade tested (pending confirmation rows are deleted before the NOT NULL comes back). `0010_merge_duty_and_visits_heads` (empty merge point over 0008 and 0009) gives the graph one head again; 0007 → head, head → 0007 → head exercised on the test DB.
+- **Geofence** `farmerapp/visits/geofence.py`: `evaluate(session, lat, lon, farm, village, default_radius_m) -> GeofenceCheck(result, distance_m, target, radius_m)` with `ST_DWithin` / `ST_Distance` on `geography`; farm first, then the meeting point; nearest target reported when outside.
+- **Photos** `farmerapp/visits/photos.py`: `phash(bytes)` (imagehash DCT hash, 16 hex chars; `None` for undecodable bytes), `read_exif(bytes)` (`DateTimeOriginal` + `OffsetTimeOriginal`, GPS IFD; IST when no offset). New dependencies `pillow`, `imagehash` (numpy / scipy / PyWavelets come with it); mypy override for `imagehash`.
+- **Events** `farmerapp/visits/events.py`: `EventBus` (subscribe / unsubscribe / publish; handler errors logged and swallowed) and the `bus` singleton; `IntegrityEvent` (FA-028 / VA-E01 hook), `OverrideRequested` (FA-014 approval, FA-007 delivery), `ConfirmationRequested` (FA-016 push with the token).
+- **Service** `farmerapp/visits/service.py`: `check_in` (replay by `id` / `client_visit_id`, farmer / farm / village lookups, geofence, `outside_geofence` or override + request + event, integrity issues + `integrity_signal` + event, initial live components), `decide_override`, `capture`, `add_photo` (blob under the tenant prefix, server sha256 / phash / time, EXIF fallback, VA-E08 flags incl. duplicates, rescore), `request_confirmation` (`sms_otp` via `OtpService` purpose `farmer_confirm`; `app_push` / `qr` tokens `typ = visit_confirm` bound to tenant + visit + row, `token_hash` stored), `confirm_with_otp`, `farmer_confirm` (token, rating, idempotent replay), `check_out` (replay, `checkout_before_checkin`, `visit_already_checked_out`, `under_minimum`), `rescore` (idempotent), lookups `visible_visit` / `own_visit`, `settings_of`. Errors in `farmerapp/visits/errors.py`.
+- **Scoring** `farmerapp/visits/scoring.py`: `score_visit(..., override_approved=True)`; `score_visit_row` passes `override_approved_by is not None` so a pending / rejected override scores 0 for the geofence component.
+- **Schemas** `farmerapp/visits/schemas.py`: write models `VisitCheckIn`, `VisitCapture` (`extra = forbid`), `VisitCheckOut`, `VisitPhotoCreate`, `ConfirmationRequest`, `ConfirmationSubmit`, `FarmerConfirm`, `OverrideDecisionIn`; read models gain `integrity_issues`, `flags`, `photo_flags`, `signed_url`, confirmation `status` / `requested_at` / `expires_at`, `OverrideRequestOut`, `ConfirmationRequestOut`, `VisitDetailOut.override_request`.
+- **Router** `farmerapp/visits/router.py`: `POST /v1/visits/check-in` (201, `@idempotent`), `PATCH /v1/visits/{id}`, `POST /v1/visits/{id}/photos` (201, `@idempotent`), `POST /v1/visits/{id}/confirm/request` (202), `POST /v1/visits/{id}/confirm`, `POST /v1/visits/{id}/farmer-confirm` (farmer), `POST /v1/visits/{id}/check-out` (`@idempotent`), `POST /v1/visits/{id}/override/approve|reject` (cluster head, owner, director, tenant admin); `GET /v1/visits/{id}` now signs photo URLs and returns the override request. Roles: `VISIT_ROLES` field_officer / cluster_head / store_manager; writes on own visits only (404 otherwise).
+- **Sync** `farmerapp/visits/sync_ops.py` (visit create / update, visit_photo create, visit_confirmation create) wired into `farmerapp/sync/service.py` through an `OpContext` (settings, now, auth services, blob store) — `apply_ops(..., services=, blobs=)`; `visit_confirmation` added to the `Entity` literal, `SYNC_ENTITIES`, `CONFLICT_RULES` (`server_wins`), the feed scope and current state; `_ENTITIES_WITHOUT_WRITE_PATH` now only `duty_session` / `policy_acceptance`. `sync/router.py` passes the services and blob store.
+- **Settings** `VISIT_CONFIRM_TOKEN_TTL_SECONDS` (86 400) in `settings.py` / `.env.example`.
+- `apps/api/openapi.yaml` regenerated (9 new operations with `x-roles`), `apps/api/README.md` "Visit flow" section, `docs/progress.md`, this file.
+
+Design decisions and assumptions:
+- Writes belong to the visiting officer: a cluster head or store manager who can *read* an officer's visit gets 404 on its write endpoints (same "not in scope" answer the rest of the API gives), so the SEC-006 matrix stays meaningful (allowed roles are those who make visits themselves).
+- Officer-side `POST /confirm` accepts `sms_otp` only. The QR / push token is handed to the farmer's app and comes back through `farmer-confirm` (role farmer, own visits): if the officer could post the token he was just shown, a QR would confirm nothing. OTP is the offline-tolerant officer-side channel (the typed code is queued as a sync op and verified on arrival, within the 5-minute validity); QR is the offline-tolerant farmer-side channel (24-hour token, validated later by the server). Requesting a confirmation has no sync op — it needs the network anyway (SMS, push).
+- The OTP purpose reuses the existing CHECK value `farmer_confirm` (the contract's `visit_confirm` label is the token `typ`). Sending uses the FA-001 limits per farmer phone: one active code per farmer at a time; a later resend for the same farmer supersedes the pending request row.
+- Farm without a boundary and village without a meeting point: the check-in is `outside` with `target: null` and needs an override (no geofence, no automatic credit). `farm_id: null` tests only the meeting point.
+- Override approvers: the cluster head of the officer's cluster through `visit_filters` scope, plus owner / director / tenant admin as escalation (SPEC FA-014 names the cluster head; the escalation is an assumption). One override request per visit; a rejected override is not re-requested from the API (the officer's recourse is the manager).
+- Photo evidence thresholds for the VA-E08 flags are 30 minutes and 300 m (the contract); the score keeps the tighter ± 10 min / 150 m of `scoring.py`. `duplicate_photo` (same sha256 or phash on another visit) is recorded here since the hash index already exists; the batch agent (M4) does the near-duplicate Hamming search.
+- The blob must exist in the store under the tenant prefix, but an `upload_session` row is not required (a blob written by another device session of the same tenant is fine) — same leniency as `farm_photo`.
+- `notification` table: not touched (it belongs to the concurrent duty / location migration). The three events are the hook; FA-007 wires delivery. `override_request` is read through `GET /v1/visits/{id}` (the cluster head sees the visit); a queue endpoint is a WC item.
+- Live components while open: `score_components` is filled at check-in and on every photo / confirmation so the A31 ProofChecklist can show progress; `score` and `status` stay null / `open` until check-out (VV-005).
+
+## Screenshots / goldens (UI changes)
+
+None (API + database).
+
+## Migration notes
+
+- [x] Alembic migration added — `0009_visits_flow` on branch `visits` (revises 0007). Backward compatible: one table, additive columns, one NOT NULL dropped. Downgrade exercised on the test DB; `0010` merges the duty (0008) and visits (0009) heads (branch rebased onto the FA-010 API). Deploy order migrate -> api.
+- [x] RLS policy + tenant_id on every table — `override_request` isolated and forced (metadata meta-test + `test_override_request_rows_are_tenant_isolated`).
+- [x] Data backfill / retention impact — none (existing confirmations default to `status = confirmed`).
+- [ ] Cloud SQL: nothing new.
+
+## Test evidence
+
+Run from the worktree against an isolated test database (`TEST_DATABASE_URL=…/farmerapp_test_visits`), the individual `check-api` steps: ruff check + format --check clean, mypy strict clean (199 files), pytest `1160 passed, 1 skipped in 10 min 34 s` after the rebase onto the FA-010 API (96% coverage, `farmerapp/visits/` 87-100% per module; 1013 on the pre-rebase branch), `openapi.yaml` up to date, bandit clean.
+
+New tests:
+- `tests/visits/test_flow.py` — check-in inside the polygon / inside the 150 m buffer / at the meeting point (village radius override, tenant radius override); outside rejected with reason, distance, target and radius, nothing stored; no target -> override needed; scope / validation / 403 for farmers; replay by client id and by `Idempotency-Key`; override needs a note (ignored when inside) and cluster-head approval: pending scores 0, other cluster's head 404, officer 403, approve -> 15 and rescore, second decision 409, reject keeps 0, owner may decide, `OverrideRequested` event; FA-028 issues recorded, `integrity_signal` logged without PII, `IntegrityEvent`, integrity component zeroed, drift exactly 300 s ok; event bus handler failure isolation; capture last-writer-wins, server-owned fields refused, other officer / cluster head 404; gallery photo rejected; EXIF + server time + sha256 + phash (= `imagehash.phash` of the generated JPEG) + signed URL stored; EXIF time / GPS mismatch, missing, duplicate across visits and after check-out flagged not rejected; EXIF fallback from the JPEG (IST offset, GPS DMS), undecodable bytes -> `phash null`; sha mismatch / unknown blob / foreign-tenant blob / bad URI / other officer; client photo id replay; SMS OTP: request (masked phone, limits), wrong code 401 leaves the visit unconfirmed, right code confirms with the officer's device, code never echoed, resend supersedes; push: token only to the farmer (event), officer / other farmer / wrong token refused, farmer confirms with rating, replay idempotent; QR: other visit's token refused, validated 6 hours later, expired after 25 h; second channel after success 409; check-out duration 1200 s and score, replay ok, different time 409, under-minimum flagged (exactly 5 min ok), before check-in 422, naive time 422; exact totals 100 verified, 70 verified (boundary), 65 partial with approved override, 40 partial (boundary), 30 unverified, `status_for(69/39)`; late confirmation / photo rescore, unchanged rescore keeps the version; store manager reads visits but 403 on tracks and overrides; `override_request` RLS in both tenants and unbound; sync: check-in applied / duplicate / conflict, photo + capture + check-out batch with server-owned fields dropped, OTP typed on the officer's phone rejected then applied, feed carries visit / photo / confirmation; outside rejected unless overridden, gallery rejected, photo update / visit delete unsupported; farmer posts a scanned QR token (rating), wrong channel, officer replay of a known confirmation id -> conflict.
+- `tests/sync/test_m2_rules.py` — duty ops still `unsupported_action`; visit ops reach the write path (validation / scope errors, never unsupported); `visit_confirmation` rule.
+- `tests/authz/test_matrix.py` — `RouteFixture`s for the nine new routes (generated matrix: 9 routes × 10 roles, cross-tenant, no token).
+
+## Checklist
+
+- [x] Tests written first; acceptance criteria covered (FA-014 blocked with reason + override needs note and approval; FA-015 gallery disabled, EXIF and server time stored; FA-016 confirmed only after one channel succeeds; FA-017 under minimum flagged not rejected; FA-028 flagged not blocked; VV-003 sample polygons; VV-004 components stored; VV-005 status)
+- [x] Role + tenant authorisation tests for every new endpoint (SEC-006 matrix, RLS on `override_request`)
+- [x] Strings externalised; money in integer paise; timestamps UTC — problem `detail`s are developer text (the apps map `code`s to copy); `timestamptz` everywhere; no money
+- [x] No secrets in code, fixtures or logs — OTP codes never logged or echoed; tokens stored as SHA-256; dev JWT key only
+- [x] OpenAPI (`apps/api/openapi.yaml`) and `docs/progress.md` updated in this PR
+- [x] Logs / metrics / alerts — `visit_checked_in`, `override_requested`, `override_decided`, `integrity_signal` (WARNING), `visit_photo_flagged`, `visit_confirmed`, `visit_checked_out`
+- [x] Runbook updated — `apps/api/README.md` "Visit flow"
+- [ ] `infra/`, `rules/`, payments or auth code: 2 reviewers (CODEOWNERS) — `auth/` untouched; the OTP service is reused, not changed
+
+### Mobile releases only
+
+- [ ] VV-009 / disclosure copy: unchanged (no release in this PR)

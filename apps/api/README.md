@@ -148,8 +148,8 @@ the loop:
   window and GPS within 150 m 20, duration >= tenant `min_visit_duration_s` 10, device
   integrity 10; VV-005: verified >= 70, partial 40-69, unverified < 40, `open` until
   check-out), `device_integrity {is_mock, is_rooted, clock_drift_s}`, `client_visit_id`
-  (device id, unique per tenant). The write endpoints (check-in, photos, confirmation,
-  check-out) are FA-014 .. FA-017; call `score_visit_row` at check-out and on confirmation.
+  (device id, unique per tenant), `flags` (`under_minimum`, FA-017). The write endpoints are
+  in "Visit flow" below.
 - `visit_photo` keeps EXIF time + point, `taken_in_app`, device and server time, `sha256`
   and `phash` (VA-E08); `visit_confirmation` the channel, OTP challenge, farmer phone last4
   and confirming device (VA-E05), later the FM-011 rating.
@@ -165,12 +165,13 @@ the loop:
   (SPEC 2.6 "Officer location track": owner / director / auditor / tenant admin all,
   cluster head own cluster, officer self only; store managers, accountants, agronomists and
   farmers are not on the routes).
-- Sync: `visit`, `visit_photo`, `duty_session`, `policy_acceptance` are in `SYNC_ENTITIES`
-  and the change feed; conflict rules `merge_fields` for visit / duty_session with
-  `SERVER_OWNED_FIELDS` (score, status, confirmation, geofence decision; km, stops, and the
-  end of an auto-ended session), `server_wins` for photos and acceptances. The visit /
-  visit_photo write ops are rejected `unsupported_action` until the FA-014 .. FA-017 paths
-  land; duty sessions, acceptances and location batches are live (next section).
+- Sync: `visit`, `visit_photo`, `visit_confirmation`, `duty_session`, `policy_acceptance`
+  are in `SYNC_ENTITIES` and the change feed (`location_batch` is write-only); conflict
+  rules `merge_fields` for visit / duty_session with `SERVER_OWNED_FIELDS` (score, status,
+  confirmation, geofence decision; km, stops, and the end of an auto-ended session),
+  `server_wins` for photos, confirmations and acceptances. Visit ops are applied by
+  `farmerapp/visits/sync_ops.py` ("Visit flow" below); duty sessions, acceptances and
+  location batches by the FA-010 / FA-011 services (next section).
 
 ## Duty, location ingest and the location policy (FA-010 / FA-011 / VV-001 / VV-002 / VV-007 / VV-010)
 
@@ -223,6 +224,80 @@ session's window, whatever a device sends.
 - **Notifications** (`farmerapp/notifications/models.py`): `notification` (tenant, user,
   kind, title_key, body_key, data jsonb, created_at, read_at), RLS, not audited; the FA-007
   inbox and FCM delivery build on it.
+
+## Visit flow (FA-014 .. FA-017, FA-028; VV-003 .. VV-005)
+
+One write path, `farmerapp/visits/service.py`, behind the REST twins in
+`farmerapp/visits/router.py` and the `POST /v1/sync` ops in `farmerapp/visits/sync_ops.py`
+(the device queues exactly the REST bodies). Roles: field officer, cluster head and store
+manager make visits and write only their **own** (anything else is 404); the farmer completes
+push / QR confirmations on visits made to them; the cluster head of the officer's cluster
+(or an owner / director / tenant admin) decides overrides. Migration `0009_visits_flow`
+(branch `visits`, revises 0007; `0010` merges it with the duty head 0008).
+
+- **Check-in** `POST /v1/visits/check-in` (201, `Idempotency-Key`; sync `visit.create`)
+  `{id?, farmer_id, farm_id?, village_id?, purpose, checkin_at, checkin_point{lat,lon,accuracy_m},
+  device_integrity{is_mock,is_rooted,clock_drift_s}, override_note?, client_visit_id?}`.
+  VV-003 in PostGIS (`farmerapp/visits/geofence.py`): inside the farm polygon buffered by the
+  tenant `geofence_radius_m` (150) -> `inside`; within the village meeting point's radius
+  (`village.meeting_point_radius_m`, else the tenant default) -> `meeting_point`; otherwise
+  `422 outside_geofence` with `detail`, `distance_m` (to the nearest target), `target`
+  (`farm` / `meeting_point` / null) and `radius_m` -- unless `override_note` is present: the
+  visit is created with `geofence_result: override`, an `override_request` row (pending,
+  `approver_role: cluster_head`) and an `OverrideRequested` event. `POST
+  /v1/visits/{id}/override/approve|reject {note?}` decides it; while pending or rejected the
+  geofence component scores 0, approved earns 15 of 30 and rescores. A replayed check-in
+  (same `id` / `client_visit_id`) returns the existing visit. `farm_id` null means only the
+  meeting point counts; no boundary and no meeting point -> override needed.
+- **FA-028** integrity is recorded on `visit.device_integrity` (`issues`:
+  `mock_location | rooted_device | clock_drift` for drift > 300 s), exposed as
+  `integrity_issues`, logged as WARNING `integrity_signal` and published as
+  `IntegrityEvent` on `farmerapp.visits.events.bus` (M4 / VA-E01 subscribes). Never blocks;
+  the integrity component of the score is 0.
+- **Capture** `PATCH /v1/visits/{id} {notes?, crop_stage?, purpose?}` (sync `visit.update`;
+  last writer wins). **Photos** `POST /v1/visits/{id}/photos` (201, sync `visit_photo.create`)
+  `{id?, blob_uri, sha256?, exif_time?, exif_point?, taken_in_app, device_time?}`: the blob
+  must be a completed upload under the tenant's prefix; `taken_in_app: false` ->
+  `422 gallery_not_allowed`; the server stores `server_time`, its own `sha256`
+  (`422 photo_sha_mismatch` if the client's differs), the perceptual hash `phash`
+  (`imagehash.phash`, 16 hex chars; null for undecodable bytes) and, when the payload has no
+  EXIF, the JPEG's `DateTimeOriginal` / GPS (times without an offset are read as IST).
+  VA-E08 evidence goes to `photo_flags` (`exif_time_missing`, `exif_time_mismatch` > 30 min
+  outside check-in .. check-out, `exif_gps_missing`, `exif_gps_mismatch` > 300 m from the
+  check-in, `duplicate_photo` same sha256 / phash on another visit) -- never a rejection.
+  Detail reads carry a 15-minute `signed_url` per photo.
+- **Confirmation** (FA-016) `POST /v1/visits/{id}/confirm/request {channel}` (202):
+  `sms_otp` sends a code to the farmer's phone through the FA-001 OTP service (purpose
+  `farmer_confirm`, same 5-minute validity, 3 resends / 15 min, lockout after 5 misses;
+  response has `phone_masked`, `expires_in`, `resends_left`); `app_push` needs a farmer with
+  an app account (`422 confirmation_channel_invalid` otherwise) and publishes
+  `ConfirmationRequested` with the token for FA-007 delivery; `qr` returns `token` to render
+  as a QR. Tokens are HS256 JWTs `typ = visit_confirm` bound to tenant, visit and the
+  pending `visit_confirmation` row (`token_hash`), valid `VISIT_CONFIRM_TOKEN_TTL_SECONDS`
+  (24 h) so a QR scanned offline is validated when the farmer app is back online.
+  Completion: `POST /v1/visits/{id}/confirm {channel: sms_otp, code}` on the officer's phone
+  (wrong code -> `401 otp_invalid`, attempts counted; push / QR here ->
+  `422 confirmation_channel_invalid`), `POST /v1/visits/{id}/farmer-confirm {token, rating?,
+  reason?}` (role farmer, own visits; FM-011 rating stored on the row). The visit is
+  `confirmed` only when one channel succeeds; a second channel afterwards is
+  `409 visit_already_confirmed`; pending rows of other channels expire. Sync
+  `visit_confirmation.create {visit_id, channel: sms_otp, code}` (officer; the code must
+  still be valid when the batch arrives -- OTP needs connectivity by nature, the request
+  itself has no sync op) or `{visit_id, channel: qr|app_push, token, rating?, reason?}`
+  (farmer).
+- **Check-out** `POST /v1/visits/{id}/check-out {checkout_at, checkout_point?}` (sync
+  `visit.update` with those keys): `duration_s` is generated, a duration under the tenant
+  `min_visit_duration_s` (300) sets `flags: ["under_minimum"]` without rejecting
+  (`422 checkout_before_checkin`, `409 visit_already_checked_out` for a different time),
+  then `rescore` writes `score`, `score_components` and `status` (VV-004: geofence 30,
+  confirmation 30, in-app photo with EXIF time in the window and GPS within 150 m 20,
+  duration 10, integrity 10; VV-005: verified >= 70, partial 40-69, unverified < 40).
+  `rescore` runs again on every later photo, confirmation or override decision and is
+  idempotent (no version bump when nothing changed); while the visit is open the live
+  components are stored and `score` / `status` stay null / `open`.
+- Reads: `GET /v1/visits/{id}` returns photos (+ signed URLs, flags), confirmations
+  (status / requested / expires), `override_request`, `score_components`,
+  `integrity_issues` and `flags`.
 
 ## Farmer registration writes (FA-012 / FA-013)
 

@@ -124,6 +124,16 @@ def _random_upload(_ctx: Ctx) -> dict[str, str]:
     return {"upload_id": "00000000-0000-0000-0000-000000000000", "index": "0"}
 
 
+def _checkin_body(ctx: Ctx) -> dict[str, Any]:
+    # A meeting-point-less, farm-less check-in: 404 / 422 for allowed roles, never 401 / 403.
+    return {
+        "farmer_id": str(ctx.target.farmer.id),
+        "purpose": "advisory",
+        "checkin_at": "2026-09-18T10:00:00+00:00",
+        "checkin_point": {"lat": 18.02, "lon": 79.55, "accuracy_m": 10},
+    }
+
+
 def _farmer_body(ctx: Ctx) -> dict[str, Any]:
     return {
         "phone": "+919000177001",
@@ -192,6 +202,36 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
     "POST /v1/uploads/{upload_id}/complete": RouteFixture(path_params=_random_upload),
     "GET /v1/blobs/signed-url": RouteFixture(query={"uri": "gs://photos/nothing/here"}),
     "GET /v1/visits/{id}": RouteFixture(path_params=_target_visit_id),
+    "POST /v1/visits/check-in": RouteFixture(body=_checkin_body),
+    "PATCH /v1/visits/{id}": RouteFixture(
+        path_params=_target_visit_id, body=lambda _ctx: {"notes": "Matrix"}
+    ),
+    "POST /v1/visits/{id}/photos": RouteFixture(
+        path_params=_target_visit_id,
+        body=lambda ctx: {
+            "blob_uri": f"gs://local/{ctx.target.tenant.id}/visit_photo/{'0' * 64}",
+            "taken_in_app": True,
+        },
+    ),
+    "POST /v1/visits/{id}/confirm/request": RouteFixture(
+        path_params=_target_visit_id, body=lambda _ctx: {"channel": "qr"}
+    ),
+    "POST /v1/visits/{id}/confirm": RouteFixture(
+        path_params=_target_visit_id, body=lambda _ctx: {"channel": "sms_otp", "code": "000000"}
+    ),
+    "POST /v1/visits/{id}/farmer-confirm": RouteFixture(
+        path_params=_target_visit_id, body=lambda _ctx: {"token": "not-a-real-token-at-all"}
+    ),
+    "POST /v1/visits/{id}/check-out": RouteFixture(
+        path_params=_target_visit_id,
+        body=lambda _ctx: {"checkout_at": "2026-09-18T12:00:00+00:00"},
+    ),
+    "POST /v1/visits/{id}/override/approve": RouteFixture(
+        path_params=_target_visit_id, body=lambda _ctx: {}
+    ),
+    "POST /v1/visits/{id}/override/reject": RouteFixture(
+        path_params=_target_visit_id, body=lambda _ctx: {}
+    ),
     "GET /v1/officers/{id}/track": RouteFixture(
         path_params=_target_officer_id, query={"day": "2026-09-18"}
     ),

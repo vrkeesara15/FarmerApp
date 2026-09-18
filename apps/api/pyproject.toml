@@ -19,6 +19,8 @@ dependencies = [
   "typer>=0.12",
   "pyyaml>=6.0",
   "pyjwt>=2.14.0",
+  "pillow>=12.3.0",
+  "imagehash>=4.3.2",
 ]
 
 [dependency-groups]
@@ -79,7 +81,7 @@ plugins = ["pydantic.mypy"]
 
 # Libraries without type information (only add entries here, never inline ignores).
 [[tool.mypy.overrides]]
-module = ["pgvector.*"]
+module = ["pgvector.*", "imagehash.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------

@@ -25,12 +25,13 @@ the entity's strategy decides (``CONFLICT_RULES``):
   row whatever the ``base_version``, except the **server-owned** fields
   (``SERVER_OWNED_FIELDS``: a visit's score / status / confirmation / geofence decision;
   a duty session's ``end_at`` / ``end_reason`` once the server auto-ended it, VV-007), which
-  are dropped from the payload (``merge_payload``). Visit photos and policy acceptances are
-  immutable once written (``server_wins``).
+  are dropped from the payload (``merge_payload``). Visit photos, confirmations and policy
+  acceptances are immutable once written (``server_wins``).
 
-The M2 write paths (check-in, photos, confirmation, check-out, duty toggle, acceptance)
-land with FA-010 / FA-014 .. FA-017; until then their ops validate and are rejected with
-``unsupported_action`` so nothing is mis-applied.
+Visit ops (``visit`` create = FA-014 check-in / update = FA-015 capture + FA-017 check-out,
+``visit_photo`` create, ``visit_confirmation`` create) are applied by
+``farmerapp.visits.sync_ops``; duty sessions, location batches and policy acceptances by
+the FA-010 / FA-011 services — all through the same code the REST endpoints use.
 
 Changes feed
 ------------
@@ -45,9 +46,10 @@ from __future__ import annotations
 import base64
 import binascii
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ValidationError
 from sqlalchemy import and_, or_, select
@@ -90,8 +92,13 @@ from farmerapp.policies.schemas import PolicyAcceptIn
 from farmerapp.settings import Settings
 from farmerapp.sync.models import SyncChange, SyncOp
 from farmerapp.sync.schemas import SyncChangeOut, SyncError, SyncOpIn, SyncResult
-from farmerapp.visits.models import Visit, VisitPhoto
-from farmerapp.visits.schemas import VisitOut, VisitPhotoOut
+from farmerapp.uploads.blobstore import BlobStore
+from farmerapp.visits import sync_ops as visit_sync
+from farmerapp.visits.models import Visit, VisitConfirmation, VisitPhoto
+from farmerapp.visits.schemas import VisitConfirmationOut, VisitOut, VisitPhotoOut
+
+if TYPE_CHECKING:
+    from farmerapp.auth.deps import AuthServices
 
 log = get_logger("farmerapp.sync")
 
@@ -111,6 +118,7 @@ CONFLICT_RULES: dict[str, Strategy] = {
     "consent_record": Strategy.SERVER_WINS,
     "visit": Strategy.MERGE_FIELDS,  # notes / crop_stage from the device; score etc. server
     "visit_photo": Strategy.SERVER_WINS,  # immutable once uploaded (EXIF, hashes, server time)
+    "visit_confirmation": Strategy.SERVER_WINS,  # one outcome per request (FA-016)
     "duty_session": Strategy.MERGE_FIELDS,  # server wins for end_at once auto-ended (VV-007)
     "policy_acceptance": Strategy.SERVER_WINS,  # append-only (FA-011)
     "location_batch": Strategy.SERVER_WINS,  # write-only telemetry batch (FA-010); no feed row
@@ -139,7 +147,9 @@ SERVER_OWNED_FIELDS: dict[str, frozenset[str]] = {
 
 #: ``duty_session`` end fields become server-owned once the server ended the session.
 _DUTY_END_FIELDS = frozenset({"end_at", "end_reason"})
-_ENTITIES_WITHOUT_WRITE_PATH = frozenset({"visit", "visit_photo"})
+#: Every synced entity has a write path now (FA-010 / FA-011 duty + acceptance, FA-014 ..
+#: FA-017 visits); kept so a future entity can be listed before its path lands.
+_ENTITIES_WITHOUT_WRITE_PATH: frozenset[str] = frozenset()
 
 
 def server_owned_fields(entity: str, row: Any) -> frozenset[str]:
@@ -216,16 +226,48 @@ def _loses_conflict(op: SyncOpIn, row: Any) -> bool:
 
 def _check_write_path(op: SyncOpIn) -> None:
     if op.entity in _ENTITIES_WITHOUT_WRITE_PATH:
-        raise UnsupportedActionError(
-            f"{op.entity} sync writes are not available yet (FA-010 / FA-014 .. FA-017)."
-        )
+        raise UnsupportedActionError(f"{op.entity} sync writes are not available yet.")
+
+
+@dataclass(frozen=True)
+class OpContext:
+    """What the write paths need besides the session: the auth clock's ``now``, settings,
+    the auth services (OTP for FA-016) and the blob store (photo bytes for FA-015)."""
+
+    settings: Settings
+    now: datetime
+    services: AuthServices | None = None
+    blobs: BlobStore | None = None
+
+    def visit_deps(self) -> tuple[AuthServices, BlobStore]:
+        if self.services is None or self.blobs is None:
+            raise UnsupportedActionError("Visit sync ops need the auth services and blob store.")
+        return self.services, self.blobs
+
+
+def _from_visit(op: SyncOpIn, applied: visit_sync.Applied) -> SyncResult:
+    if applied.conflict:
+        return _conflict(op, applied.out, applied.version)
+    return _applied(op, applied.out, applied.version)
 
 
 # --------------------------------------------------------------------------- dispatch
-async def _create(
-    session: AsyncSession, actor: User, op: SyncOpIn, settings: Settings, now: datetime
-) -> SyncResult:
+async def _create(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpContext) -> SyncResult:
     _check_write_path(op)
+    settings, now = ctx.settings, ctx.now
+    if op.entity in visit_sync.ENTITIES:
+        services, blobs = ctx.visit_deps()
+        applied = await visit_sync.create(
+            session,
+            actor,
+            op.entity,
+            op.entity_id,
+            dict(op.payload),
+            services=services,
+            blobs=blobs,
+            now=now,
+        )
+        return _from_visit(op, applied)
     payload = {**op.payload, "id": str(op.entity_id)}
     if op.entity == "duty_session":  # FA-010 start
         if await session.get(DutySession, op.entity_id) is not None:
@@ -291,19 +333,24 @@ async def _create(
     return _applied(op, consent, 1)
 
 
-async def _update(
-    session: AsyncSession, actor: User, op: SyncOpIn, now: datetime | None = None
-) -> SyncResult:
+async def _update(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpContext) -> SyncResult:
     _check_write_path(op)
     if op.entity == "duty_session":  # FA-010 end; server-owned end once auto-ended (VV-007)
         duty_row = await duty.own_session(session, actor, op.entity_id)
         if duty_row.end_at is not None:
             return _conflict(op, DutySessionOut.from_row(duty_row), duty_row.version)
         end_body = DutyEndIn.model_validate(merge_payload("duty_session", duty_row, op.payload))
-        duty_out = await duty.end_duty(
-            session, actor, end_body, now=now or datetime.now(UTC), duty=duty_row
-        )
+        duty_out = await duty.end_duty(session, actor, end_body, now=ctx.now, duty=duty_row)
         return _applied(op, duty_out, duty_out.version)
+    if op.entity in visit_sync.ENTITIES:
+        if op.entity != "visit":
+            raise UnsupportedActionError(f"{op.entity} rows are immutable once written.")
+        row = await session.get(Visit, op.entity_id)
+        payload = merge_payload("visit", row, dict(op.payload)) if row else dict(op.payload)
+        applied = await visit_sync.update(
+            session, actor, op.entity, op.entity_id, payload, now=ctx.now
+        )
+        return _from_visit(op, applied)
     if op.entity == "farmer":
         farmer = await farmers.visible_farmer(session, actor, op.entity_id)
         if _loses_conflict(op, farmer):
@@ -354,22 +401,20 @@ def _uuid(value: Any) -> uuid.UUID:
         raise NotFoundError("Parent entity not found.") from exc
 
 
-async def _dispatch(
-    session: AsyncSession, actor: User, op: SyncOpIn, settings: Settings, now: datetime
-) -> SyncResult:
+async def _dispatch(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpContext) -> SyncResult:
     if op.action == "create":
-        return await _create(session, actor, op, settings, now)
+        return await _create(session, actor, op, ctx)
     if op.action == "update":
-        return await _update(session, actor, op, now)
+        return await _update(session, actor, op, ctx)
     return await _delete(session, actor, op)
 
 
 async def _apply_one(
-    session: AsyncSession, actor: User, op: SyncOpIn, settings: Settings, now: datetime
+    session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpContext
 ) -> SyncResult:
     try:
         async with session.begin_nested():
-            return await _dispatch(session, actor, op, settings, now)
+            return await _dispatch(session, actor, op, ctx)
     except ValidationError as exc:
         errors = [
             {"loc": [str(p) for p in e.get("loc", ())], "msg": e.get("msg"), "type": e.get("type")}
@@ -409,9 +454,13 @@ async def apply_ops(
     ops: list[SyncOpIn],
     settings: Settings,
     now: datetime | None = None,
+    services: AuthServices | None = None,
+    blobs: BlobStore | None = None,
 ) -> list[SyncResult]:
-    """``now`` is the auth clock (phone verification tokens); defaults to the wall clock."""
+    """``now`` is the auth clock (phone verification tokens); defaults to the wall clock.
+    ``services`` (OTP) and ``blobs`` (photo bytes) are needed by the visit ops."""
     now = now or datetime.now(UTC)
+    ctx = OpContext(settings=settings, now=now, services=services, blobs=blobs)
     results: list[SyncResult] = []
     for op in ops:
         stored = (
@@ -422,7 +471,7 @@ async def apply_ops(
         if stored is not None:
             results.append(SyncResult.model_validate({**stored.result, "status": "duplicate"}))
             continue
-        result = await _apply_one(session, actor, op, settings, now)
+        result = await _apply_one(session, actor, op, ctx)
         session.add(
             SyncOp(
                 tenant_id=actor.tenant_id,
@@ -475,6 +524,12 @@ def _scope(actor: User) -> Any:
             SyncChange.entity_id.in_(select(VisitPhoto.id).where(VisitPhoto.visit_id.in_(visits))),
         ),
         and_(
+            SyncChange.entity == "visit_confirmation",
+            SyncChange.entity_id.in_(
+                select(VisitConfirmation.id).where(VisitConfirmation.visit_id.in_(visits))
+            ),
+        ),
+        and_(
             SyncChange.entity == "duty_session",
             SyncChange.entity_id.in_(select(DutySession.id).where(*duty_session_filters(actor))),
         ),
@@ -522,6 +577,14 @@ async def _current_state(
         )
         for photo in photos.scalars():
             state[("visit_photo", photo.id)] = VisitPhotoOut.from_row(photo)
+    if ids.get("visit_confirmation"):
+        confirmations = await session.execute(
+            select(VisitConfirmation).where(VisitConfirmation.id.in_(ids["visit_confirmation"]))
+        )
+        for confirmation in confirmations.scalars():
+            state[("visit_confirmation", confirmation.id)] = VisitConfirmationOut.from_row(
+                confirmation
+            )
     if ids.get("duty_session"):
         sessions = await session.execute(
             select(DutySession).where(DutySession.id.in_(ids["duty_session"]))
@@ -595,6 +658,7 @@ __all__ = [
     "CONFLICT_RULES",
     "MAX_CHANGES",
     "SERVER_OWNED_FIELDS",
+    "OpContext",
     "Strategy",
     "apply_ops",
     "changes_since",

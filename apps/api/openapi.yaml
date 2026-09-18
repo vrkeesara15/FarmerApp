@@ -1266,11 +1266,60 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+  /v1/visits/check-in:
+    post:
+      tags:
+      - visits
+      summary: Check in at a farm or a village meeting point (FA-014 geofence, FA-028 integrity)
+      operationId: checkInVisit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisitCheckIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`conflict`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`outside_geofence`, `idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+      - store_manager
   /v1/visits/{id}:
     get:
       tags:
       - visits
-      summary: One visit with photos, farmer confirmation and VV-004 score components
+      summary: One visit with photos (signed URLs), confirmations, override request and score components
       operationId: getVisit
       parameters:
       - name: id
@@ -1313,6 +1362,457 @@ paths:
       - field_officer
       - owner
       - store_manager
+      - tenant_admin
+    patch:
+      tags:
+      - visits
+      summary: Notes, crop stage and purpose of an open or closed visit (FA-015)
+      operationId: captureVisit
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisitCapture'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+      - store_manager
+  /v1/visits/{id}/photos:
+    post:
+      tags:
+      - visits
+      summary: Attach an in-app photo from a completed upload (FA-015; EXIF and server time kept)
+      operationId: addVisitPhoto
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisitPhotoCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitPhotoOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`conflict`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`gallery_not_allowed`, `photo_sha_mismatch`, `idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+      - store_manager
+  /v1/visits/{id}/confirm/request:
+    post:
+      tags:
+      - visits
+      summary: 'Ask the farmer to confirm: SMS OTP, push prompt in the farmer app, or a QR token'
+      operationId: requestVisitConfirmation
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmationRequest'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmationRequestOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`visit_already_confirmed`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`confirmation_channel_invalid`'
+          content:
+            application/problem+json: {}
+        '423':
+          description: '`otp_locked`'
+          content:
+            application/problem+json: {}
+        '429':
+          description: '`otp_rate_limited`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+      - store_manager
+  /v1/visits/{id}/confirm:
+    post:
+      tags:
+      - visits
+      summary: 'Officer-side completion: the SMS OTP the farmer read out (FA-016)'
+      operationId: confirmVisit
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmationSubmit'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`, `confirmation_not_requested`, `otp_not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`visit_already_confirmed`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`confirmation_channel_invalid`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`otp_invalid`, `otp_expired`, `unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '423':
+          description: '`otp_locked`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+      - store_manager
+  /v1/visits/{id}/farmer-confirm:
+    post:
+      tags:
+      - visits
+      summary: Farmer-side completion of a push or QR confirmation, with the FM-011 rating
+      operationId: farmerConfirmVisit
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FarmerConfirm'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitConfirmationOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`visit_already_confirmed`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`confirmation_token_invalid`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
+  /v1/visits/{id}/check-out:
+    post:
+      tags:
+      - visits
+      summary: 'Check out: duration, VV-004 score and VV-005 status (short visits flagged)'
+      operationId: checkOutVisit
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisitCheckOut'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`visit_already_checked_out`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`checkout_before_checkin`, `idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+      - store_manager
+  /v1/visits/{id}/override/approve:
+    post:
+      tags:
+      - visits
+      summary: Approve the pending geofence override (cluster head of the officer's cluster)
+      operationId: approveVisitOverride
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OverrideDecisionIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverrideRequestOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`override_not_pending`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
+      - tenant_admin
+  /v1/visits/{id}/override/reject:
+    post:
+      tags:
+      - visits
+      summary: Reject the pending geofence override (the visit keeps no geofence credit)
+      operationId: rejectVisitOverride
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OverrideDecisionIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverrideRequestOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`override_not_pending`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
       - tenant_admin
   /v1/duty-sessions:
     get:
@@ -2271,6 +2771,26 @@ components:
       - trace_id
       - created_at
       title: AuditLogOut
+    CheckinPoint:
+      properties:
+        lat:
+          type: number
+          title: Lat
+        lon:
+          type: number
+          title: Lon
+        accuracy_m:
+          anyOf:
+          - type: number
+            maximum: 10000.0
+            minimum: 0.0
+          - type: 'null'
+          title: Accuracy M
+      type: object
+      required:
+      - lat
+      - lon
+      title: CheckinPoint
     ChunkAck:
       properties:
         upload_id:
@@ -2293,6 +2813,88 @@ components:
       - received_chunks
       - missing_chunks
       title: ChunkAck
+    ConfirmationRequest:
+      properties:
+        channel:
+          type: string
+          enum:
+          - sms_otp
+          - app_push
+          - qr
+          title: Channel
+      type: object
+      required:
+      - channel
+      title: ConfirmationRequest
+      description: 'FA-016: ask the farmer to confirm through one channel.'
+    ConfirmationRequestOut:
+      properties:
+        confirmation:
+          $ref: '#/components/schemas/VisitConfirmationOut'
+        channel:
+          type: string
+          title: Channel
+        phone_masked:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone Masked
+          description: '`sms_otp`: where the code went.'
+        expires_in:
+          type: integer
+          title: Expires In
+          description: Seconds until the code / token lapses.
+        resend_after:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Resend After
+        resends_left:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Resends Left
+        token:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Token
+          description: '`qr`: the signed token to render as a QR for the farmer app to scan.'
+      type: object
+      required:
+      - confirmation
+      - channel
+      - expires_in
+      title: ConfirmationRequestOut
+      description: Answer to ``POST /v1/visits/{id}/confirm/request``.
+    ConfirmationSubmit:
+      properties:
+        channel:
+          type: string
+          enum:
+          - sms_otp
+          - app_push
+          - qr
+          title: Channel
+        code:
+          anyOf:
+          - type: string
+            maxLength: 8
+            minLength: 4
+          - type: 'null'
+          title: Code
+        token:
+          anyOf:
+          - type: string
+            maxLength: 2048
+            minLength: 16
+          - type: 'null'
+          title: Token
+      type: object
+      required:
+      - channel
+      title: ConfirmationSubmit
+      description: 'FA-016 officer-side completion: the OTP the farmer read out (``sms_otp``).'
     ConsentCreate:
       properties:
         purpose:
@@ -2581,23 +3183,6 @@ components:
       - maturity
       - harvested
       title: CropStage
-    DeviceIntegrityIn:
-      properties:
-        is_mock:
-          type: boolean
-          title: Is Mock
-          default: false
-        is_rooted:
-          type: boolean
-          title: Is Rooted
-          default: false
-        clock_drift_s:
-          type: integer
-          title: Clock Drift S
-          default: 0
-      type: object
-      title: DeviceIntegrityIn
-      description: FA-028 flags the app reports at duty start (never blocking, flagged to VA-E01).
     DeviceIntegrityOut:
       properties:
         is_mock:
@@ -2804,7 +3389,7 @@ components:
         start_point:
           $ref: '#/components/schemas/PointIn'
         integrity:
-          $ref: '#/components/schemas/DeviceIntegrityIn'
+          $ref: '#/components/schemas/farmerapp__duty__schemas__DeviceIntegrityIn'
       type: object
       required:
       - device_id
@@ -3091,6 +3676,31 @@ components:
           title: Photos
       type: object
       title: FarmUpdate
+    FarmerConfirm:
+      properties:
+        token:
+          type: string
+          maxLength: 2048
+          minLength: 16
+          title: Token
+        rating:
+          anyOf:
+          - type: integer
+            maximum: 5.0
+            minimum: 1.0
+          - type: 'null'
+          title: Rating
+        reason:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Reason
+      type: object
+      required:
+      - token
+      title: FarmerConfirm
+      description: FA-016 / FM-011 farmer-side completion for ``app_push`` and ``qr``.
     FarmerCreate:
       properties:
         id:
@@ -3804,6 +4414,85 @@ components:
       - phone
       - code
       title: OtpVerifyRequest
+    OverrideDecisionIn:
+      properties:
+        note:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Note
+      type: object
+      title: OverrideDecisionIn
+    OverrideRequestOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        visit_id:
+          type: string
+          format: uuid
+          title: Visit Id
+        note:
+          type: string
+          title: Note
+        requested_at:
+          type: string
+          format: date-time
+          title: Requested At
+        requested_by:
+          type: string
+          format: uuid
+          title: Requested By
+        approver_role:
+          type: string
+          title: Approver Role
+        decided_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Decided At
+        decision:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Decision
+          description: null while pending; approved | rejected
+        decided_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Decided By
+        decision_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Decision Note
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - visit_id
+      - note
+      - requested_at
+      - requested_by
+      - approver_role
+      - decided_at
+      - decision
+      - decided_by
+      - decision_note
+      - created_at
+      - version
+      title: OverrideRequestOut
     PageOut_AuditLogOut_:
       properties:
         items:
@@ -4169,6 +4858,7 @@ components:
           - consent_record
           - visit
           - visit_photo
+          - visit_confirmation
           - duty_session
           - policy_acceptance
           - location_batch
@@ -4247,6 +4937,7 @@ components:
           - consent_record
           - visit
           - visit_photo
+          - visit_confirmation
           - duty_session
           - policy_acceptance
           - location_batch
@@ -4650,15 +5341,118 @@ components:
       type: object
       title: UserUpdate
       description: 'PATCH body: only the fields present are changed; ``null`` clears store/cluster.'
+    VisitCapture:
+      properties:
+        notes:
+          anyOf:
+          - type: string
+            maxLength: 4000
+          - type: 'null'
+          title: Notes
+        crop_stage:
+          anyOf:
+          - $ref: '#/components/schemas/CropStage'
+          - type: 'null'
+        purpose:
+          anyOf:
+          - $ref: '#/components/schemas/VisitPurpose'
+          - type: 'null'
+      additionalProperties: false
+      type: object
+      title: VisitCapture
+      description: FA-015 notes / crop stage / purpose (REST ``PATCH``; sync ``visit.update``).
+    VisitCheckIn:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client-generated visit id (offline).
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        farm_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farm Id
+        village_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Village Id
+          description: Meeting-point village; defaults to the farmer's village.
+        purpose:
+          $ref: '#/components/schemas/VisitPurpose'
+        checkin_at:
+          type: string
+          format: date-time
+          title: Checkin At
+          description: Device time of the check-in (aware).
+        checkin_point:
+          $ref: '#/components/schemas/CheckinPoint'
+        device_integrity:
+          $ref: '#/components/schemas/farmerapp__visits__schemas__DeviceIntegrityIn'
+        override_note:
+          anyOf:
+          - type: string
+            maxLength: 2000
+            minLength: 1
+          - type: 'null'
+          title: Override Note
+          description: 'FA-014: why the officer checks in outside the geofence (needs approval).'
+        client_visit_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Client Visit Id
+          description: The device's own id for replays; defaults to `id`.
+      type: object
+      required:
+      - farmer_id
+      - purpose
+      - checkin_at
+      - checkin_point
+      title: VisitCheckIn
+      description: FA-014 check-in (REST ``POST /v1/visits/check-in``; sync ``visit.create``).
+    VisitCheckOut:
+      properties:
+        checkout_at:
+          type: string
+          format: date-time
+          title: Checkout At
+        checkout_point:
+          anyOf:
+          - $ref: '#/components/schemas/LatLon'
+          - type: 'null'
+      type: object
+      required:
+      - checkout_at
+      title: VisitCheckOut
+      description: FA-017 check-out (REST ``POST .../check-out``; sync ``visit.update`` with these keys).
     VisitConfirmationOut:
       properties:
         id:
           type: string
           format: uuid
           title: Id
+        visit_id:
+          type: string
+          format: uuid
+          title: Visit Id
         channel:
           type: string
           title: Channel
+        status:
+          type: string
+          title: Status
+          description: pending | confirmed | expired
         otp_challenge_id:
           anyOf:
           - type: string
@@ -4670,9 +5464,23 @@ components:
           - type: string
           - type: 'null'
           title: Farmer Phone Last4
+        requested_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Requested At
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
         confirmed_at:
-          type: string
-          format: date-time
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
           title: Confirmed At
         confirmed_via_device_id:
           anyOf:
@@ -4693,17 +5501,25 @@ components:
           type: string
           format: date-time
           title: Created At
+        version:
+          type: integer
+          title: Version
       type: object
       required:
       - id
+      - visit_id
       - channel
+      - status
       - otp_challenge_id
       - farmer_phone_last4
+      - requested_at
+      - expires_at
       - confirmed_at
       - confirmed_via_device_id
       - rating
       - rating_reason
       - created_at
+      - version
       title: VisitConfirmationOut
     VisitDetailOut:
       properties:
@@ -4810,6 +5626,18 @@ components:
           title: Confirmed At
         device_integrity:
           $ref: '#/components/schemas/DeviceIntegrityOut'
+        integrity_issues:
+          items:
+            type: string
+          type: array
+          title: Integrity Issues
+          description: 'FA-028: mock_location | rooted_device | clock_drift (recorded, not blocking).'
+        flags:
+          items:
+            type: string
+          type: array
+          title: Flags
+          description: 'FA-017: under_minimum.'
         client_visit_id:
           anyOf:
           - type: string
@@ -4850,6 +5678,10 @@ components:
             $ref: '#/components/schemas/VisitConfirmationOut'
           type: array
           title: Confirmations
+        override_request:
+          anyOf:
+          - $ref: '#/components/schemas/OverrideRequestOut'
+          - type: 'null'
       type: object
       required:
       - id
@@ -4881,7 +5713,7 @@ components:
       - version
       - score_components
       title: VisitDetailOut
-      description: One visit with its photos, confirmations and the VV-004 score components.
+      description: One visit with its photos, confirmations, override request and the VV-004 components.
     VisitOut:
       properties:
         id:
@@ -4987,6 +5819,18 @@ components:
           title: Confirmed At
         device_integrity:
           $ref: '#/components/schemas/DeviceIntegrityOut'
+        integrity_issues:
+          items:
+            type: string
+          type: array
+          title: Integrity Issues
+          description: 'FA-028: mock_location | rooted_device | clock_drift (recorded, not blocking).'
+        flags:
+          items:
+            type: string
+          type: array
+          title: Flags
+          description: 'FA-017: under_minimum.'
         client_visit_id:
           anyOf:
           - type: string
@@ -5040,12 +5884,76 @@ components:
       - updated_at
       - version
       title: VisitOut
+    VisitPhotoCreate:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client-generated photo id.
+        visit_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Visit Id
+          description: Sync payloads carry it.
+        blob_uri:
+          type: string
+          maxLength: 512
+          minLength: 6
+          pattern: ^gs://
+          title: Blob Uri
+        sha256:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-f]{64}$
+          - type: 'null'
+          title: Sha256
+        exif_time:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Exif Time
+        exif_point:
+          anyOf:
+          - $ref: '#/components/schemas/LatLon'
+          - type: 'null'
+        taken_in_app:
+          type: boolean
+          title: Taken In App
+          default: true
+        device_time:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Device Time
+      type: object
+      required:
+      - blob_uri
+      title: VisitPhotoCreate
+      description: 'FA-015 in-app photo (REST ``POST .../photos``; sync ``visit_photo.create``).
+
+
+        ``blob_uri`` is the completed NF-003 upload (``purpose = visit_photo``). ``exif_time`` /
+
+        ``exif_point`` come from the in-app camera (NF-004); when absent the server reads the
+
+        JPEG''s EXIF. ``taken_in_app: false`` is refused (``gallery_not_allowed``).'
     VisitPhotoOut:
       properties:
         id:
           type: string
           format: uuid
           title: Id
+        visit_id:
+          type: string
+          format: uuid
+          title: Visit Id
         blob_uri:
           type: string
           title: Blob Uri
@@ -5082,13 +5990,35 @@ components:
           type: string
           format: date-time
           title: Server Time
+        photo_flags:
+          items:
+            type: string
+          type: array
+          title: Photo Flags
+          description: VA-E08 evidence flags (never a rejection).
+        signed_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Signed Url
+          description: 15-minute read URL (SEC-016); detail reads only.
+        signed_url_expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Signed Url Expires At
         created_at:
           type: string
           format: date-time
           title: Created At
+        version:
+          type: integer
+          title: Version
       type: object
       required:
       - id
+      - visit_id
       - blob_uri
       - sha256
       - phash
@@ -5098,7 +6028,18 @@ components:
       - device_time
       - server_time
       - created_at
+      - version
       title: VisitPhotoOut
+    VisitPurpose:
+      type: string
+      enum:
+      - advisory
+      - scouting
+      - demo
+      - collection
+      - sale
+      - meeting
+      title: VisitPurpose
     VisitStatus:
       type: string
       enum:
@@ -5107,6 +6048,42 @@ components:
       - unverified
       - open
       title: VisitStatus
+    farmerapp__duty__schemas__DeviceIntegrityIn:
+      properties:
+        is_mock:
+          type: boolean
+          title: Is Mock
+          default: false
+        is_rooted:
+          type: boolean
+          title: Is Rooted
+          default: false
+        clock_drift_s:
+          type: integer
+          title: Clock Drift S
+          default: 0
+      type: object
+      title: DeviceIntegrityIn
+      description: FA-028 flags the app reports at duty start (never blocking, flagged to VA-E01).
+    farmerapp__visits__schemas__DeviceIntegrityIn:
+      properties:
+        is_mock:
+          type: boolean
+          title: Is Mock
+          default: false
+        is_rooted:
+          type: boolean
+          title: Is Rooted
+          default: false
+        clock_drift_s:
+          type: integer
+          maximum: 31536000.0
+          minimum: -31536000.0
+          title: Clock Drift S
+          default: 0
+      type: object
+      title: DeviceIntegrityIn
+      description: FA-028 flags the app reports at check-in; recorded, never blocking.
     Problem:
       type: object
       required:

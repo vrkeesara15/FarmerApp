@@ -15,7 +15,7 @@ from farmerapp.notifications.models import Notification
 from farmerapp.sync.models import SyncChange, SyncOp
 from farmerapp.tenants.models import Cluster, Store, Village
 from farmerapp.uploads.models import UploadChunk, UploadSession
-from farmerapp.visits.models import Visit, VisitConfirmation, VisitPhoto
+from farmerapp.visits.models import OverrideRequest, Visit, VisitConfirmation, VisitPhoto
 
 __all__ = [
     "AuditLog",
@@ -32,6 +32,7 @@ __all__ = [
     "LocationPoint",
     "Notification",
     "OtpChallenge",
+    "OverrideRequest",
     "PolicyAcceptance",
     "RefreshToken",
     "Store",

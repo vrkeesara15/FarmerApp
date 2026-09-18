@@ -38,6 +38,7 @@ def test_rules_cover_every_synced_entity() -> None:
     assert CONFLICT_RULES["visit"] == Strategy.MERGE_FIELDS
     assert CONFLICT_RULES["duty_session"] == Strategy.MERGE_FIELDS
     assert CONFLICT_RULES["visit_photo"] == Strategy.SERVER_WINS
+    assert CONFLICT_RULES["visit_confirmation"] == Strategy.SERVER_WINS
     assert CONFLICT_RULES["policy_acceptance"] == Strategy.SERVER_WINS
     assert "location_point" in SYNC_EXCLUDED_ENTITIES and "location_point" not in CONFLICT_RULES
 
@@ -94,21 +95,40 @@ def test_merge_fields_never_loses_a_conflict() -> None:
     assert sync_service._loses_conflict(stale_farmer, farmer_row) is True
 
 
-async def test_m2_ops_validate_but_are_rejected_until_the_write_path_lands(
+async def test_device_deletes_stay_unsupported(client: AsyncClient, ctx: WriteCtx) -> None:
+    """Every synced entity has a write path now (FA-010 / FA-011 duty + acceptance, FA-014 ..
+    FA-017 visits); what a device still cannot do is delete a duty session or a visit."""
+    ops = [
+        op("duty_session", "delete", {}, base_version=1),
+        op("visit", "delete", {}, base_version=1),
+        op("visit_photo", "update", {"exif_time": None}, base_version=1),
+    ]
+    body = await sync(client, ctx, ops)
+    assert [r["status"] for r in body["results"]] == ["rejected"] * 3
+    assert {r["error"]["code"] for r in body["results"]} == {"unsupported_action"}
+    assert all(r["error"]["status"] == 422 for r in body["results"])
+
+
+async def test_visit_ops_are_applied_by_the_visit_write_path(
     client: AsyncClient, ctx: WriteCtx
 ) -> None:
-    # duty_session / policy_acceptance / location_batch writes landed with FA-010 (tests/duty,
-    # tests/location/test_batch.py, tests/policies); a duty session is never deleted by a device.
+    """FA-014 .. FA-017 ops reach ``farmerapp.visits.sync_ops``: validated, scoped, never
+    ``unsupported_action`` (the flow itself is covered in ``tests/visits/test_flow.py``)."""
     ops = [
-        op("visit", "create", {"purpose": "advisory"}),
-        op("visit_photo", "create", {"blob_uri": "gs://x/y"}),
-        op("visit", "update", {"notes": "x"}, base_version=1),
-        op("duty_session", "delete", {}, base_version=1),
+        op("visit", "create", {"purpose": "advisory"}),  # incomplete body
+        op("visit_photo", "create", {"blob_uri": "gs://x/y"}),  # no visit_id
+        op("visit", "update", {"notes": "x"}, base_version=1),  # unknown visit
+        op("visit_confirmation", "create", {"visit_id": str(uuid.uuid4()), "channel": "qr"}),
     ]
     body = await sync(client, ctx, ops)
     assert [r["status"] for r in body["results"]] == ["rejected"] * 4
-    assert {r["error"]["code"] for r in body["results"]} == {"unsupported_action"}
-    assert all(r["error"]["status"] == 422 for r in body["results"])
+    codes = [r["error"]["code"] for r in body["results"]]
+    assert codes == [
+        "validation_error",
+        "not_found",
+        "not_found",
+        "confirmation_channel_invalid",
+    ]
 
 
 async def test_change_feed_reports_own_visits_duty_sessions_and_acceptances(

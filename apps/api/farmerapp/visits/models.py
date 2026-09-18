@@ -16,10 +16,17 @@
   by the app and score nothing): the blob from a completed NF-003 upload, ``sha256``,
   perceptual hash ``phash`` (VA-E08 duplicates), EXIF time + GPS, the device time and the
   server time at upload.
-* ``visit_confirmation`` — how the farmer confirmed (FA-016: SMS OTP, farmer-app push, QR):
-  the OTP challenge, the receiving phone's last four digits and the confirming device (VA-E05
-  looks for the same phone or device confirming many farmers). ``rating`` / ``rating_reason``
-  are the FM-011 farmer rating, added later on the same row.
+* ``visit_confirmation`` — one confirmation attempt per channel request (FA-016: SMS OTP,
+  farmer-app push, QR). ``status`` is ``pending`` from the request until the channel succeeds
+  (``confirmed``) or the request lapses (``expired``); ``confirmed_at`` is set only on
+  success, which is the moment the visit itself becomes confirmed (``visit.confirmed_at``).
+  The row keeps the OTP challenge, the receiving phone's last four digits, the confirming
+  device (VA-E05 looks for the same phone or device confirming many farmers) and, for push /
+  QR, the SHA-256 of the signed token the farmer app presents. ``rating`` / ``rating_reason``
+  are the FM-011 farmer rating, stored on the same row when the farmer confirms.
+* ``override_request`` — the FA-014 geofence override: the officer's note, who asked, the role
+  that must decide (``cluster_head``) and the decision (``approved`` / ``rejected``, by whom,
+  when). Until approved the visit's geofence component scores 0 (``scoring.py``).
 
 Enumerations are CHECK constraints on short strings (expand-only), like every other table.
 """
@@ -85,6 +92,31 @@ class ConfirmationChannel(StrEnum):
     APP_PUSH = "app_push"
     QR = "qr"
     NONE = "none"
+
+
+class ConfirmationStatus(StrEnum):
+    PENDING = "pending"  # requested, waiting for the farmer
+    CONFIRMED = "confirmed"  # the channel succeeded (FA-016)
+    EXPIRED = "expired"  # superseded or timed out
+
+
+class OverrideDecision(StrEnum):
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+#: FA-014: who decides an override request.
+OVERRIDE_APPROVER_ROLE = "cluster_head"
+
+#: FA-017 / VA-E04: set on ``visit.flags`` when the duration is under the tenant minimum.
+FLAG_UNDER_MINIMUM = "under_minimum"
+
+#: VA-E08 evidence recorded on ``visit_photo.photo_flags`` (never a rejection).
+PHOTO_FLAG_EXIF_TIME_MISSING = "exif_time_missing"
+PHOTO_FLAG_EXIF_TIME_MISMATCH = "exif_time_mismatch"
+PHOTO_FLAG_EXIF_GPS_MISSING = "exif_gps_missing"
+PHOTO_FLAG_EXIF_GPS_MISMATCH = "exif_gps_mismatch"
+PHOTO_FLAG_DUPLICATE = "duplicate_photo"
 
 
 def _in(values: type[StrEnum]) -> str:
@@ -170,6 +202,10 @@ class Visit(Base, BaseColumns):
     device_integrity: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
     )
+    #: Server-set evidence flags that never reject (FA-017 ``under_minimum``; more in M4).
+    flags: Mapped[list[str]] = mapped_column(
+        JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb")
+    )
     client_visit_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
     checkin_lon: Mapped[float] = column_property(func.ST_X(cast(checkin_point, _POINT_GEOM)))
     checkin_lat: Mapped[float] = column_property(func.ST_Y(cast(checkin_point, _POINT_GEOM)))
@@ -210,6 +246,10 @@ class VisitPhoto(Base, BaseColumns):
     server_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+    #: VA-E08 evidence: EXIF time / GPS inconsistent with the check-in, duplicates.
+    photo_flags: Mapped[list[str]] = mapped_column(
+        JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb")
+    )
     exif_lon: Mapped[float | None] = column_property(func.ST_X(cast(exif_point, _POINT_GEOM)))
     exif_lat: Mapped[float | None] = column_property(func.ST_Y(cast(exif_point, _POINT_GEOM)))
 
@@ -225,6 +265,8 @@ class VisitConfirmation(Base, BaseColumns):
             "farmer_phone_last4 IS NULL OR char_length(farmer_phone_last4) = 4",
             name="farmer_phone_last4",
         ),
+        CheckConstraint(f"status IN ({_in(ConfirmationStatus)})", name="status"),
+        CheckConstraint("(status = 'confirmed') = (confirmed_at IS NOT NULL)", name="confirmed_at"),
         Index("ix_visit_confirmation_visit_id", "visit_id"),
         Index("ix_visit_confirmation_tenant_phone", "tenant_id", "farmer_phone_last4"),  # VA-E05
         Index("ix_visit_confirmation_tenant_device", "tenant_id", "confirmed_via_device_id"),
@@ -238,15 +280,73 @@ class VisitConfirmation(Base, BaseColumns):
         ForeignKey("otp_challenge.id", ondelete="SET NULL"), nullable=True
     )
     farmer_phone_last4: Mapped[str | None] = mapped_column(String(4), nullable=True)
-    confirmed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(16),
+        nullable=False,
+        default=ConfirmationStatus.CONFIRMED,
+        server_default=text("'confirmed'"),
+    )
+    requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    #: SHA-256 of the signed push / QR token the farmer app presents (never the token).
+    token_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     confirmed_via_device_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     rating: Mapped[int | None] = mapped_column(Integer, nullable=True)  # FM-011
     rating_reason: Mapped[str | None] = mapped_column(String(200), nullable=True)
 
 
+class OverrideRequest(Base, BaseColumns):
+    __tablename__ = "override_request"
+    __table_args__ = (
+        CheckConstraint("char_length(note) > 0", name="note"),
+        CheckConstraint(
+            f"decision IS NULL OR decision IN ({_in(OverrideDecision)})", name="decision"
+        ),
+        CheckConstraint("(decision IS NULL) = (decided_at IS NULL)", name="decided_at"),
+        Index("ix_override_request_visit_id", "visit_id"),
+        Index("ix_override_request_tenant_decision", "tenant_id", "decision"),
+    )
+
+    visit_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("visit.id", ondelete="CASCADE"), nullable=False
+    )
+    note: Mapped[str] = mapped_column(Text, nullable=False)
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    requested_by: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("user.id", ondelete="RESTRICT"), nullable=False
+    )
+    approver_role: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default=OVERRIDE_APPROVER_ROLE,
+        server_default=text(f"'{OVERRIDE_APPROVER_ROLE}'"),
+    )
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    decision: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    decided_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("user.id", ondelete="SET NULL"), nullable=True
+    )
+    decision_note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    @property
+    def pending(self) -> bool:
+        return self.decision is None
+
+
 __all__ = [
+    "FLAG_UNDER_MINIMUM",
+    "OVERRIDE_APPROVER_ROLE",
+    "PHOTO_FLAG_DUPLICATE",
+    "PHOTO_FLAG_EXIF_GPS_MISMATCH",
+    "PHOTO_FLAG_EXIF_GPS_MISSING",
+    "PHOTO_FLAG_EXIF_TIME_MISMATCH",
+    "PHOTO_FLAG_EXIF_TIME_MISSING",
     "ConfirmationChannel",
+    "ConfirmationStatus",
     "GeofenceResult",
+    "OverrideDecision",
+    "OverrideRequest",
     "Visit",
     "VisitConfirmation",
     "VisitPhoto",

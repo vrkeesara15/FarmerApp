@@ -17,6 +17,7 @@ from farmerapp.tenants.models import Store
 from farmerapp.visits.models import Visit
 from tests.authz.conftest import Bearer, World, bearer, world  # noqa: F401  (fixtures re-exported)
 from tests.farmers.conftest import graph  # noqa: F401  (fixture re-exported)
+from tests.farmers.write_fixtures import ctx  # noqa: F401  (fixture re-exported)
 
 _ = Bearer  # re-exported type
 

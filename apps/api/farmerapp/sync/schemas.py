@@ -17,6 +17,7 @@ Entity = Literal[
     "consent_record",
     "visit",
     "visit_photo",
+    "visit_confirmation",
     "duty_session",
     "policy_acceptance",
     "location_batch",

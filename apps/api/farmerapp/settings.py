@@ -85,6 +85,11 @@ class Settings(BaseSettings):
     phone_verification_ttl_seconds: int = Field(
         default=1800, description="Farmer phone verification token lifetime (30 min)."
     )
+    visit_confirm_token_ttl_seconds: int = Field(
+        default=86_400,
+        description="FA-016 push / QR confirmation token lifetime (24 h): the farmer app may "
+        "scan offline and post the token when back online.",
+    )
 
     # --- Providers (base URLs only; keys come from Secret Manager) -----------
     sms_provider_url: str = Field(default="http://localhost:8090/sms")

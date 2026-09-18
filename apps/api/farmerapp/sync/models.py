@@ -32,8 +32,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 from farmerapp.db.base import Base, TenantRow
 
 #: Entities the mobile outbox may write and the changes feed reports (SPEC 8.3). M2 adds
-#: visits, their photos, duty sessions and policy acceptances (writes land with FA-010 /
-#: FA-014 .. FA-017; the feed and the conflict rules are in place).
+#: visits, their photos and confirmations (FA-014 .. FA-017, ``farmerapp.visits.sync_ops``),
+#: duty sessions and policy acceptances (writes land with FA-010 / FA-011).
 SYNC_ENTITIES: tuple[str, ...] = (
     "farmer",
     "farm",
@@ -41,6 +41,7 @@ SYNC_ENTITIES: tuple[str, ...] = (
     "consent_record",
     "visit",
     "visit_photo",
+    "visit_confirmation",
     "duty_session",
     "policy_acceptance",
     "location_batch",  # write-only: points land in location_point, which is never in the feed

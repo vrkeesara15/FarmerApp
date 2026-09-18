@@ -13,6 +13,7 @@ from farmerapp.auth.models import User
 from farmerapp.auth.policy import Role, require_roles
 from farmerapp.sync import service
 from farmerapp.sync.schemas import SyncRequest, SyncResponse
+from farmerapp.uploads.router import get_blob_store
 
 router = APIRouter(prefix="/sync", tags=["sync"])
 
@@ -42,6 +43,8 @@ async def sync(
         ops=body.ops,
         settings=services.settings,
         now=services.clock.now(),
+        services=services,
+        blobs=get_blob_store(request),
     )
     changes, cursor, has_more = await service.changes_since(
         session, actor, service.encode_cursor(since)
