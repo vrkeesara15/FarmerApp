@@ -20,7 +20,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
 
@@ -36,11 +36,12 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     Uuid,
+    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
 from farmerapp.catalog.models import BASIS_POINTS, sql_in
-from farmerapp.db.base import Base, BaseColumns
+from farmerapp.db.base import Base, BaseColumns, TenantRow
 
 
 class OrderChannel(StrEnum):
@@ -141,6 +142,56 @@ class OrderLine(Base, BaseColumns):
     )
 
 
+#: ST-005 queue: the statuses each status may move to (anything else is ``invalid_transition``).
+TRANSITIONS: dict[OrderStatus, frozenset[OrderStatus]] = {
+    OrderStatus.DRAFT: frozenset({OrderStatus.PLACED, OrderStatus.CANCELLED}),
+    OrderStatus.PLACED: frozenset({OrderStatus.RESERVED, OrderStatus.CANCELLED}),
+    OrderStatus.RESERVED: frozenset({OrderStatus.PACKED, OrderStatus.CANCELLED}),
+    OrderStatus.PACKED: frozenset({OrderStatus.READY, OrderStatus.CANCELLED}),
+    OrderStatus.READY: frozenset(
+        {OrderStatus.HANDED_OVER, OrderStatus.DELIVERED, OrderStatus.CANCELLED}
+    ),
+    OrderStatus.HANDED_OVER: frozenset(),
+    OrderStatus.DELIVERED: frozenset(),
+    OrderStatus.CANCELLED: frozenset(),
+}
+
+
+def can_transition(current: str, target: str) -> bool:
+    return OrderStatus(target) in TRANSITIONS[OrderStatus(current)]
+
+
+class OrderStatusEvent(Base, TenantRow):
+    """Append-only history of an order's status (ST-005): one row per change, with who
+    made it and a note. ``from_status`` is NULL for the placing event."""
+
+    __tablename__ = "order_status_event"
+    __table_args__ = (
+        CheckConstraint(f"to_status IN ({sql_in(OrderStatus)})", name="to_status"),
+        CheckConstraint(
+            f"from_status IS NULL OR from_status IN ({sql_in(OrderStatus)})", name="from_status"
+        ),
+        Index("ix_order_status_event_order", "tenant_id", "order_id", "created_at"),
+    )
+
+    # Wall clock so events written in one transaction keep their order.
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        server_default=func.now(),
+    )
+    order_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("order.id", ondelete="CASCADE"), nullable=False
+    )
+    from_status: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    to_status: Mapped[str] = mapped_column(String(16), nullable=False)
+    note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("user.id", ondelete="SET NULL"), nullable=True
+    )
+
+
 def line_total_paise(qty: Decimal, unit_price_paise: int) -> int:
     """``qty x unit price`` rounded half-up to the paisa."""
     return int((qty * unit_price_paise).quantize(Decimal(1), rounding="ROUND_HALF_UP"))
@@ -158,11 +209,14 @@ def tax_paise(line_total: int, gst_rate_bp: int) -> int:
 __all__ = [
     "FULFILLED_STATUSES",
     "OPEN_STATUSES",
+    "TRANSITIONS",
     "Fulfilment",
     "Order",
     "OrderChannel",
     "OrderLine",
     "OrderStatus",
+    "OrderStatusEvent",
+    "can_transition",
     "line_total_paise",
     "tax_paise",
 ]

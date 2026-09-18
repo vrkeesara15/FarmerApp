@@ -74,7 +74,9 @@ def test_money_columns_are_integer_paise() -> None:
             if not name.endswith("_paise"):
                 offenders.append(f"{table.name}.{name}: money column not named *_paise")
     assert offenders == []
-    assert money_columns == 15  # every M3 money column was inspected (update when adding one)
+    # every M3 money column was inspected (update when adding one): 15 in 0011, plus
+    # credit_approval_request amount / balance / limit / shortfall in 0012 (ST-007).
+    assert money_columns == 19
 
 
 def test_every_m3_table_is_a_model_table() -> None:

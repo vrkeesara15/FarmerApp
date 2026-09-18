@@ -1,9 +1,17 @@
-"""``GET /v1/stores/{id}/stock`` — batches with on-hand quantities (ST-003, ST-004).
+"""Stock routes (ST-003, ST-004).
+
+* ``GET /v1/stores/{id}/stock`` — batches with on-hand (ledger sum), reserved and available
+  quantities.
+* ``POST /v1/stores/{id}/stock/receipts`` — goods receipt.
+* ``POST /v1/stock/transfers`` — transfer between two stores (atomic out + in).
+* ``POST /v1/stores/{id}/stock/write-offs`` — damage / expiry write-off with a photo.
+* ``POST /v1/stores/{id}/stock/adjustments`` — stock count correction (store manager only,
+  audited).
 
 Store internals follow ``STORE_VISIBILITY``: owner / director / tenant admin / auditor /
 accountant see every store, a cluster head their cluster, a store manager their own store;
-a store outside the caller's scope is a 404. ``on_hand`` is the sum of the movement ledger
-per batch (the truth), ``qty`` the cache kept with it.
+a store outside the caller's scope is a 404. Writes need a store role that runs stock
+(``STOCK_WRITE_ROLES``); the destination of a transfer may be any store of the tenant.
 """
 
 from __future__ import annotations
@@ -21,12 +29,21 @@ from farmerapp.auth.deps import DbSession, Services
 from farmerapp.auth.models import User
 from farmerapp.auth.policy import Role, require_roles
 from farmerapp.auth.scope import visible_store_filters
-from farmerapp.stock.ledger import stock_on_hand_by_batch
+from farmerapp.stock import service
+from farmerapp.stock.ledger import reserved_by_batch, stock_on_hand_by_batch
 from farmerapp.stock.models import StockBatch
-from farmerapp.stock.schemas import StockBatchOut, StockPage
+from farmerapp.stock.schemas import (
+    AdjustmentIn,
+    ReceiptIn,
+    StockBatchOut,
+    StockPage,
+    StockWriteOut,
+    TransferIn,
+    WriteOffIn,
+)
 from farmerapp.tenants.models import Store
 
-router = APIRouter(prefix="/stores", tags=["stock"])
+router = APIRouter(tags=["stock"])
 
 STOCK_ROLES = (
     Role.OWNER,
@@ -36,6 +53,16 @@ STOCK_ROLES = (
     Role.ACCOUNTANT,
     Role.CLUSTER_HEAD,
     Role.STORE_MANAGER,
+)
+#: Who receives, transfers and writes off stock (auditor / accountant / tenant admin read).
+STOCK_WRITE_ROLES = (Role.OWNER, Role.DIRECTOR, Role.CLUSTER_HEAD, Role.STORE_MANAGER)
+
+_WRITE_PROBLEMS = (
+    (404, "not_found"),
+    (409, "negative_stock"),
+    (409, "batch_mismatch"),
+    (422, "invalid_stock_request"),
+    (422, "validation_error"),
 )
 
 
@@ -53,10 +80,26 @@ async def visible_store(session: DbSession, actor: User, store_id: uuid.UUID) ->
     return store
 
 
+async def tenant_store(session: DbSession, actor: User, store_id: uuid.UUID) -> Store:
+    """Any live store of the actor's tenant (transfer destination); else 404."""
+    store = (
+        await session.execute(
+            select(Store).where(
+                Store.id == store_id,
+                Store.tenant_id == actor.tenant_id,
+                Store.deleted_at.is_(None),
+            )
+        )
+    ).scalar_one_or_none()
+    if store is None:
+        raise NotFoundError("Store not found.")
+    return store
+
+
 @router.get(
-    "/{id}/stock",
+    "/stores/{id}/stock",
     operation_id="listStoreStock",
-    summary="Stock batches of a store with on-hand quantity and days to expiry",
+    summary="Stock batches of a store with on-hand, reserved and available quantity",
     response_model=StockPage,
     responses=problem_responses((400, "invalid_cursor"), (404, "not_found")),
 )
@@ -93,13 +136,91 @@ async def list_store_stock(
     rows = (await session.execute(stmt)).scalars().all()
     items, next_cursor = page.slice(rows)
     on_hand = await stock_on_hand_by_batch(session, store.id)
+    reserved = await reserved_by_batch(session, [b.id for b in items])
     return StockPage(
         items=[
-            StockBatchOut.from_row(b, on_hand=on_hand.get(b.id, b.qty * 0), today=today)
+            StockBatchOut.from_row(
+                b,
+                on_hand=on_hand.get(b.id, b.qty * 0),
+                today=today,
+                reserved=reserved.get(b.id, b.qty * 0),
+            )
             for b in items
         ],
         next_cursor=next_cursor,
     )
 
 
-__all__ = ["STOCK_ROLES", "router", "visible_store"]
+@router.post(
+    "/stores/{id}/stock/receipts",
+    operation_id="receiveStock",
+    summary="Goods receipt: receipt movements into new or existing batches (ST-003)",
+    status_code=201,
+    response_model=StockWriteOut,
+    responses=problem_responses(*_WRITE_PROBLEMS),
+)
+async def receive_stock(
+    id: uuid.UUID,
+    body: ReceiptIn,
+    actor: Annotated[User, require_roles(*STOCK_WRITE_ROLES)],
+    session: DbSession,
+) -> StockWriteOut:
+    store = await visible_store(session, actor, id)
+    return await service.receive(session, actor, store, body)
+
+
+@router.post(
+    "/stock/transfers",
+    operation_id="transferStock",
+    summary="Transfer batches between stores: transfer_out + transfer_in atomically (ST-003)",
+    status_code=201,
+    response_model=StockWriteOut,
+    responses=problem_responses(*_WRITE_PROBLEMS),
+)
+async def transfer_stock(
+    body: TransferIn,
+    actor: Annotated[User, require_roles(*STOCK_WRITE_ROLES)],
+    session: DbSession,
+) -> StockWriteOut:
+    source = await visible_store(session, actor, body.from_store_id)
+    target = await tenant_store(session, actor, body.to_store_id)
+    return await service.transfer(session, actor, source, target, body)
+
+
+@router.post(
+    "/stores/{id}/stock/write-offs",
+    operation_id="writeOffStock",
+    summary="Damage / expiry write-off with reason and optional photo (ST-003)",
+    status_code=201,
+    response_model=StockWriteOut,
+    responses=problem_responses(*_WRITE_PROBLEMS),
+)
+async def write_off_stock(
+    id: uuid.UUID,
+    body: WriteOffIn,
+    actor: Annotated[User, require_roles(*STOCK_WRITE_ROLES)],
+    session: DbSession,
+) -> StockWriteOut:
+    store = await visible_store(session, actor, id)
+    return await service.write_off(session, actor, store, body)
+
+
+@router.post(
+    "/stores/{id}/stock/adjustments",
+    operation_id="adjustStock",
+    summary="Stock count correction to the counted quantity (store manager, audited)",
+    status_code=201,
+    response_model=StockWriteOut,
+    responses=problem_responses(*_WRITE_PROBLEMS),
+)
+async def adjust_stock(
+    id: uuid.UUID,
+    body: AdjustmentIn,
+    actor: Annotated[User, require_roles(Role.STORE_MANAGER)],
+    session: DbSession,
+) -> StockWriteOut:
+    store = await visible_store(session, actor, id)
+    return await service.adjust(session, actor, store, body)
+
+
+__all__ = ["STOCK_ROLES", "STOCK_WRITE_ROLES", "router", "tenant_store", "visible_store"]

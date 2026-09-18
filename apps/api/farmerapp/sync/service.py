@@ -87,12 +87,14 @@ from farmerapp.farmers.schemas import (
     FarmOut,
     FarmUpdate,
 )
+from farmerapp.khata.credit import CreditLimitExceededError, decision_extra
 from farmerapp.khata.models import KhataEntry
 from farmerapp.khata.schemas import KhataEntryOut
 from farmerapp.location.ingest import LocationBatchIn, ingest_batch
 from farmerapp.location.models import DutySession, PolicyAcceptance
 from farmerapp.location.schemas import DutySessionOut, PolicyAcceptanceOut
 from farmerapp.logging import get_logger
+from farmerapp.orders import sync_ops as order_sync
 from farmerapp.orders.models import Order, OrderLine
 from farmerapp.orders.schemas import OrderLineOut, OrderOut
 from farmerapp.payments.models import Payment
@@ -162,12 +164,10 @@ SERVER_OWNED_FIELDS: dict[str, frozenset[str]] = {
 
 #: ``duty_session`` end fields become server-owned once the server ended the session.
 _DUTY_END_FIELDS = frozenset({"end_at", "end_reason"})
-#: Synced entities whose device write path has not landed yet: M3 orders, lines, payments
-#: and khata entries (FA-020 / FA-021 / FA-022 are the loop's job). Ops on them are rejected
-#: with ``unsupported_action``; they are already in the changes feed.
-_ENTITIES_WITHOUT_WRITE_PATH: frozenset[str] = frozenset(
-    {"order", "order_line", "payment", "khata_entry"}
-)
+#: Synced entities whose device write path has not landed yet: order lines (they travel
+#: inside the ``order`` create, FA-020), payments and khata entries (FA-021 / FA-022). Ops on
+#: them are rejected with ``unsupported_action``; they are already in the changes feed.
+_ENTITIES_WITHOUT_WRITE_PATH: frozenset[str] = frozenset({"order_line", "payment", "khata_entry"})
 
 
 def server_owned_fields(entity: str, row: Any) -> frozenset[str]:
@@ -286,6 +286,25 @@ async def _create(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpConte
             now=now,
         )
         return _from_visit(op, applied)
+    if op.entity == "order":  # FA-020 offline order capture (``farmerapp.orders.sync_ops``)
+        placed = await order_sync.create(
+            session, actor, op.entity_id, dict(op.payload), today=ctx.now.date()
+        )
+        if placed.blocked is not None:
+            return _rejected(
+                op,
+                SyncError(
+                    code=CreditLimitExceededError.code,
+                    status=CreditLimitExceededError.status,
+                    detail="The credit sale is beyond the farmer's limit; approval requested.",
+                    errors=[decision_extra(placed.blocked)],
+                ),
+            )
+        if placed.out is None:  # pragma: no cover - create returns an order unless blocked
+            raise RuntimeError("order sync create returned no order")
+        if placed.conflict:
+            return _conflict(op, placed.out, placed.out.version)
+        return _applied(op, placed.out, placed.out.version)
     payload = {**op.payload, "id": str(op.entity_id)}
     if op.entity == "duty_session":  # FA-010 start
         if await session.get(DutySession, op.entity_id) is not None:

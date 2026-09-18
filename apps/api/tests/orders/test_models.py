@@ -313,10 +313,15 @@ def test_money_entities_are_synced_server_wins() -> None:
 
 
 async def test_money_sync_writes_are_not_wired_yet(client: AsyncClient, ctx: WriteCtx) -> None:
-    ops = [op(entity, "create", {"amount_paise": 100}) for entity in MONEY_ENTITIES]
+    """Lines travel inside the ``order`` create (FA-020, tests/orders/test_place.py);
+    payments and khata entries have no device write path yet."""
+    unwired = [e for e in MONEY_ENTITIES if e != "order"]
+    ops = [op(entity, "create", {"amount_paise": 100}) for entity in unwired]
     body = await sync(client, ctx, ops)
-    assert [r["status"] for r in body["results"]] == ["rejected"] * 4
+    assert [r["status"] for r in body["results"]] == ["rejected"] * len(unwired)
     assert {r["error"]["code"] for r in body["results"]} == {"unsupported_action"}
+    body = await sync(client, ctx, [op("order", "create", {"amount_paise": 100})])
+    assert body["results"][0]["error"]["code"] == "validation_error"  # wired: FA-020
 
 
 async def test_changes_feed_carries_own_orders_and_khata(

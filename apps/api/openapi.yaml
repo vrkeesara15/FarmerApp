@@ -3878,7 +3878,7 @@ paths:
     get:
       tags:
       - stock
-      summary: Stock batches of a store with on-hand quantity and days to expiry
+      summary: Stock batches of a store with on-hand, reserved and available quantity
       operationId: listStoreStock
       parameters:
       - name: id
@@ -3975,6 +3975,227 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+  /v1/stores/{id}/stock/receipts:
+    post:
+      tags:
+      - stock
+      summary: 'Goods receipt: receipt movements into new or existing batches (ST-003)'
+      operationId: receiveStock
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiptIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockWriteOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`negative_stock`, `batch_mismatch`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_stock_request`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+  /v1/stock/transfers:
+    post:
+      tags:
+      - stock
+      summary: 'Transfer batches between stores: transfer_out + transfer_in atomically (ST-003)'
+      operationId: transferStock
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockWriteOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`negative_stock`, `batch_mismatch`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_stock_request`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+  /v1/stores/{id}/stock/write-offs:
+    post:
+      tags:
+      - stock
+      summary: Damage / expiry write-off with reason and optional photo (ST-003)
+      operationId: writeOffStock
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WriteOffIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockWriteOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`negative_stock`, `batch_mismatch`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_stock_request`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+  /v1/stores/{id}/stock/adjustments:
+    post:
+      tags:
+      - stock
+      summary: Stock count correction to the counted quantity (store manager, audited)
+      operationId: adjustStock
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdjustmentIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockWriteOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`negative_stock`, `batch_mismatch`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_stock_request`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - store_manager
   /v1/orders:
     get:
       tags:
@@ -4090,11 +4311,64 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+    post:
+      tags:
+      - orders
+      summary: 'Place an order for a farmer: server prices, FEFO reservation, credit gate'
+      operationId: placeOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '402':
+          description: '`credit_limit_exceeded`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`insufficient_stock`, `amount_mismatch`, `order_exists`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_order`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - farmer
+      - field_officer
+      - store_manager
   /v1/orders/{id}:
     get:
       tags:
       - orders
-      summary: One order with its lines and payments
+      summary: One order with its lines, payments, status history and reservations
       operationId: getOrder
       parameters:
       - name: id
@@ -4132,6 +4406,214 @@ paths:
       x-roles:
       - accountant
       - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/orders/{id}/status:
+    post:
+      tags:
+      - orders
+      summary: Move an order through the store queue (ST-005)
+      operationId: changeOrderStatus
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderStatusIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_transition`, `insufficient_stock`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/stores/{id}/order-queue:
+    get:
+      tags:
+      - orders
+      summary: The store's order queue with lines, oldest first (ST-005, S05)
+      operationId: getStoreOrderQueue
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/OrderStatus'
+          - type: 'null'
+          description: 'Default: the open statuses.'
+          title: Status
+        description: 'Default: the open statuses.'
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderQueuePage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/stores/nearest:
+    get:
+      tags:
+      - orders
+      summary: The store an order for this farmer goes to, with SKU availability (FA-020)
+      operationId: getNearestStore
+      parameters:
+      - name: farmer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Required except for a farmer (self).
+          title: Farmer Id
+        description: Required except for a farmer (self).
+      - name: sku_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              type: string
+              format: uuid
+            maxItems: 50
+          - type: 'null'
+          title: Sku Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NearestStoreOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_order`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
       - cluster_head
       - director
       - farmer
@@ -4267,7 +4749,7 @@ paths:
     get:
       tags:
       - khata
-      summary: 'A farmer''s khata: balance (sum of entries), overdue amount, due dates, ledger'
+      summary: 'A farmer''s khata: balance, overdue buckets, due dates, payments, ledger'
       operationId: getFarmerKhata
       parameters:
       - name: id
@@ -4348,8 +4830,359 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+  /v1/farmers/{id}/khata/entries:
+    post:
+      tags:
+      - khata
+      summary: Manual khata adjustment by the store manager (append-only, reason required)
+      operationId: addKhataEntry
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KhataEntryIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KhataEntryOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - store_manager
+  /v1/farmers/{id}/credit-limit:
+    put:
+      tags:
+      - khata
+      summary: Set a farmer's credit limit at a store (ST-007)
+      operationId: setCreditLimit
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditLimitIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditLimitOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: '`credit_limit_needs_cluster_head`, `forbidden`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+  /v1/credit-approvals:
+    get:
+      tags:
+      - khata
+      summary: Credit approval requests of the caller's stores, oldest first (ST-007)
+      operationId: listCreditApprovals
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/ApprovalStatus'
+          - type: 'null'
+          title: Status
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+      - name: farmer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditApprovalPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/credit-approvals/{id}/approve:
+    post:
+      tags:
+      - khata
+      summary: Approve a credit sale beyond the limit (cluster head); the order proceeds once
+      operationId: approveCreditRequest
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/CreditDecisionIn'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditApprovalOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`approval_not_pending`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
+  /v1/credit-approvals/{id}/reject:
+    post:
+      tags:
+      - khata
+      summary: Reject a credit sale beyond the limit (cluster head)
+      operationId: rejectCreditRequest
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/CreditDecisionIn'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditApprovalOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`approval_not_pending`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
 components:
   schemas:
+    AdjustmentIn:
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+          minLength: 3
+          title: Reason
+        lines:
+          items:
+            $ref: '#/components/schemas/AdjustmentLineIn'
+          type: array
+          maxItems: 100
+          minItems: 1
+          title: Lines
+      additionalProperties: false
+      type: object
+      required:
+      - reason
+      - lines
+      title: AdjustmentIn
+      description: 'Stock count correction: the counted quantity per batch; the difference to the ledger
+
+        is written as an ``adjust`` movement (audited, reason required).'
+    AdjustmentLineIn:
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+          title: Batch Id
+        counted_qty:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,9}|(?=[\d.]{1,13}0*$)\d{0,9}\.\d{0,3}0*$)
+          title: Counted Qty
+      additionalProperties: false
+      type: object
+      required:
+      - batch_id
+      - counted_qty
+      title: AdjustmentLineIn
+    ApprovalStatus:
+      type: string
+      enum:
+      - pending
+      - approved
+      - rejected
+      title: ApprovalStatus
     AuditLogOut:
       properties:
         id:
@@ -4504,6 +5337,72 @@ components:
       - version
       - product
       title: BarcodeLookupOut
+    BatchQtyIn:
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+          title: Batch Id
+        qty:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,9}|(?=[\d.]{1,13}0*$)\d{0,9}\.\d{0,3}0*$)
+          title: Qty
+      additionalProperties: false
+      type: object
+      required:
+      - batch_id
+      - qty
+      title: BatchQtyIn
+    BatchStateOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        batch_no:
+          type: string
+          title: Batch No
+        expiry:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Expiry
+        qty:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Qty
+        reserved:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Reserved
+        available:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Available
+      type: object
+      required:
+      - id
+      - store_id
+      - sku_id
+      - batch_no
+      - expiry
+      - qty
+      - reserved
+      - available
+      title: BatchStateOut
+      description: 'A batch after the write: the cached qty equals the ledger sum.'
     CatalogKind:
       type: string
       enum:
@@ -4744,6 +5643,149 @@ components:
       - recorded_by
       - created_at
       title: ConsentRecordOut
+    CreditApprovalOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Order Id
+        amount_paise:
+          type: integer
+          title: Amount Paise
+        balance_paise:
+          type: integer
+          title: Balance Paise
+        limit_paise:
+          type: integer
+          title: Limit Paise
+        shortfall_paise:
+          type: integer
+          title: Shortfall Paise
+        requested_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Requested By
+        status:
+          type: string
+          title: Status
+        decided_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Decided By
+        decided_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Decided At
+        decision_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Decision Note
+        used_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Used At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - farmer_id
+      - store_id
+      - order_id
+      - amount_paise
+      - balance_paise
+      - limit_paise
+      - shortfall_paise
+      - requested_by
+      - status
+      - decided_by
+      - decided_at
+      - decision_note
+      - used_at
+      - created_at
+      - updated_at
+      - version
+      title: CreditApprovalOut
+    CreditApprovalPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/CreditApprovalOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: CreditApprovalPage
+    CreditDecisionIn:
+      properties:
+        note:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Note
+      additionalProperties: false
+      type: object
+      title: CreditDecisionIn
+    CreditLimitIn:
+      properties:
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        limit_paise:
+          type: integer
+          minimum: 0.0
+          title: Limit Paise
+      additionalProperties: false
+      type: object
+      required:
+      - store_id
+      - limit_paise
+      title: CreditLimitIn
     CreditLimitOut:
       properties:
         id:
@@ -5262,6 +6304,12 @@ components:
       - policy_version
       - policy_accepted
       title: DutyStatusOut
+    EntryType:
+      type: string
+      enum:
+      - debit
+      - credit
+      title: EntryType
     FarmCreate:
       properties:
         id:
@@ -5867,6 +6915,12 @@ components:
       additionalProperties: false
       type: object
       title: FarmerUpdate
+    Fulfilment:
+      type: string
+      enum:
+      - pickup
+      - delivery
+      title: Fulfilment
     GeoJsonPolygon:
       properties:
         type:
@@ -6002,6 +7056,43 @@ components:
       - drip
       - sprinkler
       title: IrrigationType
+    KhataEntryIn:
+      properties:
+        type:
+          $ref: '#/components/schemas/EntryType'
+        amount_paise:
+          type: integer
+          exclusiveMinimum: 0.0
+          title: Amount Paise
+        reason:
+          type: string
+          maxLength: 500
+          minLength: 3
+          title: Reason
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+          description: Defaults to the caller's store.
+        due_date:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Due Date
+          description: 'Debits: defaults to harvest-linked.'
+      additionalProperties: false
+      type: object
+      required:
+      - type
+      - amount_paise
+      - reason
+      title: KhataEntryIn
+      description: 'Manual adjustment (store manager): a new row, never an edit (the ledger is
+
+        append-only); a correction of a wrong entry is the opposite entry with a reason.'
     KhataEntryOut:
       properties:
         id:
@@ -6122,6 +7213,20 @@ components:
             $ref: '#/components/schemas/CreditLimitOut'
           type: array
           title: Credit Limits
+        open_debits:
+          items:
+            $ref: '#/components/schemas/OpenDebitOut'
+          type: array
+          title: Open Debits
+          description: Uncovered debits with due date and ageing.
+        overdue_buckets:
+          $ref: '#/components/schemas/OverdueBucketsOut'
+        payment_history:
+          items:
+            $ref: '#/components/schemas/PaymentOut'
+          type: array
+          title: Payment History
+          description: The farmer's payments (not credit sales), newest first.
         entries:
           items:
             $ref: '#/components/schemas/KhataEntryOut'
@@ -6142,6 +7247,7 @@ components:
       - next_due_date
       - balances
       - credit_limits
+      - overdue_buckets
       - entries
       title: KhataOut
     LabelClaimCreate:
@@ -6697,6 +7803,78 @@ components:
       required:
       - refresh_token
       title: LogoutRequest
+    NearestStoreOut:
+      properties:
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        store:
+          $ref: '#/components/schemas/farmerapp__orders__schemas__StoreBriefOut'
+        distance_m:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Distance M
+          description: Village centre to store, metres.
+        source:
+          type: string
+          title: Source
+          description: '``village`` (the village''s store) or ``nearest``.'
+        stock:
+          items:
+            $ref: '#/components/schemas/SkuAvailabilityOut'
+          type: array
+          title: Stock
+          description: Availability of the requested SKUs at the store.
+      type: object
+      required:
+      - farmer_id
+      - store
+      - distance_m
+      - source
+      title: NearestStoreOut
+    OpenDebitOut:
+      properties:
+        entry_id:
+          type: string
+          format: uuid
+          title: Entry Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        amount_paise:
+          type: integer
+          title: Amount Paise
+        open_paise:
+          type: integer
+          title: Open Paise
+        due_date:
+          type: string
+          format: date
+          title: Due Date
+          description: Harvest-linked due date (or tenant default days).
+        days_overdue:
+          type: integer
+          title: Days Overdue
+        bucket:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Bucket
+          description: '``0_30`` / ``31_60`` / ``61_90`` / ``90_plus``.'
+      type: object
+      required:
+      - entry_id
+      - store_id
+      - amount_paise
+      - open_paise
+      - due_date
+      - days_overdue
+      - bucket
+      title: OpenDebitOut
+      description: A debit not yet covered by credits (FIFO by due date) and how late it is.
     OrderChannel:
       type: string
       enum:
@@ -6704,6 +7882,63 @@ components:
       - farmer_app
       - pos
       title: OrderChannel
+    OrderCreate:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client-generated id (offline capture); the order's id.
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+          description: Required except for a farmer ordering for themselves.
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+          description: Defaults to the farmer's nearest store (village store).
+        fulfilment:
+          $ref: '#/components/schemas/Fulfilment'
+          default: pickup
+        payment_mode:
+          anyOf:
+          - $ref: '#/components/schemas/PaymentMode'
+          - type: 'null'
+          description: '``credit`` puts the order on the khata (ST-007 limit check at placing).'
+        notes:
+          anyOf:
+          - type: string
+            maxLength: 1000
+          - type: 'null'
+          title: Notes
+        lines:
+          items:
+            $ref: '#/components/schemas/OrderLineIn'
+          type: array
+          maxItems: 50
+          minItems: 1
+          title: Lines
+        expected_total_paise:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Expected Total Paise
+          description: The total the device showed; a different server total is a 409.
+      additionalProperties: false
+      type: object
+      required:
+      - lines
+      title: OrderCreate
+      description: FA-020 order capture. Prices, tax and totals are computed by the server.
     OrderDetailOut:
       properties:
         id:
@@ -6800,6 +8035,18 @@ components:
             $ref: '#/components/schemas/PaymentOut'
           type: array
           title: Payments
+        events:
+          items:
+            $ref: '#/components/schemas/OrderStatusEventOut'
+          type: array
+          title: Events
+          description: Status history, oldest first (ST-005).
+        reservations:
+          items:
+            $ref: '#/components/schemas/OrderReservationOut'
+          type: array
+          title: Reservations
+          description: Stock held per batch (FEFO), FA-020.
       type: object
       required:
       - id
@@ -6825,6 +8072,40 @@ components:
       - lines
       - payments
       title: OrderDetailOut
+    OrderLineIn:
+      properties:
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        qty:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,9}|(?=[\d.]{1,13}0*$)\d{0,9}\.\d{0,3}0*$)
+          title: Qty
+        unit_price_paise:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Unit Price Paise
+          description: 'The price the device showed; rejected (409) when it differs from the server''s
+            price list (SEC-023: amounts are recomputed server-side).'
+        label_claim_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Label Claim Id
+          description: Why the SKU was recommended (DX-007; approved claim).
+      additionalProperties: false
+      type: object
+      required:
+      - sku_id
+      - qty
+      title: OrderLineIn
     OrderLineOut:
       properties:
         id:
@@ -7015,6 +8296,171 @@ components:
       required:
       - items
       title: OrderPage
+    OrderQueueItemOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        channel:
+          type: string
+          title: Channel
+        status:
+          type: string
+          title: Status
+        fulfilment:
+          type: string
+          title: Fulfilment
+        subtotal_paise:
+          type: integer
+          title: Subtotal Paise
+        discount_paise:
+          type: integer
+          title: Discount Paise
+        tax_paise:
+          type: integer
+          title: Tax Paise
+        total_paise:
+          type: integer
+          title: Total Paise
+        placed_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Placed By
+        placed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Placed At
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+        invoice_no:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Invoice No
+        client_order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Client Order Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+        lines:
+          items:
+            $ref: '#/components/schemas/OrderLineOut'
+          type: array
+          title: Lines
+      type: object
+      required:
+      - id
+      - tenant_id
+      - farmer_id
+      - store_id
+      - channel
+      - status
+      - fulfilment
+      - subtotal_paise
+      - discount_paise
+      - tax_paise
+      - total_paise
+      - placed_by
+      - placed_at
+      - notes
+      - invoice_no
+      - client_order_id
+      - created_at
+      - updated_at
+      - deleted_at
+      - version
+      - lines
+      title: OrderQueueItemOut
+    OrderQueuePage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/OrderQueueItemOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: OrderQueuePage
+    OrderReservationOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        order_line_id:
+          type: string
+          format: uuid
+          title: Order Line Id
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        batch_id:
+          type: string
+          format: uuid
+          title: Batch Id
+        qty:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Qty
+        status:
+          type: string
+          title: Status
+      type: object
+      required:
+      - id
+      - order_line_id
+      - sku_id
+      - batch_id
+      - qty
+      - status
+      title: OrderReservationOut
     OrderStatus:
       type: string
       enum:
@@ -7027,6 +8473,64 @@ components:
       - delivered
       - cancelled
       title: OrderStatus
+    OrderStatusEventOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        order_id:
+          type: string
+          format: uuid
+          title: Order Id
+        from_status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: From Status
+        to_status:
+          type: string
+          title: To Status
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+        actor_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Actor Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - order_id
+      - from_status
+      - to_status
+      - note
+      - actor_id
+      - created_at
+      title: OrderStatusEventOut
+    OrderStatusIn:
+      properties:
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        note:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Note
+      additionalProperties: false
+      type: object
+      required:
+      - status
+      title: OrderStatusIn
     OtpSendRequest:
       properties:
         phone:
@@ -7110,6 +8614,28 @@ components:
       - phone
       - code
       title: OtpVerifyRequest
+    OverdueBucketsOut:
+      properties:
+        '0_30':
+          type: integer
+          title: 0 30
+        '31_60':
+          type: integer
+          title: 31 60
+        '61_90':
+          type: integer
+          title: 61 90
+        90_plus:
+          type: integer
+          title: 90 Plus
+      type: object
+      required:
+      - '0_30'
+      - '31_60'
+      - '61_90'
+      - 90_plus
+      title: OverdueBucketsOut
+      description: 'SPEC 5.2 "Credit overdue": open debit amounts by days past due.'
     OverrideDecisionIn:
       properties:
         note:
@@ -8152,6 +9678,65 @@ components:
       - version
       - skus
       title: ProductWithSkusOut
+    ReceiptIn:
+      properties:
+        reference:
+          anyOf:
+          - type: string
+            maxLength: 120
+          - type: 'null'
+          title: Reference
+          description: GRN / invoice no.
+        lines:
+          items:
+            $ref: '#/components/schemas/ReceiptLineIn'
+          type: array
+          maxItems: 100
+          minItems: 1
+          title: Lines
+      additionalProperties: false
+      type: object
+      required:
+      - lines
+      title: ReceiptIn
+      description: 'Goods receipt: batches arriving from a supplier (a new batch or more of one).'
+    ReceiptLineIn:
+      properties:
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        batch_no:
+          type: string
+          maxLength: 64
+          minLength: 1
+          title: Batch No
+        expiry:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Expiry
+        qty:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,9}|(?=[\d.]{1,13}0*$)\d{0,9}\.\d{0,3}0*$)
+          title: Qty
+        cost_paise:
+          type: integer
+          minimum: 0.0
+          title: Cost Paise
+          description: Unit cost in paise.
+      additionalProperties: false
+      type: object
+      required:
+      - sku_id
+      - batch_no
+      - qty
+      - cost_paise
+      title: ReceiptLineIn
     RecommendableList:
       properties:
         items:
@@ -8315,6 +9900,31 @@ components:
       - expires_at
       - note
       title: SignedUrlOut
+    SkuAvailabilityOut:
+      properties:
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        on_hand:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: On Hand
+        reserved:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Reserved
+        available:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Available
+      type: object
+      required:
+      - sku_id
+      - on_hand
+      - reserved
+      - available
+      title: SkuAvailabilityOut
     SkuCreate:
       properties:
         product_id:
@@ -8588,6 +10198,18 @@ components:
           pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: On Hand
           description: Sum of the movement ledger for this batch (ST-003).
+        reserved:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Reserved
+          description: Held by active order reservations (FA-020).
+          default: '0'
+        available:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Available
+          description: '``on_hand - reserved``.'
+          default: '0'
         days_to_expiry:
           anyOf:
           - type: integer
@@ -8628,6 +10250,85 @@ components:
       - updated_at
       - version
       title: StockBatchOut
+    StockMovementOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        batch_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Batch Id
+        kind:
+          type: string
+          title: Kind
+        qty:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Qty
+        ref_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ref Type
+        ref_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Ref Id
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+        photo_uri:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Photo Uri
+        created_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Created By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - store_id
+      - sku_id
+      - batch_id
+      - kind
+      - qty
+      - ref_type
+      - ref_id
+      - note
+      - reason
+      - photo_uri
+      - created_by
+      - created_at
+      title: StockMovementOut
     StockPage:
       properties:
         items:
@@ -8644,6 +10345,34 @@ components:
       required:
       - items
       title: StockPage
+    StockWriteOut:
+      properties:
+        ref_type:
+          type: string
+          title: Ref Type
+          description: '``receipt`` / ``transfer`` / ``write_off`` / ``adjustment``.'
+        ref_id:
+          type: string
+          format: uuid
+          title: Ref Id
+          description: Id shared by every movement of this write.
+        movements:
+          items:
+            $ref: '#/components/schemas/StockMovementOut'
+          type: array
+          title: Movements
+        batches:
+          items:
+            $ref: '#/components/schemas/BatchStateOut'
+          type: array
+          title: Batches
+      type: object
+      required:
+      - ref_type
+      - ref_id
+      - movements
+      - batches
+      title: StockWriteOut
     StoreBalanceOut:
       properties:
         store_id:
@@ -8662,31 +10391,13 @@ components:
       properties:
         items:
           items:
-            $ref: '#/components/schemas/StoreBriefOut'
+            $ref: '#/components/schemas/farmerapp__catalog__write_schemas__StoreBriefOut'
           type: array
           title: Items
       type: object
       required:
       - items
       title: StoreBriefList
-    StoreBriefOut:
-      properties:
-        id:
-          type: string
-          format: uuid
-          title: Id
-        code:
-          type: string
-          title: Code
-        name:
-          type: string
-          title: Name
-      type: object
-      required:
-      - id
-      - code
-      - name
-      title: StoreBriefOut
     SyncChangeOut:
       properties:
         entity:
@@ -8965,6 +10676,41 @@ components:
       - count
       - points
       title: TrackOut
+    TransferIn:
+      properties:
+        from_store_id:
+          type: string
+          format: uuid
+          title: From Store Id
+        to_store_id:
+          type: string
+          format: uuid
+          title: To Store Id
+        note:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Note
+        lines:
+          items:
+            $ref: '#/components/schemas/BatchQtyIn'
+          type: array
+          maxItems: 100
+          minItems: 1
+          title: Lines
+      additionalProperties: false
+      type: object
+      required:
+      - from_store_id
+      - to_store_id
+      - lines
+      title: TransferIn
+      description: 'Move batches between two stores of the tenant: ``transfer_out`` at the source and
+
+        ``transfer_in`` at the destination in one transaction (batch number, expiry and cost
+
+        travel with the stock). No in-transit state in the pilot.'
     UploadCompleteOut:
       properties:
         upload_id:
@@ -9896,6 +11642,81 @@ components:
       - unverified
       - open
       title: VisitStatus
+    WriteOffIn:
+      properties:
+        note:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Note
+        photo_blob_uri:
+          anyOf:
+          - type: string
+            maxLength: 512
+            minLength: 1
+          - type: 'null'
+          title: Photo Blob Uri
+        lines:
+          items:
+            $ref: '#/components/schemas/WriteOffLineIn'
+          type: array
+          maxItems: 100
+          minItems: 1
+          title: Lines
+      additionalProperties: false
+      type: object
+      required:
+      - lines
+      title: WriteOffIn
+      description: Damage / expiry write-off (``damage`` movements) with an optional photo.
+    WriteOffLineIn:
+      properties:
+        batch_id:
+          type: string
+          format: uuid
+          title: Batch Id
+        qty:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,9}|(?=[\d.]{1,13}0*$)\d{0,9}\.\d{0,3}0*$)
+          title: Qty
+        reason:
+          $ref: '#/components/schemas/WriteOffReason'
+          default: damage
+      additionalProperties: false
+      type: object
+      required:
+      - batch_id
+      - qty
+      title: WriteOffLineIn
+    WriteOffReason:
+      type: string
+      enum:
+      - damage
+      - expiry
+      - other
+      title: WriteOffReason
+    farmerapp__catalog__write_schemas__StoreBriefOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        code:
+          type: string
+          title: Code
+        name:
+          type: string
+          title: Name
+      type: object
+      required:
+      - id
+      - code
+      - name
+      title: StoreBriefOut
     farmerapp__duty__schemas__DeviceIntegrityIn:
       properties:
         is_mock:
@@ -9913,6 +11734,35 @@ components:
       type: object
       title: DeviceIntegrityIn
       description: FA-028 flags the app reports at duty start (never blocking, flagged to VA-E01).
+    farmerapp__orders__schemas__StoreBriefOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        code:
+          type: string
+          title: Code
+        name:
+          type: string
+          title: Name
+        district:
+          type: string
+          title: District
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+      type: object
+      required:
+      - id
+      - code
+      - name
+      - district
+      - cluster_id
+      title: StoreBriefOut
     farmerapp__visits__schemas__DeviceIntegrityIn:
       properties:
         is_mock:

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
+import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -335,6 +336,67 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
     ),
     "POST /v1/catalog/import/label-claims": RouteFixture(
         body=lambda _ctx: {"csv": "sku_barcode,crop_code\n", "dry_run": True}
+    ),
+    # FA-020 / ST-003 / ST-005 / ST-007 / FA-022 writes: business outcomes (scope 404s,
+    # 409 stock / transition / amount problems, 402 credit) in tests/orders, tests/stock,
+    # tests/khata.
+    "POST /v1/orders": RouteFixture(
+        body=lambda ctx: {
+            "farmer_id": str(ctx.target.farmer.id),
+            "lines": [{"sku_id": str(ctx.target.sku_id), "qty": "1"}],
+        }
+    ),
+    "POST /v1/orders/{id}/status": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.order_id)},
+        body=lambda _ctx: {"status": "packed"},
+    ),
+    "GET /v1/stores/{id}/order-queue": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.store_id)}
+    ),
+    "POST /v1/stores/{id}/stock/receipts": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.store_id)},
+        body=lambda ctx: {
+            "lines": [
+                {
+                    "sku_id": str(ctx.target.sku_id),
+                    "batch_no": "MATRIX",
+                    "qty": "1",
+                    "cost_paise": 1,
+                }
+            ]
+        },
+    ),
+    "POST /v1/stores/{id}/stock/write-offs": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.store_id)},
+        body=lambda _ctx: {"lines": [{"batch_id": str(uuid.uuid4()), "qty": "1"}]},
+    ),
+    "POST /v1/stores/{id}/stock/adjustments": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.store_id)},
+        body=lambda _ctx: {
+            "reason": "matrix",
+            "lines": [{"batch_id": str(uuid.uuid4()), "counted_qty": "1"}],
+        },
+    ),
+    "POST /v1/stock/transfers": RouteFixture(
+        body=lambda ctx: {
+            "from_store_id": str(ctx.target.store_id),
+            "to_store_id": str(uuid.uuid4()),
+            "lines": [{"batch_id": str(uuid.uuid4()), "qty": "1"}],
+        }
+    ),
+    "PUT /v1/farmers/{id}/credit-limit": RouteFixture(
+        path_params=_target_farmer_id,
+        body=lambda ctx: {"store_id": str(ctx.target.store_id), "limit_paise": 100_000},
+    ),
+    "POST /v1/farmers/{id}/khata/entries": RouteFixture(
+        path_params=_target_farmer_id,
+        body=lambda _ctx: {"type": "credit", "amount_paise": 100, "reason": "matrix"},
+    ),
+    "POST /v1/credit-approvals/{id}/approve": RouteFixture(
+        path_params=lambda _ctx: {"id": str(uuid.uuid4())}
+    ),
+    "POST /v1/credit-approvals/{id}/reject": RouteFixture(
+        path_params=lambda _ctx: {"id": str(uuid.uuid4())}
     ),
     "POST /v1/policies/location/accept": RouteFixture(
         body=lambda _ctx: {
