@@ -47,9 +47,9 @@ AUTH_POLICY = "auth_lookup"
 NON_TENANT_TABLES = frozenset({"alembic_version", "spatial_ref_sys"})
 
 #: Append-only tenant tables: the app role may SELECT and INSERT but never UPDATE or DELETE
-#: (FA-006 audit trail; FM-002 consent records — a withdrawal is a new row). Purging past
-#: retention is the migrate role's job (NF-012).
-APPEND_ONLY_TABLES = frozenset({"audit_log", "consent_record"})
+#: (FA-006 audit trail; FM-002 consent records — a withdrawal is a new row; FA-025 sync
+#: change log). Purging past retention is the migrate role's job (NF-012).
+APPEND_ONLY_TABLES = frozenset({"audit_log", "consent_record", "sync_change"})
 
 
 def _q(identifier: str) -> str:

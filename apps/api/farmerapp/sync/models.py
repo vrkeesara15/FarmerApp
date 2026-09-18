@@ -1,0 +1,70 @@
+"""Sync bookkeeping (FA-025, NF-003).
+
+* ``sync_op`` — one row per applied outbox operation, unique on ``(tenant_id, op_id)``:
+  the stored ``result`` is what a replayed ``op_id`` gets back (``duplicate``).
+* ``sync_change`` — the append-only change log the changes feed reads: ``seq`` (identity)
+  is the cursor, ``entity`` / ``entity_id`` / ``action`` / ``version`` say what changed.
+  Rows are written by the flush hook in ``farmerapp.sync.changes`` for every synced entity,
+  whichever path mutated it (REST, sync, jobs). The app role may only INSERT.
+
+Neither table audits itself (``__audit__ = False``): the audited event is the entity change.
+"""
+
+from __future__ import annotations
+
+import uuid
+from datetime import datetime
+from typing import Any
+
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    Identity,
+    Index,
+    Integer,
+    String,
+    UniqueConstraint,
+    Uuid,
+)
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
+
+from farmerapp.db.base import Base, TenantRow
+
+#: Entities the mobile outbox may write and the changes feed reports (SPEC 8.3).
+SYNC_ENTITIES: tuple[str, ...] = ("farmer", "farm", "crop_plot", "consent_record")
+
+
+class SyncOp(Base, TenantRow):
+    __tablename__ = "sync_op"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "op_id"),
+        Index("ix_sync_op_created_at", "created_at"),
+    )
+    __audit__ = False
+
+    op_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
+    device_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
+    entity: Mapped[str] = mapped_column(String(32), nullable=False)
+    action: Mapped[str] = mapped_column(String(16), nullable=False)
+    entity_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
+    result: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+
+
+class SyncChange(Base):
+    __tablename__ = "sync_change"
+    __table_args__ = (Index("ix_sync_change_tenant_seq", "tenant_id", "seq"),)
+    __audit__ = False
+
+    seq: Mapped[int] = mapped_column(BigInteger, Identity(always=True), primary_key=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
+    entity: Mapped[str] = mapped_column(String(32), nullable=False)
+    entity_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
+    action: Mapped[str] = mapped_column(String(16), nullable=False)  # create | update | delete
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
+
+
+__all__ = ["SYNC_ENTITIES", "SyncChange", "SyncOp"]

@@ -7,6 +7,7 @@ only ever *referenced* by name in code. See ``/.env.example`` for the full list.
 
 from __future__ import annotations
 
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -62,6 +63,28 @@ class Settings(BaseSettings):
     )
     photos_bucket: str = Field(default="farmerapp-local-photos")
     exports_bucket: str = Field(default="farmerapp-local-exports")
+
+    # --- Blob store + resumable uploads (NF-003, SEC-016) ------------------------
+    blob_store: Literal["local", "fake_gcs"] = Field(
+        default="local",
+        description="'local' is a directory (unit tests, bare laptop); 'fake_gcs' talks to "
+        "STORAGE_EMULATOR_HOST (docker compose). The real GCS adapter with V4 signed URLs "
+        "lands with SEC-016 (M5), together with the prd guard rail that requires it.",
+    )
+    blob_local_dir: str = Field(
+        default_factory=lambda: str(Path(tempfile.gettempdir()) / "farmerapp-blobs"),
+        description="Root directory of the 'local' blob store (dev / unit tests only).",
+    )
+    upload_chunk_size: int = Field(default=262_144, description="256 KB chunks (NF-003).")
+    upload_max_bytes: int = Field(default=20 * 1024 * 1024, description="Largest upload (20 MB).")
+    upload_ttl_seconds: int = Field(default=900, description="Pending upload TTL (15 min).")
+    signed_url_ttl_seconds: int = Field(default=900, description="Signed URL lifetime (15 min).")
+
+    # --- Sync + idempotency (FA-025, NF-003, SPEC 8.3) ---------------------------
+    idempotency_ttl_seconds: int = Field(default=86_400, description="Idempotency-Key kept 24 h.")
+    phone_verification_ttl_seconds: int = Field(
+        default=1800, description="Farmer phone verification token lifetime (30 min)."
+    )
 
     # --- Providers (base URLs only; keys come from Secret Manager) -----------
     sms_provider_url: str = Field(default="http://localhost:8090/sms")

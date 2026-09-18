@@ -4,12 +4,15 @@ Importing this package also installs the FA-006 audit listener (``farmerapp.db.a
 """
 
 import farmerapp.db.audit  # noqa: F401  (registers the session listener)
+from farmerapp.api.idempotency import IdempotencyKey
 from farmerapp.auth.models import OtpChallenge, RefreshToken, User
 from farmerapp.catalog.crops import Crop
 from farmerapp.db.models.audit_log import AuditLog
 from farmerapp.db.models.tenant import Tenant
-from farmerapp.farmers.models import ConsentRecord, CropPlot, Farm, Farmer
+from farmerapp.farmers.models import ConsentRecord, CropPlot, Farm, Farmer, FarmPhoto
+from farmerapp.sync.models import SyncChange, SyncOp
 from farmerapp.tenants.models import Cluster, Store, Village
+from farmerapp.uploads.models import UploadChunk, UploadSession
 
 __all__ = [
     "AuditLog",
@@ -18,11 +21,17 @@ __all__ = [
     "Crop",
     "CropPlot",
     "Farm",
+    "FarmPhoto",
     "Farmer",
+    "IdempotencyKey",
     "OtpChallenge",
     "RefreshToken",
     "Store",
+    "SyncChange",
+    "SyncOp",
     "Tenant",
+    "UploadChunk",
+    "UploadSession",
     "User",
     "Village",
 ]

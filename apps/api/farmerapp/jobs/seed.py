@@ -45,6 +45,7 @@ from farmerapp.db.geo import ACRE_M2, offset, point_wkt, polygon_wkt
 from farmerapp.db.models import Tenant
 from farmerapp.db.session import get_session_factory, tenant_scope
 from farmerapp.farmers.models import (
+    DEFAULT_CONSENT_VERSION,
     ConsentChannel,
     ConsentPurpose,
     ConsentRecord,
@@ -68,7 +69,7 @@ TENANT_NAMESPACE = uuid.UUID("6f5b3d1e-0c2a-4b8e-9a7d-2f1e3c4b5a60")  # farmerap
 RANDOM_SEED = 20260918
 #: Fixed "today" so stages, sowing dates and consent timestamps are reproducible.
 SEED_TODAY = date(2026, 9, 18)
-CONSENT_VERSION = "2026-09-v1"  # TODO-LEGAL: placeholder consent text version (SPEC 14.6)
+CONSENT_VERSION = DEFAULT_CONSENT_VERSION  # TODO-LEGAL: placeholder (SPEC 14.6)
 
 
 def demo_tenant_id(slug: str) -> uuid.UUID:

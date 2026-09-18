@@ -102,12 +102,86 @@ def _target_farmer_id(ctx: Ctx) -> dict[str, str]:
     return {"id": str(ctx.target.farmer.id)}
 
 
+def _target_farm_id(ctx: Ctx) -> dict[str, str]:
+    return {"id": str(ctx.target.farm_id)}
+
+
+def _target_plot_id(ctx: Ctx) -> dict[str, str]:
+    return {"id": str(ctx.target.crop_plot_id)}
+
+
+def _random_upload(_ctx: Ctx) -> dict[str, str]:
+    # Uploads are private to the actor who started them: any id is a 404 for everyone else.
+    return {"upload_id": "00000000-0000-0000-0000-000000000000", "index": "0"}
+
+
+def _farmer_body(ctx: Ctx) -> dict[str, Any]:
+    return {
+        "phone": "+919000177001",
+        "name": "Matrix Farmer",
+        "village_id": str(ctx.target.farmer.village_id),
+    }
+
+
 ROUTE_FIXTURES: dict[str, RouteFixture] = {
     "GET /v1/users/{id}": RouteFixture(path_params=_target_owner_id),
     "PATCH /v1/users/{id}": RouteFixture(
         path_params=_target_owner_id, body=lambda _ctx: {"name": "Renamed by test"}
     ),
     "GET /v1/farmers/{id}": RouteFixture(path_params=_target_farmer_id),
+    "POST /v1/farmers": RouteFixture(body=_farmer_body),
+    "PATCH /v1/farmers/{id}": RouteFixture(
+        path_params=_target_farmer_id, body=lambda _ctx: {"landmark": "Matrix"}
+    ),
+    "POST /v1/farmers/{id}/farms": RouteFixture(
+        path_params=_target_farmer_id,
+        body=lambda _ctx: {"name": "Matrix farm", "area_acres": "1.0"},
+    ),
+    "POST /v1/farmers/{id}/consents": RouteFixture(
+        path_params=_target_farmer_id, body=lambda _ctx: {"purpose": "marketing", "granted": True}
+    ),
+    "POST /v1/farmers/{id}/phone/verify/send": RouteFixture(path_params=_target_farmer_id),
+    "POST /v1/farmers/{id}/phone/verify/confirm": RouteFixture(
+        path_params=_target_farmer_id, body=lambda _ctx: {"code": "000000"}
+    ),
+    "POST /v1/farmers/phone/verify/send": RouteFixture(
+        body=lambda _ctx: {"phone": "+919000177002"}
+    ),
+    "POST /v1/farmers/phone/verify/confirm": RouteFixture(
+        body=lambda _ctx: {"phone": "+919000177002", "code": "000000"}
+    ),
+    "PATCH /v1/farms/{id}": RouteFixture(
+        path_params=_target_farm_id, body=lambda _ctx: {"name": "Matrix farm"}
+    ),
+    "DELETE /v1/farms/{id}": RouteFixture(path_params=_target_farm_id),
+    "POST /v1/farms/{id}/crop-plots": RouteFixture(
+        path_params=_target_farm_id,
+        body=lambda ctx: {
+            "crop_id": str(ctx.target.crop_id),
+            "season": "kharif",
+            "sowing_date": "2026-07-01",
+        },
+    ),
+    "PATCH /v1/crop-plots/{id}": RouteFixture(
+        path_params=_target_plot_id, body=lambda _ctx: {"stage": "sown"}
+    ),
+    "DELETE /v1/crop-plots/{id}": RouteFixture(path_params=_target_plot_id),
+    "POST /v1/sync": RouteFixture(
+        body=lambda _ctx: {"device_id": "matrix", "cursor": None, "ops": []}
+    ),
+    "POST /v1/uploads": RouteFixture(
+        body=lambda _ctx: {
+            "sha256": "0" * 64,
+            "size_bytes": 10,
+            "content_type": "image/jpeg",
+            "purpose": "farm_photo",
+            "chunk_size": 262144,
+        }
+    ),
+    "GET /v1/uploads/{upload_id}": RouteFixture(path_params=_random_upload),
+    "PUT /v1/uploads/{upload_id}/chunks/{index}": RouteFixture(path_params=_random_upload),
+    "POST /v1/uploads/{upload_id}/complete": RouteFixture(path_params=_random_upload),
+    "GET /v1/blobs/signed-url": RouteFixture(query={"uri": "gs://photos/nothing/here"}),
 }
 
 

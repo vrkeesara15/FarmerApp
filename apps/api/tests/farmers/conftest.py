@@ -18,6 +18,7 @@ from farmerapp.db.session import set_tenant, tenant_scope
 from farmerapp.farmers.models import Farm, Farmer
 from farmerapp.tenants.models import Cluster, Store, Village
 from tests.authz.conftest import bearer, world  # noqa: F401  (fixtures re-exported)
+from tests.farmers.write_fixtures import ctx  # noqa: F401  (fixture re-exported)
 
 M1_TABLES = ("cluster", "store", "village", "crop", "farmer", "farm", "crop_plot", "consent_record")
 

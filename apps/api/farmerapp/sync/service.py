@@ -1,0 +1,449 @@
+"""Apply outbox operations and read the change feed (FA-025, NF-003, SPEC 8.3).
+
+Operations
+----------
+Applied in order, each inside its own SAVEPOINT of the request transaction: a rejected op
+rolls back only itself and the batch continues. ``op_id`` is the idempotency key: the
+result of every op is stored in ``sync_op`` and a replay returns it with status
+``duplicate``. Payloads are the write models of ``farmerapp.farmers.schemas`` and the
+mutation goes through ``farmerapp.farmers.service`` — the same code the REST endpoints run,
+so validation, scope and warnings are identical. Failures become ``rejected`` with a
+problem-style ``error`` (``code`` / ``status`` / ``detail`` / ``errors``).
+
+Conflicts
+---------
+``base_version`` is the version the device edited. When it differs from the row's version
+the entity's strategy decides (``CONFLICT_RULES``):
+
+* ``last_writer_wins`` — farmer, farm, crop plot (SPEC FA-025 "last-writer for notes"):
+  the op is applied when ``client_ts`` is newer than the row's ``updated_at``, otherwise
+  the result is ``conflict`` with the current server state for the device to adopt.
+* ``server_wins`` — reserved for money-bearing entities (khata, payments; SPEC FA-025
+  "server wins for money") and used for the append-only consent record: a mismatch is
+  always a ``conflict``.
+* ``merge_fields`` — reserved (per-field merge for visit notes later).
+
+Changes feed
+------------
+``sync_change`` rows after the cursor, filtered by the actor's SPEC 2.6 scope (an officer
+sees their own farmers' entities, a farmer their own), capped at ``MAX_CHANGES`` with
+``has_more``; several changes of one entity collapse into the latest state. Deleted rows
+come back as ``action: delete`` with ``{id, deleted_at}``.
+"""
+
+from __future__ import annotations
+
+import base64
+import binascii
+import uuid
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
+
+from pydantic import BaseModel, ValidationError
+from sqlalchemy import and_, or_, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from farmerapp.api.errors import AppError, ForbiddenError, NotFoundError
+from farmerapp.api.pagination import InvalidCursorError
+from farmerapp.auth.models import User
+from farmerapp.auth.scope import farmer_filters
+from farmerapp.farmers import service as farmers
+from farmerapp.farmers.errors import UnsupportedActionError
+from farmerapp.farmers.models import ConsentRecord, CropPlot, Farm, Farmer
+from farmerapp.farmers.schemas import (
+    ConsentIn,
+    ConsentRecordOut,
+    CropPlotCreate,
+    CropPlotOut,
+    CropPlotUpdate,
+    FarmCreate,
+    FarmerCreate,
+    FarmerOut,
+    FarmerUpdate,
+    FarmOut,
+    FarmUpdate,
+)
+from farmerapp.logging import get_logger
+from farmerapp.settings import Settings
+from farmerapp.sync.models import SyncChange, SyncOp
+from farmerapp.sync.schemas import SyncChangeOut, SyncError, SyncOpIn, SyncResult
+
+log = get_logger("farmerapp.sync")
+
+MAX_CHANGES = 500
+
+
+class Strategy(StrEnum):
+    SERVER_WINS = "server_wins"
+    LAST_WRITER_WINS = "last_writer_wins"
+    MERGE_FIELDS = "merge_fields"
+
+
+CONFLICT_RULES: dict[str, Strategy] = {
+    "farmer": Strategy.LAST_WRITER_WINS,
+    "farm": Strategy.LAST_WRITER_WINS,
+    "crop_plot": Strategy.LAST_WRITER_WINS,
+    "consent_record": Strategy.SERVER_WINS,
+    # M3: "khata": Strategy.SERVER_WINS, "payment": Strategy.SERVER_WINS
+}
+
+
+# --------------------------------------------------------------------------- cursor
+def encode_cursor(seq: int) -> str:
+    return base64.urlsafe_b64encode(str(seq).encode()).decode().rstrip("=")
+
+
+def decode_cursor(cursor: str | None) -> int:
+    if not cursor:
+        return 0
+    try:
+        padded = cursor + "=" * (-len(cursor) % 4)
+        value = int(base64.urlsafe_b64decode(padded.encode()).decode())
+    except (ValueError, binascii.Error, UnicodeDecodeError) as exc:
+        raise InvalidCursorError("Malformed sync cursor.") from exc
+    if value < 0:
+        raise InvalidCursorError("Malformed sync cursor.")
+    return value
+
+
+# --------------------------------------------------------------------------- results
+def _dump(model: BaseModel) -> dict[str, Any]:
+    return model.model_dump(mode="json")
+
+
+def _applied(op: SyncOpIn, out: BaseModel, version: int) -> SyncResult:
+    return SyncResult(
+        op_id=op.op_id, status="applied", entity_id=op.entity_id, version=version, server=_dump(out)
+    )
+
+
+def _conflict(op: SyncOpIn, out: BaseModel, version: int) -> SyncResult:
+    return SyncResult(
+        op_id=op.op_id,
+        status="conflict",
+        entity_id=op.entity_id,
+        version=version,
+        server=_dump(out),
+    )
+
+
+def _rejected(op: SyncOpIn, error: SyncError) -> SyncResult:
+    return SyncResult(op_id=op.op_id, status="rejected", entity_id=op.entity_id, error=error)
+
+
+def _aware(ts: datetime) -> datetime:
+    return ts if ts.tzinfo is not None else ts.replace(tzinfo=UTC)
+
+
+def _loses_conflict(op: SyncOpIn, row: Any) -> bool:
+    """True when the op must not be applied: a stale ``base_version`` the strategy rejects."""
+    if op.base_version == row.version:
+        return False
+    strategy = CONFLICT_RULES[op.entity]
+    if strategy == Strategy.LAST_WRITER_WINS:
+        return _aware(op.client_ts) <= _aware(row.updated_at)
+    return True
+
+
+# --------------------------------------------------------------------------- dispatch
+async def _create(
+    session: AsyncSession, actor: User, op: SyncOpIn, settings: Settings, now: datetime
+) -> SyncResult:
+    payload = {**op.payload, "id": str(op.entity_id)}
+    if op.entity == "farmer":
+        existing = await session.get(Farmer, op.entity_id)
+        if existing is not None:
+            visible = await farmers.visible_farmer(session, actor, op.entity_id)
+            return _conflict(op, FarmerOut.from_row(visible), visible.version)
+        out = await farmers.create_farmer(
+            session, actor, FarmerCreate.model_validate(payload), settings=settings, now=now
+        )
+        return _applied(op, out, out.version)
+    if op.entity == "farm":
+        if await session.get(Farm, op.entity_id) is not None:
+            farm = await farmers.visible_farm(session, actor, op.entity_id)
+            return _conflict(op, await farmers.farm_out(session, farm), farm.version)
+        farmer = await farmers.visible_farmer(session, actor, _uuid(payload.get("farmer_id")))
+        farm_out = await farmers.add_farm(
+            session, actor, farmer, FarmCreate.model_validate(payload)
+        )
+        return _applied(op, farm_out, farm_out.version)
+    if op.entity == "crop_plot":
+        if await session.get(CropPlot, op.entity_id) is not None:
+            plot = await farmers.visible_crop_plot(session, actor, op.entity_id)
+            return _conflict(op, CropPlotOut.from_row(plot), plot.version)
+        farm = await farmers.visible_farm(session, actor, _uuid(payload.get("farm_id")))
+        plot_out = await farmers.add_crop_plot(
+            session, farm, CropPlotCreate.model_validate(payload)
+        )
+        return _applied(op, plot_out, plot_out.version)
+    # consent_record
+    if await session.get(ConsentRecord, op.entity_id) is not None:
+        record = await session.get_one(ConsentRecord, op.entity_id)
+        return _conflict(op, ConsentRecordOut.from_row(record), 1)
+    farmer = await farmers.visible_farmer(session, actor, _uuid(payload.get("farmer_id")))
+    consent = await farmers.add_consent(
+        session, actor, farmer, ConsentIn.model_validate(payload), record_id=op.entity_id
+    )
+    return _applied(op, consent, 1)
+
+
+async def _update(session: AsyncSession, actor: User, op: SyncOpIn) -> SyncResult:
+    if op.entity == "farmer":
+        farmer = await farmers.visible_farmer(session, actor, op.entity_id)
+        if _loses_conflict(op, farmer):
+            return _conflict(op, FarmerOut.from_row(farmer), farmer.version)
+        body = FarmerUpdate.model_validate({**op.payload, "version": None})
+        out = await farmers.update_farmer(session, actor, farmer, body)
+        return _applied(op, out, out.version)
+    if op.entity == "farm":
+        farm = await farmers.visible_farm(session, actor, op.entity_id)
+        if _loses_conflict(op, farm):
+            return _conflict(op, await farmers.farm_out(session, farm), farm.version)
+        farm_out = await farmers.update_farm(
+            session, actor, farm, FarmUpdate.model_validate({**op.payload, "version": None})
+        )
+        return _applied(op, farm_out, farm_out.version)
+    if op.entity == "crop_plot":
+        plot = await farmers.visible_crop_plot(session, actor, op.entity_id)
+        if _loses_conflict(op, plot):
+            return _conflict(op, CropPlotOut.from_row(plot), plot.version)
+        plot_out = await farmers.update_crop_plot(
+            session, plot, CropPlotUpdate.model_validate({**op.payload, "version": None})
+        )
+        return _applied(op, plot_out, plot_out.version)
+    raise UnsupportedActionError("Consent records are append-only: create a new record.")
+
+
+async def _delete(session: AsyncSession, actor: User, op: SyncOpIn) -> SyncResult:
+    if op.entity == "farm":
+        farm = await farmers.visible_farm(session, actor, op.entity_id)
+        if _loses_conflict(op, farm):
+            return _conflict(op, await farmers.farm_out(session, farm), farm.version)
+        farm_out = await farmers.delete_farm(session, farm)
+        return _applied(op, farm_out, farm_out.version)
+    if op.entity == "crop_plot":
+        plot = await farmers.visible_crop_plot(session, actor, op.entity_id)
+        if _loses_conflict(op, plot):
+            return _conflict(op, CropPlotOut.from_row(plot), plot.version)
+        plot_out = await farmers.delete_crop_plot(session, plot)
+        return _applied(op, plot_out, plot_out.version)
+    raise UnsupportedActionError(f"{op.entity} cannot be deleted from a device.")
+
+
+def _uuid(value: Any) -> uuid.UUID:
+    try:
+        return uuid.UUID(str(value))
+    except ValueError as exc:
+        raise NotFoundError("Parent entity not found.") from exc
+
+
+async def _dispatch(
+    session: AsyncSession, actor: User, op: SyncOpIn, settings: Settings, now: datetime
+) -> SyncResult:
+    if op.action == "create":
+        return await _create(session, actor, op, settings, now)
+    if op.action == "update":
+        return await _update(session, actor, op)
+    return await _delete(session, actor, op)
+
+
+async def _apply_one(
+    session: AsyncSession, actor: User, op: SyncOpIn, settings: Settings, now: datetime
+) -> SyncResult:
+    try:
+        async with session.begin_nested():
+            return await _dispatch(session, actor, op, settings, now)
+    except ValidationError as exc:
+        errors = [
+            {"loc": [str(p) for p in e.get("loc", ())], "msg": e.get("msg"), "type": e.get("type")}
+            for e in exc.errors()
+        ]
+        return _rejected(
+            op,
+            SyncError(
+                code="validation_error",
+                status=422,
+                detail="Payload validation failed.",
+                errors=errors,
+            ),
+        )
+    except ForbiddenError as exc:
+        return _rejected(op, SyncError(code=exc.code, status=exc.status, detail=exc.detail))
+    except AppError as exc:
+        extra_errors: list[dict[str, Any]] | None = (
+            list(exc.extra["errors"]) if exc.extra and "errors" in exc.extra else None
+        )
+        return _rejected(
+            op,
+            SyncError(code=exc.code, status=exc.status, detail=exc.detail, errors=extra_errors),
+        )
+    except IntegrityError as exc:
+        log.warning("sync_op_integrity_error", op_id=str(op.op_id), entity=op.entity)
+        return _rejected(
+            op, SyncError(code="integrity_error", status=409, detail=str(exc.orig).splitlines()[0])
+        )
+
+
+async def apply_ops(
+    session: AsyncSession,
+    actor: User,
+    *,
+    device_id: str,
+    ops: list[SyncOpIn],
+    settings: Settings,
+    now: datetime | None = None,
+) -> list[SyncResult]:
+    """``now`` is the auth clock (phone verification tokens); defaults to the wall clock."""
+    now = now or datetime.now(UTC)
+    results: list[SyncResult] = []
+    for op in ops:
+        stored = (
+            await session.execute(
+                select(SyncOp).where(SyncOp.tenant_id == actor.tenant_id, SyncOp.op_id == op.op_id)
+            )
+        ).scalar_one_or_none()
+        if stored is not None:
+            results.append(SyncResult.model_validate({**stored.result, "status": "duplicate"}))
+            continue
+        result = await _apply_one(session, actor, op, settings, now)
+        session.add(
+            SyncOp(
+                tenant_id=actor.tenant_id,
+                op_id=op.op_id,
+                device_id=device_id,
+                actor_id=actor.id,
+                entity=op.entity,
+                action=op.action,
+                entity_id=op.entity_id,
+                result=_dump(result),
+            )
+        )
+        await session.flush()
+        results.append(result)
+    log.info(
+        "sync_ops_applied",
+        actor_id=str(actor.id),
+        device_id=device_id,
+        ops=len(ops),
+        applied=sum(r.status == "applied" for r in results),
+        rejected=sum(r.status == "rejected" for r in results),
+        conflicts=sum(r.status == "conflict" for r in results),
+        duplicates=sum(r.status == "duplicate" for r in results),
+    )
+    return results
+
+
+# --------------------------------------------------------------------------- changes feed
+def _scope(actor: User) -> Any:
+    visible = select(Farmer.id).where(*farmer_filters(actor))
+    farms = select(Farm.id).where(Farm.farmer_id.in_(visible))
+    return or_(
+        and_(SyncChange.entity == "farmer", SyncChange.entity_id.in_(visible)),
+        and_(SyncChange.entity == "farm", SyncChange.entity_id.in_(farms)),
+        and_(
+            SyncChange.entity == "crop_plot",
+            SyncChange.entity_id.in_(select(CropPlot.id).where(CropPlot.farm_id.in_(farms))),
+        ),
+        and_(
+            SyncChange.entity == "consent_record",
+            SyncChange.entity_id.in_(
+                select(ConsentRecord.id).where(ConsentRecord.subject_id.in_(visible))
+            ),
+        ),
+    )
+
+
+async def _current_state(
+    session: AsyncSession, changes: list[SyncChange]
+) -> dict[tuple[str, uuid.UUID], BaseModel]:
+    ids: dict[str, list[uuid.UUID]] = {}
+    for change in changes:
+        ids.setdefault(change.entity, []).append(change.entity_id)
+    state: dict[tuple[str, uuid.UUID], BaseModel] = {}
+    if ids.get("farmer"):
+        for row in (
+            await session.execute(select(Farmer).where(Farmer.id.in_(ids["farmer"])))
+        ).scalars():
+            state[("farmer", row.id)] = FarmerOut.from_row(row)
+    if ids.get("farm"):
+        for farm in (await session.execute(select(Farm).where(Farm.id.in_(ids["farm"])))).scalars():
+            state[("farm", farm.id)] = FarmOut.from_row(farm)
+    if ids.get("crop_plot"):
+        plots = await session.execute(select(CropPlot).where(CropPlot.id.in_(ids["crop_plot"])))
+        for plot in plots.scalars():
+            state[("crop_plot", plot.id)] = CropPlotOut.from_row(plot)
+    if ids.get("consent_record"):
+        records = await session.execute(
+            select(ConsentRecord).where(ConsentRecord.id.in_(ids["consent_record"]))
+        )
+        for record in records.scalars():
+            state[("consent_record", record.id)] = ConsentRecordOut.from_row(record)
+    return state
+
+
+async def changes_since(
+    session: AsyncSession, actor: User, cursor: str | None
+) -> tuple[list[SyncChangeOut], str, bool]:
+    since = decode_cursor(cursor)
+    rows = (
+        (
+            await session.execute(
+                select(SyncChange)
+                .where(
+                    SyncChange.tenant_id == actor.tenant_id, SyncChange.seq > since, _scope(actor)
+                )
+                .order_by(SyncChange.seq)
+                .limit(MAX_CHANGES + 1)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    has_more = len(rows) > MAX_CHANGES
+    window = list(rows[:MAX_CHANGES])
+    last_seq = window[-1].seq if window else since
+    latest: dict[tuple[str, uuid.UUID], SyncChange] = {}
+    for change in window:
+        latest[(change.entity, change.entity_id)] = change  # ascending seq: last wins
+    state = await _current_state(session, list(latest.values()))
+    out: list[SyncChangeOut] = []
+    for key, change in latest.items():
+        current = state.get(key)
+        deleted_at = getattr(current, "deleted_at", None) if current is not None else None
+        if current is None or change.action == "delete" or deleted_at is not None:
+            data: dict[str, Any] = {
+                "id": str(change.entity_id),
+                "deleted_at": deleted_at.isoformat()
+                if deleted_at
+                else change.changed_at.isoformat(),
+            }
+            action = "delete"
+        else:
+            data = _dump(current)
+            action = change.action
+        out.append(
+            SyncChangeOut(
+                entity=change.entity,
+                action=action,
+                entity_id=change.entity_id,
+                version=change.version,
+                data=data,
+                seq=change.seq,
+            )
+        )
+    out.sort(key=lambda c: c.seq)
+    return out, encode_cursor(last_seq), has_more
+
+
+__all__ = [
+    "CONFLICT_RULES",
+    "MAX_CHANGES",
+    "Strategy",
+    "apply_ops",
+    "changes_since",
+    "decode_cursor",
+    "encode_cursor",
+]

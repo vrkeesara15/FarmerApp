@@ -283,6 +283,87 @@ def _diff(obj: object) -> tuple[dict[str, Any], dict[str, Any]] | None:
     return before, after
 
 
+@dataclass(frozen=True)
+class Change:
+    """One row mutation detected at flush time: the object, the verb and the redacted diff.
+
+    ``action`` is ``create`` / ``update`` / ``delete`` (a soft delete — ``deleted_at`` set —
+    is a ``delete``). ``version`` is the row version *after* this flush (creates are 1,
+    updates and soft deletes bump the ORM version counter; tables without a version column
+    report 1).
+    """
+
+    obj: Any
+    action: str
+    before: dict[str, Any] | None
+    after: dict[str, Any] | None
+    hard_delete: bool = False  # the row is removed (session.deleted), not soft-deleted
+
+    @property
+    def table(self) -> str:
+        return str(self.obj.__tablename__)
+
+    @property
+    def version(self) -> int:
+        mapper = instance_state(self.obj).mapper
+        column = mapper.version_id_col
+        if self.action == "create" or column is None or column.key is None:
+            return 1  # no optimistic-locking column (append-only rows): always version 1
+        current = int(getattr(self.obj, column.key, None) or 0)
+        return current if self.hard_delete else current + 1
+
+
+ChangeHook = Callable[[Session, Change], None]
+_hooks: list[ChangeHook] = []
+
+
+def on_change(hook: ChangeHook) -> ChangeHook:
+    """Register a hook that runs for every audited mutation in the same flush (FA-025 uses it
+    for the sync change log). Hooks may add rows to the session; they must not query."""
+    if hook not in _hooks:
+        _hooks.append(hook)
+    return hook
+
+
+def pending_changes(session: Session) -> list[Change]:
+    """The audited mutations the session is about to flush, in new / dirty / deleted order."""
+    changes: list[Change] = []
+    for obj in list(session.new):
+        if not is_audited(obj):
+            continue
+        _ensure_ids(obj)
+        snapshot = {k: v for k, v in _current_values(obj).items() if v is not None}
+        changes.append(Change(obj=obj, action="create", before=None, after=redact(snapshot)))
+    for obj in list(session.dirty):
+        if not is_audited(obj) or not session.is_modified(obj):
+            continue
+        diff = _diff(obj)
+        if diff is None:
+            continue
+        before, after = diff
+        soft_deleted = (
+            "deleted_at" in after
+            and after["deleted_at"] is not None
+            and before.get("deleted_at") is None
+        )
+        action = "delete" if soft_deleted else "update"
+        before["id"] = after["id"] = obj.id
+        changes.append(Change(obj=obj, action=action, before=redact(before), after=redact(after)))
+    for obj in list(session.deleted):
+        if not is_audited(obj):
+            continue
+        changes.append(
+            Change(
+                obj=obj,
+                action="delete",
+                before=redact(_current_values(obj)),
+                after=None,
+                hard_delete=True,
+            )
+        )
+    return changes
+
+
 def _new_row(session: Session, obj: Any, *, action: str, before: Any, after: Any) -> None:
     entity_id, tenant_id = _ensure_ids(obj)
     who = current_actor() or system_actor()
@@ -309,42 +390,28 @@ def _new_row(session: Session, obj: Any, *, action: str, before: Any, after: Any
 
 
 def _before_flush(session: Session, _flush_context: Any, _instances: Any) -> None:
-    for obj in list(session.new):
-        if not is_audited(obj):
-            continue
-        _ensure_ids(obj)
-        snapshot = {k: v for k, v in _current_values(obj).items() if v is not None}
-        _new_row(session, obj, action="create", before=None, after=redact(snapshot))
-    for obj in list(session.dirty):
-        if not is_audited(obj) or not session.is_modified(obj):
-            continue
-        changes = _diff(obj)
-        if changes is None:
-            continue
-        before, after = changes
-        soft_deleted = (
-            "deleted_at" in after
-            and after["deleted_at"] is not None
-            and before.get("deleted_at") is None
+    for change in pending_changes(session):
+        _new_row(
+            session, change.obj, action=change.action, before=change.before, after=change.after
         )
-        action = "delete" if soft_deleted else "update"
-        before["id"] = after["id"] = obj.id
-        _new_row(session, obj, action=action, before=redact(before), after=redact(after))
-    for obj in list(session.deleted):
-        if not is_audited(obj):
-            continue
-        _new_row(session, obj, action="delete", before=redact(_current_values(obj)), after=None)
+        for hook in _hooks:
+            hook(session, change)
 
 
 _INSTALLED = False
 
 
 def install_audit_listener() -> None:
-    """Register the flush listener once, for every ``Session`` (sync core of ``AsyncSession``)."""
+    """Register the flush listener once, for every ``Session`` (sync core of ``AsyncSession``),
+    together with the change hooks that ride on it (FA-025 sync change log)."""
     global _INSTALLED
     if _INSTALLED:
         return
     event.listen(Session, "before_flush", _before_flush)
+    # Local import: the hook module imports this one (``on_change`` / ``Change``).
+    from farmerapp.sync.changes import record_change
+
+    on_change(record_change)
     _INSTALLED = True
 
 
@@ -357,6 +424,8 @@ __all__ = [
     "REDACTED_COLUMNS",
     "SYSTEM_ROLE",
     "Actor",
+    "Change",
+    "ChangeHook",
     "actor_from_request",
     "actor_scope",
     "bind_actor",
@@ -367,6 +436,8 @@ __all__ = [
     "is_audited",
     "jsonable",
     "mask_phone",
+    "on_change",
+    "pending_changes",
     "record",
     "redact",
     "system_actor",

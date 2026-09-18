@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import asyncio
 import os
+import shutil
+import tempfile
 from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
 
@@ -81,8 +83,11 @@ def _env() -> Iterator[None]:
     os.environ["LOG_JSON"] = "false"
     os.environ["OTP_PROVIDER"] = "fake"
     os.environ["OTP_DEV_CODE"] = ""  # never accept the dev code in tests unless a test opts in
+    os.environ["BLOB_STORE"] = "local"  # NF-003: uploads land in a temp directory
+    os.environ["BLOB_LOCAL_DIR"] = tempfile.mkdtemp(prefix="farmerapp-blobs-")
     get_settings.cache_clear()
     yield
+    shutil.rmtree(os.environ["BLOB_LOCAL_DIR"], ignore_errors=True)
     get_settings.cache_clear()
 
 

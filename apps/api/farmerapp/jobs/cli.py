@@ -9,6 +9,7 @@ import uuid
 import typer
 
 from farmerapp.jobs import purge_audit_logs as purge_mod
+from farmerapp.jobs import purge_expired as expired_mod
 from farmerapp.jobs import seed as seed_mod
 from farmerapp.logging import configure_logging, get_logger
 from farmerapp.settings import get_settings
@@ -78,6 +79,22 @@ def purge_audit_logs(
             f"purge-audit-logs (dry-run): tenant={report.tenant_id} "
             f"older_than_days={report.older_than_days} cutoff={report.cutoff.isoformat()} "
             f"rows={report.rows}"
+        )
+
+
+@cli.command("purge-expired")
+def purge_expired(
+    tenant_id: list[uuid.UUID] = typer.Option(  # noqa: B008
+        ..., "--tenant-id", help="Tenant(s) to purge (repeatable)."
+    ),
+) -> None:
+    """Delete expired pending uploads (with staged chunks) and expired Idempotency-Key rows
+    (NF-003). Safe to run every 15 minutes."""
+    _setup()
+    for report in asyncio.run(expired_mod.run_purge_expired(tenant_id)):
+        typer.echo(
+            f"purge-expired: tenant={report.tenant_id} upload_sessions={report.upload_sessions} "
+            f"upload_chunks={report.upload_chunks} idempotency_keys={report.idempotency_keys}"
         )
 
 

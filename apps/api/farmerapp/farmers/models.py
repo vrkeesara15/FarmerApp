@@ -13,6 +13,8 @@
   and the ORM never has to compute geometry in Python. ``area_acres`` is what the officer
   declared.
 * ``crop_plot`` — a crop on a farm in a season (many per farm; FA-013 "3 crop plots").
+* ``farm_photo`` — photos of a farm boundary walk (FA-012): the blob URI from a completed
+  NF-003 upload, its sha256, when it was taken and the EXIF point if the device had one.
 * ``consent_record`` — append-only (FM-002, NF-013): granting and withdrawing are *rows*,
   never updates; the latest row per ``(subject, purpose)`` is the current state. The app role
   cannot UPDATE or DELETE it (``APPEND_ONLY_TABLES``).
@@ -121,6 +123,10 @@ def _in(values: type[StrEnum]) -> str:
     return ", ".join(f"'{v.value}'" for v in values)
 
 
+#: Consent text version used when ``tenant.settings["consent_version"]`` is not set.
+#: TODO-LEGAL: placeholder until the legal copy is approved (SPEC 14.6 human gate).
+DEFAULT_CONSENT_VERSION = "2026-09-v1"
+
 _POINT_GEOM = Geometry(geometry_type="POINT", srid=SRID)
 
 
@@ -169,6 +175,11 @@ class Farmer(Base, BaseColumns):
         String(16), nullable=False, server_default=text("'officer'"), default=FarmerSource.OFFICER
     )
     land_ownership: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    # FA-012 / VA-F01: set when the farmer confirmed an OTP (at registration through a
+    # ``phone_verification_token``, or later on the record); false for offline captures.
+    phone_verified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false"), default=False
+    )
 
     @staticmethod
     def last4(phone: str) -> str:
@@ -224,6 +235,26 @@ class Farm(Base, BaseColumns):
         # eager_defaults: fetch the generated columns with RETURNING on INSERT/UPDATE so
         # ``farm.centroid`` / ``farm.area_acres_computed`` are usable right after a flush.
         return {"version_id_col": cls.version, "eager_defaults": True}
+
+
+class FarmPhoto(Base, BaseColumns):
+    __tablename__ = "farm_photo"
+    __table_args__ = (
+        Index("ix_farm_photo_farm_id", "farm_id"),
+        CheckConstraint("char_length(blob_uri) > 0", name="blob_uri"),
+    )
+
+    farm_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("farm.id", ondelete="CASCADE"), nullable=False
+    )
+    blob_uri: Mapped[str] = mapped_column(String(512), nullable=False)  # gs://bucket/key
+    sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    taken_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    location: Mapped[Any] = mapped_column(  # EXIF point, if the device recorded one
+        Geography(geometry_type="POINT", srid=SRID, spatial_index=False), nullable=True
+    )
+    location_lon: Mapped[float | None] = column_property(func.ST_X(cast(location, _POINT_GEOM)))
+    location_lat: Mapped[float | None] = column_property(func.ST_Y(cast(location, _POINT_GEOM)))
 
 
 class CropPlot(Base, BaseColumns):
@@ -295,6 +326,7 @@ class ConsentRecord(Base, TenantRow):
 
 
 __all__ = [
+    "DEFAULT_CONSENT_VERSION",
     "ConsentChannel",
     "ConsentPurpose",
     "ConsentRecord",
@@ -302,6 +334,7 @@ __all__ = [
     "CropPlot",
     "CropStage",
     "Farm",
+    "FarmPhoto",
     "Farmer",
     "FarmerSource",
     "IrrigationType",

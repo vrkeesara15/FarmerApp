@@ -94,6 +94,72 @@ Tables `cluster`, `store`, `village`, `crop`, `farmer`, `farm`, `crop_plot`, `co
   `farmerapp.auth.scope.farmer_filters(actor)`; the agronomist gets a masked phone and no
   landmark.
 
+## Farmer registration writes (FA-012 / FA-013)
+
+`POST /v1/farmers` registers a farmer with nested `farms[{boundary GeoJSON, area_acres, soil,
+irrigation, ownership, photos: [blob_uri], crop_plots[]}]` and `consents[{purpose, granted}]`
+in one request (field officer, store manager, cluster head, tenant admin); then
+`PATCH /v1/farmers/{id}`, `POST /v1/farmers/{id}/farms`, `PATCH|DELETE /v1/farms/{id}`,
+`POST /v1/farms/{id}/crop-plots`, `PATCH|DELETE /v1/crop-plots/{id}` (soft deletes) and
+`POST /v1/farmers/{id}/consents` (append a grant or withdrawal). Everything goes through
+`farmerapp/farmers/service.py`, which `POST /v1/sync` shares. Inline checks (SPEC 6.2):
+
+- VA-F01: E.164 Indian mobile (normalised), duplicate `(tenant, phone)` -> `409
+  farmer_phone_exists`, staff phone -> `422 farmer_phone_is_staff`. Phone verification:
+  `POST /v1/farmers/phone/verify/send {phone}` + `/confirm {phone, code}` return a 30-minute
+  `phone_verification_token` (HS256 JWT bound to tenant + phone, `farmerapp/farmers/phone_verify.py`)
+  that `POST /v1/farmers` or a sync `farmer.create` op presents to get `phone_verified: true`;
+  without it the farmer is registered unverified (offline capture) and verified later with
+  `POST /v1/farmers/{id}/phone/verify/send|confirm`. Same OTP limits/lockout as login
+  (purpose `farmer_register`).
+- VA-F03: `ST_IsValid` -> `422 farm_boundary_invalid` (detail carries PostGIS' reason);
+  declared vs measured acres outside ±30 % -> `warnings: ["area_mismatch"]`; overlap with
+  another farmer's farm above 20 % -> `warnings: ["farm_overlap"]`. Warnings never reject
+  (per farm and as the union on the farmer response).
+
+Every POST honours `Idempotency-Key` (`farmerapp/api/idempotency.py`): the response is stored
+24 h per `(tenant, actor, key)` and replayed for the same body; a different body is
+`422 idempotency_key_reuse`; errors are not cached. Decorate an endpoint with
+`@idempotent(status_code=...)` under the route decorator (it needs `request`, `session`,
+`actor` parameters).
+
+## Sync (FA-025 / NF-003)
+
+`POST /v1/sync {device_id, cursor, ops[]}` (field officer, store manager, cluster head,
+farmer; ≤ 200 ops) applies outbox operations `{op_id, entity, action, entity_id,
+base_version, payload, client_ts}` in order, each in its own SAVEPOINT, and returns
+`results[]` (`applied | duplicate | conflict | rejected`, `version`, problem-style `error`,
+`server` state) plus `changes[]` since the cursor. `farmerapp/sync/service.py`:
+
+- `op_id` idempotency: results are stored in `sync_op`; a replay returns `duplicate` with
+  the original result.
+- Conflict rules `CONFLICT_RULES`: farmer / farm / crop_plot `last_writer_wins`
+  (`base_version` mismatch is applied when `client_ts` is newer than `updated_at`, else
+  `conflict` with the server state); `server_wins` reserved for khata / payments and used
+  for the append-only consent record; `merge_fields` reserved.
+- Change feed: `sync_change` (append-only, `seq` identity) is written by the flush hook
+  `farmerapp/sync/changes.py` registered on the FA-006 audit listener, so REST, sync and
+  jobs all feed it. Reads are scoped with `farmer_filters` (officer: own farmers' entities;
+  farmer: own), collapsed to the latest state per entity, capped at 500 with `has_more`;
+  soft-deleted rows come back as `action: delete` with `{id, deleted_at}`. The cursor is
+  the base64 of the last `seq`.
+
+## Uploads and blobs (NF-003 / SEC-016)
+
+Resumable 256 KB chunked uploads: `POST /v1/uploads {sha256, size_bytes, content_type,
+purpose, chunk_size: 262144}` -> `{upload_id, received_chunks, expires_at}`; `PUT
+/v1/uploads/{id}/chunks/{index}` (raw body + `X-Chunk-Sha256`, any order, re-PUT is fine);
+`GET /v1/uploads/{id}` for resume; `POST /v1/uploads/{id}/complete` verifies the whole-file
+sha256 and returns `{blob_uri, sha256, size_bytes, content_type}`. Chunks are staged as
+`bytea` in `upload_chunk` (15-minute TTL, `python -m farmerapp.jobs purge-expired
+--tenant-id …` also drops expired idempotency keys). Blobs land in a `BlobStore`
+(`farmerapp/uploads/blobstore.py`) under `gs://<bucket>/<tenant>/<purpose>/<sha256>`:
+`BLOB_STORE=local` (directory; unit tests) or `BLOB_STORE=fake_gcs` (compose
+`gcs` service, bucket `photos`; `pytest -m integration` covers it). `GET
+/v1/blobs/signed-url?uri=` returns a 15-minute URL — a plain media URL for the fake / local
+stores; real V4 signing is the `GcsBlobStore` seam for SEC-016 (M5). `farm_photo` rows
+reference completed uploads (`photos: [blob_uri]` on a farm).
+
 ## Auth (FA-001)
 
 ```

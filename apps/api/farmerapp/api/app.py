@@ -25,6 +25,9 @@ from farmerapp.db import models as _models  # noqa: F401  (registers models + au
 from farmerapp.farmers import router as farmer_routes
 from farmerapp.logging import configure_logging, get_logger
 from farmerapp.settings import Settings, get_settings
+from farmerapp.sync import router as sync_routes
+from farmerapp.uploads import router as upload_routes
+from farmerapp.uploads.blobstore import BlobStore, build_blob_store
 from farmerapp.users import router as user_routes
 
 API_PREFIX = "/v1"
@@ -73,7 +76,10 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 def create_app(
-    settings: Settings | None = None, *, auth_services: AuthServices | None = None
+    settings: Settings | None = None,
+    *,
+    auth_services: AuthServices | None = None,
+    blob_store: BlobStore | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(level=settings.log_level, json_logs=settings.log_json, service="api")
@@ -107,11 +113,13 @@ def create_app(
             "Idempotency-Key",
             "X-Request-Id",
             "X-Device-Id",
+            "X-Chunk-Sha256",
         ],
         expose_headers=["X-Request-Id"],
     )
     install_error_handlers(app)
     app.state.auth = auth_services or build_auth_services(settings)
+    app.state.blobs = blob_store or build_blob_store(settings)  # NF-003 / SEC-016
 
     v1 = APIRouter(prefix=API_PREFIX)
     v1.include_router(health.router)
@@ -119,6 +127,11 @@ def create_app(
     v1.include_router(auth_routes.me_router)
     v1.include_router(user_routes.router)
     v1.include_router(farmer_routes.router)
+    v1.include_router(farmer_routes.farm_router)
+    v1.include_router(farmer_routes.plot_router)
+    v1.include_router(sync_routes.router)
+    v1.include_router(upload_routes.router)
+    v1.include_router(upload_routes.blob_router)
     v1.include_router(audit_routes.router)
     app.include_router(v1)
 

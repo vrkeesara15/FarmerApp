@@ -10,6 +10,7 @@ account of the tenant is in ``everyone``.
 
 from __future__ import annotations
 
+import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -20,9 +21,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.auth.deps import AuthServices
 from farmerapp.auth.models import User, UserRole
+from farmerapp.catalog.crops import Crop
 from farmerapp.db.models import Tenant
 from farmerapp.db.session import set_tenant, tenant_scope
-from farmerapp.farmers.models import Farmer
+from farmerapp.farmers.models import CropPlot, Farm, Farmer
 from farmerapp.jobs.seed import DEMO_TENANTS, SMALL, seed_demo
 
 ROLES: tuple[str, ...] = tuple(r.value for r in UserRole)
@@ -34,6 +36,9 @@ class SeededTenant:
     users: dict[UserRole, User]  # the role user per role (first by phone)
     everyone: tuple[User, ...] = ()  # every account of the tenant (role users + officers)
     farmers: tuple[Farmer, ...] = ()  # seeded farmers, oldest registration first
+    farm_id: uuid.UUID | None = None  # a farm of ``farmer`` (route fixtures)
+    crop_plot_id: uuid.UUID | None = None  # a crop plot of that farm
+    crop_id: uuid.UUID | None = None  # a crop of the tenant
 
     def user(self, role: str | UserRole) -> User:
         return self.users[UserRole(role)]
@@ -77,12 +82,44 @@ async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
             .scalars()
             .all()
         )
+        farm = (
+            (
+                await session.execute(
+                    select(Farm)
+                    .where(Farm.farmer_id == farmers[0].id)
+                    .order_by(Farm.created_at, Farm.id)
+                )
+            )
+            .scalars()
+            .first()
+        )
+        plot = (
+            (
+                await session.execute(
+                    select(CropPlot).where(CropPlot.farm_id == farm.id).order_by(CropPlot.id)
+                )
+            )
+            .scalars()
+            .first()
+            if farm is not None
+            else None
+        )
+        crop = (await session.execute(select(Crop).order_by(Crop.code))).scalars().first()
     by_role: dict[UserRole, User] = {}
     for u in users:
         by_role.setdefault(UserRole(u.role), u)
     assert set(by_role) == set(UserRole), f"seed for {slug} must have one user per role"
     assert farmers, f"seed for {slug} must have farmers"
-    return SeededTenant(tenant=tenant, users=by_role, everyone=tuple(users), farmers=tuple(farmers))
+    assert farm is not None and plot is not None and crop is not None
+    return SeededTenant(
+        tenant=tenant,
+        users=by_role,
+        everyone=tuple(users),
+        farmers=tuple(farmers),
+        farm_id=farm.id,
+        crop_plot_id=plot.id,
+        crop_id=crop.id,
+    )
 
 
 @pytest.fixture

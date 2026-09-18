@@ -72,6 +72,8 @@ services:
       GCP_PROJECT: farmerapp-local
       PUBSUB_EMULATOR_HOST: pubsub:8085
       STORAGE_EMULATOR_HOST: http://gcs:4443
+      BLOB_STORE: fake_gcs
+      PHOTOS_BUCKET: photos
       SMS_PROVIDER_URL: http://mockserver:8090/sms
       WHATSAPP_PROVIDER_URL: http://mockserver:8090/whatsapp
       RAZORPAY_BASE_URL: http://mockserver:8090/razorpay

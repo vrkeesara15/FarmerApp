@@ -437,6 +437,256 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+    post:
+      tags:
+      - farmers
+      summary: Register a farmer with farms, crop plots and consent (FA-012, FA-013)
+      operationId: createFarmer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FarmerCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmerDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`farmer_phone_exists`, `version_conflict`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`farm_boundary_invalid`, `farmer_phone_is_staff`, `phone_verification_invalid`,
+            `idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/farmers/phone/verify/send:
+    post:
+      tags:
+      - farmers
+      summary: Send an OTP to a farmer's phone before registration (VA-F01)
+      operationId: sendFarmerPhoneOtp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneVerifySendRequest'
+        required: true
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneVerifySendResponse'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '423':
+          description: '`otp_locked`'
+          content:
+            application/problem+json: {}
+        '429':
+          description: '`otp_rate_limited`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/farmers/phone/verify/confirm:
+    post:
+      tags:
+      - farmers
+      summary: Confirm the farmer's OTP; returns a 30-minute phone_verification_token
+      operationId: confirmFarmerPhoneOtp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneVerifyConfirmRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneVerificationTokenOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`otp_invalid`, `otp_expired`, `unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`otp_not_found`'
+          content:
+            application/problem+json: {}
+        '423':
+          description: '`otp_locked`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/farmers/{id}/phone/verify/send:
+    post:
+      tags:
+      - farmers
+      summary: Send an OTP to verify the phone of an already registered farmer
+      operationId: sendFarmerRecordPhoneOtp
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneVerifySendResponse'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '423':
+          description: '`otp_locked`'
+          content:
+            application/problem+json: {}
+        '429':
+          description: '`otp_rate_limited`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/farmers/{id}/phone/verify/confirm:
+    post:
+      tags:
+      - farmers
+      summary: Confirm the OTP and mark the farmer's phone as verified
+      operationId: confirmFarmerRecordPhoneOtp
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneVerifyCodeRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmerOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`, `otp_not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`otp_invalid`, `otp_expired`, `unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '423':
+          description: '`otp_locked`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
   /v1/farmers/{id}:
     get:
       tags:
@@ -477,6 +727,752 @@ paths:
           content:
             application/problem+json: {}
       x-roles:
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+    patch:
+      tags:
+      - farmers
+      summary: Change name, village, landmark, language or land ownership
+      operationId: updateFarmer
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FarmerUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmerOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`version_conflict`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/farmers/{id}/farms:
+    post:
+      tags:
+      - farmers
+      summary: Add a farm (with crop plots and photos) to a farmer
+      operationId: createFarm
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FarmCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`farmer_phone_exists`, `version_conflict`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`farm_boundary_invalid`, `farmer_phone_is_staff`, `phone_verification_invalid`,
+            `idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/farmers/{id}/consents:
+    post:
+      tags:
+      - farmers
+      summary: Append a consent grant or withdrawal (FM-002)
+      operationId: createConsent
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsentCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentRecordOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/farms/{id}:
+    patch:
+      tags:
+      - farmers
+      summary: Change a farm (boundary re-checked, photos replaced when given)
+      operationId: updateFarm
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FarmUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`version_conflict`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`farm_boundary_invalid`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
+    delete:
+      tags:
+      - farmers
+      summary: Soft-delete a farm and its crop plots
+      operationId: deleteFarm
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/farms/{id}/crop-plots:
+    post:
+      tags:
+      - farmers
+      summary: Add a crop plot to a farm (FA-013)
+      operationId: createCropPlot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CropPlotCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CropPlotOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/crop-plots/{id}:
+    patch:
+      tags:
+      - farmers
+      summary: Change a crop plot
+      operationId: updateCropPlot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CropPlotUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CropPlotOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`version_conflict`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
+    delete:
+      tags:
+      - farmers
+      summary: Soft-delete a crop plot
+      operationId: deleteCropPlot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/sync:
+    post:
+      tags:
+      - sync
+      summary: Apply a batch of outbox operations and return server changes since a cursor
+      operationId: sync
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+  /v1/uploads:
+    post:
+      tags:
+      - uploads
+      summary: Start a resumable upload (256 KB chunks)
+      operationId: initUpload
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadInit'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadStatusOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`upload_too_large`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/uploads/{upload_id}:
+    get:
+      tags:
+      - uploads
+      summary: 'Upload status for resume: which chunks the server already has'
+      operationId: getUpload
+      parameters:
+      - name: upload_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Upload Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadStatusOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '410':
+          description: '`upload_expired`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/uploads/{upload_id}/chunks/{index}:
+    put:
+      tags:
+      - uploads
+      summary: Store one chunk (raw bytes body; idempotent per index)
+      operationId: putUploadChunk
+      parameters:
+      - name: upload_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Upload Id
+      - name: index
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+          title: Index
+      - name: x-chunk-sha256
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Lower-case hex SHA-256 of this chunk.
+          title: X-Chunk-Sha256
+        description: Lower-case hex SHA-256 of this chunk.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChunkAck'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '410':
+          description: '`upload_expired`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`upload_complete`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`chunk_sha_missing`, `chunk_sha_mismatch`, `chunk_index_invalid`, `chunk_size_invalid`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/uploads/{upload_id}/complete:
+    post:
+      tags:
+      - uploads
+      summary: Assemble the chunks, verify the sha256 and store the blob
+      operationId: completeUpload
+      parameters:
+      - name: upload_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Upload Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadCompleteOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '410':
+          description: '`upload_expired`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`upload_incomplete`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`upload_sha_mismatch`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - farmer
+      - field_officer
+      - store_manager
+      - tenant_admin
+  /v1/blobs/signed-url:
+    get:
+      tags:
+      - uploads
+      summary: A 15-minute URL to read a blob of the caller's tenant (SEC-016)
+      operationId: getSignedUrl
+      parameters:
+      - name: uri
+        in: query
+        required: true
+        schema:
+          type: string
+          maxLength: 512
+          description: '`blob_uri` of a completed upload.'
+          title: Uri
+        description: '`blob_uri` of a completed upload.'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignedUrlOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
       - agronomist
       - auditor
       - cluster_head
@@ -690,12 +1686,81 @@ components:
       - trace_id
       - created_at
       title: AuditLogOut
+    ChunkAck:
+      properties:
+        upload_id:
+          type: string
+          format: uuid
+          title: Upload Id
+        received_chunks:
+          items:
+            type: integer
+          type: array
+          title: Received Chunks
+        missing_chunks:
+          items:
+            type: integer
+          type: array
+          title: Missing Chunks
+      type: object
+      required:
+      - upload_id
+      - received_chunks
+      - missing_chunks
+      title: ChunkAck
+    ConsentCreate:
+      properties:
+        purpose:
+          $ref: '#/components/schemas/ConsentPurpose'
+        granted:
+          type: boolean
+          title: Granted
+        language:
+          anyOf:
+          - type: string
+            maxLength: 8
+          - type: 'null'
+          title: Language
+      type: object
+      required:
+      - purpose
+      - granted
+      title: ConsentCreate
+      description: '``POST /v1/farmers/{id}/consents``: append a grant or a withdrawal.'
+    ConsentIn:
+      properties:
+        purpose:
+          $ref: '#/components/schemas/ConsentPurpose'
+        granted:
+          type: boolean
+          title: Granted
+        language:
+          anyOf:
+          - type: string
+            maxLength: 8
+          - type: 'null'
+          title: Language
+      type: object
+      required:
+      - purpose
+      - granted
+      title: ConsentIn
+    ConsentPurpose:
+      type: string
+      enum:
+      - data
+      - marketing
+      title: ConsentPurpose
     ConsentRecordOut:
       properties:
         id:
           type: string
           format: uuid
           title: Id
+        subject_id:
+          type: string
+          format: uuid
+          title: Subject Id
         purpose:
           type: string
           title: Purpose
@@ -735,6 +1800,7 @@ components:
       type: object
       required:
       - id
+      - subject_id
       - purpose
       - version
       - language
@@ -744,6 +1810,56 @@ components:
       - recorded_by
       - created_at
       title: ConsentRecordOut
+    CropPlotCreate:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client-generated id (offline).
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        variety:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+          title: Variety
+        season:
+          $ref: '#/components/schemas/Season'
+        sowing_date:
+          type: string
+          format: date
+          title: Sowing Date
+        stage:
+          anyOf:
+          - $ref: '#/components/schemas/CropStage'
+          - type: 'null'
+        expected_harvest:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Expected Harvest
+        area_acres:
+          anyOf:
+          - type: number
+            maximum: 9999.99
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+          - type: 'null'
+          title: Area Acres
+      type: object
+      required:
+      - crop_id
+      - season
+      - sowing_date
+      title: CropPlotCreate
     CropPlotOut:
       properties:
         id:
@@ -795,6 +1911,12 @@ components:
           type: string
           format: date-time
           title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
         version:
           type: integer
           title: Version
@@ -813,6 +1935,130 @@ components:
       - updated_at
       - version
       title: CropPlotOut
+    CropPlotUpdate:
+      properties:
+        version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Version
+          description: Expected current version (409).
+        crop_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+        variety:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+          title: Variety
+        season:
+          anyOf:
+          - $ref: '#/components/schemas/Season'
+          - type: 'null'
+        sowing_date:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Sowing Date
+        stage:
+          anyOf:
+          - $ref: '#/components/schemas/CropStage'
+          - type: 'null'
+        expected_harvest:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Expected Harvest
+        area_acres:
+          anyOf:
+          - type: number
+            maximum: 9999.99
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+          - type: 'null'
+          title: Area Acres
+      type: object
+      title: CropPlotUpdate
+    CropStage:
+      type: string
+      enum:
+      - sown
+      - vegetative
+      - flowering
+      - fruiting
+      - maturity
+      - harvested
+      title: CropStage
+    FarmCreate:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client-generated id (offline).
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+          - type: 'null'
+          title: Name
+        survey_no:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Survey No
+        boundary:
+          anyOf:
+          - $ref: '#/components/schemas/GeoJsonPolygon'
+          - type: 'null'
+        area_acres:
+          anyOf:
+          - type: number
+            maximum: 9999.99
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+          title: Area Acres
+          description: Declared acres.
+        soil:
+          anyOf:
+          - $ref: '#/components/schemas/SoilType'
+          - type: 'null'
+        irrigation:
+          anyOf:
+          - $ref: '#/components/schemas/IrrigationType'
+          - type: 'null'
+        ownership:
+          anyOf:
+          - $ref: '#/components/schemas/LandOwnership'
+          - type: 'null'
+        photos:
+          items:
+            type: string
+          type: array
+          maxItems: 20
+          title: Photos
+          description: '`blob_uri`s of completed uploads.'
+        crop_plots:
+          items:
+            $ref: '#/components/schemas/CropPlotCreate'
+          type: array
+          maxItems: 50
+          title: Crop Plots
+      type: object
+      required:
+      - area_acres
+      title: FarmCreate
     FarmOut:
       properties:
         id:
@@ -871,11 +2117,22 @@ components:
           - type: string
           - type: 'null'
           title: Ownership
+        photos:
+          items:
+            $ref: '#/components/schemas/FarmPhotoOut'
+          type: array
+          title: Photos
         crop_plots:
           items:
             $ref: '#/components/schemas/CropPlotOut'
           type: array
           title: Crop Plots
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
+          description: 'VA-F03 soft checks on this write: `area_mismatch`, `farm_overlap`.'
         created_at:
           type: string
           format: date-time
@@ -884,6 +2141,12 @@ components:
           type: string
           format: date-time
           title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
         version:
           type: integer
           title: Version
@@ -904,6 +2167,154 @@ components:
       - updated_at
       - version
       title: FarmOut
+    FarmPhotoOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        blob_uri:
+          type: string
+          title: Blob Uri
+        sha256:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sha256
+        taken_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Taken At
+        location:
+          anyOf:
+          - $ref: '#/components/schemas/LatLon'
+          - type: 'null'
+      type: object
+      required:
+      - id
+      - blob_uri
+      - sha256
+      - taken_at
+      title: FarmPhotoOut
+    FarmUpdate:
+      properties:
+        version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Version
+          description: Expected current version (409).
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+          - type: 'null'
+          title: Name
+        survey_no:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Survey No
+        boundary:
+          anyOf:
+          - $ref: '#/components/schemas/GeoJsonPolygon'
+          - type: 'null'
+        area_acres:
+          anyOf:
+          - type: number
+            maximum: 9999.99
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+          - type: 'null'
+          title: Area Acres
+        soil:
+          anyOf:
+          - $ref: '#/components/schemas/SoilType'
+          - type: 'null'
+        irrigation:
+          anyOf:
+          - $ref: '#/components/schemas/IrrigationType'
+          - type: 'null'
+        ownership:
+          anyOf:
+          - $ref: '#/components/schemas/LandOwnership'
+          - type: 'null'
+        photos:
+          anyOf:
+          - items:
+              type: string
+            type: array
+            maxItems: 20
+          - type: 'null'
+          title: Photos
+      type: object
+      title: FarmUpdate
+    FarmerCreate:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client-generated id (offline).
+        phone:
+          type: string
+          title: Phone
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+        village_id:
+          type: string
+          format: uuid
+          title: Village Id
+        landmark:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Landmark
+        language:
+          type: string
+          maxLength: 8
+          minLength: 2
+          title: Language
+          default: te
+        land_ownership:
+          anyOf:
+          - $ref: '#/components/schemas/LandOwnership'
+          - type: 'null'
+        farms:
+          items:
+            $ref: '#/components/schemas/FarmCreate'
+          type: array
+          maxItems: 20
+          title: Farms
+        consents:
+          items:
+            $ref: '#/components/schemas/ConsentIn'
+          type: array
+          maxItems: 4
+          title: Consents
+        phone_verification_token:
+          anyOf:
+          - type: string
+            maxLength: 1024
+          - type: 'null'
+          title: Phone Verification Token
+          description: From `POST /v1/farmers/phone/verify/confirm`; absent for offline capture.
+      type: object
+      required:
+      - phone
+      - name
+      - village_id
+      title: FarmerCreate
     FarmerDetailOut:
       properties:
         id:
@@ -920,6 +2331,9 @@ components:
         phone_last4:
           type: string
           title: Phone Last4
+        phone_verified:
+          type: boolean
+          title: Phone Verified
         name:
           type: string
           title: Name
@@ -971,6 +2385,12 @@ components:
           type: string
           format: date-time
           title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
         version:
           type: integer
           title: Version
@@ -984,12 +2404,18 @@ components:
             $ref: '#/components/schemas/ConsentRecordOut'
           type: array
           title: Consents
+        warnings:
+          items:
+            type: string
+          type: array
+          title: Warnings
       type: object
       required:
       - id
       - tenant_id
       - phone
       - phone_last4
+      - phone_verified
       - name
       - village_id
       - landmark
@@ -1004,7 +2430,10 @@ components:
       - updated_at
       - version
       title: FarmerDetailOut
-      description: 'Farmer 360 (WC-003): the farmer with farms, crop plots and consent history.'
+      description: 'Farmer 360 (WC-003): the farmer with farms, crop plots and consent history.
+
+
+        ``warnings`` is the union of the farms'' VA-F03 warnings on a write (empty on reads).'
     FarmerOut:
       properties:
         id:
@@ -1021,6 +2450,9 @@ components:
         phone_last4:
           type: string
           title: Phone Last4
+        phone_verified:
+          type: boolean
+          title: Phone Verified
         name:
           type: string
           title: Name
@@ -1072,6 +2504,12 @@ components:
           type: string
           format: date-time
           title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
         version:
           type: integer
           title: Version
@@ -1081,6 +2519,7 @@ components:
       - tenant_id
       - phone
       - phone_last4
+      - phone_verified
       - name
       - village_id
       - landmark
@@ -1096,6 +2535,70 @@ components:
       - version
       title: FarmerOut
       description: Directory row. ``phone`` is masked for roles that read crop data only (agronomist).
+    FarmerUpdate:
+      properties:
+        version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Version
+          description: Expected current version (409).
+        name:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Name
+        village_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Village Id
+        landmark:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Landmark
+        language:
+          anyOf:
+          - type: string
+            maxLength: 8
+            minLength: 2
+          - type: 'null'
+          title: Language
+        land_ownership:
+          anyOf:
+          - $ref: '#/components/schemas/LandOwnership'
+          - type: 'null'
+      additionalProperties: false
+      type: object
+      title: FarmerUpdate
+    GeoJsonPolygon:
+      properties:
+        type:
+          type: string
+          const: Polygon
+          title: Type
+        coordinates:
+          items:
+            items:
+              items:
+                type: number
+              type: array
+            type: array
+          type: array
+          maxItems: 1
+          minItems: 1
+          title: Coordinates
+      type: object
+      required:
+      - type
+      - coordinates
+      title: GeoJsonPolygon
+      description: 'A GeoJSON Polygon: one outer ring (holes are not accepted for farm boundaries).'
     HealthResponse:
       properties:
         status:
@@ -1118,6 +2621,23 @@ components:
       - version
       - env
       title: HealthResponse
+    IrrigationType:
+      type: string
+      enum:
+      - rainfed
+      - borewell
+      - canal
+      - tank
+      - open_well
+      - drip
+      - sprinkler
+      title: IrrigationType
+    LandOwnership:
+      type: string
+      enum:
+      - own
+      - leased
+      title: LandOwnership
     LatLon:
       properties:
         lat:
@@ -1273,6 +2793,86 @@ components:
       required:
       - items
       title: PageOut[UserOut]
+    PhoneVerificationTokenOut:
+      properties:
+        phone_verification_token:
+          type: string
+          title: Phone Verification Token
+        expires_in:
+          type: integer
+          title: Expires In
+          description: Seconds the token stays valid (30 min).
+      type: object
+      required:
+      - phone_verification_token
+      - expires_in
+      title: PhoneVerificationTokenOut
+    PhoneVerifyCodeRequest:
+      properties:
+        code:
+          type: string
+          pattern: ^\d{6}$
+          title: Code
+      type: object
+      required:
+      - code
+      title: PhoneVerifyCodeRequest
+    PhoneVerifyConfirmRequest:
+      properties:
+        phone:
+          type: string
+          title: Phone
+        code:
+          type: string
+          pattern: ^\d{6}$
+          title: Code
+      type: object
+      required:
+      - phone
+      - code
+      title: PhoneVerifyConfirmRequest
+    PhoneVerifySendRequest:
+      properties:
+        phone:
+          type: string
+          title: Phone
+      type: object
+      required:
+      - phone
+      title: PhoneVerifySendRequest
+    PhoneVerifySendResponse:
+      properties:
+        challenge_id:
+          type: string
+          format: uuid
+          title: Challenge Id
+        phone_masked:
+          type: string
+          title: Phone Masked
+        channel:
+          type: string
+          enum:
+          - sms
+          - whatsapp
+          title: Channel
+        expires_in:
+          type: integer
+          title: Expires In
+        resend_after:
+          type: integer
+          title: Resend After
+        resends_left:
+          type: integer
+          title: Resends Left
+      type: object
+      required:
+      - challenge_id
+      - phone_masked
+      - channel
+      - expires_in
+      - resend_after
+      - resends_left
+      title: PhoneVerifySendResponse
     RefreshRequest:
       properties:
         refresh_token:
@@ -1291,6 +2891,253 @@ components:
       required:
       - refresh_token
       title: RefreshRequest
+    Season:
+      type: string
+      enum:
+      - kharif
+      - rabi
+      - zaid
+      title: Season
+    SignedUrlOut:
+      properties:
+        uri:
+          type: string
+          title: Uri
+        url:
+          type: string
+          title: Url
+        expires_at:
+          type: string
+          format: date-time
+          title: Expires At
+        note:
+          type: string
+          title: Note
+          description: Adapter note (fake GCS / local URLs are not signed).
+      type: object
+      required:
+      - uri
+      - url
+      - expires_at
+      - note
+      title: SignedUrlOut
+    SoilType:
+      type: string
+      enum:
+      - black
+      - red
+      - sandy
+      - loamy
+      - clay
+      - alluvial
+      - laterite
+      title: SoilType
+    SyncChangeOut:
+      properties:
+        entity:
+          type: string
+          enum:
+          - farmer
+          - farm
+          - crop_plot
+          - consent_record
+          title: Entity
+        action:
+          type: string
+          enum:
+          - create
+          - update
+          - delete
+          title: Action
+        entity_id:
+          type: string
+          format: uuid
+          title: Entity Id
+        version:
+          type: integer
+          title: Version
+        data:
+          additionalProperties: true
+          type: object
+          title: Data
+          description: Current row; `{id, deleted_at}` for deletes.
+        seq:
+          type: integer
+          title: Seq
+      type: object
+      required:
+      - entity
+      - action
+      - entity_id
+      - version
+      - data
+      - seq
+      title: SyncChangeOut
+    SyncError:
+      properties:
+        code:
+          type: string
+          title: Code
+        status:
+          type: integer
+          title: Status
+        detail:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Detail
+        errors:
+          anyOf:
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+          - type: 'null'
+          title: Errors
+      type: object
+      required:
+      - code
+      - status
+      title: SyncError
+      description: Problem-style error of a rejected op (same ``code`` values as the REST endpoints).
+    SyncOpIn:
+      properties:
+        op_id:
+          type: string
+          format: uuid
+          title: Op Id
+          description: Client-generated; the idempotency key of the op.
+        entity:
+          type: string
+          enum:
+          - farmer
+          - farm
+          - crop_plot
+          - consent_record
+          title: Entity
+        action:
+          type: string
+          enum:
+          - create
+          - update
+          - delete
+          title: Action
+        entity_id:
+          type: string
+          format: uuid
+          title: Entity Id
+          description: Client-generated entity id.
+        base_version:
+          type: integer
+          minimum: 0.0
+          title: Base Version
+          description: Version the client edited; 0 for create.
+        payload:
+          additionalProperties: true
+          type: object
+          title: Payload
+        client_ts:
+          type: string
+          format: date-time
+          title: Client Ts
+          description: When the device made the change (aware).
+      type: object
+      required:
+      - op_id
+      - entity
+      - action
+      - entity_id
+      - base_version
+      - client_ts
+      title: SyncOpIn
+    SyncRequest:
+      properties:
+        device_id:
+          type: string
+          maxLength: 128
+          minLength: 1
+          title: Device Id
+        cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+          description: Opaque cursor from a previous sync.
+        ops:
+          items:
+            $ref: '#/components/schemas/SyncOpIn'
+          type: array
+          maxItems: 200
+          title: Ops
+      type: object
+      required:
+      - device_id
+      title: SyncRequest
+    SyncResponse:
+      properties:
+        results:
+          items:
+            $ref: '#/components/schemas/SyncResult'
+          type: array
+          title: Results
+        changes:
+          items:
+            $ref: '#/components/schemas/SyncChangeOut'
+          type: array
+          title: Changes
+        cursor:
+          type: string
+          title: Cursor
+        has_more:
+          type: boolean
+          title: Has More
+      type: object
+      required:
+      - results
+      - changes
+      - cursor
+      - has_more
+      title: SyncResponse
+    SyncResult:
+      properties:
+        op_id:
+          type: string
+          format: uuid
+          title: Op Id
+        status:
+          type: string
+          enum:
+          - applied
+          - duplicate
+          - conflict
+          - rejected
+          title: Status
+        entity_id:
+          type: string
+          format: uuid
+          title: Entity Id
+        version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Version
+        error:
+          anyOf:
+          - $ref: '#/components/schemas/SyncError'
+          - type: 'null'
+        server:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Server
+          description: Server state after the op (applied) or current (conflict).
+      type: object
+      required:
+      - op_id
+      - status
+      - entity_id
+      title: SyncResult
     TokenResponse:
       properties:
         access_token:
@@ -1317,6 +3164,122 @@ components:
       - expires_in
       - user
       title: TokenResponse
+    UploadCompleteOut:
+      properties:
+        upload_id:
+          type: string
+          format: uuid
+          title: Upload Id
+        blob_uri:
+          type: string
+          title: Blob Uri
+        sha256:
+          type: string
+          title: Sha256
+        size_bytes:
+          type: integer
+          title: Size Bytes
+        content_type:
+          type: string
+          title: Content Type
+      type: object
+      required:
+      - upload_id
+      - blob_uri
+      - sha256
+      - size_bytes
+      - content_type
+      title: UploadCompleteOut
+    UploadInit:
+      properties:
+        sha256:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+          title: Sha256
+          description: Lower-case hex SHA-256.
+        size_bytes:
+          type: integer
+          exclusiveMinimum: 0.0
+          title: Size Bytes
+          description: Whole-file size; capped by UPLOAD_MAX_BYTES.
+        content_type:
+          type: string
+          enum:
+          - image/jpeg
+          - image/png
+          - image/webp
+          - application/pdf
+          title: Content Type
+        purpose:
+          $ref: '#/components/schemas/UploadPurpose'
+        chunk_size:
+          type: integer
+          const: 262144
+          title: Chunk Size
+          description: 256 KB (NF-003).
+          default: 262144
+      type: object
+      required:
+      - sha256
+      - size_bytes
+      - content_type
+      - purpose
+      title: UploadInit
+    UploadPurpose:
+      type: string
+      enum:
+      - farm_photo
+      - visit_photo
+      - receipt
+      - diagnosis
+      - profile
+      title: UploadPurpose
+    UploadStatusOut:
+      properties:
+        upload_id:
+          type: string
+          format: uuid
+          title: Upload Id
+        status:
+          type: string
+          enum:
+          - pending
+          - complete
+          title: Status
+        chunk_size:
+          type: integer
+          title: Chunk Size
+        chunk_count:
+          type: integer
+          title: Chunk Count
+        size_bytes:
+          type: integer
+          title: Size Bytes
+        received_chunks:
+          items:
+            type: integer
+          type: array
+          title: Received Chunks
+          description: Indexes stored so far, ascending.
+        expires_at:
+          type: string
+          format: date-time
+          title: Expires At
+        blob_uri:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Blob Uri
+      type: object
+      required:
+      - upload_id
+      - status
+      - chunk_size
+      - chunk_count
+      - size_bytes
+      - received_chunks
+      - expires_at
+      title: UploadStatusOut
     UserOut:
       properties:
         id:
