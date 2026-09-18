@@ -5,10 +5,10 @@ from __future__ import annotations
 import uuid
 
 from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from farmerapp.db.models import Tenant
-from farmerapp.db.session import set_tenant
+from farmerapp.db.session import set_tenant, tenant_scope
 
 BASE_COLUMNS = {"id", "tenant_id", "created_at", "updated_at", "deleted_at", "version"}
 TENANT_COLUMNS = BASE_COLUMNS | {"name", "plan", "branding", "settings", "slug"}
@@ -79,7 +79,8 @@ async def test_tenant_has_base_columns(db_session: AsyncSession) -> None:
 
 
 async def test_tenant_insert_defaults_and_rollback(db_session: AsyncSession) -> None:
-    tenant = Tenant(name="FCC")
+    tenant = Tenant(id=uuid.uuid4(), name="FCC")
+    await set_tenant(db_session, tenant.id)  # RLS: a tenant row is only writable in its scope
     db_session.add(tenant)
     await db_session.flush()
     assert tenant.tenant_id == tenant.id
@@ -108,10 +109,17 @@ async def test_set_tenant_none_is_noop(db_session: AsyncSession) -> None:
     assert bound in (None, "")
 
 
-async def test_previous_test_rows_were_rolled_back(db_session: AsyncSession) -> None:
-    count = await db_session.scalar(select(text("count(*)")).select_from(Tenant))
+async def test_previous_test_rows_were_rolled_back(migrate_engine: AsyncEngine) -> None:
+    """Counted as the migrate role (its maintenance policy sees every tenant)."""
+    async with migrate_engine.connect() as conn:
+        count = await conn.scalar(text("SELECT count(*) FROM tenant WHERE name = 'FCC Agro'"))
     assert count == 0
-    assert uuid.UUID(int=0)  # keep uuid import meaningful for readers
+
+
+async def test_tenant_row_needs_its_own_scope(db_session: AsyncSession) -> None:
+    other = uuid.uuid4()
+    async with tenant_scope(db_session, other):
+        assert await db_session.scalar(select(text("count(*)")).select_from(Tenant)) == 0
 
 
 async def _columns(db_session: AsyncSession, table: str) -> set[str]:

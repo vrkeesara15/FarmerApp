@@ -1,4 +1,8 @@
-"""Async Alembic environment. URL comes from ``sqlalchemy.url`` (tests) or DATABASE_URL."""
+"""Async Alembic environment.
+
+URL comes from ``sqlalchemy.url`` (tests) or ``MIGRATION_DATABASE_URL``: migrations run as the
+owner/DDL role, never as the runtime app role (SEC-011).
+"""
 
 from __future__ import annotations
 
@@ -18,7 +22,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 if not config.get_main_option("sqlalchemy.url"):
-    config.set_main_option("sqlalchemy.url", get_settings().database_url)
+    config.set_main_option("sqlalchemy.url", get_settings().migration_database_url)
 
 target_metadata = Base.metadata
 

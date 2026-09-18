@@ -50,7 +50,7 @@ variable "backup_location" {
 }
 
 variable "iam_service_accounts" {
-  description = "Service account emails that log in with IAM database authentication (SEC-011). Roles/grants are applied by migrations."
+  description = "Service account emails that log in with IAM database authentication (SEC-011). Postgres groups farmerapp_app / farmerapp_migrate come from migration 0003; membership is granted per environment (see main.tf)."
   type        = list(string)
   default     = []
 }

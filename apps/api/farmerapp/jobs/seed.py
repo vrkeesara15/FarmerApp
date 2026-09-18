@@ -6,6 +6,9 @@
 
 M1-KICKOFF extends this with stores, officers and farmers. Idempotent: re-running updates
 names/roles in place and never duplicates rows. Phones are reserved test numbers.
+
+Runs as the app role under RLS (FA-003): every demo tenant has a fixed id (uuid5 of its slug)
+and is seeded inside its own ``tenant_scope``; no bypass is needed or available.
 """
 
 from __future__ import annotations
@@ -18,9 +21,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.auth.models import User, UserRole, UserStatus
 from farmerapp.db.models import Tenant
-from farmerapp.db.session import get_session_factory, set_bypass_rls
+from farmerapp.db.session import get_session_factory, tenant_scope
 
 DemoUser = tuple[str, str, UserRole, str]  # (phone, name, role, language)
+
+
+TENANT_NAMESPACE = uuid.UUID("6f5b3d1e-0c2a-4b8e-9a7d-2f1e3c4b5a60")  # farmerapp demo tenants
+
+
+def demo_tenant_id(slug: str) -> uuid.UUID:
+    """Stable id per demo tenant so the seed can bind its scope before the row exists."""
+    return uuid.uuid5(TENANT_NAMESPACE, slug)
 
 
 @dataclass(frozen=True)
@@ -28,6 +39,10 @@ class DemoTenant:
     name: str
     slug: str
     users: tuple[DemoUser, ...]
+
+    @property
+    def id(self) -> uuid.UUID:
+        return demo_tenant_id(self.slug)
 
 
 DEMO_TENANT_NAME = "Future Crop Care"
@@ -74,11 +89,9 @@ class SeedResult:
 
 
 async def _seed_tenant(session: AsyncSession, demo: DemoTenant) -> tuple[Tenant, int]:
-    tenant = (
-        await session.execute(select(Tenant).where(Tenant.slug == demo.slug))
-    ).scalar_one_or_none()
+    tenant = await session.get(Tenant, demo.id)
     if tenant is None:
-        tenant = Tenant(name=demo.name, slug=demo.slug)
+        tenant = Tenant(id=demo.id, name=demo.name, slug=demo.slug)
         session.add(tenant)
         await session.flush()
     elif tenant.name != demo.name:
@@ -110,11 +123,11 @@ async def _seed_tenant(session: AsyncSession, demo: DemoTenant) -> tuple[Tenant,
 
 
 async def seed_demo(session: AsyncSession) -> SeedResult:
-    await set_bypass_rls(session)
     seeded: list[tuple[str, uuid.UUID]] = []
     created = 0
     for demo in DEMO_TENANTS:
-        tenant, n = await _seed_tenant(session, demo)
+        async with tenant_scope(session, demo.id):
+            tenant, n = await _seed_tenant(session, demo)
         seeded.append((demo.slug, tenant.id))
         created += n
     primary = dict(seeded)[DEMO_TENANT_SLUG]

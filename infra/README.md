@@ -88,7 +88,7 @@ tools that are missing so it still passes locally; CI always runs all four.
 |---|---|---|
 | VPC, subnet, Cloud NAT, PSA, deny-all ingress | `network` | Direct VPC egress from Cloud Run, no connector |
 | Per-service SAs + observability roles | `iam` | api, worker, jobs, console, embed, pubsub-push, scheduler |
-| Postgres 16, private IP, IAM auth, logical decoding, PITR/HA in prd, replica in prd | `sql` | SPEC 9.4 verbatim |
+| Postgres 16, private IP only, TLS `ENCRYPTED_ONLY`, IAM auth (`cloudsql.iam_authentication=on`, `google_sql_user` per SA), logical decoding, PITR/HA in prd, replica in prd | `sql` | SPEC 9.4 verbatim; SEC-011 |
 | Secrets, created empty | `secrets` | otp-provider, razorpay-*, llm-api-key, jwt-signing-key |
 | photos / exports / corpus buckets with 9.2 lifecycle rules | `storage` | private, uniform access |
 | api, console, worker, embed | `run_service` | ingress internal-LB (api/console) or internal (worker/embed) |
@@ -97,6 +97,15 @@ tools that are missing so it still passes locally; CI always runs all four.
 | HTTPS LB, managed cert, Cloud Armor (stg preview, prd enforce) | `lb` | SEC-014/015 |
 | BigQuery datasets; Datastream CDC when enabled | `analytics` | `datastream_enabled=false` in dev until M7 |
 | Uptime checks, OPS-003/004/005 alerts, audit log bucket (400 d), dashboard | `monitoring` | SEC-017 |
+
+Database roles (SEC-011, FA-003): Terraform only creates the IAM users. Migration 0003
+(`apps/api/alembic/versions/0003_rls_roles.py`, run by the `migrate` job as the owner) creates
+the Postgres groups `farmerapp_app` (DML only, RLS) and `farmerapp_migrate` (DDL). Once per
+environment an admin grants membership: api/worker/jobs SAs → `farmerapp_app`, the migrate
+job's SA → `farmerapp_migrate` (statements in `modules/sql/main.tf`). The runtime must never
+be a member of `farmerapp_migrate`. Follow-up: a dedicated `migrate` service account (the
+migrate job runs as the jobs SA today, `DB_ROLE=migrator` is a placeholder until the app reads
+IAM credentials); `MIGRATION_DATABASE_URL` / `DATABASE_URL` are then set per job/service.
 
 Open items to verify on the first real dev apply: worker → embed calls with `PRIVATE_RANGES_ONLY`
 egress and `INGRESS_TRAFFIC_INTERNAL` (may need `egress = "ALL_TRAFFIC"` on the worker); Cloud Armor

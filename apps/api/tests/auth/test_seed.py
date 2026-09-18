@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.auth.models import User, UserRole
 from farmerapp.db.models import Tenant
+from farmerapp.db.session import tenant_scope
 from farmerapp.jobs.seed import DEMO_TENANTS, DEMO_USERS, seed_demo
 
 
@@ -20,11 +21,14 @@ async def test_seed_is_idempotent(db_session: AsyncSession) -> None:
     assert second.users_created == 0 and second.tenant_id == first.tenant_id
     assert second.tenants == first.tenants
 
-    tenant = (await db_session.execute(select(Tenant).where(Tenant.slug == "fcc"))).scalar_one()
-    assert tenant.name == "Future Crop Care"
-    users = (
-        (await db_session.execute(select(User).where(User.tenant_id == tenant.id))).scalars().all()
-    )
+    async with tenant_scope(db_session, first.tenant_id):
+        tenant = (await db_session.execute(select(Tenant).where(Tenant.slug == "fcc"))).scalar_one()
+        assert tenant.name == "Future Crop Care"
+        users = (
+            (await db_session.execute(select(User).where(User.tenant_id == tenant.id)))
+            .scalars()
+            .all()
+        )
     by_phone = {u.phone: u.role for u in users}
     assert by_phone == {
         "+919000000001": "owner",
@@ -44,8 +48,19 @@ async def test_second_tenant_has_every_role(db_session: AsyncSession) -> None:
     result = await seed_demo(db_session)
     gfl_id = dict(result.tenants)["gfl"]
     assert gfl_id != result.tenant_id
-    tenant = await db_session.get(Tenant, gfl_id)
-    assert tenant is not None and tenant.name == "Green Fields" and tenant.slug == "gfl"
-    users = (await db_session.execute(select(User).where(User.tenant_id == gfl_id))).scalars().all()
+    async with tenant_scope(db_session, gfl_id):
+        tenant = await db_session.get(Tenant, gfl_id)
+        assert tenant is not None and tenant.name == "Green Fields" and tenant.slug == "gfl"
+        users = (
+            (await db_session.execute(select(User).where(User.tenant_id == gfl_id))).scalars().all()
+        )
     assert {u.role for u in users} == {r.value for r in UserRole}
     assert all(u.phone.startswith("+9191") for u in users)
+
+
+async def test_seed_tenant_ids_are_stable(db_session: AsyncSession) -> None:
+    """Fixed ids let the seed run under RLS (scope per tenant) and stay idempotent."""
+    ids = {t.slug: t.id for t in DEMO_TENANTS}
+    result = await seed_demo(db_session)
+    assert dict(result.tenants) == ids
+    assert len(set(ids.values())) == len(ids)

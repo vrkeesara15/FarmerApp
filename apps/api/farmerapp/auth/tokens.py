@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 import jwt
-from sqlalchemy import select, update
+from sqlalchemy import select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.api.errors import UnauthenticatedError
@@ -33,7 +33,7 @@ from farmerapp.auth.errors import (
     UserDisabledError,
 )
 from farmerapp.auth.models import RefreshToken, User, UserStatus
-from farmerapp.db.session import set_bypass_rls, set_tenant
+from farmerapp.db.session import set_tenant
 from farmerapp.logging import get_logger
 
 if TYPE_CHECKING:
@@ -60,6 +60,19 @@ class AccessClaims:
 
 def hash_refresh(raw: str) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
+
+
+_FIND_REFRESH = text("SELECT token_id, tenant_id FROM auth_find_refresh_token(:h)")
+
+
+async def find_refresh_token(session: AsyncSession, raw: str) -> RefreshToken | None:
+    """Locate a refresh token before any tenant is bound: the ``SECURITY DEFINER`` lookup
+    (migration 0003) yields ids only; the row itself is read under the tenant's RLS."""
+    row = (await session.execute(_FIND_REFRESH, {"h": hash_refresh(raw)})).first()
+    if row is None:
+        return None
+    await set_tenant(session, row.tenant_id)
+    return await session.get(RefreshToken, row.token_id)
 
 
 class TokenService:
@@ -171,12 +184,7 @@ class TokenService:
         self, session: AsyncSession, raw: str, *, device_id: str | None
     ) -> IssuedTokens:
         now = self._s.clock.now()
-        await set_bypass_rls(session)
-        row = (
-            await session.execute(
-                select(RefreshToken).where(RefreshToken.token_hash == hash_refresh(raw))
-            )
-        ).scalar_one_or_none()
+        row = await find_refresh_token(session, raw)
         if row is None:
             raise RefreshInvalidError("Unknown refresh token.")
         if row.revoked_at is not None:
@@ -192,7 +200,6 @@ class TokenService:
             log.warning("refresh_device_mismatch", family_id=str(row.family_id))
             raise RefreshDeviceMismatchError("Refresh token is bound to another device.")
 
-        await set_tenant(session, row.tenant_id)
         user = await session.get(User, row.user_id)
         if user is None or user.deleted_at is not None:
             raise RefreshInvalidError("Unknown user.")
@@ -224,12 +231,7 @@ class TokenService:
 
     async def revoke(self, session: AsyncSession, raw: str) -> None:
         now = self._s.clock.now()
-        await set_bypass_rls(session)
-        row = (
-            await session.execute(
-                select(RefreshToken).where(RefreshToken.token_hash == hash_refresh(raw))
-            )
-        ).scalar_one_or_none()
+        row = await find_refresh_token(session, raw)
         if row is None:
             return
         await self._revoke_family(session, row.family_id, now)

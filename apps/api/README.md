@@ -22,9 +22,10 @@ farmerapp/
                   FA-002 policy.py (require_roles / PUBLIC, startup check, x-roles in OpenAPI),
                   scope.py (SPEC 2.6 matrix as SQLAlchemy filters)
   users/          /v1/users list/get/patch (minimal WC-011 slice; cursor pagination in api/pagination.py)
-  db/             async engine/session, tenant + auth bypass hooks, Base + column mixin, models
+  db/             async engine/session, tenant binding (set_tenant / tenant_scope / job_session),
+                  rls.py (enable_rls for migrations, rls_violations for the meta-test), Base, models
   worker/         Pub/Sub push receiver + dispatch table by topic (SPEC 9.2)
-  jobs/           typer CLI (hello, seed = tenants "fcc" + "gfl", one user per role each)
+  jobs/           typer CLI (hello, seed = tenants "fcc" + "gfl", one user per role each; runs as the app role)
 alembic/          async Alembic env + migrations
 scripts/          export_openapi.py (writes/checks openapi.yaml)
 tests/            pytest (needs the compose db: `make db`)
@@ -33,8 +34,9 @@ tests/            pytest (needs the compose db: `make db`)
 ## Everyday commands (from repo root)
 
 ```
-make up          # db, pubsub, gcs, mockserver
-make migrate     # alembic upgrade head
+make up          # db, pubsub, gcs, mockserver (also creates the farmerapp_app login, `make db-roles`)
+make migrate     # alembic upgrade head as the owner (MIGRATION_DATABASE_URL)
+make seed        # demo tenants, as the app role under RLS (DATABASE_URL)
 make test-api    # pytest with coverage
 make check-api   # ruff, mypy strict, pytest, openapi diff, bandit, pip-audit
 make openapi     # regenerate apps/api/openapi.yaml (commit it)
@@ -88,3 +90,44 @@ The policy is written into `openapi.yaml` as `x-roles` / `x-public` / `x-self`;
 cross-tenant access. New routes with path parameters or a body need a `RouteFixture` there.
 Seed data: `make seed` creates tenants `fcc` (+91900000000{1..10}) and `gfl`
 (+91910000000{1..10}), one user per role each.
+
+## Tenant isolation (FA-003 / SEC-011 / SEC-012)
+
+Two database roles, two URLs (design: `docs/adr/0003-rls-design.md`):
+
+| Env var | Role | Used by |
+|---|---|---|
+| `DATABASE_URL` | `farmerapp_app` — DML only, `NOBYPASSRLS`, no DDL | api, worker, jobs, tests |
+| `MIGRATION_DATABASE_URL` | owner (`farmerapp` locally; member of `farmerapp_migrate`) | `alembic upgrade`, `migrate_engine` test fixture |
+
+Every tenant table has RLS enabled **and forced** with the `tenant_isolation` policy
+(`tenant_id = app_current_tenant()`, `WITH CHECK` too). `app_current_tenant()` reads the
+transaction-local setting `app.tenant_id`; unset means *no rows*. The request session binds it
+from the access token before the user is loaded, so a foreign `tid` is a 401.
+
+Rules for new code:
+
+```python
+# migrations: right after every op.create_table of a tenant table
+from farmerapp.db.rls import enable_rls
+
+enable_rls("farmer")  # tests/rls/test_meta.py fails otherwise
+
+# jobs / worker: say which tenant you work for
+from farmerapp.db import job_session, tenant_scope
+
+async with job_session(tenant_id) as session:
+    ...
+async with tenant_scope(session, tenant_id):
+    ...  # inside an existing transaction
+```
+
+Login before the tenant is known uses two `SECURITY DEFINER` lookups owned by the NOLOGIN
+`farmerapp_auth` role — `auth_find_user_by_phone(phone)` and `auth_find_refresh_token(hash)`
+— which return ids only; there is no bypass setting. Tests: `tests/rls/` (SQL-level as the app
+role, API-level, catalogue meta-test, DDL denied, pool reuse).
+
+Dev/CI login users come from `docker/postgres/initdb/10-roles.sql` (fresh volumes) or
+`make db-roles` (existing volumes). Cloud SQL: IAM service-account users are created by
+Terraform; after the first migration an admin grants them `farmerapp_app` (api/worker/jobs)
+or `farmerapp_migrate` (migrate job) — see `infra/modules/sql/main.tf`.

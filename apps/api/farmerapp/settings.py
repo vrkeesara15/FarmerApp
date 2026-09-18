@@ -42,8 +42,13 @@ class Settings(BaseSettings):
 
     # --- Database ----------------------------------------------------------
     database_url: str = Field(
+        default="postgresql+asyncpg://farmerapp_app:farmerapp@localhost:5432/farmerapp",
+        description="Runtime SQLAlchemy async URL: the *app* role (DML only, subject to RLS; "
+        "SEC-011). Cloud SQL uses IAM auth; local uses compose creds.",
+    )
+    migration_database_url: str = Field(
         default="postgresql+asyncpg://farmerapp:farmerapp@localhost:5432/farmerapp",
-        description="SQLAlchemy async URL. Cloud SQL uses IAM auth; local uses compose creds.",
+        description="Alembic URL: the owner/migrate role (DDL). Only the migrate job needs it.",
     )
     db_pool_size: int = Field(default=5)
     db_max_overflow: int = Field(default=10)
@@ -127,6 +132,8 @@ class Settings(BaseSettings):
             problems.append("OTP_PEPPER must be a strong secret (>= 32 chars) in prd")
         if self.otp_provider == "fake":
             problems.append("OTP_PROVIDER=fake is not allowed in prd")
+        if self.migration_database_url == self.database_url:
+            problems.append("MIGRATION_DATABASE_URL must use a different role than DATABASE_URL")
         if problems:
             raise ValueError("; ".join(problems))
         return self

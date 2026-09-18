@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.auth.errors import (
@@ -39,7 +39,7 @@ from farmerapp.auth.providers import (
     mask_phone,
     otp_message,
 )
-from farmerapp.db.session import set_bypass_rls
+from farmerapp.db.session import set_tenant
 from farmerapp.logging import get_logger
 
 if TYPE_CHECKING:
@@ -65,22 +65,38 @@ class SendResult:
     resends_left: int
 
 
+_FIND_BY_PHONE = text("SELECT user_id, tenant_id FROM auth_find_user_by_phone(:phone) LIMIT 1")
+
+
+LoginIds = tuple[uuid.UUID, uuid.UUID]
+
+
+async def resolve_login_tenant(session: AsyncSession, phone: str) -> LoginIds | None:
+    """``(user_id, tenant_id)`` for a phone, before any tenant is bound (auth module only).
+
+    The only sanctioned cross-tenant read: a ``SECURITY DEFINER`` function owned by the
+    ``farmerapp_auth`` role that returns ids and nothing else (migration 0003). The caller
+    then binds the tenant and reads the user under RLS like everyone else (a deleted account
+    resolves its tenant but no user).
+    """
+    row = (await session.execute(_FIND_BY_PHONE, {"phone": phone})).first()
+    if row is None:
+        return None
+    # TODO(FA-008/WC-014): a phone in several tenants needs a tenant picker; oldest wins.
+    return row.user_id, row.tenant_id
+
+
 async def find_user_by_phone(session: AsyncSession, phone: str) -> User | None:
-    """Cross-tenant lookup used before the tenant is known (auth module only)."""
-    await set_bypass_rls(session)
-    rows = (
-        (
-            await session.execute(
-                select(User)
-                .where(User.phone == phone, User.deleted_at.is_(None))
-                .order_by(User.created_at)
-            )
-        )
-        .scalars()
-        .all()
-    )
-    # TODO(FA-008/WC-014): a phone in several tenants needs a tenant picker; take the first.
-    return rows[0] if rows else None
+    """Resolve the tenant for ``phone``, bind it on the session and load the user."""
+    found = await resolve_login_tenant(session, phone)
+    if found is None:
+        return None
+    user_id, tenant_id = found
+    await set_tenant(session, tenant_id)
+    user = await session.get(User, user_id)
+    if user is None or user.deleted_at is not None:
+        return None
+    return user
 
 
 class OtpService:
@@ -94,8 +110,10 @@ class OtpService:
         return self._s.clock.now()
 
     async def _latest(self, session: AsyncSession, phone: str, purpose: str) -> OtpChallenge | None:
-        """Most recent challenge for the phone (any state); carries the resend window and lock."""
-        await set_bypass_rls(session)
+        """Most recent challenge for the phone (any state); carries the resend window and lock.
+
+        Runs under the tenant bound by the caller: challenges live in the user's tenant.
+        """
         stmt = (
             select(OtpChallenge)
             .where(OtpChallenge.phone == phone, OtpChallenge.purpose == purpose)
@@ -135,6 +153,7 @@ class OtpService:
             tenant_id = user.tenant_id
         if tenant_id is None:
             raise ValueError("tenant_id is required for non-login purposes")
+        await set_tenant(session, tenant_id)
 
         latest = await self._latest(session, phone, purpose)
         locked = self._lock_remaining(latest, now)
@@ -190,7 +209,7 @@ class OtpService:
                 # NOTE: the code rides in the in-process payload so the fallback can resend the
                 # same one. The Pub/Sub scheduler must not carry it in the clear (KMS envelope
                 # or re-issue); see farmerapp.auth.scheduler.
-                {"challenge_id": str(challenge_id), "code": code},
+                {"challenge_id": str(challenge_id), "code": code, "tenant_id": str(tenant_id)},
             )
         await session.flush()
         log.info(
@@ -220,7 +239,7 @@ class OtpService:
     # ------------------------------------------------------------------ delayed check
     async def check_delivery(self, session: AsyncSession, payload: dict[str, Any]) -> None:
         """Scheduled 30 s after an SMS: confirm delivery or resend the same code by WhatsApp."""
-        await set_bypass_rls(session)
+        await set_tenant(session, uuid.UUID(payload["tenant_id"]))
         challenge = await session.get(OtpChallenge, uuid.UUID(payload["challenge_id"]))
         now = self._now
         if (
@@ -257,12 +276,25 @@ class OtpService:
         phone: str,
         code: str,
         purpose: OtpPurpose = OtpPurpose.LOGIN,
+        tenant_id: uuid.UUID | None = None,
     ) -> OtpChallenge:
         """Consume the active challenge or raise a problem. Attempt counters are committed
-        before raising so they survive the error response."""
+        before raising so they survive the error response.
+
+        Login challenges are found through the phone's tenant (see ``resolve_login_tenant``);
+        other purposes pass the tenant they were sent for.
+        """
         settings = self._s.settings
         now = self._now
         masked = mask_phone(phone)
+        if purpose == OtpPurpose.LOGIN:
+            found = await resolve_login_tenant(session, phone)
+            if found is None:
+                raise OtpNotFoundError("Request a code first.")
+            tenant_id = found[1]
+        if tenant_id is None:
+            raise ValueError("tenant_id is required for non-login purposes")
+        await set_tenant(session, tenant_id)
         challenge = await self._latest(session, phone, purpose)
         if challenge is None:
             raise OtpNotFoundError("Request a code first.")

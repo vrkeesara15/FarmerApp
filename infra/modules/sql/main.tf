@@ -1,6 +1,15 @@
 # SPEC 9.4 verbatim, plus database, IAM users and optional read replica.
 # Extensions postgis, vector and pg_trgm are created by the first Alembic
 # migration, not by Terraform.
+#
+# SEC-011 controls, verified by FA-003 (apps/api/alembic/versions/0003_rls_roles.py):
+#   - private IP only: ipv4_enabled = false, private_network = var.vpc_id
+#   - TLS enforced:    ssl_mode = "ENCRYPTED_ONLY"
+#   - IAM DB auth:     database_flags cloudsql.iam_authentication = on + google_sql_user
+#                      of type CLOUD_IAM_SERVICE_ACCOUNT per deployable SA (no passwords)
+#   - no DDL for the app user: Postgres roles are created by migration 0003, which grants
+#                      DML-only `farmerapp_app` and owner/DDL `farmerapp_migrate`; the IAM
+#                      users below must be made members (see the google_sql_user comment).
 
 resource "google_sql_database_instance" "main" {
   project             = var.project_id
@@ -56,6 +65,14 @@ resource "google_sql_database" "app" {
 }
 
 # IAM database users (SEC-011). Postgres role name = SA email without ".gserviceaccount.com".
+# They are created with no privileges. Migration 0003 (run by the migrate job as the owner)
+# creates the NOLOGIN groups; an admin then runs once per environment, as the instance's
+# postgres user:
+#   GRANT farmerapp_app     TO "farmerapp-api@<project>.iam", "farmerapp-worker@<project>.iam",
+#                              "farmerapp-jobs@<project>.iam";
+#   GRANT farmerapp_migrate TO "<migrate SA>@<project>.iam";   -- the SA of the migrate job only
+# (`make db-roles` is the local equivalent). The app role has DML only and cannot bypass RLS;
+# a runtime SA must never be a member of farmerapp_migrate.
 resource "google_sql_user" "iam" {
   for_each = toset(var.iam_service_accounts)
 

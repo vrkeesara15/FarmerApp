@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from farmerapp.auth.deps import AuthServices
 from farmerapp.auth.models import User, UserRole
 from farmerapp.db.models import Tenant
+from farmerapp.db.session import set_tenant, tenant_scope
 from farmerapp.jobs.seed import DEMO_TENANTS, seed_demo
 
 ROLES: tuple[str, ...] = tuple(r.value for r in UserRole)
@@ -43,8 +44,12 @@ class World:
 
 
 async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
-    tenant = (await session.execute(select(Tenant).where(Tenant.slug == slug))).scalar_one()
-    users = (await session.execute(select(User).where(User.tenant_id == tenant.id))).scalars().all()
+    demo = next(t for t in DEMO_TENANTS if t.slug == slug)
+    async with tenant_scope(session, demo.id):  # RLS: rows are only visible in their tenant
+        tenant = (await session.execute(select(Tenant).where(Tenant.slug == slug))).scalar_one()
+        users = (
+            (await session.execute(select(User).where(User.tenant_id == tenant.id))).scalars().all()
+        )
     by_role = {UserRole(u.role): u for u in users}
     assert set(by_role) == set(UserRole), f"seed for {slug} must have one user per role"
     return SeededTenant(tenant=tenant, users=by_role)
@@ -52,10 +57,13 @@ async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
 
 @pytest.fixture
 async def world(db_session: AsyncSession) -> World:
+    """Both demo tenants; the session is left bound to tenant A (tests mutate A's rows)."""
     await seed_demo(db_session)
     slugs = [t.slug for t in DEMO_TENANTS]
     assert slugs == ["fcc", "gfl"]
-    return World(a=await _load_tenant(db_session, "fcc"), b=await _load_tenant(db_session, "gfl"))
+    world = World(a=await _load_tenant(db_session, "fcc"), b=await _load_tenant(db_session, "gfl"))
+    await set_tenant(db_session, world.a.tenant.id)
+    return world
 
 
 Bearer = Callable[[User], dict[str, str]]

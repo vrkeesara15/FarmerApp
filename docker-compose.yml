@@ -66,7 +66,9 @@ services:
       SERVICE_NAME: api
       LOG_LEVEL: INFO
       LOG_JSON: "false"
-      DATABASE_URL: postgresql+asyncpg://farmerapp:farmerapp@db:5432/farmerapp
+      # Runtime connects as the app role (DML only, RLS); Alembic as the owner (SEC-011).
+      DATABASE_URL: postgresql+asyncpg://farmerapp_app:farmerapp@db:5432/farmerapp
+      MIGRATION_DATABASE_URL: postgresql+asyncpg://farmerapp:farmerapp@db:5432/farmerapp
       GCP_PROJECT: farmerapp-local
       PUBSUB_EMULATOR_HOST: pubsub:8085
       STORAGE_EMULATOR_HOST: http://gcs:4443

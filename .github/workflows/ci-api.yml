@@ -35,7 +35,10 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.12"
-  DATABASE_URL: postgresql+psycopg://farmerapp:farmerapp@localhost:5432/farmerapp_test
+  # SEC-011/012: tests run as the app role (created by docker/postgres/initdb, riding along in
+  # the image built below); only Alembic uses the owner. tests/rls proves the isolation in CI.
+  DATABASE_URL: postgresql+asyncpg://farmerapp_app:farmerapp@localhost:5432/farmerapp_test
+  MIGRATION_DATABASE_URL: postgresql+asyncpg://farmerapp:farmerapp@localhost:5432/farmerapp_test
   SKIP_AUDIT: "0"
 
 jobs:
@@ -63,11 +66,14 @@ jobs:
             farmerapp-postgres:ci
           for i in $(seq 1 30); do
             if docker exec pg pg_isready -U farmerapp -d farmerapp_test >/dev/null 2>&1; then
-              echo "postgres ready after ${i}s"; exit 0
+              echo "postgres ready after ${i}s"; break
             fi
             sleep 1
           done
-          docker logs pg; echo "postgres did not become ready" >&2; exit 1
+          docker exec pg pg_isready -U farmerapp -d farmerapp_test || { docker logs pg; exit 1; }
+          # initdb scripts (app role) only run on a fresh volume, which this is; verify anyway.
+          docker exec pg psql -U farmerapp -d farmerapp_test -tAc \
+            "SELECT 1 FROM pg_roles WHERE rolname = 'farmerapp_app'" | grep -q 1
 
       - name: Install API (dev extras)
         working-directory: apps/api

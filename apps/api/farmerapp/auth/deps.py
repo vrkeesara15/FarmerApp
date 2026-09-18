@@ -19,7 +19,7 @@ from farmerapp.auth.otp import OtpService
 from farmerapp.auth.providers import FakeProvider, MockServerProvider, SmsProvider, WhatsAppProvider
 from farmerapp.auth.scheduler import InProcessScheduler, Scheduler
 from farmerapp.auth.tokens import TokenService
-from farmerapp.db.session import get_session, get_session_factory, set_bypass_rls, set_tenant
+from farmerapp.db.session import get_session, get_session_factory, set_tenant
 from farmerapp.settings import Settings
 
 
@@ -63,10 +63,9 @@ SessionProvider = Callable[[], contextlib.AbstractAsyncContextManager[AsyncSessi
 
 @contextlib.asynccontextmanager
 async def _job_session() -> AsyncIterator[AsyncSession]:
-    """A transaction for scheduled auth tasks (no request, no tenant: auth-module bypass)."""
+    """A transaction for scheduled auth tasks; each task binds the tenant from its payload."""
     factory = get_session_factory()
     async with factory() as session, session.begin():
-        await set_bypass_rls(session)
         yield session
 
 
@@ -90,7 +89,11 @@ async def get_current_user(
     session: Annotated[AsyncSession, Depends(get_session)],
     services: Annotated[AuthServices, Depends(get_auth_services)],
 ) -> User:
-    """Verify the bearer token, bind the tenant on the session and return the active user."""
+    """Verify the bearer token, bind the tenant on the session and return the active user.
+
+    The tenant is bound *before* the user is loaded, so RLS hides the user when the token's
+    tenant claim does not match: a forged claim is just an unknown user (401).
+    """
     header = request.headers.get("authorization", "")
     scheme, _, token = header.partition(" ")
     token = token.strip()

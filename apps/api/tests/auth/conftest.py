@@ -8,6 +8,7 @@ time (expiry, windows, fallback) without sleeping and read OTP codes from the fa
 from __future__ import annotations
 
 import re
+import uuid
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 from typing import Any
@@ -23,6 +24,7 @@ from farmerapp.auth.models import User, UserRole
 from farmerapp.auth.providers import FakeProvider
 from farmerapp.auth.scheduler import InProcessScheduler
 from farmerapp.db.models import Tenant
+from farmerapp.db.session import set_tenant
 from farmerapp.settings import get_settings
 
 T0 = datetime(2026, 9, 17, 9, 0, tzinfo=UTC)
@@ -68,7 +70,9 @@ def auth_services(
 
 @pytest.fixture
 async def tenant(db_session: AsyncSession) -> Tenant:
-    t = Tenant(name="Future Crop Care", slug="fcc")
+    """Tenant "fcc"; the session stays bound to it so later fixtures/tests write into it (RLS)."""
+    t = Tenant(id=uuid.uuid4(), name="Future Crop Care", slug="fcc")
+    await set_tenant(db_session, t.id)
     db_session.add(t)
     await db_session.flush()
     return t

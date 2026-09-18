@@ -12,7 +12,7 @@ UV        := uv
 UV_RUN    := cd $(API_DIR) && $(UV) run
 CORE_SERVICES := db pubsub gcs mockserver
 
-.PHONY: help up down db seed migrate openapi test-api test-console test-mobile \
+.PHONY: help up down db db-roles seed migrate openapi test-api test-console test-mobile \
         check-api check-console check-mobile check-infra check plan-dev logs
 
 help: ## Show this help
@@ -21,13 +21,19 @@ help: ## Show this help
 
 # ---------------------------------------------------------------- local env
 up: ## Start db, pubsub, gcs, mockserver and wait for health
-	$(COMPOSE) up -d --wait $(CORE_SERVICES)
+	$(COMPOSE) up -d --build --wait $(CORE_SERVICES)
+	$(MAKE) db-roles
 
 down: ## Stop and remove local containers (volumes kept)
 	$(COMPOSE) down --remove-orphans
 
-db: ## Start only Postgres (PostGIS + pgvector)
-	$(COMPOSE) up -d --wait db
+db: ## Start only Postgres (PostGIS + pgvector) and make sure the app role exists
+	$(COMPOSE) up -d --build --wait db
+	$(MAKE) db-roles
+
+db-roles: ## (Re)apply docker/postgres/initdb roles on an existing volume (idempotent, SEC-011)
+	$(COMPOSE) exec -T db psql -q -v ON_ERROR_STOP=1 -U farmerapp -d farmerapp \
+	  -f /docker-entrypoint-initdb.d/10-roles.sql
 
 logs: ## Tail compose logs
 	$(COMPOSE) logs -f --tail=100
@@ -37,10 +43,10 @@ $(API_DIR)/.venv/.synced: $(API_DIR)/pyproject.toml $(API_DIR)/uv.lock
 	cd $(API_DIR) && $(UV) sync --frozen
 	@touch $@
 
-migrate: db $(API_DIR)/.venv/.synced ## Run Alembic migrations to head
+migrate: db $(API_DIR)/.venv/.synced ## Run Alembic migrations to head (as the owner: MIGRATION_DATABASE_URL)
 	$(UV_RUN) alembic upgrade head
 
-seed: db $(API_DIR)/.venv/.synced ## Load the demo tenant (stub until M1)
+seed: db $(API_DIR)/.venv/.synced ## Load the demo tenants (runs as the app role under RLS)
 	$(UV_RUN) python -m farmerapp.jobs seed
 
 openapi: $(API_DIR)/.venv/.synced ## Export apps/api/openapi.yaml from the app (commit it)
