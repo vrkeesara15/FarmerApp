@@ -735,5 +735,153 @@
       }
     }
   },
-  "mapFarmBoundary": "Farm boundary"
+  "mapFarmBoundary": "Farm boundary",
+  "dutyNotificationTitle": "On duty — location on",
+  "@dutyNotificationTitle": {
+    "description": "Persistent Android notification title while on duty (FA-010)"
+  },
+  "dutyChannelName": "Duty",
+  "dutyAlertsChannelName": "Duty alerts",
+  "dutyPromptTitle": "Still on duty?",
+  "dutyPromptBody": "Ending at {time}",
+  "@dutyPromptBody": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dutyEndedTitle": "Duty ended",
+  "dutyAutoEndedBody": "Your day ended automatically at {time}.",
+  "@dutyAutoEndedBody": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dutyServerEndedBody": "Your duty was ended by the server (idle or end of day).",
+  "dutyAutoEndAt": "Ends automatically at {time}",
+  "@dutyAutoEndAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dutyBlockedPolicy": "Accept the location policy to go on duty",
+  "dutyReviewPolicy": "Review policy",
+  "dutyPointsPending": "{count} points waiting to upload",
+  "@dutyPointsPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dutyNoticeAlreadyActive": "You are already on duty on another device. This one stays off.",
+  "dutyNoticePolicy": "Please accept the current location policy before going on duty.",
+  "dutyNoticeLocationUnavailable": "Could not get your location. Turn on location and try again.",
+  "integrityBanner": "Some device checks reported issues; visits may be reviewed.",
+  "disclosureIntro": "Before you start, here is what Mitra records and why.",
+  "disclosureVersion": "Policy version {version}",
+  "@disclosureVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "disclosureUpdated": "The location policy has changed. Please read and accept the new version.",
+  "policySheetTitle": "Location policy",
+  "locationPolicyText": "Mitra location policy (version 2026-09-v1)\n\n1. What we collect. While you are on duty, Mitra records your location (latitude, longitude, accuracy, speed, direction), the time, your battery level and basic device checks (mock-location, rooted device, clock difference). It also records the photos, notes and farmer confirmations you capture during visits.\n\n2. Only while on duty. Location is recorded only after you switch duty on, and it stops the moment you switch duty off, when the day ends at the tenant’s set time (20:00 by default) or after 60 minutes idle at your home location. Nothing is recorded while you are off duty, and a notification is always visible while location is on.\n\n3. Why we collect it. Your track computes the kilometres for your travel allowance, and your location at a visit gives you credit for that visit. No track means no automatic travel allowance and no verified visit.\n\n4. Who can see it. Your cluster head, the directors and the owner of your organisation can see your track and visits for their area, and auditors can review flagged visits. Store managers and farmers never see your location. Raw points are kept for 180 days and then reduced to daily totals.",
+  "@locationPolicyText": {
+    "description": "Full employee location policy (FA-011 / VV-010), version 2026-09-v1; English is the hashed source in design/copy/location_policy_en.md"
+  },
+  "permissionsTitle": "Permissions Mitra needs",
+  "permissionsIntro": "Mitra asks for these one by one. You can change them later in Settings.",
+  "permLocationTitle": "Location",
+  "permLocationBody": "To record your track while on duty and check you are at the farm.",
+  "permBackgroundTitle": "Location all the time",
+  "permBackgroundBody": "Choose \"Allow all the time\" so tracking continues while the screen is off. It still runs only while you are on duty.",
+  "permCameraTitle": "Camera",
+  "permCameraBody": "For farm and visit photos taken inside the app.",
+  "permNotificationsTitle": "Notifications",
+  "permNotificationsBody": "To show the on-duty notice and remind you before duty ends.",
+  "permGranted": "Allowed",
+  "permDenied": "Not allowed",
+  "permOpenSettings": "Open settings",
+  "permAllow": "Allow",
+  "registeredTitle": "Device registered",
+  "registeredBody": "You are set. Go on duty from Home to start your day.",
+  "registeredStart": "Go to Home",
+  "homeTitle": "Home",
+  "homeTodayStats": "Today",
+  "statVisitsVerified": "Visits verified",
+  "statFarmersAdded": "Farmers added",
+  "statCollections": "Collections",
+  "homeNextUp": "Next up",
+  "homeNextUpEmpty": "No beat plan yet",
+  "homeNextUpEmptyHelp": "Your cluster head will assign villages. Until then, add farmers and start visits.",
+  "homeQuickActions": "Quick actions",
+  "actionStartVisit": "Start visit",
+  "actionScoutCrop": "Scout crop",
+  "actionCollectPayment": "Collect payment",
+  "comingSoon": "Coming soon",
+  "navHome": "Home",
+  "navFarmers": "Farmers",
+  "navVisits": "Visits",
+  "navOrders": "Orders",
+  "navMe": "Me",
+  "myDayTitle": "My day",
+  "myDayKm": "{km} km today",
+  "@myDayKm": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "myDayEmpty": "No duty today yet",
+  "myDayEmptyHelp": "Go on duty from Home; your track and km appear here.",
+  "myDaySession": "Duty {start} – {end}",
+  "@myDaySession": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "myDaySessionActive": "Duty since {start}",
+  "@myDaySessionActive": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      }
+    }
+  },
+  "myDayPoints": "{pending} pending · {accepted} accepted",
+  "@myDayPoints": {
+    "placeholders": {
+      "pending": {
+        "type": "int"
+      },
+      "accepted": {
+        "type": "int"
+      }
+    }
+  },
+  "myDayGapsTitle": "Gaps and reasons",
+  "myDayGapsHelp": "Gap reasons arrive with the next update.",
+  "myDayEndReasonManual": "Ended by you",
+  "myDayEndReasonAutoTime": "Ended at day end",
+  "myDayEndReasonAutoIdle": "Ended after idle",
+  "myDayEndReasonForced": "Ended by manager",
+  "myDayEndReasonRejected": "Not recorded",
+  "syncEntityDutySession": "Duty session",
+  "syncEntityLocationBatch": "Location points",
+  "syncEntityPolicyAcceptance": "Policy acceptance"
 }

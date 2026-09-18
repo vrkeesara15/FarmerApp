@@ -1232,4 +1232,257 @@ class CoreLocalizationsMr extends CoreLocalizations {
 
   @override
   String get mapFarmBoundary => 'शेताची हद्द';
+
+  @override
+  String get dutyNotificationTitle => 'ड्युटीवर — लोकेशन सुरू';
+
+  @override
+  String get dutyChannelName => 'ड्युटी';
+
+  @override
+  String get dutyAlertsChannelName => 'ड्युटी सूचना';
+
+  @override
+  String get dutyPromptTitle => 'अजूनही ड्युटीवर आहात?';
+
+  @override
+  String dutyPromptBody(String time) {
+    return '$time वाजता संपेल';
+  }
+
+  @override
+  String get dutyEndedTitle => 'ड्युटी संपली';
+
+  @override
+  String dutyAutoEndedBody(String time) {
+    return 'तुमचा दिवस $time वाजता आपोआप संपला.';
+  }
+
+  @override
+  String get dutyServerEndedBody =>
+      'सर्व्हरने तुमची ड्युटी संपवली (निष्क्रियता किंवा दिवसाचा शेवट).';
+
+  @override
+  String dutyAutoEndAt(String time) {
+    return '$time वाजता आपोआप संपेल';
+  }
+
+  @override
+  String get dutyBlockedPolicy => 'ड्युटीवर जाण्यासाठी लोकेशन धोरण स्वीकारा';
+
+  @override
+  String get dutyReviewPolicy => 'धोरण पाहा';
+
+  @override
+  String dutyPointsPending(int count) {
+    return '$count पॉइंट अपलोडची वाट पाहत आहेत';
+  }
+
+  @override
+  String get dutyNoticeAlreadyActive =>
+      'तुम्ही आधीच दुसऱ्या डिव्हाइसवर ड्युटीवर आहात. हे बंदच राहील.';
+
+  @override
+  String get dutyNoticePolicy =>
+      'ड्युटीवर जाण्यापूर्वी सध्याचे लोकेशन धोरण स्वीकारा.';
+
+  @override
+  String get dutyNoticeLocationUnavailable =>
+      'तुमचे लोकेशन मिळू शकले नाही. लोकेशन सुरू करून पुन्हा प्रयत्न करा.';
+
+  @override
+  String get integrityBanner =>
+      'काही डिव्हाइस तपासण्यांत समस्या आढळल्या; भेटींचे पुनरावलोकन होऊ शकते.';
+
+  @override
+  String get disclosureIntro =>
+      'सुरू करण्यापूर्वी, मित्र काय नोंदवते आणि का हे येथे आहे.';
+
+  @override
+  String disclosureVersion(String version) {
+    return 'धोरण आवृत्ती $version';
+  }
+
+  @override
+  String get disclosureUpdated =>
+      'लोकेशन धोरण बदलले आहे. कृपया नवीन आवृत्ती वाचून स्वीकारा.';
+
+  @override
+  String get policySheetTitle => 'लोकेशन धोरण';
+
+  @override
+  String get locationPolicyText =>
+      'मित्र लोकेशन धोरण (आवृत्ती 2026-09-v1)\n\n1. आम्ही काय गोळा करतो. तुम्ही ड्युटीवर असताना, मित्र तुमचे लोकेशन (अक्षांश, रेखांश, अचूकता, वेग, दिशा), वेळ, बॅटरी पातळी आणि मूलभूत डिव्हाइस तपासण्या (मॉक लोकेशन, रूट केलेले डिव्हाइस, घड्याळातील फरक) नोंदवते. भेटींदरम्यान तुम्ही घेतलेले फोटो, नोंदी आणि शेतकऱ्यांची पुष्टी देखील नोंदवली जाते.\n\n2. फक्त ड्युटीवर असताना. तुम्ही ड्युटी सुरू केल्यानंतरच लोकेशन नोंदवले जाते; ड्युटी बंद करताच, संस्थेच्या ठरलेल्या वेळी दिवस संपल्यावर (डीफॉल्ट 20:00) किंवा घरी 60 मिनिटे निष्क्रिय राहिल्यावर ते थांबते. ड्युटी बंद असताना काहीही नोंदवले जात नाही, आणि लोकेशन सुरू असेपर्यंत सूचना नेहमी दिसते.\n\n3. आम्ही ते का गोळा करतो. तुमच्या ट्रॅकवरून प्रवास भत्त्यासाठी किलोमीटर मोजले जातात, आणि भेटीच्या वेळी तुमचे लोकेशन त्या भेटीचे श्रेय देते. ट्रॅक नाही तर आपोआप प्रवास भत्ता नाही आणि पडताळलेली भेट नाही.\n\n4. ते कोण पाहू शकते. तुमचे क्लस्टर हेड, संचालक आणि संस्थेचे मालक त्यांच्या क्षेत्रासाठी तुमचा ट्रॅक आणि भेटी पाहू शकतात, आणि ऑडिटर फ्लॅग केलेल्या भेटींचे पुनरावलोकन करू शकतात. स्टोअर मॅनेजर आणि शेतकरी तुमचे लोकेशन कधीही पाहत नाहीत. कच्चे पॉइंट 180 दिवस ठेवले जातात आणि नंतर दैनिक बेरजेत रूपांतरित केले जातात.';
+
+  @override
+  String get permissionsTitle => 'मित्रला लागणाऱ्या परवानग्या';
+
+  @override
+  String get permissionsIntro =>
+      'मित्र या एक-एक करून विचारेल. त्या नंतर सेटिंग्जमध्ये बदलता येतील.';
+
+  @override
+  String get permLocationTitle => 'लोकेशन';
+
+  @override
+  String get permLocationBody =>
+      'ड्युटीवर तुमचा ट्रॅक नोंदवण्यासाठी आणि तुम्ही शेतावर आहात का हे तपासण्यासाठी.';
+
+  @override
+  String get permBackgroundTitle => 'लोकेशन नेहमी';
+
+  @override
+  String get permBackgroundBody =>
+      'स्क्रीन बंद असतानाही ट्रॅकिंग सुरू राहण्यासाठी \"नेहमी परवानगी द्या\" निवडा. तरीही हे फक्त ड्युटीवर असतानाच चालते.';
+
+  @override
+  String get permCameraTitle => 'कॅमेरा';
+
+  @override
+  String get permCameraBody =>
+      'अ‍ॅपमध्ये घेतलेल्या शेत आणि भेटीच्या फोटोंसाठी.';
+
+  @override
+  String get permNotificationsTitle => 'सूचना';
+
+  @override
+  String get permNotificationsBody =>
+      'ड्युटीची सूचना दाखवण्यासाठी आणि ड्युटी संपण्यापूर्वी आठवण करून देण्यासाठी.';
+
+  @override
+  String get permGranted => 'परवानगी दिली';
+
+  @override
+  String get permDenied => 'परवानगी नाही';
+
+  @override
+  String get permOpenSettings => 'सेटिंग्ज उघडा';
+
+  @override
+  String get permAllow => 'परवानगी द्या';
+
+  @override
+  String get registeredTitle => 'डिव्हाइस नोंदणीकृत';
+
+  @override
+  String get registeredBody =>
+      'तुम्ही तयार आहात. दिवस सुरू करण्यासाठी होमवरून ड्युटीवर जा.';
+
+  @override
+  String get registeredStart => 'होमवर जा';
+
+  @override
+  String get homeTitle => 'होम';
+
+  @override
+  String get homeTodayStats => 'आज';
+
+  @override
+  String get statVisitsVerified => 'पडताळलेल्या भेटी';
+
+  @override
+  String get statFarmersAdded => 'जोडलेले शेतकरी';
+
+  @override
+  String get statCollections => 'वसुली';
+
+  @override
+  String get homeNextUp => 'पुढील';
+
+  @override
+  String get homeNextUpEmpty => 'अजून बीट प्लॅन नाही';
+
+  @override
+  String get homeNextUpEmptyHelp =>
+      'तुमचे क्लस्टर हेड गावे नेमून देतील. तोपर्यंत शेतकरी जोडा आणि भेटी सुरू करा.';
+
+  @override
+  String get homeQuickActions => 'जलद कृती';
+
+  @override
+  String get actionStartVisit => 'भेट सुरू करा';
+
+  @override
+  String get actionScoutCrop => 'पीक पाहणी';
+
+  @override
+  String get actionCollectPayment => 'पैसे गोळा करा';
+
+  @override
+  String get comingSoon => 'लवकरच येत आहे';
+
+  @override
+  String get navHome => 'होम';
+
+  @override
+  String get navFarmers => 'शेतकरी';
+
+  @override
+  String get navVisits => 'भेटी';
+
+  @override
+  String get navOrders => 'ऑर्डर';
+
+  @override
+  String get navMe => 'मी';
+
+  @override
+  String get myDayTitle => 'माझा दिवस';
+
+  @override
+  String myDayKm(String km) {
+    return 'आज $km कि.मी.';
+  }
+
+  @override
+  String get myDayEmpty => 'आज अजून ड्युटी नाही';
+
+  @override
+  String get myDayEmptyHelp =>
+      'होमवरून ड्युटीवर जा; तुमचा ट्रॅक आणि कि.मी. येथे दिसतील.';
+
+  @override
+  String myDaySession(String start, String end) {
+    return 'ड्युटी $start – $end';
+  }
+
+  @override
+  String myDaySessionActive(String start) {
+    return '$start पासून ड्युटीवर';
+  }
+
+  @override
+  String myDayPoints(int pending, int accepted) {
+    return '$pending प्रलंबित · $accepted स्वीकृत';
+  }
+
+  @override
+  String get myDayGapsTitle => 'अंतर आणि कारणे';
+
+  @override
+  String get myDayGapsHelp => 'अंतराची कारणे पुढील अपडेटसह येतील.';
+
+  @override
+  String get myDayEndReasonManual => 'तुम्ही संपवली';
+
+  @override
+  String get myDayEndReasonAutoTime => 'दिवसाच्या शेवटी संपली';
+
+  @override
+  String get myDayEndReasonAutoIdle => 'निष्क्रियतेनंतर संपली';
+
+  @override
+  String get myDayEndReasonForced => 'मॅनेजरने संपवली';
+
+  @override
+  String get myDayEndReasonRejected => 'नोंद झाली नाही';
+
+  @override
+  String get syncEntityDutySession => 'ड्युटी सत्र';
+
+  @override
+  String get syncEntityLocationBatch => 'लोकेशन पॉइंट';
+
+  @override
+  String get syncEntityPolicyAcceptance => 'धोरण स्वीकृती';
 }

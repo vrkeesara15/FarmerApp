@@ -20,6 +20,9 @@ String syncEntityLabel(CoreLocalizations l10n, String entity) =>
       SyncEntities.farm => l10n.syncEntityFarm,
       SyncEntities.cropPlot => l10n.syncEntityCropPlot,
       SyncEntities.consentRecord => l10n.syncEntityConsent,
+      SyncEntities.dutySession => l10n.syncEntityDutySession,
+      SyncEntities.locationBatch => l10n.syncEntityLocationBatch,
+      SyncEntities.policyAcceptance => l10n.syncEntityPolicyAcceptance,
       _ => l10n.syncEntityOther,
     };
 

@@ -2347,6 +2347,444 @@ abstract class CoreLocalizations {
   /// In en, this message translates to:
   /// **'Farm boundary'**
   String get mapFarmBoundary;
+
+  /// Persistent Android notification title while on duty (FA-010)
+  ///
+  /// In en, this message translates to:
+  /// **'On duty — location on'**
+  String get dutyNotificationTitle;
+
+  /// No description provided for @dutyChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Duty'**
+  String get dutyChannelName;
+
+  /// No description provided for @dutyAlertsChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Duty alerts'**
+  String get dutyAlertsChannelName;
+
+  /// No description provided for @dutyPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Still on duty?'**
+  String get dutyPromptTitle;
+
+  /// No description provided for @dutyPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Ending at {time}'**
+  String dutyPromptBody(String time);
+
+  /// No description provided for @dutyEndedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Duty ended'**
+  String get dutyEndedTitle;
+
+  /// No description provided for @dutyAutoEndedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your day ended automatically at {time}.'**
+  String dutyAutoEndedBody(String time);
+
+  /// No description provided for @dutyServerEndedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your duty was ended by the server (idle or end of day).'**
+  String get dutyServerEndedBody;
+
+  /// No description provided for @dutyAutoEndAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends automatically at {time}'**
+  String dutyAutoEndAt(String time);
+
+  /// No description provided for @dutyBlockedPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the location policy to go on duty'**
+  String get dutyBlockedPolicy;
+
+  /// No description provided for @dutyReviewPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Review policy'**
+  String get dutyReviewPolicy;
+
+  /// No description provided for @dutyPointsPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} points waiting to upload'**
+  String dutyPointsPending(int count);
+
+  /// No description provided for @dutyNoticeAlreadyActive.
+  ///
+  /// In en, this message translates to:
+  /// **'You are already on duty on another device. This one stays off.'**
+  String get dutyNoticeAlreadyActive;
+
+  /// No description provided for @dutyNoticePolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Please accept the current location policy before going on duty.'**
+  String get dutyNoticePolicy;
+
+  /// No description provided for @dutyNoticeLocationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not get your location. Turn on location and try again.'**
+  String get dutyNoticeLocationUnavailable;
+
+  /// No description provided for @integrityBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Some device checks reported issues; visits may be reviewed.'**
+  String get integrityBanner;
+
+  /// No description provided for @disclosureIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you start, here is what Mitra records and why.'**
+  String get disclosureIntro;
+
+  /// No description provided for @disclosureVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Policy version {version}'**
+  String disclosureVersion(String version);
+
+  /// No description provided for @disclosureUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'The location policy has changed. Please read and accept the new version.'**
+  String get disclosureUpdated;
+
+  /// No description provided for @policySheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location policy'**
+  String get policySheetTitle;
+
+  /// Full employee location policy (FA-011 / VV-010), version 2026-09-v1; English is the hashed source in design/copy/location_policy_en.md
+  ///
+  /// In en, this message translates to:
+  /// **'Mitra location policy (version 2026-09-v1)\n\n1. What we collect. While you are on duty, Mitra records your location (latitude, longitude, accuracy, speed, direction), the time, your battery level and basic device checks (mock-location, rooted device, clock difference). It also records the photos, notes and farmer confirmations you capture during visits.\n\n2. Only while on duty. Location is recorded only after you switch duty on, and it stops the moment you switch duty off, when the day ends at the tenant’s set time (20:00 by default) or after 60 minutes idle at your home location. Nothing is recorded while you are off duty, and a notification is always visible while location is on.\n\n3. Why we collect it. Your track computes the kilometres for your travel allowance, and your location at a visit gives you credit for that visit. No track means no automatic travel allowance and no verified visit.\n\n4. Who can see it. Your cluster head, the directors and the owner of your organisation can see your track and visits for their area, and auditors can review flagged visits. Store managers and farmers never see your location. Raw points are kept for 180 days and then reduced to daily totals.'**
+  String get locationPolicyText;
+
+  /// No description provided for @permissionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions Mitra needs'**
+  String get permissionsTitle;
+
+  /// No description provided for @permissionsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Mitra asks for these one by one. You can change them later in Settings.'**
+  String get permissionsIntro;
+
+  /// No description provided for @permLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get permLocationTitle;
+
+  /// No description provided for @permLocationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To record your track while on duty and check you are at the farm.'**
+  String get permLocationBody;
+
+  /// No description provided for @permBackgroundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location all the time'**
+  String get permBackgroundTitle;
+
+  /// No description provided for @permBackgroundBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose \"Allow all the time\" so tracking continues while the screen is off. It still runs only while you are on duty.'**
+  String get permBackgroundBody;
+
+  /// No description provided for @permCameraTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get permCameraTitle;
+
+  /// No description provided for @permCameraBody.
+  ///
+  /// In en, this message translates to:
+  /// **'For farm and visit photos taken inside the app.'**
+  String get permCameraBody;
+
+  /// No description provided for @permNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get permNotificationsTitle;
+
+  /// No description provided for @permNotificationsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To show the on-duty notice and remind you before duty ends.'**
+  String get permNotificationsBody;
+
+  /// No description provided for @permGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed'**
+  String get permGranted;
+
+  /// No description provided for @permDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Not allowed'**
+  String get permDenied;
+
+  /// No description provided for @permOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get permOpenSettings;
+
+  /// No description provided for @permAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get permAllow;
+
+  /// No description provided for @registeredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Device registered'**
+  String get registeredTitle;
+
+  /// No description provided for @registeredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You are set. Go on duty from Home to start your day.'**
+  String get registeredBody;
+
+  /// No description provided for @registeredStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Home'**
+  String get registeredStart;
+
+  /// No description provided for @homeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get homeTitle;
+
+  /// No description provided for @homeTodayStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get homeTodayStats;
+
+  /// No description provided for @statVisitsVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Visits verified'**
+  String get statVisitsVerified;
+
+  /// No description provided for @statFarmersAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmers added'**
+  String get statFarmersAdded;
+
+  /// No description provided for @statCollections.
+  ///
+  /// In en, this message translates to:
+  /// **'Collections'**
+  String get statCollections;
+
+  /// No description provided for @homeNextUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Next up'**
+  String get homeNextUp;
+
+  /// No description provided for @homeNextUpEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No beat plan yet'**
+  String get homeNextUpEmpty;
+
+  /// No description provided for @homeNextUpEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cluster head will assign villages. Until then, add farmers and start visits.'**
+  String get homeNextUpEmptyHelp;
+
+  /// No description provided for @homeQuickActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick actions'**
+  String get homeQuickActions;
+
+  /// No description provided for @actionStartVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'Start visit'**
+  String get actionStartVisit;
+
+  /// No description provided for @actionScoutCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Scout crop'**
+  String get actionScoutCrop;
+
+  /// No description provided for @actionCollectPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect payment'**
+  String get actionCollectPayment;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get comingSoon;
+
+  /// No description provided for @navHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get navHome;
+
+  /// No description provided for @navFarmers.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmers'**
+  String get navFarmers;
+
+  /// No description provided for @navVisits.
+  ///
+  /// In en, this message translates to:
+  /// **'Visits'**
+  String get navVisits;
+
+  /// No description provided for @navOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
+  String get navOrders;
+
+  /// No description provided for @navMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get navMe;
+
+  /// No description provided for @myDayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My day'**
+  String get myDayTitle;
+
+  /// No description provided for @myDayKm.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km today'**
+  String myDayKm(String km);
+
+  /// No description provided for @myDayEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No duty today yet'**
+  String get myDayEmpty;
+
+  /// No description provided for @myDayEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Go on duty from Home; your track and km appear here.'**
+  String get myDayEmptyHelp;
+
+  /// No description provided for @myDaySession.
+  ///
+  /// In en, this message translates to:
+  /// **'Duty {start} – {end}'**
+  String myDaySession(String start, String end);
+
+  /// No description provided for @myDaySessionActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Duty since {start}'**
+  String myDaySessionActive(String start);
+
+  /// No description provided for @myDayPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'{pending} pending · {accepted} accepted'**
+  String myDayPoints(int pending, int accepted);
+
+  /// No description provided for @myDayGapsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gaps and reasons'**
+  String get myDayGapsTitle;
+
+  /// No description provided for @myDayGapsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Gap reasons arrive with the next update.'**
+  String get myDayGapsHelp;
+
+  /// No description provided for @myDayEndReasonManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended by you'**
+  String get myDayEndReasonManual;
+
+  /// No description provided for @myDayEndReasonAutoTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended at day end'**
+  String get myDayEndReasonAutoTime;
+
+  /// No description provided for @myDayEndReasonAutoIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended after idle'**
+  String get myDayEndReasonAutoIdle;
+
+  /// No description provided for @myDayEndReasonForced.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended by manager'**
+  String get myDayEndReasonForced;
+
+  /// No description provided for @myDayEndReasonRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recorded'**
+  String get myDayEndReasonRejected;
+
+  /// No description provided for @syncEntityDutySession.
+  ///
+  /// In en, this message translates to:
+  /// **'Duty session'**
+  String get syncEntityDutySession;
+
+  /// No description provided for @syncEntityLocationBatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Location points'**
+  String get syncEntityLocationBatch;
+
+  /// No description provided for @syncEntityPolicyAcceptance.
+  ///
+  /// In en, this message translates to:
+  /// **'Policy acceptance'**
+  String get syncEntityPolicyAcceptance;
 }
 
 class _CoreLocalizationsDelegate

@@ -30,7 +30,15 @@ class AgentDeps {
       connectivity = FakeConnectivityMonitor(online: online),
       location = FakeLocationSource(),
       camera = FakeCameraSource(),
-      photos = MemoryPhotoStore();
+      photos = MemoryPhotoStore(),
+      sampler = FakeLocationSampler(),
+      dutyService = FakeForegroundDutyService(),
+      alerts = FakeDutyAlerts(),
+      conditions = FakeDeviceConditionsMonitor(),
+      probe = FakeDeviceIntegrityProbe(),
+      policyApi = FakePolicyApi(),
+      permissions = FakePermissionGate(),
+      tokens = InMemoryTokenStore(deviceId: 'device-1');
 
   /// The database.
   final AppDatabase db;
@@ -56,6 +64,30 @@ class AgentDeps {
   /// Photo files.
   final MemoryPhotoStore photos;
 
+  /// GPS for the duty tracker (FA-010).
+  final FakeLocationSampler sampler;
+
+  /// Foreground service.
+  final FakeForegroundDutyService dutyService;
+
+  /// Duty notifications.
+  final FakeDutyAlerts alerts;
+
+  /// Wi-Fi / charging / battery.
+  final FakeDeviceConditionsMonitor conditions;
+
+  /// Root / mock probes (FA-028).
+  final FakeDeviceIntegrityProbe probe;
+
+  /// Policy endpoints.
+  final FakePolicyApi policyApi;
+
+  /// Runtime permissions (A06).
+  final FakePermissionGate permissions;
+
+  /// Device id `device-1`.
+  final InMemoryTokenStore tokens;
+
   /// Now (UTC), fixed.
   DateTime now = t0;
 
@@ -75,6 +107,16 @@ class AgentDeps {
     cameraSourceProvider.overrideWithValue(camera),
     photoStoreProvider.overrideWithValue(photos),
     mapTileProviderProvider.overrideWithValue(BlankTileProvider()),
+    locationSamplerProvider.overrideWithValue(sampler),
+    foregroundDutyServiceProvider.overrideWithValue(dutyService),
+    dutyAlertsProvider.overrideWithValue(alerts),
+    deviceConditionsProvider.overrideWithValue(conditions),
+    deviceIntegrityProbeProvider.overrideWithValue(probe),
+    policyApiProvider.overrideWithValue(policyApi),
+    permissionGateProvider.overrideWithValue(permissions),
+    tokenStoreProvider.overrideWithValue(tokens),
+    appVersionProvider.overrideWithValue('0.1.0+1'),
+    dutyTickerProvider.overrideWithValue(const Stream<void>.empty()),
     settingsStoreProvider.overrideWithValue(
       InMemorySettingsStore(AppSettings(locale: locale, themeMode: theme)),
     ),
@@ -106,6 +148,8 @@ class AgentDeps {
   /// Closes everything.
   Future<void> dispose() async {
     await location.dispose();
+    await sampler.dispose();
+    await conditions.dispose();
     await connectivity.dispose();
     await db.close();
   }

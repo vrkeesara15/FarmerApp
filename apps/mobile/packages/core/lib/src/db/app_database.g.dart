@@ -6374,6 +6374,2488 @@ class VillagesCompanion extends UpdateCompanion<Village> {
   }
 }
 
+class $DutySessionsTable extends DutySessions
+    with TableInfo<$DutySessionsTable, DutySession> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DutySessionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _startAtMeta = const VerificationMeta(
+    'startAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startAt = GeneratedColumn<DateTime>(
+    'start_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endAtMeta = const VerificationMeta('endAt');
+  @override
+  late final GeneratedColumn<DateTime> endAt = GeneratedColumn<DateTime>(
+    'end_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _endReasonMeta = const VerificationMeta(
+    'endReason',
+  );
+  @override
+  late final GeneratedColumn<String> endReason = GeneratedColumn<String>(
+    'end_reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startLatMeta = const VerificationMeta(
+    'startLat',
+  );
+  @override
+  late final GeneratedColumn<double> startLat = GeneratedColumn<double>(
+    'start_lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startLonMeta = const VerificationMeta(
+    'startLon',
+  );
+  @override
+  late final GeneratedColumn<double> startLon = GeneratedColumn<double>(
+    'start_lon',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startAccuracyMMeta = const VerificationMeta(
+    'startAccuracyM',
+  );
+  @override
+  late final GeneratedColumn<double> startAccuracyM = GeneratedColumn<double>(
+    'start_accuracy_m',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _endLatMeta = const VerificationMeta('endLat');
+  @override
+  late final GeneratedColumn<double> endLat = GeneratedColumn<double>(
+    'end_lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _endLonMeta = const VerificationMeta('endLon');
+  @override
+  late final GeneratedColumn<double> endLon = GeneratedColumn<double>(
+    'end_lon',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _endAccuracyMMeta = const VerificationMeta(
+    'endAccuracyM',
+  );
+  @override
+  late final GeneratedColumn<double> endAccuracyM = GeneratedColumn<double>(
+    'end_accuracy_m',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _policyVersionMeta = const VerificationMeta(
+    'policyVersion',
+  );
+  @override
+  late final GeneratedColumn<String> policyVersion = GeneratedColumn<String>(
+    'policy_version',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _appVersionMeta = const VerificationMeta(
+    'appVersion',
+  );
+  @override
+  late final GeneratedColumn<String> appVersion = GeneratedColumn<String>(
+    'app_version',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _integrityMeta = const VerificationMeta(
+    'integrity',
+  );
+  @override
+  late final GeneratedColumn<String> integrity = GeneratedColumn<String>(
+    'integrity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _distanceMMeta = const VerificationMeta(
+    'distanceM',
+  );
+  @override
+  late final GeneratedColumn<double> distanceM = GeneratedColumn<double>(
+    'distance_m',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _autoEndedMeta = const VerificationMeta(
+    'autoEnded',
+  );
+  @override
+  late final GeneratedColumn<bool> autoEnded = GeneratedColumn<bool>(
+    'auto_ended',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("auto_ended" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _extraMeta = const VerificationMeta('extra');
+  @override
+  late final GeneratedColumn<String> extra = GeneratedColumn<String>(
+    'extra',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    version,
+    updatedAt,
+    dirty,
+    deleted,
+    startAt,
+    endAt,
+    endReason,
+    startLat,
+    startLon,
+    startAccuracyM,
+    endLat,
+    endLon,
+    endAccuracyM,
+    policyVersion,
+    deviceId,
+    appVersion,
+    integrity,
+    distanceM,
+    autoEnded,
+    extra,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'duty_sessions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DutySession> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('start_at')) {
+      context.handle(
+        _startAtMeta,
+        startAt.isAcceptableOrUnknown(data['start_at']!, _startAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startAtMeta);
+    }
+    if (data.containsKey('end_at')) {
+      context.handle(
+        _endAtMeta,
+        endAt.isAcceptableOrUnknown(data['end_at']!, _endAtMeta),
+      );
+    }
+    if (data.containsKey('end_reason')) {
+      context.handle(
+        _endReasonMeta,
+        endReason.isAcceptableOrUnknown(data['end_reason']!, _endReasonMeta),
+      );
+    }
+    if (data.containsKey('start_lat')) {
+      context.handle(
+        _startLatMeta,
+        startLat.isAcceptableOrUnknown(data['start_lat']!, _startLatMeta),
+      );
+    }
+    if (data.containsKey('start_lon')) {
+      context.handle(
+        _startLonMeta,
+        startLon.isAcceptableOrUnknown(data['start_lon']!, _startLonMeta),
+      );
+    }
+    if (data.containsKey('start_accuracy_m')) {
+      context.handle(
+        _startAccuracyMMeta,
+        startAccuracyM.isAcceptableOrUnknown(
+          data['start_accuracy_m']!,
+          _startAccuracyMMeta,
+        ),
+      );
+    }
+    if (data.containsKey('end_lat')) {
+      context.handle(
+        _endLatMeta,
+        endLat.isAcceptableOrUnknown(data['end_lat']!, _endLatMeta),
+      );
+    }
+    if (data.containsKey('end_lon')) {
+      context.handle(
+        _endLonMeta,
+        endLon.isAcceptableOrUnknown(data['end_lon']!, _endLonMeta),
+      );
+    }
+    if (data.containsKey('end_accuracy_m')) {
+      context.handle(
+        _endAccuracyMMeta,
+        endAccuracyM.isAcceptableOrUnknown(
+          data['end_accuracy_m']!,
+          _endAccuracyMMeta,
+        ),
+      );
+    }
+    if (data.containsKey('policy_version')) {
+      context.handle(
+        _policyVersionMeta,
+        policyVersion.isAcceptableOrUnknown(
+          data['policy_version']!,
+          _policyVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    if (data.containsKey('app_version')) {
+      context.handle(
+        _appVersionMeta,
+        appVersion.isAcceptableOrUnknown(data['app_version']!, _appVersionMeta),
+      );
+    }
+    if (data.containsKey('integrity')) {
+      context.handle(
+        _integrityMeta,
+        integrity.isAcceptableOrUnknown(data['integrity']!, _integrityMeta),
+      );
+    }
+    if (data.containsKey('distance_m')) {
+      context.handle(
+        _distanceMMeta,
+        distanceM.isAcceptableOrUnknown(data['distance_m']!, _distanceMMeta),
+      );
+    }
+    if (data.containsKey('auto_ended')) {
+      context.handle(
+        _autoEndedMeta,
+        autoEnded.isAcceptableOrUnknown(data['auto_ended']!, _autoEndedMeta),
+      );
+    }
+    if (data.containsKey('extra')) {
+      context.handle(
+        _extraMeta,
+        extra.isAcceptableOrUnknown(data['extra']!, _extraMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DutySession map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DutySession(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      startAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}start_at'],
+      )!,
+      endAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}end_at'],
+      ),
+      endReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}end_reason'],
+      ),
+      startLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}start_lat'],
+      ),
+      startLon: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}start_lon'],
+      ),
+      startAccuracyM: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}start_accuracy_m'],
+      ),
+      endLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}end_lat'],
+      ),
+      endLon: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}end_lon'],
+      ),
+      endAccuracyM: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}end_accuracy_m'],
+      ),
+      policyVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}policy_version'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+      appVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}app_version'],
+      ),
+      integrity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}integrity'],
+      )!,
+      distanceM: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}distance_m'],
+      )!,
+      autoEnded: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}auto_ended'],
+      )!,
+      extra: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}extra'],
+      )!,
+    );
+  }
+
+  @override
+  $DutySessionsTable createAlias(String alias) {
+    return $DutySessionsTable(attachedDatabase, alias);
+  }
+}
+
+class DutySession extends DataClass implements Insertable<DutySession> {
+  /// Client-generated uuid, also the server id.
+  final String id;
+
+  /// Server row version; 0 while the create is still queued.
+  final int version;
+
+  /// Last local write (UTC).
+  final DateTime updatedAt;
+
+  /// A queued op still references this row.
+  final bool dirty;
+
+  /// Deleted locally; removed once the server confirms.
+  final bool deleted;
+
+  /// When duty started (UTC).
+  final DateTime startAt;
+
+  /// When duty ended (UTC); null while active.
+  final DateTime? endAt;
+
+  /// `manual` | `auto_time` | `auto_idle` | `forced` | `rejected`.
+  final String? endReason;
+
+  /// Start fix latitude.
+  final double? startLat;
+
+  /// Start fix longitude.
+  final double? startLon;
+
+  /// Start fix accuracy (m).
+  final double? startAccuracyM;
+
+  /// End fix latitude.
+  final double? endLat;
+
+  /// End fix longitude.
+  final double? endLon;
+
+  /// End fix accuracy (m).
+  final double? endAccuracyM;
+
+  /// Location policy version accepted when the session started (VV-010).
+  final String? policyVersion;
+
+  /// Device that started the session.
+  final String? deviceId;
+
+  /// App version that started the session.
+  final String? appVersion;
+
+  /// JSON `{is_mock, is_rooted, clock_drift_s}` at start (FA-028).
+  final String integrity;
+
+  /// Client-side distance estimate in metres (sum of accepted point hops).
+  final double distanceM;
+
+  /// The server ended the session (VV-007); end fields are then read-only.
+  final bool autoEnded;
+
+  /// JSON of server fields this app does not model (km, stops, points).
+  final String extra;
+  const DutySession({
+    required this.id,
+    required this.version,
+    required this.updatedAt,
+    required this.dirty,
+    required this.deleted,
+    required this.startAt,
+    this.endAt,
+    this.endReason,
+    this.startLat,
+    this.startLon,
+    this.startAccuracyM,
+    this.endLat,
+    this.endLon,
+    this.endAccuracyM,
+    this.policyVersion,
+    this.deviceId,
+    this.appVersion,
+    required this.integrity,
+    required this.distanceM,
+    required this.autoEnded,
+    required this.extra,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['version'] = Variable<int>(version);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['dirty'] = Variable<bool>(dirty);
+    map['deleted'] = Variable<bool>(deleted);
+    map['start_at'] = Variable<DateTime>(startAt);
+    if (!nullToAbsent || endAt != null) {
+      map['end_at'] = Variable<DateTime>(endAt);
+    }
+    if (!nullToAbsent || endReason != null) {
+      map['end_reason'] = Variable<String>(endReason);
+    }
+    if (!nullToAbsent || startLat != null) {
+      map['start_lat'] = Variable<double>(startLat);
+    }
+    if (!nullToAbsent || startLon != null) {
+      map['start_lon'] = Variable<double>(startLon);
+    }
+    if (!nullToAbsent || startAccuracyM != null) {
+      map['start_accuracy_m'] = Variable<double>(startAccuracyM);
+    }
+    if (!nullToAbsent || endLat != null) {
+      map['end_lat'] = Variable<double>(endLat);
+    }
+    if (!nullToAbsent || endLon != null) {
+      map['end_lon'] = Variable<double>(endLon);
+    }
+    if (!nullToAbsent || endAccuracyM != null) {
+      map['end_accuracy_m'] = Variable<double>(endAccuracyM);
+    }
+    if (!nullToAbsent || policyVersion != null) {
+      map['policy_version'] = Variable<String>(policyVersion);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    if (!nullToAbsent || appVersion != null) {
+      map['app_version'] = Variable<String>(appVersion);
+    }
+    map['integrity'] = Variable<String>(integrity);
+    map['distance_m'] = Variable<double>(distanceM);
+    map['auto_ended'] = Variable<bool>(autoEnded);
+    map['extra'] = Variable<String>(extra);
+    return map;
+  }
+
+  DutySessionsCompanion toCompanion(bool nullToAbsent) {
+    return DutySessionsCompanion(
+      id: Value(id),
+      version: Value(version),
+      updatedAt: Value(updatedAt),
+      dirty: Value(dirty),
+      deleted: Value(deleted),
+      startAt: Value(startAt),
+      endAt: endAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endAt),
+      endReason: endReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endReason),
+      startLat: startLat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(startLat),
+      startLon: startLon == null && nullToAbsent
+          ? const Value.absent()
+          : Value(startLon),
+      startAccuracyM: startAccuracyM == null && nullToAbsent
+          ? const Value.absent()
+          : Value(startAccuracyM),
+      endLat: endLat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endLat),
+      endLon: endLon == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endLon),
+      endAccuracyM: endAccuracyM == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endAccuracyM),
+      policyVersion: policyVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(policyVersion),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+      appVersion: appVersion == null && nullToAbsent
+          ? const Value.absent()
+          : Value(appVersion),
+      integrity: Value(integrity),
+      distanceM: Value(distanceM),
+      autoEnded: Value(autoEnded),
+      extra: Value(extra),
+    );
+  }
+
+  factory DutySession.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DutySession(
+      id: serializer.fromJson<String>(json['id']),
+      version: serializer.fromJson<int>(json['version']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      startAt: serializer.fromJson<DateTime>(json['startAt']),
+      endAt: serializer.fromJson<DateTime?>(json['endAt']),
+      endReason: serializer.fromJson<String?>(json['endReason']),
+      startLat: serializer.fromJson<double?>(json['startLat']),
+      startLon: serializer.fromJson<double?>(json['startLon']),
+      startAccuracyM: serializer.fromJson<double?>(json['startAccuracyM']),
+      endLat: serializer.fromJson<double?>(json['endLat']),
+      endLon: serializer.fromJson<double?>(json['endLon']),
+      endAccuracyM: serializer.fromJson<double?>(json['endAccuracyM']),
+      policyVersion: serializer.fromJson<String?>(json['policyVersion']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+      appVersion: serializer.fromJson<String?>(json['appVersion']),
+      integrity: serializer.fromJson<String>(json['integrity']),
+      distanceM: serializer.fromJson<double>(json['distanceM']),
+      autoEnded: serializer.fromJson<bool>(json['autoEnded']),
+      extra: serializer.fromJson<String>(json['extra']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'version': serializer.toJson<int>(version),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'deleted': serializer.toJson<bool>(deleted),
+      'startAt': serializer.toJson<DateTime>(startAt),
+      'endAt': serializer.toJson<DateTime?>(endAt),
+      'endReason': serializer.toJson<String?>(endReason),
+      'startLat': serializer.toJson<double?>(startLat),
+      'startLon': serializer.toJson<double?>(startLon),
+      'startAccuracyM': serializer.toJson<double?>(startAccuracyM),
+      'endLat': serializer.toJson<double?>(endLat),
+      'endLon': serializer.toJson<double?>(endLon),
+      'endAccuracyM': serializer.toJson<double?>(endAccuracyM),
+      'policyVersion': serializer.toJson<String?>(policyVersion),
+      'deviceId': serializer.toJson<String?>(deviceId),
+      'appVersion': serializer.toJson<String?>(appVersion),
+      'integrity': serializer.toJson<String>(integrity),
+      'distanceM': serializer.toJson<double>(distanceM),
+      'autoEnded': serializer.toJson<bool>(autoEnded),
+      'extra': serializer.toJson<String>(extra),
+    };
+  }
+
+  DutySession copyWith({
+    String? id,
+    int? version,
+    DateTime? updatedAt,
+    bool? dirty,
+    bool? deleted,
+    DateTime? startAt,
+    Value<DateTime?> endAt = const Value.absent(),
+    Value<String?> endReason = const Value.absent(),
+    Value<double?> startLat = const Value.absent(),
+    Value<double?> startLon = const Value.absent(),
+    Value<double?> startAccuracyM = const Value.absent(),
+    Value<double?> endLat = const Value.absent(),
+    Value<double?> endLon = const Value.absent(),
+    Value<double?> endAccuracyM = const Value.absent(),
+    Value<String?> policyVersion = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
+    Value<String?> appVersion = const Value.absent(),
+    String? integrity,
+    double? distanceM,
+    bool? autoEnded,
+    String? extra,
+  }) => DutySession(
+    id: id ?? this.id,
+    version: version ?? this.version,
+    updatedAt: updatedAt ?? this.updatedAt,
+    dirty: dirty ?? this.dirty,
+    deleted: deleted ?? this.deleted,
+    startAt: startAt ?? this.startAt,
+    endAt: endAt.present ? endAt.value : this.endAt,
+    endReason: endReason.present ? endReason.value : this.endReason,
+    startLat: startLat.present ? startLat.value : this.startLat,
+    startLon: startLon.present ? startLon.value : this.startLon,
+    startAccuracyM: startAccuracyM.present
+        ? startAccuracyM.value
+        : this.startAccuracyM,
+    endLat: endLat.present ? endLat.value : this.endLat,
+    endLon: endLon.present ? endLon.value : this.endLon,
+    endAccuracyM: endAccuracyM.present ? endAccuracyM.value : this.endAccuracyM,
+    policyVersion: policyVersion.present
+        ? policyVersion.value
+        : this.policyVersion,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+    appVersion: appVersion.present ? appVersion.value : this.appVersion,
+    integrity: integrity ?? this.integrity,
+    distanceM: distanceM ?? this.distanceM,
+    autoEnded: autoEnded ?? this.autoEnded,
+    extra: extra ?? this.extra,
+  );
+  DutySession copyWithCompanion(DutySessionsCompanion data) {
+    return DutySession(
+      id: data.id.present ? data.id.value : this.id,
+      version: data.version.present ? data.version.value : this.version,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      startAt: data.startAt.present ? data.startAt.value : this.startAt,
+      endAt: data.endAt.present ? data.endAt.value : this.endAt,
+      endReason: data.endReason.present ? data.endReason.value : this.endReason,
+      startLat: data.startLat.present ? data.startLat.value : this.startLat,
+      startLon: data.startLon.present ? data.startLon.value : this.startLon,
+      startAccuracyM: data.startAccuracyM.present
+          ? data.startAccuracyM.value
+          : this.startAccuracyM,
+      endLat: data.endLat.present ? data.endLat.value : this.endLat,
+      endLon: data.endLon.present ? data.endLon.value : this.endLon,
+      endAccuracyM: data.endAccuracyM.present
+          ? data.endAccuracyM.value
+          : this.endAccuracyM,
+      policyVersion: data.policyVersion.present
+          ? data.policyVersion.value
+          : this.policyVersion,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      appVersion: data.appVersion.present
+          ? data.appVersion.value
+          : this.appVersion,
+      integrity: data.integrity.present ? data.integrity.value : this.integrity,
+      distanceM: data.distanceM.present ? data.distanceM.value : this.distanceM,
+      autoEnded: data.autoEnded.present ? data.autoEnded.value : this.autoEnded,
+      extra: data.extra.present ? data.extra.value : this.extra,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DutySession(')
+          ..write('id: $id, ')
+          ..write('version: $version, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('deleted: $deleted, ')
+          ..write('startAt: $startAt, ')
+          ..write('endAt: $endAt, ')
+          ..write('endReason: $endReason, ')
+          ..write('startLat: $startLat, ')
+          ..write('startLon: $startLon, ')
+          ..write('startAccuracyM: $startAccuracyM, ')
+          ..write('endLat: $endLat, ')
+          ..write('endLon: $endLon, ')
+          ..write('endAccuracyM: $endAccuracyM, ')
+          ..write('policyVersion: $policyVersion, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('appVersion: $appVersion, ')
+          ..write('integrity: $integrity, ')
+          ..write('distanceM: $distanceM, ')
+          ..write('autoEnded: $autoEnded, ')
+          ..write('extra: $extra')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    version,
+    updatedAt,
+    dirty,
+    deleted,
+    startAt,
+    endAt,
+    endReason,
+    startLat,
+    startLon,
+    startAccuracyM,
+    endLat,
+    endLon,
+    endAccuracyM,
+    policyVersion,
+    deviceId,
+    appVersion,
+    integrity,
+    distanceM,
+    autoEnded,
+    extra,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DutySession &&
+          other.id == this.id &&
+          other.version == this.version &&
+          other.updatedAt == this.updatedAt &&
+          other.dirty == this.dirty &&
+          other.deleted == this.deleted &&
+          other.startAt == this.startAt &&
+          other.endAt == this.endAt &&
+          other.endReason == this.endReason &&
+          other.startLat == this.startLat &&
+          other.startLon == this.startLon &&
+          other.startAccuracyM == this.startAccuracyM &&
+          other.endLat == this.endLat &&
+          other.endLon == this.endLon &&
+          other.endAccuracyM == this.endAccuracyM &&
+          other.policyVersion == this.policyVersion &&
+          other.deviceId == this.deviceId &&
+          other.appVersion == this.appVersion &&
+          other.integrity == this.integrity &&
+          other.distanceM == this.distanceM &&
+          other.autoEnded == this.autoEnded &&
+          other.extra == this.extra);
+}
+
+class DutySessionsCompanion extends UpdateCompanion<DutySession> {
+  final Value<String> id;
+  final Value<int> version;
+  final Value<DateTime> updatedAt;
+  final Value<bool> dirty;
+  final Value<bool> deleted;
+  final Value<DateTime> startAt;
+  final Value<DateTime?> endAt;
+  final Value<String?> endReason;
+  final Value<double?> startLat;
+  final Value<double?> startLon;
+  final Value<double?> startAccuracyM;
+  final Value<double?> endLat;
+  final Value<double?> endLon;
+  final Value<double?> endAccuracyM;
+  final Value<String?> policyVersion;
+  final Value<String?> deviceId;
+  final Value<String?> appVersion;
+  final Value<String> integrity;
+  final Value<double> distanceM;
+  final Value<bool> autoEnded;
+  final Value<String> extra;
+  final Value<int> rowid;
+  const DutySessionsCompanion({
+    this.id = const Value.absent(),
+    this.version = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.startAt = const Value.absent(),
+    this.endAt = const Value.absent(),
+    this.endReason = const Value.absent(),
+    this.startLat = const Value.absent(),
+    this.startLon = const Value.absent(),
+    this.startAccuracyM = const Value.absent(),
+    this.endLat = const Value.absent(),
+    this.endLon = const Value.absent(),
+    this.endAccuracyM = const Value.absent(),
+    this.policyVersion = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.appVersion = const Value.absent(),
+    this.integrity = const Value.absent(),
+    this.distanceM = const Value.absent(),
+    this.autoEnded = const Value.absent(),
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DutySessionsCompanion.insert({
+    required String id,
+    this.version = const Value.absent(),
+    required DateTime updatedAt,
+    this.dirty = const Value.absent(),
+    this.deleted = const Value.absent(),
+    required DateTime startAt,
+    this.endAt = const Value.absent(),
+    this.endReason = const Value.absent(),
+    this.startLat = const Value.absent(),
+    this.startLon = const Value.absent(),
+    this.startAccuracyM = const Value.absent(),
+    this.endLat = const Value.absent(),
+    this.endLon = const Value.absent(),
+    this.endAccuracyM = const Value.absent(),
+    this.policyVersion = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.appVersion = const Value.absent(),
+    this.integrity = const Value.absent(),
+    this.distanceM = const Value.absent(),
+    this.autoEnded = const Value.absent(),
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       updatedAt = Value(updatedAt),
+       startAt = Value(startAt);
+  static Insertable<DutySession> custom({
+    Expression<String>? id,
+    Expression<int>? version,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? dirty,
+    Expression<bool>? deleted,
+    Expression<DateTime>? startAt,
+    Expression<DateTime>? endAt,
+    Expression<String>? endReason,
+    Expression<double>? startLat,
+    Expression<double>? startLon,
+    Expression<double>? startAccuracyM,
+    Expression<double>? endLat,
+    Expression<double>? endLon,
+    Expression<double>? endAccuracyM,
+    Expression<String>? policyVersion,
+    Expression<String>? deviceId,
+    Expression<String>? appVersion,
+    Expression<String>? integrity,
+    Expression<double>? distanceM,
+    Expression<bool>? autoEnded,
+    Expression<String>? extra,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (version != null) 'version': version,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (deleted != null) 'deleted': deleted,
+      if (startAt != null) 'start_at': startAt,
+      if (endAt != null) 'end_at': endAt,
+      if (endReason != null) 'end_reason': endReason,
+      if (startLat != null) 'start_lat': startLat,
+      if (startLon != null) 'start_lon': startLon,
+      if (startAccuracyM != null) 'start_accuracy_m': startAccuracyM,
+      if (endLat != null) 'end_lat': endLat,
+      if (endLon != null) 'end_lon': endLon,
+      if (endAccuracyM != null) 'end_accuracy_m': endAccuracyM,
+      if (policyVersion != null) 'policy_version': policyVersion,
+      if (deviceId != null) 'device_id': deviceId,
+      if (appVersion != null) 'app_version': appVersion,
+      if (integrity != null) 'integrity': integrity,
+      if (distanceM != null) 'distance_m': distanceM,
+      if (autoEnded != null) 'auto_ended': autoEnded,
+      if (extra != null) 'extra': extra,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DutySessionsCompanion copyWith({
+    Value<String>? id,
+    Value<int>? version,
+    Value<DateTime>? updatedAt,
+    Value<bool>? dirty,
+    Value<bool>? deleted,
+    Value<DateTime>? startAt,
+    Value<DateTime?>? endAt,
+    Value<String?>? endReason,
+    Value<double?>? startLat,
+    Value<double?>? startLon,
+    Value<double?>? startAccuracyM,
+    Value<double?>? endLat,
+    Value<double?>? endLon,
+    Value<double?>? endAccuracyM,
+    Value<String?>? policyVersion,
+    Value<String?>? deviceId,
+    Value<String?>? appVersion,
+    Value<String>? integrity,
+    Value<double>? distanceM,
+    Value<bool>? autoEnded,
+    Value<String>? extra,
+    Value<int>? rowid,
+  }) {
+    return DutySessionsCompanion(
+      id: id ?? this.id,
+      version: version ?? this.version,
+      updatedAt: updatedAt ?? this.updatedAt,
+      dirty: dirty ?? this.dirty,
+      deleted: deleted ?? this.deleted,
+      startAt: startAt ?? this.startAt,
+      endAt: endAt ?? this.endAt,
+      endReason: endReason ?? this.endReason,
+      startLat: startLat ?? this.startLat,
+      startLon: startLon ?? this.startLon,
+      startAccuracyM: startAccuracyM ?? this.startAccuracyM,
+      endLat: endLat ?? this.endLat,
+      endLon: endLon ?? this.endLon,
+      endAccuracyM: endAccuracyM ?? this.endAccuracyM,
+      policyVersion: policyVersion ?? this.policyVersion,
+      deviceId: deviceId ?? this.deviceId,
+      appVersion: appVersion ?? this.appVersion,
+      integrity: integrity ?? this.integrity,
+      distanceM: distanceM ?? this.distanceM,
+      autoEnded: autoEnded ?? this.autoEnded,
+      extra: extra ?? this.extra,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (startAt.present) {
+      map['start_at'] = Variable<DateTime>(startAt.value);
+    }
+    if (endAt.present) {
+      map['end_at'] = Variable<DateTime>(endAt.value);
+    }
+    if (endReason.present) {
+      map['end_reason'] = Variable<String>(endReason.value);
+    }
+    if (startLat.present) {
+      map['start_lat'] = Variable<double>(startLat.value);
+    }
+    if (startLon.present) {
+      map['start_lon'] = Variable<double>(startLon.value);
+    }
+    if (startAccuracyM.present) {
+      map['start_accuracy_m'] = Variable<double>(startAccuracyM.value);
+    }
+    if (endLat.present) {
+      map['end_lat'] = Variable<double>(endLat.value);
+    }
+    if (endLon.present) {
+      map['end_lon'] = Variable<double>(endLon.value);
+    }
+    if (endAccuracyM.present) {
+      map['end_accuracy_m'] = Variable<double>(endAccuracyM.value);
+    }
+    if (policyVersion.present) {
+      map['policy_version'] = Variable<String>(policyVersion.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (appVersion.present) {
+      map['app_version'] = Variable<String>(appVersion.value);
+    }
+    if (integrity.present) {
+      map['integrity'] = Variable<String>(integrity.value);
+    }
+    if (distanceM.present) {
+      map['distance_m'] = Variable<double>(distanceM.value);
+    }
+    if (autoEnded.present) {
+      map['auto_ended'] = Variable<bool>(autoEnded.value);
+    }
+    if (extra.present) {
+      map['extra'] = Variable<String>(extra.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DutySessionsCompanion(')
+          ..write('id: $id, ')
+          ..write('version: $version, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('deleted: $deleted, ')
+          ..write('startAt: $startAt, ')
+          ..write('endAt: $endAt, ')
+          ..write('endReason: $endReason, ')
+          ..write('startLat: $startLat, ')
+          ..write('startLon: $startLon, ')
+          ..write('startAccuracyM: $startAccuracyM, ')
+          ..write('endLat: $endLat, ')
+          ..write('endLon: $endLon, ')
+          ..write('endAccuracyM: $endAccuracyM, ')
+          ..write('policyVersion: $policyVersion, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('appVersion: $appVersion, ')
+          ..write('integrity: $integrity, ')
+          ..write('distanceM: $distanceM, ')
+          ..write('autoEnded: $autoEnded, ')
+          ..write('extra: $extra, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $LocationBufferTable extends LocationBuffer
+    with TableInfo<$LocationBufferTable, LocationBufferRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LocationBufferTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tsMeta = const VerificationMeta('ts');
+  @override
+  late final GeneratedColumn<DateTime> ts = GeneratedColumn<DateTime>(
+    'ts',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latMeta = const VerificationMeta('lat');
+  @override
+  late final GeneratedColumn<double> lat = GeneratedColumn<double>(
+    'lat',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lonMeta = const VerificationMeta('lon');
+  @override
+  late final GeneratedColumn<double> lon = GeneratedColumn<double>(
+    'lon',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _accuracyMMeta = const VerificationMeta(
+    'accuracyM',
+  );
+  @override
+  late final GeneratedColumn<double> accuracyM = GeneratedColumn<double>(
+    'accuracy_m',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _speedMpsMeta = const VerificationMeta(
+    'speedMps',
+  );
+  @override
+  late final GeneratedColumn<double> speedMps = GeneratedColumn<double>(
+    'speed_mps',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _bearingMeta = const VerificationMeta(
+    'bearing',
+  );
+  @override
+  late final GeneratedColumn<double> bearing = GeneratedColumn<double>(
+    'bearing',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _batteryPctMeta = const VerificationMeta(
+    'batteryPct',
+  );
+  @override
+  late final GeneratedColumn<int> batteryPct = GeneratedColumn<int>(
+    'battery_pct',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isMockMeta = const VerificationMeta('isMock');
+  @override
+  late final GeneratedColumn<bool> isMock = GeneratedColumn<bool>(
+    'is_mock',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_mock" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isRootedMeta = const VerificationMeta(
+    'isRooted',
+  );
+  @override
+  late final GeneratedColumn<bool> isRooted = GeneratedColumn<bool>(
+    'is_rooted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_rooted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _clockDriftSMeta = const VerificationMeta(
+    'clockDriftS',
+  );
+  @override
+  late final GeneratedColumn<int> clockDriftS = GeneratedColumn<int>(
+    'clock_drift_s',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _providerMeta = const VerificationMeta(
+    'provider',
+  );
+  @override
+  late final GeneratedColumn<String> provider = GeneratedColumn<String>(
+    'provider',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _batchIdMeta = const VerificationMeta(
+    'batchId',
+  );
+  @override
+  late final GeneratedColumn<String> batchId = GeneratedColumn<String>(
+    'batch_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    sessionId,
+    ts,
+    lat,
+    lon,
+    accuracyM,
+    speedMps,
+    bearing,
+    batteryPct,
+    isMock,
+    isRooted,
+    clockDriftS,
+    provider,
+    batchId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'location_buffer';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LocationBufferRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('ts')) {
+      context.handle(_tsMeta, ts.isAcceptableOrUnknown(data['ts']!, _tsMeta));
+    } else if (isInserting) {
+      context.missing(_tsMeta);
+    }
+    if (data.containsKey('lat')) {
+      context.handle(
+        _latMeta,
+        lat.isAcceptableOrUnknown(data['lat']!, _latMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latMeta);
+    }
+    if (data.containsKey('lon')) {
+      context.handle(
+        _lonMeta,
+        lon.isAcceptableOrUnknown(data['lon']!, _lonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lonMeta);
+    }
+    if (data.containsKey('accuracy_m')) {
+      context.handle(
+        _accuracyMMeta,
+        accuracyM.isAcceptableOrUnknown(data['accuracy_m']!, _accuracyMMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accuracyMMeta);
+    }
+    if (data.containsKey('speed_mps')) {
+      context.handle(
+        _speedMpsMeta,
+        speedMps.isAcceptableOrUnknown(data['speed_mps']!, _speedMpsMeta),
+      );
+    }
+    if (data.containsKey('bearing')) {
+      context.handle(
+        _bearingMeta,
+        bearing.isAcceptableOrUnknown(data['bearing']!, _bearingMeta),
+      );
+    }
+    if (data.containsKey('battery_pct')) {
+      context.handle(
+        _batteryPctMeta,
+        batteryPct.isAcceptableOrUnknown(data['battery_pct']!, _batteryPctMeta),
+      );
+    }
+    if (data.containsKey('is_mock')) {
+      context.handle(
+        _isMockMeta,
+        isMock.isAcceptableOrUnknown(data['is_mock']!, _isMockMeta),
+      );
+    }
+    if (data.containsKey('is_rooted')) {
+      context.handle(
+        _isRootedMeta,
+        isRooted.isAcceptableOrUnknown(data['is_rooted']!, _isRootedMeta),
+      );
+    }
+    if (data.containsKey('clock_drift_s')) {
+      context.handle(
+        _clockDriftSMeta,
+        clockDriftS.isAcceptableOrUnknown(
+          data['clock_drift_s']!,
+          _clockDriftSMeta,
+        ),
+      );
+    }
+    if (data.containsKey('provider')) {
+      context.handle(
+        _providerMeta,
+        provider.isAcceptableOrUnknown(data['provider']!, _providerMeta),
+      );
+    }
+    if (data.containsKey('batch_id')) {
+      context.handle(
+        _batchIdMeta,
+        batchId.isAcceptableOrUnknown(data['batch_id']!, _batchIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LocationBufferRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocationBufferRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      ts: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}ts'],
+      )!,
+      lat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lat'],
+      )!,
+      lon: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}lon'],
+      )!,
+      accuracyM: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}accuracy_m'],
+      )!,
+      speedMps: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}speed_mps'],
+      ),
+      bearing: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}bearing'],
+      ),
+      batteryPct: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}battery_pct'],
+      ),
+      isMock: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_mock'],
+      )!,
+      isRooted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_rooted'],
+      )!,
+      clockDriftS: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}clock_drift_s'],
+      ),
+      provider: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider'],
+      ),
+      batchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}batch_id'],
+      ),
+    );
+  }
+
+  @override
+  $LocationBufferTable createAlias(String alias) {
+    return $LocationBufferTable(attachedDatabase, alias);
+  }
+}
+
+class LocationBufferRow extends DataClass
+    implements Insertable<LocationBufferRow> {
+  /// Local sequence.
+  final int id;
+
+  /// Owning duty session.
+  final String sessionId;
+
+  /// Fix time (UTC).
+  final DateTime ts;
+
+  /// Latitude.
+  final double lat;
+
+  /// Longitude.
+  final double lon;
+
+  /// Horizontal accuracy (m).
+  final double accuracyM;
+
+  /// Speed (m/s), if the provider gave one.
+  final double? speedMps;
+
+  /// Bearing (degrees), if the provider gave one.
+  final double? bearing;
+
+  /// Battery level 0-100.
+  final int? batteryPct;
+
+  /// The fix came from a mock provider (FA-028).
+  final bool isMock;
+
+  /// The device looked rooted when the fix was taken (FA-028).
+  final bool isRooted;
+
+  /// Device clock minus server clock (s) at the fix, if known (VV-002).
+  final int? clockDriftS;
+
+  /// `fused` | `gps` | `network` | ...
+  final String? provider;
+
+  /// The `location_batch` op the point went out in; null while pending.
+  final String? batchId;
+  const LocationBufferRow({
+    required this.id,
+    required this.sessionId,
+    required this.ts,
+    required this.lat,
+    required this.lon,
+    required this.accuracyM,
+    this.speedMps,
+    this.bearing,
+    this.batteryPct,
+    required this.isMock,
+    required this.isRooted,
+    this.clockDriftS,
+    this.provider,
+    this.batchId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['session_id'] = Variable<String>(sessionId);
+    map['ts'] = Variable<DateTime>(ts);
+    map['lat'] = Variable<double>(lat);
+    map['lon'] = Variable<double>(lon);
+    map['accuracy_m'] = Variable<double>(accuracyM);
+    if (!nullToAbsent || speedMps != null) {
+      map['speed_mps'] = Variable<double>(speedMps);
+    }
+    if (!nullToAbsent || bearing != null) {
+      map['bearing'] = Variable<double>(bearing);
+    }
+    if (!nullToAbsent || batteryPct != null) {
+      map['battery_pct'] = Variable<int>(batteryPct);
+    }
+    map['is_mock'] = Variable<bool>(isMock);
+    map['is_rooted'] = Variable<bool>(isRooted);
+    if (!nullToAbsent || clockDriftS != null) {
+      map['clock_drift_s'] = Variable<int>(clockDriftS);
+    }
+    if (!nullToAbsent || provider != null) {
+      map['provider'] = Variable<String>(provider);
+    }
+    if (!nullToAbsent || batchId != null) {
+      map['batch_id'] = Variable<String>(batchId);
+    }
+    return map;
+  }
+
+  LocationBufferCompanion toCompanion(bool nullToAbsent) {
+    return LocationBufferCompanion(
+      id: Value(id),
+      sessionId: Value(sessionId),
+      ts: Value(ts),
+      lat: Value(lat),
+      lon: Value(lon),
+      accuracyM: Value(accuracyM),
+      speedMps: speedMps == null && nullToAbsent
+          ? const Value.absent()
+          : Value(speedMps),
+      bearing: bearing == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bearing),
+      batteryPct: batteryPct == null && nullToAbsent
+          ? const Value.absent()
+          : Value(batteryPct),
+      isMock: Value(isMock),
+      isRooted: Value(isRooted),
+      clockDriftS: clockDriftS == null && nullToAbsent
+          ? const Value.absent()
+          : Value(clockDriftS),
+      provider: provider == null && nullToAbsent
+          ? const Value.absent()
+          : Value(provider),
+      batchId: batchId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(batchId),
+    );
+  }
+
+  factory LocationBufferRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocationBufferRow(
+      id: serializer.fromJson<int>(json['id']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      ts: serializer.fromJson<DateTime>(json['ts']),
+      lat: serializer.fromJson<double>(json['lat']),
+      lon: serializer.fromJson<double>(json['lon']),
+      accuracyM: serializer.fromJson<double>(json['accuracyM']),
+      speedMps: serializer.fromJson<double?>(json['speedMps']),
+      bearing: serializer.fromJson<double?>(json['bearing']),
+      batteryPct: serializer.fromJson<int?>(json['batteryPct']),
+      isMock: serializer.fromJson<bool>(json['isMock']),
+      isRooted: serializer.fromJson<bool>(json['isRooted']),
+      clockDriftS: serializer.fromJson<int?>(json['clockDriftS']),
+      provider: serializer.fromJson<String?>(json['provider']),
+      batchId: serializer.fromJson<String?>(json['batchId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'ts': serializer.toJson<DateTime>(ts),
+      'lat': serializer.toJson<double>(lat),
+      'lon': serializer.toJson<double>(lon),
+      'accuracyM': serializer.toJson<double>(accuracyM),
+      'speedMps': serializer.toJson<double?>(speedMps),
+      'bearing': serializer.toJson<double?>(bearing),
+      'batteryPct': serializer.toJson<int?>(batteryPct),
+      'isMock': serializer.toJson<bool>(isMock),
+      'isRooted': serializer.toJson<bool>(isRooted),
+      'clockDriftS': serializer.toJson<int?>(clockDriftS),
+      'provider': serializer.toJson<String?>(provider),
+      'batchId': serializer.toJson<String?>(batchId),
+    };
+  }
+
+  LocationBufferRow copyWith({
+    int? id,
+    String? sessionId,
+    DateTime? ts,
+    double? lat,
+    double? lon,
+    double? accuracyM,
+    Value<double?> speedMps = const Value.absent(),
+    Value<double?> bearing = const Value.absent(),
+    Value<int?> batteryPct = const Value.absent(),
+    bool? isMock,
+    bool? isRooted,
+    Value<int?> clockDriftS = const Value.absent(),
+    Value<String?> provider = const Value.absent(),
+    Value<String?> batchId = const Value.absent(),
+  }) => LocationBufferRow(
+    id: id ?? this.id,
+    sessionId: sessionId ?? this.sessionId,
+    ts: ts ?? this.ts,
+    lat: lat ?? this.lat,
+    lon: lon ?? this.lon,
+    accuracyM: accuracyM ?? this.accuracyM,
+    speedMps: speedMps.present ? speedMps.value : this.speedMps,
+    bearing: bearing.present ? bearing.value : this.bearing,
+    batteryPct: batteryPct.present ? batteryPct.value : this.batteryPct,
+    isMock: isMock ?? this.isMock,
+    isRooted: isRooted ?? this.isRooted,
+    clockDriftS: clockDriftS.present ? clockDriftS.value : this.clockDriftS,
+    provider: provider.present ? provider.value : this.provider,
+    batchId: batchId.present ? batchId.value : this.batchId,
+  );
+  LocationBufferRow copyWithCompanion(LocationBufferCompanion data) {
+    return LocationBufferRow(
+      id: data.id.present ? data.id.value : this.id,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      ts: data.ts.present ? data.ts.value : this.ts,
+      lat: data.lat.present ? data.lat.value : this.lat,
+      lon: data.lon.present ? data.lon.value : this.lon,
+      accuracyM: data.accuracyM.present ? data.accuracyM.value : this.accuracyM,
+      speedMps: data.speedMps.present ? data.speedMps.value : this.speedMps,
+      bearing: data.bearing.present ? data.bearing.value : this.bearing,
+      batteryPct: data.batteryPct.present
+          ? data.batteryPct.value
+          : this.batteryPct,
+      isMock: data.isMock.present ? data.isMock.value : this.isMock,
+      isRooted: data.isRooted.present ? data.isRooted.value : this.isRooted,
+      clockDriftS: data.clockDriftS.present
+          ? data.clockDriftS.value
+          : this.clockDriftS,
+      provider: data.provider.present ? data.provider.value : this.provider,
+      batchId: data.batchId.present ? data.batchId.value : this.batchId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocationBufferRow(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('ts: $ts, ')
+          ..write('lat: $lat, ')
+          ..write('lon: $lon, ')
+          ..write('accuracyM: $accuracyM, ')
+          ..write('speedMps: $speedMps, ')
+          ..write('bearing: $bearing, ')
+          ..write('batteryPct: $batteryPct, ')
+          ..write('isMock: $isMock, ')
+          ..write('isRooted: $isRooted, ')
+          ..write('clockDriftS: $clockDriftS, ')
+          ..write('provider: $provider, ')
+          ..write('batchId: $batchId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    sessionId,
+    ts,
+    lat,
+    lon,
+    accuracyM,
+    speedMps,
+    bearing,
+    batteryPct,
+    isMock,
+    isRooted,
+    clockDriftS,
+    provider,
+    batchId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocationBufferRow &&
+          other.id == this.id &&
+          other.sessionId == this.sessionId &&
+          other.ts == this.ts &&
+          other.lat == this.lat &&
+          other.lon == this.lon &&
+          other.accuracyM == this.accuracyM &&
+          other.speedMps == this.speedMps &&
+          other.bearing == this.bearing &&
+          other.batteryPct == this.batteryPct &&
+          other.isMock == this.isMock &&
+          other.isRooted == this.isRooted &&
+          other.clockDriftS == this.clockDriftS &&
+          other.provider == this.provider &&
+          other.batchId == this.batchId);
+}
+
+class LocationBufferCompanion extends UpdateCompanion<LocationBufferRow> {
+  final Value<int> id;
+  final Value<String> sessionId;
+  final Value<DateTime> ts;
+  final Value<double> lat;
+  final Value<double> lon;
+  final Value<double> accuracyM;
+  final Value<double?> speedMps;
+  final Value<double?> bearing;
+  final Value<int?> batteryPct;
+  final Value<bool> isMock;
+  final Value<bool> isRooted;
+  final Value<int?> clockDriftS;
+  final Value<String?> provider;
+  final Value<String?> batchId;
+  const LocationBufferCompanion({
+    this.id = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.ts = const Value.absent(),
+    this.lat = const Value.absent(),
+    this.lon = const Value.absent(),
+    this.accuracyM = const Value.absent(),
+    this.speedMps = const Value.absent(),
+    this.bearing = const Value.absent(),
+    this.batteryPct = const Value.absent(),
+    this.isMock = const Value.absent(),
+    this.isRooted = const Value.absent(),
+    this.clockDriftS = const Value.absent(),
+    this.provider = const Value.absent(),
+    this.batchId = const Value.absent(),
+  });
+  LocationBufferCompanion.insert({
+    this.id = const Value.absent(),
+    required String sessionId,
+    required DateTime ts,
+    required double lat,
+    required double lon,
+    required double accuracyM,
+    this.speedMps = const Value.absent(),
+    this.bearing = const Value.absent(),
+    this.batteryPct = const Value.absent(),
+    this.isMock = const Value.absent(),
+    this.isRooted = const Value.absent(),
+    this.clockDriftS = const Value.absent(),
+    this.provider = const Value.absent(),
+    this.batchId = const Value.absent(),
+  }) : sessionId = Value(sessionId),
+       ts = Value(ts),
+       lat = Value(lat),
+       lon = Value(lon),
+       accuracyM = Value(accuracyM);
+  static Insertable<LocationBufferRow> custom({
+    Expression<int>? id,
+    Expression<String>? sessionId,
+    Expression<DateTime>? ts,
+    Expression<double>? lat,
+    Expression<double>? lon,
+    Expression<double>? accuracyM,
+    Expression<double>? speedMps,
+    Expression<double>? bearing,
+    Expression<int>? batteryPct,
+    Expression<bool>? isMock,
+    Expression<bool>? isRooted,
+    Expression<int>? clockDriftS,
+    Expression<String>? provider,
+    Expression<String>? batchId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sessionId != null) 'session_id': sessionId,
+      if (ts != null) 'ts': ts,
+      if (lat != null) 'lat': lat,
+      if (lon != null) 'lon': lon,
+      if (accuracyM != null) 'accuracy_m': accuracyM,
+      if (speedMps != null) 'speed_mps': speedMps,
+      if (bearing != null) 'bearing': bearing,
+      if (batteryPct != null) 'battery_pct': batteryPct,
+      if (isMock != null) 'is_mock': isMock,
+      if (isRooted != null) 'is_rooted': isRooted,
+      if (clockDriftS != null) 'clock_drift_s': clockDriftS,
+      if (provider != null) 'provider': provider,
+      if (batchId != null) 'batch_id': batchId,
+    });
+  }
+
+  LocationBufferCompanion copyWith({
+    Value<int>? id,
+    Value<String>? sessionId,
+    Value<DateTime>? ts,
+    Value<double>? lat,
+    Value<double>? lon,
+    Value<double>? accuracyM,
+    Value<double?>? speedMps,
+    Value<double?>? bearing,
+    Value<int?>? batteryPct,
+    Value<bool>? isMock,
+    Value<bool>? isRooted,
+    Value<int?>? clockDriftS,
+    Value<String?>? provider,
+    Value<String?>? batchId,
+  }) {
+    return LocationBufferCompanion(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      ts: ts ?? this.ts,
+      lat: lat ?? this.lat,
+      lon: lon ?? this.lon,
+      accuracyM: accuracyM ?? this.accuracyM,
+      speedMps: speedMps ?? this.speedMps,
+      bearing: bearing ?? this.bearing,
+      batteryPct: batteryPct ?? this.batteryPct,
+      isMock: isMock ?? this.isMock,
+      isRooted: isRooted ?? this.isRooted,
+      clockDriftS: clockDriftS ?? this.clockDriftS,
+      provider: provider ?? this.provider,
+      batchId: batchId ?? this.batchId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (ts.present) {
+      map['ts'] = Variable<DateTime>(ts.value);
+    }
+    if (lat.present) {
+      map['lat'] = Variable<double>(lat.value);
+    }
+    if (lon.present) {
+      map['lon'] = Variable<double>(lon.value);
+    }
+    if (accuracyM.present) {
+      map['accuracy_m'] = Variable<double>(accuracyM.value);
+    }
+    if (speedMps.present) {
+      map['speed_mps'] = Variable<double>(speedMps.value);
+    }
+    if (bearing.present) {
+      map['bearing'] = Variable<double>(bearing.value);
+    }
+    if (batteryPct.present) {
+      map['battery_pct'] = Variable<int>(batteryPct.value);
+    }
+    if (isMock.present) {
+      map['is_mock'] = Variable<bool>(isMock.value);
+    }
+    if (isRooted.present) {
+      map['is_rooted'] = Variable<bool>(isRooted.value);
+    }
+    if (clockDriftS.present) {
+      map['clock_drift_s'] = Variable<int>(clockDriftS.value);
+    }
+    if (provider.present) {
+      map['provider'] = Variable<String>(provider.value);
+    }
+    if (batchId.present) {
+      map['batch_id'] = Variable<String>(batchId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocationBufferCompanion(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('ts: $ts, ')
+          ..write('lat: $lat, ')
+          ..write('lon: $lon, ')
+          ..write('accuracyM: $accuracyM, ')
+          ..write('speedMps: $speedMps, ')
+          ..write('bearing: $bearing, ')
+          ..write('batteryPct: $batteryPct, ')
+          ..write('isMock: $isMock, ')
+          ..write('isRooted: $isRooted, ')
+          ..write('clockDriftS: $clockDriftS, ')
+          ..write('provider: $provider, ')
+          ..write('batchId: $batchId')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SyncDocsTable extends SyncDocs with TableInfo<$SyncDocsTable, SyncDoc> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncDocsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _entityMeta = const VerificationMeta('entity');
+  @override
+  late final GeneratedColumn<String> entity = GeneratedColumn<String>(
+    'entity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _docIdMeta = const VerificationMeta('docId');
+  @override
+  late final GeneratedColumn<String> docId = GeneratedColumn<String>(
+    'doc_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _dataMeta = const VerificationMeta('data');
+  @override
+  late final GeneratedColumn<String> data = GeneratedColumn<String>(
+    'data',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    entity,
+    docId,
+    version,
+    dirty,
+    deleted,
+    data,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_docs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncDoc> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('entity')) {
+      context.handle(
+        _entityMeta,
+        entity.isAcceptableOrUnknown(data['entity']!, _entityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityMeta);
+    }
+    if (data.containsKey('doc_id')) {
+      context.handle(
+        _docIdMeta,
+        docId.isAcceptableOrUnknown(data['doc_id']!, _docIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_docIdMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('data')) {
+      context.handle(
+        _dataMeta,
+        this.data.isAcceptableOrUnknown(data['data']!, _dataMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dataMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {entity, docId};
+  @override
+  SyncDoc map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncDoc(
+      entity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity'],
+      )!,
+      docId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}doc_id'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      data: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}data'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SyncDocsTable createAlias(String alias) {
+    return $SyncDocsTable(attachedDatabase, alias);
+  }
+}
+
+class SyncDoc extends DataClass implements Insertable<SyncDoc> {
+  /// Entity wire name.
+  final String entity;
+
+  /// Row id.
+  final String docId;
+
+  /// Server row version; 0 while the create is still queued.
+  final int version;
+
+  /// A queued op still references this row.
+  final bool dirty;
+
+  /// Local tombstone.
+  final bool deleted;
+
+  /// JSON data.
+  final String data;
+
+  /// Last local write (UTC).
+  final DateTime updatedAt;
+  const SyncDoc({
+    required this.entity,
+    required this.docId,
+    required this.version,
+    required this.dirty,
+    required this.deleted,
+    required this.data,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['entity'] = Variable<String>(entity);
+    map['doc_id'] = Variable<String>(docId);
+    map['version'] = Variable<int>(version);
+    map['dirty'] = Variable<bool>(dirty);
+    map['deleted'] = Variable<bool>(deleted);
+    map['data'] = Variable<String>(data);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SyncDocsCompanion toCompanion(bool nullToAbsent) {
+    return SyncDocsCompanion(
+      entity: Value(entity),
+      docId: Value(docId),
+      version: Value(version),
+      dirty: Value(dirty),
+      deleted: Value(deleted),
+      data: Value(data),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SyncDoc.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncDoc(
+      entity: serializer.fromJson<String>(json['entity']),
+      docId: serializer.fromJson<String>(json['docId']),
+      version: serializer.fromJson<int>(json['version']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      data: serializer.fromJson<String>(json['data']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'entity': serializer.toJson<String>(entity),
+      'docId': serializer.toJson<String>(docId),
+      'version': serializer.toJson<int>(version),
+      'dirty': serializer.toJson<bool>(dirty),
+      'deleted': serializer.toJson<bool>(deleted),
+      'data': serializer.toJson<String>(data),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SyncDoc copyWith({
+    String? entity,
+    String? docId,
+    int? version,
+    bool? dirty,
+    bool? deleted,
+    String? data,
+    DateTime? updatedAt,
+  }) => SyncDoc(
+    entity: entity ?? this.entity,
+    docId: docId ?? this.docId,
+    version: version ?? this.version,
+    dirty: dirty ?? this.dirty,
+    deleted: deleted ?? this.deleted,
+    data: data ?? this.data,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SyncDoc copyWithCompanion(SyncDocsCompanion data) {
+    return SyncDoc(
+      entity: data.entity.present ? data.entity.value : this.entity,
+      docId: data.docId.present ? data.docId.value : this.docId,
+      version: data.version.present ? data.version.value : this.version,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      data: data.data.present ? data.data.value : this.data,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncDoc(')
+          ..write('entity: $entity, ')
+          ..write('docId: $docId, ')
+          ..write('version: $version, ')
+          ..write('dirty: $dirty, ')
+          ..write('deleted: $deleted, ')
+          ..write('data: $data, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(entity, docId, version, dirty, deleted, data, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncDoc &&
+          other.entity == this.entity &&
+          other.docId == this.docId &&
+          other.version == this.version &&
+          other.dirty == this.dirty &&
+          other.deleted == this.deleted &&
+          other.data == this.data &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SyncDocsCompanion extends UpdateCompanion<SyncDoc> {
+  final Value<String> entity;
+  final Value<String> docId;
+  final Value<int> version;
+  final Value<bool> dirty;
+  final Value<bool> deleted;
+  final Value<String> data;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const SyncDocsCompanion({
+    this.entity = const Value.absent(),
+    this.docId = const Value.absent(),
+    this.version = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.data = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SyncDocsCompanion.insert({
+    required String entity,
+    required String docId,
+    this.version = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.deleted = const Value.absent(),
+    required String data,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : entity = Value(entity),
+       docId = Value(docId),
+       data = Value(data),
+       updatedAt = Value(updatedAt);
+  static Insertable<SyncDoc> custom({
+    Expression<String>? entity,
+    Expression<String>? docId,
+    Expression<int>? version,
+    Expression<bool>? dirty,
+    Expression<bool>? deleted,
+    Expression<String>? data,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (entity != null) 'entity': entity,
+      if (docId != null) 'doc_id': docId,
+      if (version != null) 'version': version,
+      if (dirty != null) 'dirty': dirty,
+      if (deleted != null) 'deleted': deleted,
+      if (data != null) 'data': data,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SyncDocsCompanion copyWith({
+    Value<String>? entity,
+    Value<String>? docId,
+    Value<int>? version,
+    Value<bool>? dirty,
+    Value<bool>? deleted,
+    Value<String>? data,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return SyncDocsCompanion(
+      entity: entity ?? this.entity,
+      docId: docId ?? this.docId,
+      version: version ?? this.version,
+      dirty: dirty ?? this.dirty,
+      deleted: deleted ?? this.deleted,
+      data: data ?? this.data,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (entity.present) {
+      map['entity'] = Variable<String>(entity.value);
+    }
+    if (docId.present) {
+      map['doc_id'] = Variable<String>(docId.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (data.present) {
+      map['data'] = Variable<String>(data.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncDocsCompanion(')
+          ..write('entity: $entity, ')
+          ..write('docId: $docId, ')
+          ..write('version: $version, ')
+          ..write('dirty: $dirty, ')
+          ..write('deleted: $deleted, ')
+          ..write('data: $data, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6387,6 +8869,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SyncStatesTable syncStates = $SyncStatesTable(this);
   late final $SyncedRefsTable syncedRefs = $SyncedRefsTable(this);
   late final $VillagesTable villages = $VillagesTable(this);
+  late final $DutySessionsTable dutySessions = $DutySessionsTable(this);
+  late final $LocationBufferTable locationBuffer = $LocationBufferTable(this);
+  late final $SyncDocsTable syncDocs = $SyncDocsTable(this);
   late final Index outboxStateSeq = Index(
     'outbox_state_seq',
     'CREATE INDEX outbox_state_seq ON outbox (state, seq)',
@@ -6394,6 +8879,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index outboxEntity = Index(
     'outbox_entity',
     'CREATE INDEX outbox_entity ON outbox (entity_id)',
+  );
+  late final Index locationBufferSession = Index(
+    'location_buffer_session',
+    'CREATE INDEX location_buffer_session ON location_buffer (session_id, ts)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -6410,8 +8899,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     syncStates,
     syncedRefs,
     villages,
+    dutySessions,
+    locationBuffer,
+    syncDocs,
     outboxStateSeq,
     outboxEntity,
+    locationBufferSession,
   ];
 }
 
@@ -9451,6 +11944,1150 @@ typedef $$VillagesTableProcessedTableManager =
       Village,
       PrefetchHooks Function()
     >;
+typedef $$DutySessionsTableCreateCompanionBuilder =
+    DutySessionsCompanion Function({
+      required String id,
+      Value<int> version,
+      required DateTime updatedAt,
+      Value<bool> dirty,
+      Value<bool> deleted,
+      required DateTime startAt,
+      Value<DateTime?> endAt,
+      Value<String?> endReason,
+      Value<double?> startLat,
+      Value<double?> startLon,
+      Value<double?> startAccuracyM,
+      Value<double?> endLat,
+      Value<double?> endLon,
+      Value<double?> endAccuracyM,
+      Value<String?> policyVersion,
+      Value<String?> deviceId,
+      Value<String?> appVersion,
+      Value<String> integrity,
+      Value<double> distanceM,
+      Value<bool> autoEnded,
+      Value<String> extra,
+      Value<int> rowid,
+    });
+typedef $$DutySessionsTableUpdateCompanionBuilder =
+    DutySessionsCompanion Function({
+      Value<String> id,
+      Value<int> version,
+      Value<DateTime> updatedAt,
+      Value<bool> dirty,
+      Value<bool> deleted,
+      Value<DateTime> startAt,
+      Value<DateTime?> endAt,
+      Value<String?> endReason,
+      Value<double?> startLat,
+      Value<double?> startLon,
+      Value<double?> startAccuracyM,
+      Value<double?> endLat,
+      Value<double?> endLon,
+      Value<double?> endAccuracyM,
+      Value<String?> policyVersion,
+      Value<String?> deviceId,
+      Value<String?> appVersion,
+      Value<String> integrity,
+      Value<double> distanceM,
+      Value<bool> autoEnded,
+      Value<String> extra,
+      Value<int> rowid,
+    });
+
+class $$DutySessionsTableFilterComposer
+    extends Composer<_$AppDatabase, $DutySessionsTable> {
+  $$DutySessionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startAt => $composableBuilder(
+    column: $table.startAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get endAt => $composableBuilder(
+    column: $table.endAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get endReason => $composableBuilder(
+    column: $table.endReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get startLat => $composableBuilder(
+    column: $table.startLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get startLon => $composableBuilder(
+    column: $table.startLon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get startAccuracyM => $composableBuilder(
+    column: $table.startAccuracyM,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get endLat => $composableBuilder(
+    column: $table.endLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get endLon => $composableBuilder(
+    column: $table.endLon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get endAccuracyM => $composableBuilder(
+    column: $table.endAccuracyM,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get policyVersion => $composableBuilder(
+    column: $table.policyVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get appVersion => $composableBuilder(
+    column: $table.appVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get integrity => $composableBuilder(
+    column: $table.integrity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get distanceM => $composableBuilder(
+    column: $table.distanceM,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get autoEnded => $composableBuilder(
+    column: $table.autoEnded,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DutySessionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DutySessionsTable> {
+  $$DutySessionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startAt => $composableBuilder(
+    column: $table.startAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get endAt => $composableBuilder(
+    column: $table.endAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get endReason => $composableBuilder(
+    column: $table.endReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get startLat => $composableBuilder(
+    column: $table.startLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get startLon => $composableBuilder(
+    column: $table.startLon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get startAccuracyM => $composableBuilder(
+    column: $table.startAccuracyM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get endLat => $composableBuilder(
+    column: $table.endLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get endLon => $composableBuilder(
+    column: $table.endLon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get endAccuracyM => $composableBuilder(
+    column: $table.endAccuracyM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get policyVersion => $composableBuilder(
+    column: $table.policyVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get appVersion => $composableBuilder(
+    column: $table.appVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get integrity => $composableBuilder(
+    column: $table.integrity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get distanceM => $composableBuilder(
+    column: $table.distanceM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get autoEnded => $composableBuilder(
+    column: $table.autoEnded,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DutySessionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DutySessionsTable> {
+  $$DutySessionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startAt =>
+      $composableBuilder(column: $table.startAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endAt =>
+      $composableBuilder(column: $table.endAt, builder: (column) => column);
+
+  GeneratedColumn<String> get endReason =>
+      $composableBuilder(column: $table.endReason, builder: (column) => column);
+
+  GeneratedColumn<double> get startLat =>
+      $composableBuilder(column: $table.startLat, builder: (column) => column);
+
+  GeneratedColumn<double> get startLon =>
+      $composableBuilder(column: $table.startLon, builder: (column) => column);
+
+  GeneratedColumn<double> get startAccuracyM => $composableBuilder(
+    column: $table.startAccuracyM,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get endLat =>
+      $composableBuilder(column: $table.endLat, builder: (column) => column);
+
+  GeneratedColumn<double> get endLon =>
+      $composableBuilder(column: $table.endLon, builder: (column) => column);
+
+  GeneratedColumn<double> get endAccuracyM => $composableBuilder(
+    column: $table.endAccuracyM,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get policyVersion => $composableBuilder(
+    column: $table.policyVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<String> get appVersion => $composableBuilder(
+    column: $table.appVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get integrity =>
+      $composableBuilder(column: $table.integrity, builder: (column) => column);
+
+  GeneratedColumn<double> get distanceM =>
+      $composableBuilder(column: $table.distanceM, builder: (column) => column);
+
+  GeneratedColumn<bool> get autoEnded =>
+      $composableBuilder(column: $table.autoEnded, builder: (column) => column);
+
+  GeneratedColumn<String> get extra =>
+      $composableBuilder(column: $table.extra, builder: (column) => column);
+}
+
+class $$DutySessionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DutySessionsTable,
+          DutySession,
+          $$DutySessionsTableFilterComposer,
+          $$DutySessionsTableOrderingComposer,
+          $$DutySessionsTableAnnotationComposer,
+          $$DutySessionsTableCreateCompanionBuilder,
+          $$DutySessionsTableUpdateCompanionBuilder,
+          (
+            DutySession,
+            BaseReferences<_$AppDatabase, $DutySessionsTable, DutySession>,
+          ),
+          DutySession,
+          PrefetchHooks Function()
+        > {
+  $$DutySessionsTableTableManager(_$AppDatabase db, $DutySessionsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DutySessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DutySessionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DutySessionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<DateTime> startAt = const Value.absent(),
+                Value<DateTime?> endAt = const Value.absent(),
+                Value<String?> endReason = const Value.absent(),
+                Value<double?> startLat = const Value.absent(),
+                Value<double?> startLon = const Value.absent(),
+                Value<double?> startAccuracyM = const Value.absent(),
+                Value<double?> endLat = const Value.absent(),
+                Value<double?> endLon = const Value.absent(),
+                Value<double?> endAccuracyM = const Value.absent(),
+                Value<String?> policyVersion = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<String?> appVersion = const Value.absent(),
+                Value<String> integrity = const Value.absent(),
+                Value<double> distanceM = const Value.absent(),
+                Value<bool> autoEnded = const Value.absent(),
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DutySessionsCompanion(
+                id: id,
+                version: version,
+                updatedAt: updatedAt,
+                dirty: dirty,
+                deleted: deleted,
+                startAt: startAt,
+                endAt: endAt,
+                endReason: endReason,
+                startLat: startLat,
+                startLon: startLon,
+                startAccuracyM: startAccuracyM,
+                endLat: endLat,
+                endLon: endLon,
+                endAccuracyM: endAccuracyM,
+                policyVersion: policyVersion,
+                deviceId: deviceId,
+                appVersion: appVersion,
+                integrity: integrity,
+                distanceM: distanceM,
+                autoEnded: autoEnded,
+                extra: extra,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<int> version = const Value.absent(),
+                required DateTime updatedAt,
+                Value<bool> dirty = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                required DateTime startAt,
+                Value<DateTime?> endAt = const Value.absent(),
+                Value<String?> endReason = const Value.absent(),
+                Value<double?> startLat = const Value.absent(),
+                Value<double?> startLon = const Value.absent(),
+                Value<double?> startAccuracyM = const Value.absent(),
+                Value<double?> endLat = const Value.absent(),
+                Value<double?> endLon = const Value.absent(),
+                Value<double?> endAccuracyM = const Value.absent(),
+                Value<String?> policyVersion = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<String?> appVersion = const Value.absent(),
+                Value<String> integrity = const Value.absent(),
+                Value<double> distanceM = const Value.absent(),
+                Value<bool> autoEnded = const Value.absent(),
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DutySessionsCompanion.insert(
+                id: id,
+                version: version,
+                updatedAt: updatedAt,
+                dirty: dirty,
+                deleted: deleted,
+                startAt: startAt,
+                endAt: endAt,
+                endReason: endReason,
+                startLat: startLat,
+                startLon: startLon,
+                startAccuracyM: startAccuracyM,
+                endLat: endLat,
+                endLon: endLon,
+                endAccuracyM: endAccuracyM,
+                policyVersion: policyVersion,
+                deviceId: deviceId,
+                appVersion: appVersion,
+                integrity: integrity,
+                distanceM: distanceM,
+                autoEnded: autoEnded,
+                extra: extra,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$DutySessionsTable, DutySession>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $DutySessionsTable,
+                    DutySession
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DutySessionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DutySessionsTable,
+      DutySession,
+      $$DutySessionsTableFilterComposer,
+      $$DutySessionsTableOrderingComposer,
+      $$DutySessionsTableAnnotationComposer,
+      $$DutySessionsTableCreateCompanionBuilder,
+      $$DutySessionsTableUpdateCompanionBuilder,
+      (
+        DutySession,
+        BaseReferences<_$AppDatabase, $DutySessionsTable, DutySession>,
+      ),
+      DutySession,
+      PrefetchHooks Function()
+    >;
+typedef $$LocationBufferTableCreateCompanionBuilder =
+    LocationBufferCompanion Function({
+      Value<int> id,
+      required String sessionId,
+      required DateTime ts,
+      required double lat,
+      required double lon,
+      required double accuracyM,
+      Value<double?> speedMps,
+      Value<double?> bearing,
+      Value<int?> batteryPct,
+      Value<bool> isMock,
+      Value<bool> isRooted,
+      Value<int?> clockDriftS,
+      Value<String?> provider,
+      Value<String?> batchId,
+    });
+typedef $$LocationBufferTableUpdateCompanionBuilder =
+    LocationBufferCompanion Function({
+      Value<int> id,
+      Value<String> sessionId,
+      Value<DateTime> ts,
+      Value<double> lat,
+      Value<double> lon,
+      Value<double> accuracyM,
+      Value<double?> speedMps,
+      Value<double?> bearing,
+      Value<int?> batteryPct,
+      Value<bool> isMock,
+      Value<bool> isRooted,
+      Value<int?> clockDriftS,
+      Value<String?> provider,
+      Value<String?> batchId,
+    });
+
+class $$LocationBufferTableFilterComposer
+    extends Composer<_$AppDatabase, $LocationBufferTable> {
+  $$LocationBufferTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get ts => $composableBuilder(
+    column: $table.ts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get lon => $composableBuilder(
+    column: $table.lon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get accuracyM => $composableBuilder(
+    column: $table.accuracyM,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get speedMps => $composableBuilder(
+    column: $table.speedMps,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get bearing => $composableBuilder(
+    column: $table.bearing,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get batteryPct => $composableBuilder(
+    column: $table.batteryPct,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isMock => $composableBuilder(
+    column: $table.isMock,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isRooted => $composableBuilder(
+    column: $table.isRooted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get clockDriftS => $composableBuilder(
+    column: $table.clockDriftS,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get provider => $composableBuilder(
+    column: $table.provider,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get batchId => $composableBuilder(
+    column: $table.batchId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LocationBufferTableOrderingComposer
+    extends Composer<_$AppDatabase, $LocationBufferTable> {
+  $$LocationBufferTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get ts => $composableBuilder(
+    column: $table.ts,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lat => $composableBuilder(
+    column: $table.lat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get lon => $composableBuilder(
+    column: $table.lon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get accuracyM => $composableBuilder(
+    column: $table.accuracyM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get speedMps => $composableBuilder(
+    column: $table.speedMps,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get bearing => $composableBuilder(
+    column: $table.bearing,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get batteryPct => $composableBuilder(
+    column: $table.batteryPct,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isMock => $composableBuilder(
+    column: $table.isMock,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isRooted => $composableBuilder(
+    column: $table.isRooted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get clockDriftS => $composableBuilder(
+    column: $table.clockDriftS,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get provider => $composableBuilder(
+    column: $table.provider,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get batchId => $composableBuilder(
+    column: $table.batchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LocationBufferTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LocationBufferTable> {
+  $$LocationBufferTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get ts =>
+      $composableBuilder(column: $table.ts, builder: (column) => column);
+
+  GeneratedColumn<double> get lat =>
+      $composableBuilder(column: $table.lat, builder: (column) => column);
+
+  GeneratedColumn<double> get lon =>
+      $composableBuilder(column: $table.lon, builder: (column) => column);
+
+  GeneratedColumn<double> get accuracyM =>
+      $composableBuilder(column: $table.accuracyM, builder: (column) => column);
+
+  GeneratedColumn<double> get speedMps =>
+      $composableBuilder(column: $table.speedMps, builder: (column) => column);
+
+  GeneratedColumn<double> get bearing =>
+      $composableBuilder(column: $table.bearing, builder: (column) => column);
+
+  GeneratedColumn<int> get batteryPct => $composableBuilder(
+    column: $table.batteryPct,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isMock =>
+      $composableBuilder(column: $table.isMock, builder: (column) => column);
+
+  GeneratedColumn<bool> get isRooted =>
+      $composableBuilder(column: $table.isRooted, builder: (column) => column);
+
+  GeneratedColumn<int> get clockDriftS => $composableBuilder(
+    column: $table.clockDriftS,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get provider =>
+      $composableBuilder(column: $table.provider, builder: (column) => column);
+
+  GeneratedColumn<String> get batchId =>
+      $composableBuilder(column: $table.batchId, builder: (column) => column);
+}
+
+class $$LocationBufferTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LocationBufferTable,
+          LocationBufferRow,
+          $$LocationBufferTableFilterComposer,
+          $$LocationBufferTableOrderingComposer,
+          $$LocationBufferTableAnnotationComposer,
+          $$LocationBufferTableCreateCompanionBuilder,
+          $$LocationBufferTableUpdateCompanionBuilder,
+          (
+            LocationBufferRow,
+            BaseReferences<
+              _$AppDatabase,
+              $LocationBufferTable,
+              LocationBufferRow
+            >,
+          ),
+          LocationBufferRow,
+          PrefetchHooks Function()
+        > {
+  $$LocationBufferTableTableManager(
+    _$AppDatabase db,
+    $LocationBufferTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LocationBufferTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LocationBufferTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LocationBufferTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
+                Value<DateTime> ts = const Value.absent(),
+                Value<double> lat = const Value.absent(),
+                Value<double> lon = const Value.absent(),
+                Value<double> accuracyM = const Value.absent(),
+                Value<double?> speedMps = const Value.absent(),
+                Value<double?> bearing = const Value.absent(),
+                Value<int?> batteryPct = const Value.absent(),
+                Value<bool> isMock = const Value.absent(),
+                Value<bool> isRooted = const Value.absent(),
+                Value<int?> clockDriftS = const Value.absent(),
+                Value<String?> provider = const Value.absent(),
+                Value<String?> batchId = const Value.absent(),
+              }) => LocationBufferCompanion(
+                id: id,
+                sessionId: sessionId,
+                ts: ts,
+                lat: lat,
+                lon: lon,
+                accuracyM: accuracyM,
+                speedMps: speedMps,
+                bearing: bearing,
+                batteryPct: batteryPct,
+                isMock: isMock,
+                isRooted: isRooted,
+                clockDriftS: clockDriftS,
+                provider: provider,
+                batchId: batchId,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String sessionId,
+                required DateTime ts,
+                required double lat,
+                required double lon,
+                required double accuracyM,
+                Value<double?> speedMps = const Value.absent(),
+                Value<double?> bearing = const Value.absent(),
+                Value<int?> batteryPct = const Value.absent(),
+                Value<bool> isMock = const Value.absent(),
+                Value<bool> isRooted = const Value.absent(),
+                Value<int?> clockDriftS = const Value.absent(),
+                Value<String?> provider = const Value.absent(),
+                Value<String?> batchId = const Value.absent(),
+              }) => LocationBufferCompanion.insert(
+                id: id,
+                sessionId: sessionId,
+                ts: ts,
+                lat: lat,
+                lon: lon,
+                accuracyM: accuracyM,
+                speedMps: speedMps,
+                bearing: bearing,
+                batteryPct: batteryPct,
+                isMock: isMock,
+                isRooted: isRooted,
+                clockDriftS: clockDriftS,
+                provider: provider,
+                batchId: batchId,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$LocationBufferTable, LocationBufferRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $LocationBufferTable,
+                    LocationBufferRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LocationBufferTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LocationBufferTable,
+      LocationBufferRow,
+      $$LocationBufferTableFilterComposer,
+      $$LocationBufferTableOrderingComposer,
+      $$LocationBufferTableAnnotationComposer,
+      $$LocationBufferTableCreateCompanionBuilder,
+      $$LocationBufferTableUpdateCompanionBuilder,
+      (
+        LocationBufferRow,
+        BaseReferences<_$AppDatabase, $LocationBufferTable, LocationBufferRow>,
+      ),
+      LocationBufferRow,
+      PrefetchHooks Function()
+    >;
+typedef $$SyncDocsTableCreateCompanionBuilder = SyncDocsCompanion Function({
+  required String entity,
+  required String docId,
+  Value<int> version,
+  Value<bool> dirty,
+  Value<bool> deleted,
+  required String data,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$SyncDocsTableUpdateCompanionBuilder = SyncDocsCompanion Function({
+  Value<String> entity,
+  Value<String> docId,
+  Value<int> version,
+  Value<bool> dirty,
+  Value<bool> deleted,
+  Value<String> data,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+class $$SyncDocsTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncDocsTable> {
+  $$SyncDocsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get entity => $composableBuilder(
+    column: $table.entity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get docId => $composableBuilder(
+    column: $table.docId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get data => $composableBuilder(
+    column: $table.data,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SyncDocsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncDocsTable> {
+  $$SyncDocsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get entity => $composableBuilder(
+    column: $table.entity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get docId => $composableBuilder(
+    column: $table.docId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get data => $composableBuilder(
+    column: $table.data,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SyncDocsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncDocsTable> {
+  $$SyncDocsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get entity =>
+      $composableBuilder(column: $table.entity, builder: (column) => column);
+
+  GeneratedColumn<String> get docId =>
+      $composableBuilder(column: $table.docId, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get data =>
+      $composableBuilder(column: $table.data, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SyncDocsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncDocsTable,
+          SyncDoc,
+          $$SyncDocsTableFilterComposer,
+          $$SyncDocsTableOrderingComposer,
+          $$SyncDocsTableAnnotationComposer,
+          $$SyncDocsTableCreateCompanionBuilder,
+          $$SyncDocsTableUpdateCompanionBuilder,
+          (SyncDoc, BaseReferences<_$AppDatabase, $SyncDocsTable, SyncDoc>),
+          SyncDoc,
+          PrefetchHooks Function()
+        > {
+  $$SyncDocsTableTableManager(_$AppDatabase db, $SyncDocsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncDocsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncDocsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncDocsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> entity = const Value.absent(),
+                Value<String> docId = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<String> data = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SyncDocsCompanion(
+                entity: entity,
+                docId: docId,
+                version: version,
+                dirty: dirty,
+                deleted: deleted,
+                data: data,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String entity,
+                required String docId,
+                Value<int> version = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                required String data,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => SyncDocsCompanion.insert(
+                entity: entity,
+                docId: docId,
+                version: version,
+                dirty: dirty,
+                deleted: deleted,
+                data: data,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$SyncDocsTable, SyncDoc>(table),
+                  BaseReferences<_$AppDatabase, $SyncDocsTable, SyncDoc>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SyncDocsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncDocsTable,
+      SyncDoc,
+      $$SyncDocsTableFilterComposer,
+      $$SyncDocsTableOrderingComposer,
+      $$SyncDocsTableAnnotationComposer,
+      $$SyncDocsTableCreateCompanionBuilder,
+      $$SyncDocsTableUpdateCompanionBuilder,
+      (SyncDoc, BaseReferences<_$AppDatabase, $SyncDocsTable, SyncDoc>),
+      SyncDoc,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9474,4 +13111,10 @@ class $AppDatabaseManager {
       $$SyncedRefsTableTableManager(_db, _db.syncedRefs);
   $$VillagesTableTableManager get villages =>
       $$VillagesTableTableManager(_db, _db.villages);
+  $$DutySessionsTableTableManager get dutySessions =>
+      $$DutySessionsTableTableManager(_db, _db.dutySessions);
+  $$LocationBufferTableTableManager get locationBuffer =>
+      $$LocationBufferTableTableManager(_db, _db.locationBuffer);
+  $$SyncDocsTableTableManager get syncDocs =>
+      $$SyncDocsTableTableManager(_db, _db.syncDocs);
 }

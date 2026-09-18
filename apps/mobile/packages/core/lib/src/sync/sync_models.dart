@@ -21,12 +21,25 @@ abstract final class SyncEntities {
   /// Crop reference data (pull only; kept in `synced_refs`).
   static const String crop = 'crop';
 
-  /// Entities with a typed local table and outbox support.
+  /// FA-010 duty session (typed `duty_sessions` table).
+  static const String dutySession = 'duty_session';
+
+  /// VV-001 location batch (`sync_docs`; points are only ever sent while
+  /// on duty).
+  static const String locationBatch = 'location_batch';
+
+  /// FA-011 location policy acceptance (`sync_docs`, append-only).
+  static const String policyAcceptance = 'policy_acceptance';
+
+  /// Entities with a local table and outbox support.
   static const Set<String> writable = <String>{
     farmer,
     farm,
     cropPlot,
     consentRecord,
+    dutySession,
+    locationBatch,
+    policyAcceptance,
   };
 }
 

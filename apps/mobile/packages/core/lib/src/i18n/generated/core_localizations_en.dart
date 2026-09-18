@@ -1235,4 +1235,257 @@ class CoreLocalizationsEn extends CoreLocalizations {
 
   @override
   String get mapFarmBoundary => 'Farm boundary';
+
+  @override
+  String get dutyNotificationTitle => 'On duty — location on';
+
+  @override
+  String get dutyChannelName => 'Duty';
+
+  @override
+  String get dutyAlertsChannelName => 'Duty alerts';
+
+  @override
+  String get dutyPromptTitle => 'Still on duty?';
+
+  @override
+  String dutyPromptBody(String time) {
+    return 'Ending at $time';
+  }
+
+  @override
+  String get dutyEndedTitle => 'Duty ended';
+
+  @override
+  String dutyAutoEndedBody(String time) {
+    return 'Your day ended automatically at $time.';
+  }
+
+  @override
+  String get dutyServerEndedBody =>
+      'Your duty was ended by the server (idle or end of day).';
+
+  @override
+  String dutyAutoEndAt(String time) {
+    return 'Ends automatically at $time';
+  }
+
+  @override
+  String get dutyBlockedPolicy => 'Accept the location policy to go on duty';
+
+  @override
+  String get dutyReviewPolicy => 'Review policy';
+
+  @override
+  String dutyPointsPending(int count) {
+    return '$count points waiting to upload';
+  }
+
+  @override
+  String get dutyNoticeAlreadyActive =>
+      'You are already on duty on another device. This one stays off.';
+
+  @override
+  String get dutyNoticePolicy =>
+      'Please accept the current location policy before going on duty.';
+
+  @override
+  String get dutyNoticeLocationUnavailable =>
+      'Could not get your location. Turn on location and try again.';
+
+  @override
+  String get integrityBanner =>
+      'Some device checks reported issues; visits may be reviewed.';
+
+  @override
+  String get disclosureIntro =>
+      'Before you start, here is what Mitra records and why.';
+
+  @override
+  String disclosureVersion(String version) {
+    return 'Policy version $version';
+  }
+
+  @override
+  String get disclosureUpdated =>
+      'The location policy has changed. Please read and accept the new version.';
+
+  @override
+  String get policySheetTitle => 'Location policy';
+
+  @override
+  String get locationPolicyText =>
+      'Mitra location policy (version 2026-09-v1)\n\n1. What we collect. While you are on duty, Mitra records your location (latitude, longitude, accuracy, speed, direction), the time, your battery level and basic device checks (mock-location, rooted device, clock difference). It also records the photos, notes and farmer confirmations you capture during visits.\n\n2. Only while on duty. Location is recorded only after you switch duty on, and it stops the moment you switch duty off, when the day ends at the tenant’s set time (20:00 by default) or after 60 minutes idle at your home location. Nothing is recorded while you are off duty, and a notification is always visible while location is on.\n\n3. Why we collect it. Your track computes the kilometres for your travel allowance, and your location at a visit gives you credit for that visit. No track means no automatic travel allowance and no verified visit.\n\n4. Who can see it. Your cluster head, the directors and the owner of your organisation can see your track and visits for their area, and auditors can review flagged visits. Store managers and farmers never see your location. Raw points are kept for 180 days and then reduced to daily totals.';
+
+  @override
+  String get permissionsTitle => 'Permissions Mitra needs';
+
+  @override
+  String get permissionsIntro =>
+      'Mitra asks for these one by one. You can change them later in Settings.';
+
+  @override
+  String get permLocationTitle => 'Location';
+
+  @override
+  String get permLocationBody =>
+      'To record your track while on duty and check you are at the farm.';
+
+  @override
+  String get permBackgroundTitle => 'Location all the time';
+
+  @override
+  String get permBackgroundBody =>
+      'Choose \"Allow all the time\" so tracking continues while the screen is off. It still runs only while you are on duty.';
+
+  @override
+  String get permCameraTitle => 'Camera';
+
+  @override
+  String get permCameraBody =>
+      'For farm and visit photos taken inside the app.';
+
+  @override
+  String get permNotificationsTitle => 'Notifications';
+
+  @override
+  String get permNotificationsBody =>
+      'To show the on-duty notice and remind you before duty ends.';
+
+  @override
+  String get permGranted => 'Allowed';
+
+  @override
+  String get permDenied => 'Not allowed';
+
+  @override
+  String get permOpenSettings => 'Open settings';
+
+  @override
+  String get permAllow => 'Allow';
+
+  @override
+  String get registeredTitle => 'Device registered';
+
+  @override
+  String get registeredBody =>
+      'You are set. Go on duty from Home to start your day.';
+
+  @override
+  String get registeredStart => 'Go to Home';
+
+  @override
+  String get homeTitle => 'Home';
+
+  @override
+  String get homeTodayStats => 'Today';
+
+  @override
+  String get statVisitsVerified => 'Visits verified';
+
+  @override
+  String get statFarmersAdded => 'Farmers added';
+
+  @override
+  String get statCollections => 'Collections';
+
+  @override
+  String get homeNextUp => 'Next up';
+
+  @override
+  String get homeNextUpEmpty => 'No beat plan yet';
+
+  @override
+  String get homeNextUpEmptyHelp =>
+      'Your cluster head will assign villages. Until then, add farmers and start visits.';
+
+  @override
+  String get homeQuickActions => 'Quick actions';
+
+  @override
+  String get actionStartVisit => 'Start visit';
+
+  @override
+  String get actionScoutCrop => 'Scout crop';
+
+  @override
+  String get actionCollectPayment => 'Collect payment';
+
+  @override
+  String get comingSoon => 'Coming soon';
+
+  @override
+  String get navHome => 'Home';
+
+  @override
+  String get navFarmers => 'Farmers';
+
+  @override
+  String get navVisits => 'Visits';
+
+  @override
+  String get navOrders => 'Orders';
+
+  @override
+  String get navMe => 'Me';
+
+  @override
+  String get myDayTitle => 'My day';
+
+  @override
+  String myDayKm(String km) {
+    return '$km km today';
+  }
+
+  @override
+  String get myDayEmpty => 'No duty today yet';
+
+  @override
+  String get myDayEmptyHelp =>
+      'Go on duty from Home; your track and km appear here.';
+
+  @override
+  String myDaySession(String start, String end) {
+    return 'Duty $start – $end';
+  }
+
+  @override
+  String myDaySessionActive(String start) {
+    return 'Duty since $start';
+  }
+
+  @override
+  String myDayPoints(int pending, int accepted) {
+    return '$pending pending · $accepted accepted';
+  }
+
+  @override
+  String get myDayGapsTitle => 'Gaps and reasons';
+
+  @override
+  String get myDayGapsHelp => 'Gap reasons arrive with the next update.';
+
+  @override
+  String get myDayEndReasonManual => 'Ended by you';
+
+  @override
+  String get myDayEndReasonAutoTime => 'Ended at day end';
+
+  @override
+  String get myDayEndReasonAutoIdle => 'Ended after idle';
+
+  @override
+  String get myDayEndReasonForced => 'Ended by manager';
+
+  @override
+  String get myDayEndReasonRejected => 'Not recorded';
+
+  @override
+  String get syncEntityDutySession => 'Duty session';
+
+  @override
+  String get syncEntityLocationBatch => 'Location points';
+
+  @override
+  String get syncEntityPolicyAcceptance => 'Policy acceptance';
 }

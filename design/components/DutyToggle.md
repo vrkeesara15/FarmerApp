@@ -12,6 +12,9 @@ Source: `apps/mobile/packages/core/lib/src/widgets/duty_toggle.dart` (exported f
 | `onChanged` | `ValueChanged<bool>?` | null disables |
 | `elapsed` | `Duration` | shown as 'On duty for H:MM' when on duty |
 | `loading` | `bool` | spinner replaces the switch; taps ignored |
+| `blockedReason` | `String?` | FA-011: shown under the card in warning colour with a lock icon; the switch is disabled while set ("Accept the location policy to go on duty") |
+| `blockedActionLabel` | `String?` | label of the tertiary link shown with the reason ("Review policy") |
+| `onBlockedAction` | `VoidCallback?` | tap handler of that link (A10 → A05) |
 
 ## Variants
 
@@ -23,6 +26,7 @@ Source: `apps/mobile/packages/core/lib/src/widgets/duty_toggle.dart` (exported f
 - default
 - loading
 - disabled
+- blocked (reason + "Review policy" link; A10 while the location policy version is not accepted)
 
 ## Accessibility
 
@@ -35,6 +39,8 @@ Source: `apps/mobile/packages/core/lib/src/widgets/duty_toggle.dart` (exported f
 
 - `color.status.success`
 - `color.status.successContainer`
+- `color.status.warning` (blocked reason)
+- `color.text.muted` (blocked action line)
 - `color.text.secondary`
 - `color.primary`
 - `color.border`
@@ -48,5 +54,5 @@ Source: `apps/mobile/packages/core/lib/src/widgets/duty_toggle.dart` (exported f
 
 ## Tests
 
-Widget tests: off/on/elapsed/toggle/loading. Golden: duty_toggle_{light,sunlight}.png
+Widget tests: off/on/elapsed/toggle/loading/blocked. Golden: duty_toggle_{light,sunlight}.png (off, on, loading, blocked). Wired on A10 by `DutyController` (design/screens/A10.md).
 

@@ -12,6 +12,24 @@ import '../photo/chunked_upload_planner.dart';
 import 'sync_api.dart';
 import 'sync_models.dart';
 
+/// Receives `(serverUtc, deviceUtc)` for every response that carried a
+/// `Date` header.
+typedef ServerDateObserver = void Function(
+  DateTime serverUtc,
+  DateTime deviceUtc,
+);
+
+/// Parses an HTTP `Date` header and hands it to [observer] (no-op when the
+/// header is missing or malformed).
+void reportServerDate(String? header, ServerDateObserver? observer) {
+  if (header == null || observer == null) return;
+  try {
+    observer(HttpDate.parse(header).toUtc(), DateTime.now().toUtc());
+  } on Exception {
+    // A malformed Date header is not worth failing a request over.
+  }
+}
+
 /// [SyncApi] over HTTP against `/v1/sync` and `/v1/uploads` (FA-025,
 /// NF-003) with the bearer token from the [TokenStore].
 ///
@@ -27,6 +45,7 @@ class HttpSyncApi implements SyncApi {
     http.Client? client,
     this.refreshSession,
     this.timeout = const Duration(seconds: 60),
+    this.onServerDate,
   }) : _client = client ?? http.Client();
 
   final TokenStore _store;
@@ -38,6 +57,11 @@ class HttpSyncApi implements SyncApi {
 
   /// Per-request timeout (chunk PUTs on 2G need headroom).
   final Duration timeout;
+
+  /// Called with the server's `Date` header (UTC) and the device time at
+  /// the moment the response arrived, on every completed request (FA-028
+  /// clock drift, VV-002 `clock_drift_s`).
+  final ServerDateObserver? onServerDate;
 
   static const Map<String, String> _jsonHeaders = <String, String>{
     'Content-Type': 'application/json',
@@ -70,6 +94,7 @@ class HttpSyncApi implements SyncApi {
     if (response.statusCode == 401) {
       throw const SyncAuthException('session revoked');
     }
+    reportServerDate(response.headers['date'], onServerDate);
     return response;
   }
 

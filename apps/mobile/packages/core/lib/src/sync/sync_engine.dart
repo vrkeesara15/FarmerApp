@@ -565,6 +565,18 @@ class SyncEngine {
           if (op.action == SyncAction.delete) {
             await store.entities.delete(op.entity, op.entityId);
           } else {
+            // Server-computed fields echoed with an applied op (a
+            // `location_batch` answers `{accepted, rejected}`) are kept on
+            // the local row.
+            final echo = result.server;
+            if (echo != null && echo.isNotEmpty) {
+              await store.entities.merge(
+                op.entity,
+                op.entityId,
+                echo,
+                now: now,
+              );
+            }
             await store.entities.setFlags(
               op.entity,
               op.entityId,

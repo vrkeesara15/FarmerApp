@@ -68,6 +68,13 @@ class OtpScreen extends ConsumerWidget {
                   loading: true,
                   onPressed: null,
                 ),
+              if (flow.step == AuthStep.done)
+                AppButton(
+                  key: const Key('otp-continue'),
+                  label: l10n.actionContinue,
+                  icon: Icons.arrow_forward,
+                  onPressed: () => context.go(AppRoutes.disclosure),
+                ),
             ],
           ),
         ),

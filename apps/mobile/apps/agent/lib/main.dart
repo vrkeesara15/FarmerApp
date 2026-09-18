@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:farmerapp_core/farmerapp_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'app.dart';
+
+/// App version sent with duty sessions and policy acceptances (pubspec).
+const String agentAppVersion = '0.1.0+1';
 
 /// Builds the sync engine outside the widget tree (WorkManager runs it in a
 /// background isolate with no ProviderScope).
@@ -46,6 +51,14 @@ Future<void> main() async {
   final db = openAppDatabase();
   final settings = await settingsOverrides(KvSettingsStore(db));
   await Workmanager().initialize(callbackDispatcher);
+  // FA-028: device clock vs server clock from every response's Date header,
+  // persisted so the next duty start / point carries the last known drift.
+  final drift = ClockDriftTracker(
+    onChanged: (d) => db.setValue(clockDriftKey, '$d'),
+  );
+  final copy = DutyCopy.forLocale(
+    (await KvSettingsStore(db).load()).locale ?? const Locale('en'),
+  );
   final container = ProviderContainer(
     overrides: [
       ...settings,
@@ -53,8 +66,34 @@ Future<void> main() async {
       tokenStoreProvider.overrideWithValue(store),
       authApiProvider.overrideWithValue(auth),
       syncApiProvider.overrideWithValue(
-        HttpSyncApi(store: store, refreshSession: auth.refresh),
+        HttpSyncApi(
+          store: store,
+          refreshSession: auth.refresh,
+          onServerDate: drift.record,
+        ),
       ),
+      // FA-010 / FA-011 / VV-001 / VV-007 / FA-028: duty toggle stack.
+      clockDriftTrackerProvider.overrideWithValue(drift),
+      locationSamplerProvider.overrideWithValue(GeolocatorLocationSampler()),
+      foregroundDutyServiceProvider.overrideWithValue(
+        FlutterForegroundDutyService(channelName: copy.channelName),
+      ),
+      dutyAlertsProvider.overrideWithValue(
+        LocalDutyAlerts(channelName: copy.alertsChannelName),
+      ),
+      deviceConditionsProvider.overrideWithValue(PlusDeviceConditionsMonitor()),
+      permissionGateProvider.overrideWithValue(const PermissionHandlerGate()),
+      deviceIntegrityProbeProvider.overrideWithValue(
+        const SafeDeviceIntegrityProbe(),
+      ),
+      policyApiProvider.overrideWithValue(
+        HttpPolicyApi(
+          store: store,
+          refreshSession: auth.refresh,
+          onServerDate: drift.record,
+        ),
+      ),
+      appVersionProvider.overrideWithValue(agentAppVersion),
       connectivityMonitorProvider.overrideWithValue(PlusConnectivityMonitor()),
       backgroundWorkSchedulerProvider.overrideWithValue(
         WorkmanagerSyncScheduler(),
@@ -72,6 +111,10 @@ Future<void> main() async {
   );
   // Periodic background sync + immediate sync on reconnect (NF-002/NF-003).
   await container.read(syncSchedulerProvider).start();
+  // An open duty session survives a restart: service + sampler resume
+  // (FA-010); the policy version is refreshed when online (FA-011).
+  await container.read(dutyControllerProvider.notifier).restore();
+  unawaited(container.read(locationPolicyProvider.notifier).refresh());
   runApp(
     UncontrolledProviderScope(container: container, child: const MitraApp()),
   );

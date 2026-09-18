@@ -6,7 +6,12 @@ import 'screens/farmers/add_farmer_wizard_screen.dart';
 import 'screens/farmers/farm_edit_screen.dart';
 import 'screens/farmers/farmer_list_screen.dart';
 import 'screens/farmers/farmer_profile_screen.dart';
+import 'screens/home/home_screen.dart';
+import 'screens/home/my_day_screen.dart';
 import 'screens/language_screen.dart';
+import 'screens/onboarding/device_registered_screen.dart';
+import 'screens/onboarding/disclosure_screen.dart';
+import 'screens/onboarding/permissions_screen.dart';
 import 'screens/otp_screen.dart';
 import 'screens/phone_screen.dart';
 import 'screens/settings_screen.dart';
@@ -25,6 +30,24 @@ abstract final class AppRoutes {
 
   /// A04 OTP entry.
   static const String otp = '/login/otp';
+
+  /// A05 Location and data disclosure (first run).
+  static const String disclosure = '/onboarding/disclosure';
+
+  /// A06 Permissions explainer.
+  static const String permissions = '/onboarding/permissions';
+
+  /// A07 Device registered.
+  static const String registered = '/onboarding/done';
+
+  /// A10 Home.
+  static const String home = '/home';
+
+  /// A12 My day timeline.
+  static const String myDay = '/home/day';
+
+  /// A05 again, from Home "Review policy" (FA-011 newer version).
+  static const String policy = '/home/policy';
 
   /// A20 Farmer list.
   static const String farmers = '/farmers';
@@ -74,6 +97,33 @@ GoRouter buildRouter({String initialLocation = AppRoutes.splash}) {
       GoRoute(
         path: AppRoutes.otp,
         builder: (context, state) => const OtpScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.disclosure,
+        builder: (context, state) => const DisclosureScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.permissions,
+        builder: (context, state) => const PermissionsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.registered,
+        builder: (context, state) => const DeviceRegisteredScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.home,
+        builder: (context, state) => const HomeScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: 'day',
+            builder: (context, state) => const MyDayScreen(),
+          ),
+          GoRoute(
+            path: 'policy',
+            builder: (context, state) =>
+                const DisclosureScreen(onboarding: false),
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.farmers,

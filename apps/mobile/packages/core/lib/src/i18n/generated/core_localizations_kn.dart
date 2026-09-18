@@ -1239,4 +1239,257 @@ class CoreLocalizationsKn extends CoreLocalizations {
 
   @override
   String get mapFarmBoundary => 'ಹೊಲದ ಗಡಿ';
+
+  @override
+  String get dutyNotificationTitle => 'ಕರ್ತವ್ಯದಲ್ಲಿ — ಲೊಕೇಶನ್ ಆನ್';
+
+  @override
+  String get dutyChannelName => 'ಕರ್ತವ್ಯ';
+
+  @override
+  String get dutyAlertsChannelName => 'ಕರ್ತವ್ಯ ಎಚ್ಚರಿಕೆಗಳು';
+
+  @override
+  String get dutyPromptTitle => 'ಇನ್ನೂ ಕರ್ತವ್ಯದಲ್ಲಿದ್ದೀರಾ?';
+
+  @override
+  String dutyPromptBody(String time) {
+    return '$timeಕ್ಕೆ ಕೊನೆಗೊಳ್ಳುತ್ತದೆ';
+  }
+
+  @override
+  String get dutyEndedTitle => 'ಕರ್ತವ್ಯ ಮುಗಿಯಿತು';
+
+  @override
+  String dutyAutoEndedBody(String time) {
+    return 'ನಿಮ್ಮ ದಿನ $timeಕ್ಕೆ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಮುಗಿಯಿತು.';
+  }
+
+  @override
+  String get dutyServerEndedBody =>
+      'ಸರ್ವರ್ ನಿಮ್ಮ ಕರ್ತವ್ಯವನ್ನು ಕೊನೆಗೊಳಿಸಿತು (ನಿಷ್ಕ್ರಿಯತೆ ಅಥವಾ ದಿನದ ಅಂತ್ಯ).';
+
+  @override
+  String dutyAutoEndAt(String time) {
+    return '$timeಕ್ಕೆ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಕೊನೆಗೊಳ್ಳುತ್ತದೆ';
+  }
+
+  @override
+  String get dutyBlockedPolicy =>
+      'ಕರ್ತವ್ಯಕ್ಕೆ ಹೋಗಲು ಲೊಕೇಶನ್ ನೀತಿಯನ್ನು ಒಪ್ಪಿಕೊಳ್ಳಿ';
+
+  @override
+  String get dutyReviewPolicy => 'ನೀತಿ ನೋಡಿ';
+
+  @override
+  String dutyPointsPending(int count) {
+    return '$count ಪಾಯಿಂಟ್‌ಗಳು ಅಪ್‌ಲೋಡ್‌ಗೆ ಕಾಯುತ್ತಿವೆ';
+  }
+
+  @override
+  String get dutyNoticeAlreadyActive =>
+      'ನೀವು ಈಗಾಗಲೇ ಬೇರೆ ಸಾಧನದಲ್ಲಿ ಕರ್ತವ್ಯದಲ್ಲಿದ್ದೀರಿ. ಇದು ಆಫ್ ಆಗಿಯೇ ಇರುತ್ತದೆ.';
+
+  @override
+  String get dutyNoticePolicy =>
+      'ಕರ್ತವ್ಯಕ್ಕೆ ಹೋಗುವ ಮೊದಲು ಪ್ರಸ್ತುತ ಲೊಕೇಶನ್ ನೀತಿಯನ್ನು ಒಪ್ಪಿಕೊಳ್ಳಿ.';
+
+  @override
+  String get dutyNoticeLocationUnavailable =>
+      'ನಿಮ್ಮ ಲೊಕೇಶನ್ ಪಡೆಯಲಾಗಲಿಲ್ಲ. ಲೊಕೇಶನ್ ಆನ್ ಮಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.';
+
+  @override
+  String get integrityBanner =>
+      'ಕೆಲವು ಸಾಧನ ಪರಿಶೀಲನೆಗಳು ಸಮಸ್ಯೆ ವರದಿ ಮಾಡಿವೆ; ಭೇಟಿಗಳನ್ನು ಪರಿಶೀಲಿಸಬಹುದು.';
+
+  @override
+  String get disclosureIntro =>
+      'ಪ್ರಾರಂಭಿಸುವ ಮೊದಲು, ಮಿತ್ರ ಏನನ್ನು ದಾಖಲಿಸುತ್ತದೆ ಮತ್ತು ಏಕೆ ಎಂಬುದು ಇಲ್ಲಿದೆ.';
+
+  @override
+  String disclosureVersion(String version) {
+    return 'ನೀತಿ ಆವೃತ್ತಿ $version';
+  }
+
+  @override
+  String get disclosureUpdated =>
+      'ಲೊಕೇಶನ್ ನೀತಿ ಬದಲಾಗಿದೆ. ದಯವಿಟ್ಟು ಹೊಸ ಆವೃತ್ತಿಯನ್ನು ಓದಿ ಒಪ್ಪಿಕೊಳ್ಳಿ.';
+
+  @override
+  String get policySheetTitle => 'ಲೊಕೇಶನ್ ನೀತಿ';
+
+  @override
+  String get locationPolicyText =>
+      'ಮಿತ್ರ ಲೊಕೇಶನ್ ನೀತಿ (ಆವೃತ್ತಿ 2026-09-v1)\n\n1. ನಾವು ಏನನ್ನು ಸಂಗ್ರಹಿಸುತ್ತೇವೆ. ನೀವು ಕರ್ತವ್ಯದಲ್ಲಿರುವಾಗ, ಮಿತ್ರ ನಿಮ್ಮ ಲೊಕೇಶನ್ (ಅಕ್ಷಾಂಶ, ರೇಖಾಂಶ, ನಿಖರತೆ, ವೇಗ, ದಿಕ್ಕು), ಸಮಯ, ಬ್ಯಾಟರಿ ಮಟ್ಟ ಮತ್ತು ಮೂಲ ಸಾಧನ ಪರಿಶೀಲನೆಗಳನ್ನು (ಮಾಕ್ ಲೊಕೇಶನ್, ರೂಟ್ ಮಾಡಿದ ಸಾಧನ, ಗಡಿಯಾರ ವ್ಯತ್ಯಾಸ) ದಾಖಲಿಸುತ್ತದೆ. ಭೇಟಿಗಳಲ್ಲಿ ನೀವು ತೆಗೆಯುವ ಫೋಟೋಗಳು, ಟಿಪ್ಪಣಿಗಳು ಮತ್ತು ರೈತರ ದೃಢೀಕರಣಗಳನ್ನೂ ದಾಖಲಿಸುತ್ತದೆ.\n\n2. ಕರ್ತವ್ಯದಲ್ಲಿರುವಾಗ ಮಾತ್ರ. ನೀವು ಕರ್ತವ್ಯ ಆನ್ ಮಾಡಿದ ನಂತರವೇ ಲೊಕೇಶನ್ ದಾಖಲಾಗುತ್ತದೆ; ಕರ್ತವ್ಯ ಆಫ್ ಮಾಡಿದ ಕ್ಷಣ, ಸಂಸ್ಥೆ ನಿಗದಿಪಡಿಸಿದ ಸಮಯಕ್ಕೆ ದಿನ ಮುಗಿದಾಗ (ಡೀಫಾಲ್ಟ್ 20:00) ಅಥವಾ ಮನೆಯ ಬಳಿ 60 ನಿಮಿಷ ನಿಷ್ಕ್ರಿಯವಾಗಿದ್ದಾಗ ನಿಲ್ಲುತ್ತದೆ. ಕರ್ತವ್ಯ ಆಫ್ ಆಗಿರುವಾಗ ಏನೂ ದಾಖಲಾಗುವುದಿಲ್ಲ; ಲೊಕೇಶನ್ ಆನ್ ಇರುವಷ್ಟು ಕಾಲ ಅಧಿಸೂಚನೆ ಯಾವಾಗಲೂ ಕಾಣಿಸುತ್ತದೆ.\n\n3. ಏಕೆ ಸಂಗ್ರಹಿಸುತ್ತೇವೆ. ನಿಮ್ಮ ಟ್ರ್ಯಾಕ್‌ನಿಂದ ಪ್ರಯಾಣ ಭತ್ಯೆಗಾಗಿ ಕಿಲೋಮೀಟರ್‌ಗಳನ್ನು ಲೆಕ್ಕಹಾಕಲಾಗುತ್ತದೆ; ಭೇಟಿಯ ವೇಳೆ ನಿಮ್ಮ ಲೊಕೇಶನ್ ಆ ಭೇಟಿಗೆ ಕ್ರೆಡಿಟ್ ನೀಡುತ್ತದೆ. ಟ್ರ್ಯಾಕ್ ಇಲ್ಲದಿದ್ದರೆ ಸ್ವಯಂಚಾಲಿತ ಪ್ರಯಾಣ ಭತ್ಯೆ ಇಲ್ಲ, ಪರಿಶೀಲಿತ ಭೇಟಿ ಇಲ್ಲ.\n\n4. ಯಾರು ನೋಡಬಹುದು. ನಿಮ್ಮ ಕ್ಲಸ್ಟರ್ ಹೆಡ್, ನಿರ್ದೇಶಕರು ಮತ್ತು ನಿಮ್ಮ ಸಂಸ್ಥೆಯ ಮಾಲೀಕರು ತಮ್ಮ ಪ್ರದೇಶಕ್ಕೆ ನಿಮ್ಮ ಟ್ರ್ಯಾಕ್ ಮತ್ತು ಭೇಟಿಗಳನ್ನು ನೋಡಬಹುದು; ಆಡಿಟರ್‌ಗಳು ಫ್ಲ್ಯಾಗ್ ಮಾಡಿದ ಭೇಟಿಗಳನ್ನು ಪರಿಶೀಲಿಸಬಹುದು. ಸ್ಟೋರ್ ಮ್ಯಾನೇಜರ್‌ಗಳು ಮತ್ತು ರೈತರು ನಿಮ್ಮ ಲೊಕೇಶನ್ ಎಂದಿಗೂ ನೋಡುವುದಿಲ್ಲ. ಕಚ್ಚಾ ಪಾಯಿಂಟ್‌ಗಳನ್ನು 180 ದಿನ ಇರಿಸಿ ನಂತರ ದೈನಂದಿನ ಒಟ್ಟುಗಳಿಗೆ ಕುಗ್ಗಿಸಲಾಗುತ್ತದೆ.';
+
+  @override
+  String get permissionsTitle => 'ಮಿತ್ರಕ್ಕೆ ಬೇಕಾದ ಅನುಮತಿಗಳು';
+
+  @override
+  String get permissionsIntro =>
+      'ಮಿತ್ರ ಇವುಗಳನ್ನು ಒಂದೊಂದಾಗಿ ಕೇಳುತ್ತದೆ. ನಂತರ ಸೆಟ್ಟಿಂಗ್ಸ್‌ನಲ್ಲಿ ಬದಲಾಯಿಸಬಹುದು.';
+
+  @override
+  String get permLocationTitle => 'ಲೊಕೇಶನ್';
+
+  @override
+  String get permLocationBody =>
+      'ಕರ್ತವ್ಯದಲ್ಲಿ ನಿಮ್ಮ ಟ್ರ್ಯಾಕ್ ದಾಖಲಿಸಲು ಮತ್ತು ನೀವು ಹೊಲದಲ್ಲಿದ್ದೀರಾ ಎಂದು ಪರಿಶೀಲಿಸಲು.';
+
+  @override
+  String get permBackgroundTitle => 'ಲೊಕೇಶನ್ ಯಾವಾಗಲೂ';
+
+  @override
+  String get permBackgroundBody =>
+      'ಪರದೆ ಆಫ್ ಆಗಿದ್ದರೂ ಟ್ರ್ಯಾಕಿಂಗ್ ಮುಂದುವರಿಯಲು \"ಯಾವಾಗಲೂ ಅನುಮತಿಸಿ\" ಆಯ್ಕೆಮಾಡಿ. ಆದರೂ ಇದು ಕರ್ತವ್ಯದಲ್ಲಿರುವಾಗ ಮಾತ್ರ ಕೆಲಸ ಮಾಡುತ್ತದೆ.';
+
+  @override
+  String get permCameraTitle => 'ಕ್ಯಾಮೆರಾ';
+
+  @override
+  String get permCameraBody => 'ಆ್ಯಪ್ ಒಳಗೆ ತೆಗೆಯುವ ಹೊಲ ಮತ್ತು ಭೇಟಿ ಫೋಟೋಗಳಿಗೆ.';
+
+  @override
+  String get permNotificationsTitle => 'ಅಧಿಸೂಚನೆಗಳು';
+
+  @override
+  String get permNotificationsBody =>
+      'ಕರ್ತವ್ಯ ಸೂಚನೆ ತೋರಿಸಲು ಮತ್ತು ಕರ್ತವ್ಯ ಮುಗಿಯುವ ಮೊದಲು ನೆನಪಿಸಲು.';
+
+  @override
+  String get permGranted => 'ಅನುಮತಿಸಲಾಗಿದೆ';
+
+  @override
+  String get permDenied => 'ಅನುಮತಿಸಿಲ್ಲ';
+
+  @override
+  String get permOpenSettings => 'ಸೆಟ್ಟಿಂಗ್ಸ್ ತೆರೆಯಿರಿ';
+
+  @override
+  String get permAllow => 'ಅನುಮತಿಸಿ';
+
+  @override
+  String get registeredTitle => 'ಸಾಧನ ನೋಂದಣಿಯಾಗಿದೆ';
+
+  @override
+  String get registeredBody =>
+      'ನೀವು ಸಿದ್ಧ. ದಿನ ಪ್ರಾರಂಭಿಸಲು ಹೋಮ್‌ನಿಂದ ಕರ್ತವ್ಯಕ್ಕೆ ಹೋಗಿ.';
+
+  @override
+  String get registeredStart => 'ಹೋಮ್‌ಗೆ ಹೋಗಿ';
+
+  @override
+  String get homeTitle => 'ಹೋಮ್';
+
+  @override
+  String get homeTodayStats => 'ಇಂದು';
+
+  @override
+  String get statVisitsVerified => 'ಪರಿಶೀಲಿತ ಭೇಟಿಗಳು';
+
+  @override
+  String get statFarmersAdded => 'ಸೇರಿಸಿದ ರೈತರು';
+
+  @override
+  String get statCollections => 'ವಸೂಲಿ';
+
+  @override
+  String get homeNextUp => 'ಮುಂದಿನದು';
+
+  @override
+  String get homeNextUpEmpty => 'ಇನ್ನೂ ಬೀಟ್ ಯೋಜನೆ ಇಲ್ಲ';
+
+  @override
+  String get homeNextUpEmptyHelp =>
+      'ನಿಮ್ಮ ಕ್ಲಸ್ಟರ್ ಹೆಡ್ ಹಳ್ಳಿಗಳನ್ನು ನಿಯೋಜಿಸುತ್ತಾರೆ. ಅಲ್ಲಿಯವರೆಗೆ ರೈತರನ್ನು ಸೇರಿಸಿ, ಭೇಟಿಗಳನ್ನು ಪ್ರಾರಂಭಿಸಿ.';
+
+  @override
+  String get homeQuickActions => 'ತ್ವರಿತ ಕ್ರಿಯೆಗಳು';
+
+  @override
+  String get actionStartVisit => 'ಭೇಟಿ ಪ್ರಾರಂಭಿಸಿ';
+
+  @override
+  String get actionScoutCrop => 'ಬೆಳೆ ಪರಿಶೀಲನೆ';
+
+  @override
+  String get actionCollectPayment => 'ಪಾವತಿ ಸಂಗ್ರಹಿಸಿ';
+
+  @override
+  String get comingSoon => 'ಶೀಘ್ರದಲ್ಲಿ ಬರಲಿದೆ';
+
+  @override
+  String get navHome => 'ಹೋಮ್';
+
+  @override
+  String get navFarmers => 'ರೈತರು';
+
+  @override
+  String get navVisits => 'ಭೇಟಿಗಳು';
+
+  @override
+  String get navOrders => 'ಆರ್ಡರ್‌ಗಳು';
+
+  @override
+  String get navMe => 'ನಾನು';
+
+  @override
+  String get myDayTitle => 'ನನ್ನ ದಿನ';
+
+  @override
+  String myDayKm(String km) {
+    return 'ಇಂದು $km ಕಿ.ಮೀ';
+  }
+
+  @override
+  String get myDayEmpty => 'ಇಂದು ಇನ್ನೂ ಕರ್ತವ್ಯ ಇಲ್ಲ';
+
+  @override
+  String get myDayEmptyHelp =>
+      'ಹೋಮ್‌ನಿಂದ ಕರ್ತವ್ಯಕ್ಕೆ ಹೋಗಿ; ನಿಮ್ಮ ಟ್ರ್ಯಾಕ್ ಮತ್ತು ಕಿ.ಮೀ ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ.';
+
+  @override
+  String myDaySession(String start, String end) {
+    return 'ಕರ್ತವ್ಯ $start – $end';
+  }
+
+  @override
+  String myDaySessionActive(String start) {
+    return '$start ರಿಂದ ಕರ್ತವ್ಯ';
+  }
+
+  @override
+  String myDayPoints(int pending, int accepted) {
+    return '$pending ಬಾಕಿ · $accepted ಸ್ವೀಕೃತ';
+  }
+
+  @override
+  String get myDayGapsTitle => 'ಅಂತರಗಳು ಮತ್ತು ಕಾರಣಗಳು';
+
+  @override
+  String get myDayGapsHelp => 'ಅಂತರದ ಕಾರಣಗಳು ಮುಂದಿನ ಅಪ್‌ಡೇಟ್‌ನೊಂದಿಗೆ ಬರುತ್ತವೆ.';
+
+  @override
+  String get myDayEndReasonManual => 'ನೀವು ಮುಗಿಸಿದ್ದೀರಿ';
+
+  @override
+  String get myDayEndReasonAutoTime => 'ದಿನದ ಅಂತ್ಯದಲ್ಲಿ ಮುಗಿಯಿತು';
+
+  @override
+  String get myDayEndReasonAutoIdle => 'ನಿಷ್ಕ್ರಿಯತೆಯ ನಂತರ ಮುಗಿಯಿತು';
+
+  @override
+  String get myDayEndReasonForced => 'ಮ್ಯಾನೇಜರ್ ಮುಗಿಸಿದರು';
+
+  @override
+  String get myDayEndReasonRejected => 'ದಾಖಲಾಗಿಲ್ಲ';
+
+  @override
+  String get syncEntityDutySession => 'ಕರ್ತವ್ಯ ಅವಧಿ';
+
+  @override
+  String get syncEntityLocationBatch => 'ಲೊಕೇಶನ್ ಪಾಯಿಂಟ್‌ಗಳು';
+
+  @override
+  String get syncEntityPolicyAcceptance => 'ನೀತಿ ಸ್ವೀಕಾರ';
 }

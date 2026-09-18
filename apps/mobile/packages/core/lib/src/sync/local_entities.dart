@@ -50,6 +50,9 @@ class LocalRow {
 /// | farm           | last_writer_wins  |
 /// | crop_plot      | last_writer_wins  |
 /// | consent_record | append_only       |
+/// | duty_session   | merge_fields      |
+/// | location_batch | server_wins       |
+/// | policy_acceptance | server_wins    |
 /// | khata, payment | server_wins (M3)  |
 class LocalEntities {
   /// Creates the accessor over [db].
@@ -64,6 +67,9 @@ class LocalEntities {
     SyncEntities.farm: 'last_writer_wins',
     SyncEntities.cropPlot: 'last_writer_wins',
     SyncEntities.consentRecord: 'append_only',
+    SyncEntities.dutySession: 'merge_fields',
+    SyncEntities.locationBatch: 'server_wins',
+    SyncEntities.policyAcceptance: 'server_wins',
     'khata_entry': 'server_wins',
     'payment': 'server_wins',
   };
@@ -130,8 +136,38 @@ class LocalEntities {
                 deleted: row.deleted,
                 data: consentToData(row),
               );
+      case SyncEntities.dutySession:
+        final row = await (db.select(
+          db.dutySessions,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
+        return row == null
+            ? null
+            : LocalRow(
+                entity: entity,
+                id: id,
+                version: row.version,
+                dirty: row.dirty,
+                deleted: row.deleted,
+                data: dutySessionToData(row),
+              );
       default:
-        throw ArgumentError.value(entity, 'entity', 'no local table');
+        if (!isKnown(entity)) {
+          throw ArgumentError.value(entity, 'entity', 'no local table');
+        }
+        final row =
+            await (db.select(db.syncDocs)
+                  ..where((t) => t.entity.equals(entity) & t.docId.equals(id)))
+                .getSingleOrNull();
+        return row == null
+            ? null
+            : LocalRow(
+                entity: entity,
+                id: id,
+                version: row.version,
+                dirty: row.dirty,
+                deleted: row.deleted,
+                data: Map<String, Object?>.from(jsonDecode(row.data) as Map),
+              );
     }
   }
 
@@ -198,9 +234,53 @@ class LocalEntities {
                 now: now,
               ),
             );
+      case SyncEntities.dutySession:
+        await db
+            .into(db.dutySessions)
+            .insertOnConflictUpdate(
+              dutySessionFromData(
+                id,
+                data,
+                version: version,
+                dirty: dirty,
+                deleted: deleted,
+                now: now,
+              ),
+            );
       default:
-        throw ArgumentError.value(entity, 'entity', 'no local table');
+        if (!isKnown(entity)) {
+          throw ArgumentError.value(entity, 'entity', 'no local table');
+        }
+        await db
+            .into(db.syncDocs)
+            .insertOnConflictUpdate(
+              SyncDocsCompanion.insert(
+                entity: entity,
+                docId: id,
+                version: Value<int>(version),
+                dirty: Value<bool>(dirty),
+                deleted: Value<bool>(deleted),
+                data: jsonEncode(docData(entity, id, data)),
+                updatedAt: now,
+              ),
+            );
     }
+  }
+
+  /// What a `sync_docs` row keeps: a `location_batch` stores its point
+  /// count instead of the points (they live in `location_buffer` and in the
+  /// outbox payload until the op is applied).
+  static Map<String, Object?> docData(
+    String entity,
+    String id,
+    Map<String, Object?> data,
+  ) {
+    final out = <String, Object?>{...data, 'id': id};
+    if (entity == SyncEntities.locationBatch && out['points'] is List) {
+      out['point_count'] = (out['points']! as List).length;
+      out.remove('points');
+    }
+    return out;
   }
 
   /// Merges [patch] into the existing row (or inserts it).
@@ -272,8 +352,15 @@ class LocalEntities {
         await (db.delete(
           db.consentRecords,
         )..where((t) => t.id.equals(id))).go();
+      case SyncEntities.dutySession:
+        await (db.delete(db.dutySessions)..where((t) => t.id.equals(id))).go();
       default:
-        throw ArgumentError.value(entity, 'entity', 'no local table');
+        if (!isKnown(entity)) {
+          throw ArgumentError.value(entity, 'entity', 'no local table');
+        }
+        await (db.delete(
+          db.syncDocs,
+        )..where((t) => t.entity.equals(entity) & t.docId.equals(id))).go();
     }
   }
 
@@ -532,5 +619,100 @@ class LocalEntities {
         'granted': r.granted,
         'version': r.consentVersion,
         'channel': r.channel,
+      };
+
+  static DateTime? _time(Object? v) =>
+      v is String ? DateTime.tryParse(v)?.toUtc() : null;
+
+  static Map<String, Object?>? _pointOf(Object? v) =>
+      v is Map ? Map<String, Object?>.from(v) : null;
+
+  /// Keys of the wire shape that have typed columns; everything else goes
+  /// to `extra` so server fields (km, stops, points) survive a round trip.
+  static const Set<String> _dutySessionKeys = <String>{
+    'id',
+    'start_at',
+    'end_at',
+    'end_reason',
+    'start_point',
+    'end_point',
+    'policy_version',
+    'device_id',
+    'app_version',
+    'integrity',
+    'distance_m',
+    'auto_ended',
+    'version',
+  };
+
+  /// Duty session row from wire data.
+  static DutySession dutySessionFromData(
+    String id,
+    Map<String, Object?> d, {
+    required int version,
+    required bool dirty,
+    required bool deleted,
+    required DateTime now,
+  }) {
+    final start = _pointOf(d['start_point']);
+    final end = _pointOf(d['end_point']);
+    final extra = <String, Object?>{
+      for (final e in d.entries)
+        if (!_dutySessionKeys.contains(e.key)) e.key: e.value,
+    };
+    return DutySession(
+      id: id,
+      startAt: _time(d['start_at']) ?? now,
+      endAt: _time(d['end_at']),
+      endReason: d['end_reason'] as String?,
+      startLat: _num(start?['lat']),
+      startLon: _num(start?['lon']),
+      startAccuracyM: _num(start?['accuracy_m']),
+      endLat: _num(end?['lat']),
+      endLon: _num(end?['lon']),
+      endAccuracyM: _num(end?['accuracy_m']),
+      policyVersion: d['policy_version'] as String?,
+      deviceId: d['device_id'] as String?,
+      appVersion: d['app_version'] as String?,
+      integrity: jsonEncode(d['integrity'] ?? const <String, Object?>{}),
+      distanceM: _num(d['distance_m']) ?? 0,
+      autoEnded: d['auto_ended'] == true,
+      extra: jsonEncode(extra),
+      version: version,
+      updatedAt: now,
+      dirty: dirty,
+      deleted: deleted,
+    );
+  }
+
+  /// Wire data from a duty session row.
+  static Map<String, Object?> dutySessionToData(DutySession r) =>
+      <String, Object?>{
+        ...Map<String, Object?>.from(jsonDecode(r.extra) as Map),
+        'id': r.id,
+        'start_at': r.startAt.toUtc().toIso8601String(),
+        'end_at': r.endAt?.toUtc().toIso8601String(),
+        'end_reason': r.endReason,
+        'start_point': r.startLat == null
+            ? null
+            : <String, Object?>{
+                'lat': r.startLat,
+                'lon': r.startLon,
+                'accuracy_m': r.startAccuracyM,
+              },
+        'end_point': r.endLat == null
+            ? null
+            : <String, Object?>{
+                'lat': r.endLat,
+                'lon': r.endLon,
+                'accuracy_m': r.endAccuracyM,
+              },
+        'policy_version': r.policyVersion,
+        'device_id': r.deviceId,
+        'app_version': r.appVersion,
+        'integrity': jsonDecode(r.integrity),
+        'distance_m': r.distanceM,
+        'auto_ended': r.autoEnded,
+        'version': r.version,
       };
 }

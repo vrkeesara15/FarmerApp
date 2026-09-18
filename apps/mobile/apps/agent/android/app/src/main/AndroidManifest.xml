@@ -4,6 +4,21 @@
     <!-- FA-012 A21b walk-around boundary capture; FA-010: read only on duty / on the boundary step -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- FA-010 / VV-009: location while on duty continues with the screen off, behind an
+         Android foreground service with a persistent notification. Requested only after the
+         A05 disclosure and the A06 in-app rationale ("Allow all the time"); Play Console
+         background-location declaration in docs/play/background-location-declaration.md.
+         The farmer app (Kisan) must never declare this. -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <!-- FA-010: foreground service of type "location" (Android 14 requires the typed permission) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- FA-010 persistent "On duty — location on" notification, VV-007 "Still on duty?" prompt (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- VV-007: exact alarm for the 10-minute auto-end prompt; falls back to inexact when refused -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- flutter_foreground_task keeps a partial wake lock while on duty -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- FA-012 farm photo, FA-015 visit photos: in-app camera only -->
     <uses-permission android:name="android.permission.CAMERA" />
     <application
@@ -32,6 +47,13 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- FA-010 foreground service (flutter_foreground_task; do not rename). Started only when
+             the officer switches duty on, stopped when duty ends; foregroundServiceType="location"
+             per Android 14 typed foreground services. -->
+        <service
+            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+            android:foregroundServiceType="location"
+            android:exported="false" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -60,4 +60,33 @@ void main() {
     await tester.tap(find.text('Off duty'));
     expect(calls, 0);
   });
+
+  testWidgets('blocked: reason and "Review policy" link, switch disabled '
+      '(FA-011)', (tester) async {
+    var reviewed = 0;
+    bool? requested;
+    await tester.pumpWidget(
+      harness(
+        DutyToggle(
+          onDuty: false,
+          onChanged: (v) => requested = v,
+          blockedReason: 'Accept the location policy to go on duty',
+          blockedActionLabel: 'Review policy',
+          onBlockedAction: () => reviewed += 1,
+        ),
+      ),
+    );
+    expect(
+      find.text('Accept the location policy to go on duty'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byType(Switch));
+    await tester.pump();
+    expect(requested, isNull);
+    final sw = tester.widget<Switch>(find.byType(Switch));
+    expect(sw.onChanged, isNull);
+    await tester.tap(find.byKey(const Key('duty-blocked-action')));
+    await tester.pump();
+    expect(reviewed, 1);
+  });
 }

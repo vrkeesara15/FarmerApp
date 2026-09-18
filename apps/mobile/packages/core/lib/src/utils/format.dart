@@ -67,6 +67,14 @@ String formatDateTimeIst(DateTime utc) {
   return '${formatDateIst(utc)} $h:$min';
 }
 
+/// Formats [utc] in IST as `HH:mm` (24-hour clock).
+String formatTimeIst(DateTime utc) {
+  final ist = utc.toUtc().add(istOffset);
+  final hh = ist.hour.toString().padLeft(2, '0');
+  final mm = ist.minute.toString().padLeft(2, '0');
+  return '$hh:$mm';
+}
+
 /// Formats a [Duration] as `H:MM` for elapsed-time displays (DutyToggle).
 String formatElapsed(Duration d) {
   final h = d.inHours;

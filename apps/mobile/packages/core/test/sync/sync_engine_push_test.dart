@@ -434,6 +434,101 @@ void main() {
     await engine.syncNow();
     expect(await db.select(db.outboxTable).get(), isEmpty);
   });
+  test('an applied result that echoes server fields merges them into the '
+      'local row (location_batch accepted / rejected, FA-010)', () async {
+    final db = newDb();
+    addTearDown(db.close);
+    final api = FakeSyncApi()
+      ..script = (op) => SyncOpResult(
+        opId: op.opId,
+        status: SyncResultStatus.applied,
+        entityId: op.entityId,
+        version: 1,
+        server: const <String, Object?>{'accepted': 2, 'rejected': <Object?>[]},
+      );
+    final outbox = outboxFor(db);
+    await outbox.enqueueCreate(SyncEntities.locationBatch, 'b-1', {
+      'duty_session_id': 'ds-1',
+      'device_id': 'device-1',
+      'sent_at': '2026-09-21T03:30:00.000Z',
+      'points': <Object?>[
+        <String, Object?>{
+          'ts': '2026-09-21T03:30:00.000Z',
+          'lat': 17.4,
+          'lon': 78.4,
+        },
+        <String, Object?>{
+          'ts': '2026-09-21T03:32:00.000Z',
+          'lat': 17.41,
+          'lon': 78.4,
+        },
+      ],
+    });
+    final before = await LocalEntities(db)
+        .read(SyncEntities.locationBatch, 'b-1');
+    expect(before!.data['point_count'], 2, reason: 'points are not duplicated');
+    expect(before.data.containsKey('points'), isFalse);
+    final report = await engineFor(db, api).syncNow();
+    expect(report.applied, 1);
+    final after = await LocalEntities(db)
+        .read(SyncEntities.locationBatch, 'b-1');
+    expect(after!.version, 1);
+    expect(after.dirty, isFalse);
+    expect(after.data['accepted'], 2);
+    expect(after.data['duty_session_id'], 'ds-1');
+  });
+
+  test('duty_session rows round-trip through the typed table, unknown server '
+      'fields kept in extra', () async {
+    final db = newDb();
+    addTearDown(db.close);
+    final entities = LocalEntities(db);
+    final data = <String, Object?>{
+      'start_at': '2026-09-21T03:30:00.000Z',
+      'end_at': null,
+      'start_point': <String, Object?>{
+        'lat': 17.4,
+        'lon': 78.4,
+        'accuracy_m': 8.0,
+      },
+      'policy_version': '2026-09-v1',
+      'device_id': 'device-1',
+      'app_version': '0.1.0',
+      'integrity': <String, Object?>{
+        'is_mock': false,
+        'is_rooted': true,
+        'clock_drift_s': 3,
+      },
+      'km': 12.5,
+      'stops': 4,
+    };
+    await entities.write(
+      SyncEntities.dutySession,
+      'ds-1',
+      data,
+      version: 3,
+      dirty: false,
+      now: DateTime.utc(2026, 9, 21, 4),
+    );
+    final row = await entities.read(SyncEntities.dutySession, 'ds-1');
+    expect(row!.version, 3);
+    expect(row.data['start_at'], '2026-09-21T03:30:00.000Z');
+    expect(row.data['end_at'], isNull);
+    expect(row.data['start_point'], data['start_point']);
+    expect(row.data['integrity'], data['integrity']);
+    expect(row.data['km'], 12.5);
+    expect(row.data['stops'], 4);
+    expect(row.data['policy_version'], '2026-09-v1');
+    await entities.merge(SyncEntities.dutySession, 'ds-1', {
+      'end_at': '2026-09-21T14:30:00.000Z',
+      'end_reason': 'auto_time',
+    }, now: DateTime.utc(2026, 9, 21, 15));
+    final ended = await entities.read(SyncEntities.dutySession, 'ds-1');
+    expect(ended!.data['end_reason'], 'auto_time');
+    expect(ended.data['km'], 12.5);
+    await entities.delete(SyncEntities.dutySession, 'ds-1');
+    expect(await entities.read(SyncEntities.dutySession, 'ds-1'), isNull);
+  });
 }
 
 class _DroppingApi implements SyncApi {

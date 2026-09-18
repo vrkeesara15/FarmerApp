@@ -1238,4 +1238,257 @@ class CoreLocalizationsTe extends CoreLocalizations {
 
   @override
   String get mapFarmBoundary => 'పొలం సరిహద్దు';
+
+  @override
+  String get dutyNotificationTitle => 'డ్యూటీలో ఉన్నారు — లొకేషన్ ఆన్';
+
+  @override
+  String get dutyChannelName => 'డ్యూటీ';
+
+  @override
+  String get dutyAlertsChannelName => 'డ్యూటీ హెచ్చరికలు';
+
+  @override
+  String get dutyPromptTitle => 'ఇంకా డ్యూటీలో ఉన్నారా?';
+
+  @override
+  String dutyPromptBody(String time) {
+    return '$timeకి ముగుస్తుంది';
+  }
+
+  @override
+  String get dutyEndedTitle => 'డ్యూటీ ముగిసింది';
+
+  @override
+  String dutyAutoEndedBody(String time) {
+    return 'మీ రోజు $timeకి ఆటోమేటిక్‌గా ముగిసింది.';
+  }
+
+  @override
+  String get dutyServerEndedBody =>
+      'సర్వర్ మీ డ్యూటీని ముగించింది (నిష్క్రియత లేదా రోజు ముగింపు).';
+
+  @override
+  String dutyAutoEndAt(String time) {
+    return '$timeకి ఆటోమేటిక్‌గా ముగుస్తుంది';
+  }
+
+  @override
+  String get dutyBlockedPolicy =>
+      'డ్యూటీలోకి వెళ్లడానికి లొకేషన్ విధానాన్ని అంగీకరించండి';
+
+  @override
+  String get dutyReviewPolicy => 'విధానం చూడండి';
+
+  @override
+  String dutyPointsPending(int count) {
+    return '$count పాయింట్లు అప్‌లోడ్ కోసం వేచి ఉన్నాయి';
+  }
+
+  @override
+  String get dutyNoticeAlreadyActive =>
+      'మీరు ఇప్పటికే మరో పరికరంలో డ్యూటీలో ఉన్నారు. ఇది ఆఫ్‌లోనే ఉంటుంది.';
+
+  @override
+  String get dutyNoticePolicy =>
+      'డ్యూటీలోకి వెళ్లే ముందు ప్రస్తుత లొకేషన్ విధానాన్ని అంగీకరించండి.';
+
+  @override
+  String get dutyNoticeLocationUnavailable =>
+      'మీ లొకేషన్ పొందలేకపోయాం. లొకేషన్ ఆన్ చేసి మళ్లీ ప్రయత్నించండి.';
+
+  @override
+  String get integrityBanner =>
+      'కొన్ని పరికర తనిఖీలు సమస్యలను నివేదించాయి; సందర్శనలు సమీక్షించబడవచ్చు.';
+
+  @override
+  String get disclosureIntro =>
+      'ప్రారంభించే ముందు, మిత్ర ఏమి నమోదు చేస్తుంది, ఎందుకు అనేది ఇక్కడ ఉంది.';
+
+  @override
+  String disclosureVersion(String version) {
+    return 'విధాన సంస్కరణ $version';
+  }
+
+  @override
+  String get disclosureUpdated =>
+      'లొకేషన్ విధానం మారింది. దయచేసి కొత్త సంస్కరణను చదివి అంగీకరించండి.';
+
+  @override
+  String get policySheetTitle => 'లొకేషన్ విధానం';
+
+  @override
+  String get locationPolicyText =>
+      'మిత్ర లొకేషన్ విధానం (సంస్కరణ 2026-09-v1)\n\n1. మేము ఏమి సేకరిస్తాము. మీరు డ్యూటీలో ఉన్నప్పుడు, మిత్ర మీ లొకేషన్ (అక్షాంశం, రేఖాంశం, ఖచ్చితత్వం, వేగం, దిశ), సమయం, బ్యాటరీ స్థాయి మరియు ప్రాథమిక పరికర తనిఖీలను (మాక్ లొకేషన్, రూట్ చేసిన పరికరం, గడియారం తేడా) నమోదు చేస్తుంది. సందర్శనల సమయంలో మీరు తీసే ఫోటోలు, గమనికలు, రైతు ధృవీకరణలను కూడా నమోదు చేస్తుంది.\n\n2. డ్యూటీలో ఉన్నప్పుడు మాత్రమే. మీరు డ్యూటీ ఆన్ చేసిన తర్వాతే లొకేషన్ నమోదు అవుతుంది; డ్యూటీ ఆఫ్ చేసిన క్షణం, సంస్థ నిర్ణయించిన సమయానికి రోజు ముగిసినప్పుడు (డిఫాల్ట్ 20:00) లేదా ఇంటి వద్ద 60 నిమిషాలు నిష్క్రియంగా ఉన్నప్పుడు ఆగిపోతుంది. డ్యూటీ ఆఫ్‌లో ఉన్నప్పుడు ఏమీ నమోదు కాదు; లొకేషన్ ఆన్‌లో ఉన్నంతసేపు నోటిఫికేషన్ ఎప్పుడూ కనిపిస్తుంది.\n\n3. ఎందుకు సేకరిస్తాము. మీ ట్రాక్ నుండి మీ ప్రయాణ భత్యం కోసం కిలోమీటర్లు లెక్కించబడతాయి; సందర్శన వద్ద మీ లొకేషన్ ఆ సందర్శనకు క్రెడిట్ ఇస్తుంది. ట్రాక్ లేకపోతే ఆటోమేటిక్ ప్రయాణ భత్యం లేదు, ధృవీకరించిన సందర్శన లేదు.\n\n4. ఎవరు చూడగలరు. మీ క్లస్టర్ హెడ్, డైరెక్టర్లు మరియు మీ సంస్థ యజమాని వారి ప్రాంతానికి మీ ట్రాక్, సందర్శనలను చూడగలరు; ఆడిటర్లు ఫ్లాగ్ చేసిన సందర్శనలను సమీక్షించగలరు. స్టోర్ మేనేజర్లు, రైతులు మీ లొకేషన్‌ను ఎప్పుడూ చూడరు. ముడి పాయింట్లు 180 రోజులు ఉంచి, ఆ తర్వాత రోజువారీ మొత్తాలుగా కుదించబడతాయి.';
+
+  @override
+  String get permissionsTitle => 'మిత్రకు కావలసిన అనుమతులు';
+
+  @override
+  String get permissionsIntro =>
+      'మిత్ర వీటిని ఒక్కొక్కటిగా అడుగుతుంది. తర్వాత సెట్టింగ్స్‌లో మార్చుకోవచ్చు.';
+
+  @override
+  String get permLocationTitle => 'లొకేషన్';
+
+  @override
+  String get permLocationBody =>
+      'డ్యూటీలో మీ ట్రాక్ నమోదు చేయడానికి, మీరు పొలం వద్ద ఉన్నారో లేదో చూడడానికి.';
+
+  @override
+  String get permBackgroundTitle => 'లొకేషన్ ఎల్లప్పుడూ';
+
+  @override
+  String get permBackgroundBody =>
+      'స్క్రీన్ ఆఫ్‌లో ఉన్నా ట్రాకింగ్ కొనసాగడానికి \"ఎల్లప్పుడూ అనుమతించు\" ఎంచుకోండి. అయినా ఇది డ్యూటీలో ఉన్నప్పుడు మాత్రమే పనిచేస్తుంది.';
+
+  @override
+  String get permCameraTitle => 'కెమెరా';
+
+  @override
+  String get permCameraBody => 'యాప్ లోపల తీసే పొలం, సందర్శన ఫోటోల కోసం.';
+
+  @override
+  String get permNotificationsTitle => 'నోటిఫికేషన్లు';
+
+  @override
+  String get permNotificationsBody =>
+      'డ్యూటీ నోటీసు చూపడానికి, డ్యూటీ ముగిసే ముందు గుర్తు చేయడానికి.';
+
+  @override
+  String get permGranted => 'అనుమతించారు';
+
+  @override
+  String get permDenied => 'అనుమతించలేదు';
+
+  @override
+  String get permOpenSettings => 'సెట్టింగ్స్ తెరవండి';
+
+  @override
+  String get permAllow => 'అనుమతించు';
+
+  @override
+  String get registeredTitle => 'పరికరం నమోదైంది';
+
+  @override
+  String get registeredBody =>
+      'మీరు సిద్ధం. రోజు ప్రారంభించడానికి హోమ్ నుండి డ్యూటీలోకి వెళ్లండి.';
+
+  @override
+  String get registeredStart => 'హోమ్‌కు వెళ్లండి';
+
+  @override
+  String get homeTitle => 'హోమ్';
+
+  @override
+  String get homeTodayStats => 'ఈ రోజు';
+
+  @override
+  String get statVisitsVerified => 'ధృవీకరించిన సందర్శనలు';
+
+  @override
+  String get statFarmersAdded => 'చేర్చిన రైతులు';
+
+  @override
+  String get statCollections => 'వసూళ్లు';
+
+  @override
+  String get homeNextUp => 'తర్వాత';
+
+  @override
+  String get homeNextUpEmpty => 'ఇంకా బీట్ ప్లాన్ లేదు';
+
+  @override
+  String get homeNextUpEmptyHelp =>
+      'మీ క్లస్టర్ హెడ్ గ్రామాలను కేటాయిస్తారు. అప్పటివరకు రైతులను చేర్చండి, సందర్శనలు ప్రారంభించండి.';
+
+  @override
+  String get homeQuickActions => 'త్వరిత చర్యలు';
+
+  @override
+  String get actionStartVisit => 'సందర్శన ప్రారంభించు';
+
+  @override
+  String get actionScoutCrop => 'పంట పరిశీలన';
+
+  @override
+  String get actionCollectPayment => 'చెల్లింపు వసూలు';
+
+  @override
+  String get comingSoon => 'త్వరలో వస్తుంది';
+
+  @override
+  String get navHome => 'హోమ్';
+
+  @override
+  String get navFarmers => 'రైతులు';
+
+  @override
+  String get navVisits => 'సందర్శనలు';
+
+  @override
+  String get navOrders => 'ఆర్డర్లు';
+
+  @override
+  String get navMe => 'నేను';
+
+  @override
+  String get myDayTitle => 'నా రోజు';
+
+  @override
+  String myDayKm(String km) {
+    return 'ఈ రోజు $km కి.మీ';
+  }
+
+  @override
+  String get myDayEmpty => 'ఈ రోజు ఇంకా డ్యూటీ లేదు';
+
+  @override
+  String get myDayEmptyHelp =>
+      'హోమ్ నుండి డ్యూటీలోకి వెళ్లండి; మీ ట్రాక్, కి.మీ ఇక్కడ కనిపిస్తాయి.';
+
+  @override
+  String myDaySession(String start, String end) {
+    return 'డ్యూటీ $start – $end';
+  }
+
+  @override
+  String myDaySessionActive(String start) {
+    return '$start నుండి డ్యూటీ';
+  }
+
+  @override
+  String myDayPoints(int pending, int accepted) {
+    return '$pending పెండింగ్ · $accepted ఆమోదించారు';
+  }
+
+  @override
+  String get myDayGapsTitle => 'గ్యాప్‌లు మరియు కారణాలు';
+
+  @override
+  String get myDayGapsHelp => 'గ్యాప్ కారణాలు తదుపరి అప్‌డేట్‌తో వస్తాయి.';
+
+  @override
+  String get myDayEndReasonManual => 'మీరు ముగించారు';
+
+  @override
+  String get myDayEndReasonAutoTime => 'రోజు ముగింపులో ముగిసింది';
+
+  @override
+  String get myDayEndReasonAutoIdle => 'నిష్క్రియత తర్వాత ముగిసింది';
+
+  @override
+  String get myDayEndReasonForced => 'మేనేజర్ ముగించారు';
+
+  @override
+  String get myDayEndReasonRejected => 'నమోదు కాలేదు';
+
+  @override
+  String get syncEntityDutySession => 'డ్యూటీ సెషన్';
+
+  @override
+  String get syncEntityLocationBatch => 'లొకేషన్ పాయింట్లు';
+
+  @override
+  String get syncEntityPolicyAcceptance => 'విధాన అంగీకారం';
 }

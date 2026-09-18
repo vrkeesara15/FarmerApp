@@ -4,6 +4,7 @@ import '../i18n/generated/core_localizations.dart';
 import '../theme/app_theme.dart';
 import '../tokens/tokens.g.dart';
 import '../utils/format.dart';
+import 'app_button.dart';
 
 /// Large On duty / Off duty switch card with elapsed time and the
 /// "location on while on duty" note (SPEC 13.1 `DutyToggle`, FA-010).
@@ -14,6 +15,9 @@ class DutyToggle extends StatelessWidget {
     required this.onChanged,
     this.elapsed = Duration.zero,
     this.loading = false,
+    this.blockedReason,
+    this.blockedActionLabel,
+    this.onBlockedAction,
     super.key,
   });
 
@@ -29,12 +33,23 @@ class DutyToggle extends StatelessWidget {
   /// Shows a spinner while the state is changing.
   final bool loading;
 
+  /// Why the switch is disabled (FA-011: "Accept the location policy to go
+  /// on duty"); shown under the card with [blockedActionLabel].
+  final String? blockedReason;
+
+  /// Label of the link next to [blockedReason] ("Review policy").
+  final String? blockedActionLabel;
+
+  /// Tap handler of the link.
+  final VoidCallback? onBlockedAction;
+
   @override
   Widget build(BuildContext context) {
     final app = context.app;
     final p = app.palette;
     final l10n = CoreLocalizations.of(context);
-    final enabled = onChanged != null && !loading;
+    final blocked = blockedReason != null;
+    final enabled = onChanged != null && !loading && !blocked;
     final accent = onDuty ? p.statusSuccess : p.textSecondary;
 
     return Semantics(
@@ -106,8 +121,45 @@ class DutyToggle extends StatelessWidget {
                 const SizedBox(height: Tokens.space3),
                 Text(
                   onDuty ? l10n.dutyGoOff : l10n.dutyGoOn,
-                  style: app.text.label.copyWith(color: p.primary),
+                  style: app.text.label.copyWith(
+                    color: blocked ? p.textMuted : p.primary,
+                  ),
                 ),
+                if (blocked) ...<Widget>[
+                  const SizedBox(height: Tokens.space2),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Icon(
+                        Icons.lock_outline,
+                        size: Tokens.space4,
+                        color: p.statusWarning,
+                      ),
+                      const SizedBox(width: Tokens.space1),
+                      Expanded(
+                        child: Text(
+                          blockedReason!,
+                          style: app.text.caption.copyWith(
+                            color: p.statusWarning,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (blockedActionLabel != null && onBlockedAction != null)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: AppButton(
+                        key: const Key('duty-blocked-action'),
+                        label: blockedActionLabel!,
+                        variant: AppButtonVariant.tertiary,
+                        size: AppButtonSize.medium,
+                        expand: false,
+                        icon: Icons.description_outlined,
+                        onPressed: onBlockedAction,
+                      ),
+                    ),
+                ],
                 const SizedBox(height: Tokens.space2),
                 Row(
                   children: <Widget>[
