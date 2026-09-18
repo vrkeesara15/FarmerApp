@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from farmerapp import __version__
+from farmerapp.auth.policy import PUBLIC
 from farmerapp.settings import get_settings
 
 router = APIRouter(tags=["health"])
@@ -22,6 +23,7 @@ class HealthResponse(BaseModel):
     "/health",
     operation_id="getHealth",
     summary="Liveness probe",
+    dependencies=[PUBLIC],
     response_model=HealthResponse,
 )
 async def get_health() -> HealthResponse:

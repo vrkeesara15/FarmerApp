@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import uuid
+from datetime import datetime
 from typing import Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
@@ -65,6 +66,7 @@ class UserOut(BaseModel):
     cluster_id: uuid.UUID | None
     language: str
     status: str
+    created_at: datetime
 
     @classmethod
     def from_user(cls, user: User) -> UserOut:

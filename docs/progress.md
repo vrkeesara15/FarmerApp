@@ -8,7 +8,7 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 |---|---|---|---|
 | M0-KICKOFF | Scaffold monorepo, docker compose, Makefile, Terraform dev+bootstrap, CI skeletons, design system in Flutter + React | done | 2026-09-17. apps/api (FastAPI, Alembic 0001 extensions+tenant, worker/jobs entrypoints, 24 tests), docker/ + docker-compose.yml + Makefile, apps/console (Next.js 15, 23 DS components, 78 vitest + 4 Playwright), apps/mobile (pub workspace, farmerapp_core with 29 widgets + 5 ARB + 62 goldens, agent/farmer apps), infra/ (bootstrap + 11 modules + dev/stg/prd), .github/ (9 workflows). `make check` green. |
 | FA-001 | Phone + OTP login | done | 2026-09-17. API: `farmerapp/auth/` (models user/otp_challenge/refresh_token, otp.py, tokens.py, deps.py get_current_user + tenant binding, providers fake/mockserver, scheduler seam, router `/v1/auth/otp/send|verify`, `/v1/auth/refresh|logout`, `/v1/me`), Alembic 0002, settings (OTP_*, JWT_*, CORS, prd guard rails), `jobs seed` (tenant fcc + 6 users), db `set_bypass_rls`, mockserver `/sms/status`, openapi.yaml; 62 75 pytest added under tests/auth (fake clock/provider, 1 `integration`) + 3 elsewhere; 102 total. Console: `lib/api.ts` auth+session, `app/api/session*` httpOnly refresh cookie, mock API in sync, LoginForm error states, +20 vitest, Playwright smoke green. Mobile: `HttpAuthApi`, `TokenStore` (secure storage, device_id), `AuthFailure` states, A03/A04 + F02/F03 wired, ARB en+te, +23 tests. PR: docs/prs/FA-001.md. Deferred: real SMS/WhatsApp adapters (human: DLT), Pub/Sub delayed check (OPS-004), phone in several tenants (WC-014). |
-| FA-002 | Role-based access | todo | |
+| FA-002 | Role-based access | done | 2026-09-17. `apps/api/farmerapp/auth/policy.py`: `Role` (= `UserRole`, 10 roles), `require_roles(*roles, self_param=)` dependency, `PUBLIC` marker, `install_policies()` startup check (app refuses to start if any route lacks a policy) that also writes `x-roles` / `x-public` / `x-self` and the 401/403 problems into `openapi.yaml`; 403 is problem+json `forbidden`, logged WARNING `authz_forbidden` (actor id, role, tenant, method, route template; no PII). `auth/scope.py`: SPEC 2.6 matrix as SQLAlchemy filters (`scope_filters`, `user_scope`; reusable for farmers/visits/khata). Policies: health + `/v1/auth/*` public, `/v1/me` all roles, new `farmerapp/users/` (`GET /v1/users` owner/director/cluster_head/auditor/tenant_admin with cluster scope + cursor pagination `api/pagination.py`; `GET /v1/users/{id}` same roles + self; `PATCH /v1/users/{id}` owner/director/tenant_admin: name/role/status/store_id/cluster_id). Disabled account with a valid access token is now 401 `user_disabled` (login stays 403). Seed: second tenant "Green Fields" (`gfl`), 10 users per tenant. `apps/api/README.md` section. PR: docs/prs/FA-002.md. |
 | FA-003 | Tenant isolation (RLS) | todo | |
 | FA-004 | Localisation, ARB files, no hard-coded strings | todo | |
 | FA-006 | Audit trail | todo | |
@@ -17,7 +17,7 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 | SEC-003 | Dependency vulnerabilities | done | 2026-09-17. ci-api pip-audit --strict; ci-console npm audit --audit-level=high; security.yml osv-scanner + trivy fs; dependabot.yml weekly for pip/npm/pub/actions/terraform. CI not yet exercised: no GitHub remote configured. |
 | SEC-004 | Container image scanning (Trivy) | done | 2026-09-17. deploy.yml trivy image scan on built images; api/worker/jobs Dockerfiles python:3.12-slim with non-root USER app. CI not yet exercised: no GitHub remote configured. |
 | SEC-005 | IaC misconfiguration (checkov, tflint) | done | 2026-09-17. ci-infra.yml tflint + checkov (infra/.tflint.hcl, infra/.checkov.yaml); security.yml trivy config on Terraform/Dockerfiles. CI not yet exercised: no GitHub remote configured. |
-| SEC-006 | Authz test matrix per endpoint/role | todo | |
+| SEC-006 | Authz test matrix per endpoint/role | done | 2026-09-17. `apps/api/tests/authz/test_matrix.py` is generated from `apps/api/openapi.yaml`: every non-public operation × 10 roles (allowed → not 401/403, denied → 403 `forbidden`), `x-self` access for every role, cross-tenant id → 404/403 with no tenant-B data in the body, collections never contain other tenants, no token → 401, unknown / disabled user → 401, forbidden call logged without PII (caplog); public operations need no token; `ROUTE_FIXTURES` table supplies path params/bodies for new routes. Plus `test_policy.py` (startup check, OpenAPI extensions), `test_scope.py`, `test_users.py`; fixtures seed both tenants and mint tokens directly. 110 tests (213 total, 97% coverage). |
 | SEC-010 | One SA per deployable, no keys | todo | |
 | SEC-011 | Cloud SQL private IP, IAM auth, no DDL for app user | todo | |
 | SEC-012 | Postgres RLS keyed on app.tenant_id, tested in CI | todo | |
@@ -80,7 +80,7 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 | WC-003 | Farmers directory + 360 | todo | |
 | WC-004 | Stores | todo | |
 | WC-010 | Validation agent inbox | todo | |
-| WC-011 | Users, roles, device binding, forced logout | todo | |
+| WC-011 | Users, roles, device binding, forced logout | todo | Minimal `/v1/users` list/get/patch (name, role, status, store_id, cluster_id) exist since FA-002 (2026-09-17) in `apps/api/farmerapp/users/`. Left: create/invite, device binding UI, forced logout (revoke refresh family when disabled; access tokens are already rejected on the next call), re-auth for role change (SEC-028), audit rows (FA-006), console screen. |
 | WC-012 | Settings | todo | |
 | AN-001 | Owner home dashboard | todo | |
 | AN-002 | Field team scorecard | todo | |
@@ -209,7 +209,7 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 | SEC-021 | OTP hashing, velocity | todo | Partly done with FA-001 (2026-09-17): HMAC-SHA256 with server pepper bound to the challenge id, constant-time compare, single use, 5-attempt lockout (15 min), 3 resends / 15 min per phone, no code or full phone in logs. Left: per-country block, IP/ASN velocity (Cloud Armor SEC-014), provider-side SMS pumping controls. |
 | SEC-022 | Input validation, CSP | todo | |
 | SEC-027 | LLM calls: no PII | todo | |
-| SEC-028 | Admin re-auth | todo | |
+| SEC-028 | Admin re-auth | todo | `PATCH /v1/users/{id}` (FA-002) changes roles without re-auth yet; logs `user_updated` with field names only. |
 | OPS-011 | Datastream lag / dbt failure | todo | |
 | OPS-012 | Cost alerts | todo | |
 | OPS-013 | Security alerts | todo | |

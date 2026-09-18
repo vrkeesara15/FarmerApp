@@ -18,9 +18,11 @@ from farmerapp.api.middleware import TraceMiddleware
 from farmerapp.api.routes import health
 from farmerapp.auth import router as auth_routes
 from farmerapp.auth.deps import AuthServices, build_auth_services, tick
+from farmerapp.auth.policy import install_policies
 from farmerapp.auth.scheduler import InProcessScheduler
 from farmerapp.logging import configure_logging, get_logger
 from farmerapp.settings import Settings, get_settings
+from farmerapp.users import router as user_routes
 
 API_PREFIX = "/v1"
 SCHEDULER_INTERVAL_S = 1.0
@@ -106,8 +108,12 @@ def create_app(
     v1.include_router(health.router)
     v1.include_router(auth_routes.router)
     v1.include_router(auth_routes.me_router)
+    v1.include_router(user_routes.router)
     app.include_router(v1)
 
+    # FA-002: refuse to start unless every route declares a role policy (or is public), and
+    # write the policies into the OpenAPI contract (x-roles / x-public / x-self).
+    install_policies(app)
     _register_problem_schema(app)
     return app
 

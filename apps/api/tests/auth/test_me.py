@@ -90,8 +90,11 @@ async def test_me_for_disabled_user(
     officer.status = "disabled"
     await db_session.flush()
     resp = await client.get("/v1/me", headers=_bearer(session_tokens["access_token"]))
-    assert resp.status_code == 403
+    # A disabled account is no longer a valid session: 401 so clients drop tokens and re-login
+    # (login itself answers 403 `user_disabled`).
+    assert resp.status_code == 401
     assert resp.json()["code"] == "user_disabled"
+    assert resp.headers["www-authenticate"] == "Bearer"
 
 
 @pytest.mark.usefixtures("officer")

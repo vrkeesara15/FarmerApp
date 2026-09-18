@@ -104,7 +104,13 @@ async def get_current_user(
     if user is None or user.tenant_id != claims.tenant_id or user.deleted_at is not None:
         raise UnauthenticatedError("Unknown user.")
     if user.status != UserStatus.ACTIVE:
-        raise UserDisabledError("This account is disabled.")
+        # The session is no longer valid: 401 so clients drop their tokens and re-login
+        # (where they get 403 `user_disabled` with the reason).
+        raise UnauthenticatedError(
+            "This account is disabled.",
+            code=UserDisabledError.code,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     request.state.user = user
     return user
 

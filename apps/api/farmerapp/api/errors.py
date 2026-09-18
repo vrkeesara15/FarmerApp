@@ -99,6 +99,17 @@ def code_for_status(status: int) -> str:
     return _STATUS_CODES.get(status, "error")
 
 
+def problem_responses(*codes: tuple[int, str]) -> dict[int | str, dict[str, Any]]:
+    """``responses=`` entries documenting the problem ``code``s a route answers with."""
+    out: dict[int | str, dict[str, Any]] = {}
+    for status_code, code in codes:
+        entry = out.setdefault(
+            status_code, {"description": "", "content": {PROBLEM_MEDIA_TYPE: {}}}
+        )
+        entry["description"] = ", ".join(filter(None, [str(entry["description"]), f"`{code}`"]))
+    return out
+
+
 def problem_response(
     request: Request,
     *,

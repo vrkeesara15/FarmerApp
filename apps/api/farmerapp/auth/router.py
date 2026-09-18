@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from typing import Annotated
+
 from fastapi import APIRouter, Response, status
 
-from farmerapp.api.errors import PROBLEM_MEDIA_TYPE
-from farmerapp.auth.deps import CurrentUser, DbSession, Services
+from farmerapp.api.errors import problem_responses
+from farmerapp.auth.deps import DbSession, Services
 from farmerapp.auth.errors import UserDisabledError, UserNotFoundError
 from farmerapp.auth.models import OtpPurpose, User, UserStatus
 from farmerapp.auth.otp import find_user_by_phone
+from farmerapp.auth.policy import PUBLIC, Role, require_roles
 from farmerapp.auth.providers import mask_phone
 from farmerapp.auth.schemas import (
     LogoutRequest,
@@ -25,23 +28,14 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 me_router = APIRouter(tags=["me"])
 
 
-def _problems(*codes: tuple[int, str]) -> dict[int | str, dict[str, object]]:
-    out: dict[int | str, dict[str, object]] = {}
-    for status_code, code in codes:
-        entry = out.setdefault(
-            status_code, {"description": "", "content": {PROBLEM_MEDIA_TYPE: {}}}
-        )
-        entry["description"] = ", ".join(filter(None, [str(entry["description"]), f"`{code}`"]))
-    return out
-
-
 @router.post(
     "/otp/send",
     operation_id="sendOtp",
+    dependencies=[PUBLIC],
     summary="Send a 6-digit login code by SMS (WhatsApp fallback after 30 s)",
     status_code=status.HTTP_202_ACCEPTED,
     response_model=OtpSendResponse,
-    responses=_problems(
+    responses=problem_responses(
         (404, "user_not_found"),
         (403, "user_disabled"),
         (423, "otp_locked"),
@@ -66,9 +60,10 @@ async def send_otp(body: OtpSendRequest, session: DbSession, services: Services)
 @router.post(
     "/otp/verify",
     operation_id="verifyOtp",
+    dependencies=[PUBLIC],
     summary="Verify the code; returns access + refresh tokens and the user profile",
     response_model=TokenResponse,
-    responses=_problems(
+    responses=problem_responses(
         (401, "otp_invalid"),
         (401, "otp_expired"),
         (404, "otp_not_found"),
@@ -109,9 +104,10 @@ async def verify_otp(
 @router.post(
     "/refresh",
     operation_id="refreshToken",
+    dependencies=[PUBLIC],
     summary="Rotate the refresh token and issue a new access token",
     response_model=TokenResponse,
-    responses=_problems(
+    responses=problem_responses(
         (401, "refresh_invalid"),
         (401, "refresh_expired"),
         (401, "refresh_reused"),
@@ -134,6 +130,7 @@ async def refresh_token(
 @router.post(
     "/logout",
     operation_id="logout",
+    dependencies=[PUBLIC],
     summary="Revoke the refresh token family (idempotent)",
     status_code=status.HTTP_204_NO_CONTENT,
 )
@@ -147,7 +144,6 @@ async def logout(body: LogoutRequest, session: DbSession, services: Services) ->
     operation_id="getMe",
     summary="Profile of the authenticated user",
     response_model=UserOut,
-    responses=_problems((401, "unauthenticated"), (401, "token_expired"), (403, "user_disabled")),
 )
-async def get_me(user: CurrentUser) -> UserOut:
+async def get_me(user: Annotated[User, require_roles(*Role)]) -> UserOut:
     return UserOut.from_user(user)

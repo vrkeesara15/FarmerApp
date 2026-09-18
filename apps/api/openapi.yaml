@@ -23,6 +23,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+      x-public: true
   /v1/auth/otp/send:
     post:
       tags:
@@ -64,6 +65,7 @@ paths:
           description: '`otp_rate_limited`'
           content:
             application/problem+json: {}
+      x-public: true
   /v1/auth/otp/verify:
     post:
       tags:
@@ -105,6 +107,7 @@ paths:
           description: '`otp_locked`'
           content:
             application/problem+json: {}
+      x-public: true
   /v1/auth/refresh:
     post:
       tags:
@@ -138,6 +141,7 @@ paths:
           description: '`user_disabled`'
           content:
             application/problem+json: {}
+      x-public: true
   /v1/auth/logout:
     post:
       tags:
@@ -159,6 +163,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+      x-public: true
   /v1/me:
     get:
       tags:
@@ -179,13 +184,177 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '401':
-          description: '`unauthenticated`, `token_expired`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
           content:
             application/problem+json: {}
         '403':
-          description: '`user_disabled`'
+          description: '`forbidden`'
           content:
             application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/users:
+    get:
+      tags:
+      - users
+      summary: Users of the caller's tenant (cluster heads see their own cluster)
+      operationId: listUsers
+      parameters:
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOut_UserOut_'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - tenant_admin
+  /v1/users/{id}:
+    get:
+      tags:
+      - users
+      summary: One user (management roles within their scope, or the user themselves)
+      operationId: getUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - tenant_admin
+      x-self: id
+    patch:
+      tags:
+      - users
+      summary: Change name, role, status, store or cluster of a user
+      operationId: updateUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
 components:
   schemas:
     HealthResponse:
@@ -304,6 +473,22 @@ components:
       - phone
       - code
       title: OtpVerifyRequest
+    PageOut_UserOut_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/UserOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: PageOut[UserOut]
     RefreshRequest:
       properties:
         refresh_token:
@@ -385,6 +570,10 @@ components:
         status:
           type: string
           title: Status
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
       type: object
       required:
       - id
@@ -396,7 +585,62 @@ components:
       - cluster_id
       - language
       - status
+      - created_at
       title: UserOut
+    UserRole:
+      type: string
+      enum:
+      - owner
+      - director
+      - cluster_head
+      - auditor
+      - store_manager
+      - accountant
+      - field_officer
+      - agronomist
+      - tenant_admin
+      - farmer
+      title: UserRole
+      description: The ten roles from FA-002.
+    UserStatus:
+      type: string
+      enum:
+      - active
+      - disabled
+      title: UserStatus
+    UserUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Name
+        role:
+          anyOf:
+          - $ref: '#/components/schemas/UserRole'
+          - type: 'null'
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/UserStatus'
+          - type: 'null'
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+      additionalProperties: false
+      type: object
+      title: UserUpdate
+      description: 'PATCH body: only the fields present are changed; ``null`` clears store/cluster.'
     Problem:
       type: object
       required:
