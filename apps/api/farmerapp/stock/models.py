@@ -9,7 +9,14 @@
   positive, ``sale`` / ``transfer_out`` / ``damage`` negative, ``adjust`` either way — with
   the batch it touched, what caused it (``ref_type`` / ``ref_id``: an order, a transfer, a
   goods receipt note...) and a note. ST-003 "stock per SKU per batch correct after each
-  movement" is ``sum(qty)`` over the ledger, never an updated counter.
+  movement" is ``sum(qty)`` over the ledger, never an updated counter. A write-off or an
+  adjustment carries its ``reason`` and a write-off an optional ``photo_uri`` (0012).
+* ``stock_reservation`` — FA-020 (migration 0012): stock held for an open order, per batch
+  (FEFO at placement). Reservations are **not** movements: on hand stays the ledger sum and
+  ``available = on_hand - sum(active reservations)``. A reservation is ``active`` until the
+  order is handed over / delivered (``consumed``: the ``sale`` movement is written then) or
+  cancelled (``released``). A separate table rather than ``reserve`` / ``release`` movement
+  kinds keeps ``stock_on_hand`` and every existing ledger reader unchanged.
 """
 
 from __future__ import annotations
@@ -52,6 +59,18 @@ INBOUND_KINDS = frozenset({MovementKind.RECEIPT, MovementKind.TRANSFER_IN})
 OUTBOUND_KINDS = frozenset({MovementKind.SALE, MovementKind.TRANSFER_OUT, MovementKind.DAMAGE})
 
 QTY_SCALE = Decimal("0.001")
+
+
+class WriteOffReason(StrEnum):
+    DAMAGE = "damage"
+    EXPIRY = "expiry"
+    OTHER = "other"
+
+
+class ReservationStatus(StrEnum):
+    ACTIVE = "active"  # holds stock for an open order
+    CONSUMED = "consumed"  # converted into a sale movement (handed over / delivered)
+    RELEASED = "released"  # order cancelled
 
 
 class StockBatch(Base, BaseColumns):
@@ -121,6 +140,38 @@ class StockMovement(Base, TenantRow):
     ref_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
     note: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_by: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)  # user.id
+    reason: Mapped[str | None] = mapped_column(String(16), nullable=True)  # write-off / adjust
+    photo_uri: Mapped[str | None] = mapped_column(String(512), nullable=True)  # damage photo
+
+
+class StockReservation(Base, BaseColumns):
+    __tablename__ = "stock_reservation"
+    __table_args__ = (
+        CheckConstraint("qty > 0", name="qty"),
+        CheckConstraint(f"status IN ({sql_in(ReservationStatus)})", name="status"),
+        Index("ix_stock_reservation_batch_status", "tenant_id", "batch_id", "status"),
+        Index("ix_stock_reservation_order_id", "order_id"),
+    )
+
+    store_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("store.id", ondelete="CASCADE"), nullable=False
+    )
+    sku_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("sku.id", ondelete="RESTRICT"), nullable=False
+    )
+    batch_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("stock_batch.id", ondelete="CASCADE"), nullable=False
+    )
+    order_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("order.id", ondelete="CASCADE"), nullable=False
+    )
+    order_line_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("order_line.id", ondelete="CASCADE"), nullable=False
+    )
+    qty: Mapped[Decimal] = mapped_column(Numeric(12, 3), nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(16), nullable=False, default=ReservationStatus.ACTIVE
+    )
 
 
 __all__ = [
@@ -128,6 +179,9 @@ __all__ = [
     "OUTBOUND_KINDS",
     "QTY_SCALE",
     "MovementKind",
+    "ReservationStatus",
     "StockBatch",
     "StockMovement",
+    "StockReservation",
+    "WriteOffReason",
 ]

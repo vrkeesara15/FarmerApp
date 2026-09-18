@@ -113,6 +113,54 @@ class CreditLimit(Base, BaseColumns):
     )
 
 
+class ApprovalStatus(StrEnum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class CreditApprovalRequest(Base, BaseColumns):
+    """ST-007 (migration 0012): a credit sale that would take the farmer beyond their limit
+    at a store. A cluster head approves or rejects it; an approved request lets the same
+    ``order_id`` (and amount up to ``amount_paise``) proceed **once** (``used_at``).
+    ``order_id`` has no FK: the order is only written once the credit is allowed."""
+
+    __tablename__ = "credit_approval_request"
+    __table_args__ = (
+        CheckConstraint(f"status IN ({sql_in(ApprovalStatus)})", name="status"),
+        CheckConstraint("amount_paise > 0 AND shortfall_paise > 0", name="amounts"),
+        CheckConstraint(
+            "(status = 'pending') = (decided_by IS NULL AND decided_at IS NULL)", name="decision"
+        ),
+        CheckConstraint("used_at IS NULL OR status = 'approved'", name="used_at"),
+        Index("ix_credit_approval_request_farmer_store", "tenant_id", "farmer_id", "store_id"),
+        Index("ix_credit_approval_request_order_id", "tenant_id", "order_id"),
+        Index("ix_credit_approval_request_status", "tenant_id", "status"),
+    )
+
+    farmer_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("farmer.id", ondelete="CASCADE"), nullable=False
+    )
+    store_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("store.id", ondelete="CASCADE"), nullable=False
+    )
+    order_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
+    amount_paise: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    balance_paise: Mapped[int] = mapped_column(BigInteger, nullable=False)  # at request time
+    limit_paise: Mapped[int] = mapped_column(BigInteger, nullable=False)  # at request time
+    shortfall_paise: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    requested_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("user.id", ondelete="SET NULL"), nullable=True
+    )
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default=ApprovalStatus.PENDING)
+    decided_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("user.id", ondelete="SET NULL"), nullable=True
+    )
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    decision_note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 # --------------------------------------------------------------------------- balance
 #: ``+amount`` for a debit, ``-amount`` for a credit: the ledger's signed amount in SQL.
 SIGNED_AMOUNT = case(
@@ -181,6 +229,8 @@ async def overdue_paise(
 
 __all__ = [
     "SIGNED_AMOUNT",
+    "ApprovalStatus",
+    "CreditApprovalRequest",
     "CreditLimit",
     "EntryRef",
     "EntryType",

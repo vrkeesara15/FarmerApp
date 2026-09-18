@@ -11,12 +11,12 @@ from farmerapp.catalog.models import LabelClaim, PestOrDisease, PriceList, Produ
 from farmerapp.db.models.audit_log import AuditLog
 from farmerapp.db.models.tenant import Tenant
 from farmerapp.farmers.models import ConsentRecord, CropPlot, Farm, Farmer, FarmPhoto
-from farmerapp.khata.models import CreditLimit, KhataEntry
+from farmerapp.khata.models import CreditApprovalRequest, CreditLimit, KhataEntry
 from farmerapp.location.models import DutySession, LocationDailyAgg, LocationPoint, PolicyAcceptance
 from farmerapp.notifications.models import Notification
-from farmerapp.orders.models import Order, OrderLine
+from farmerapp.orders.models import Order, OrderLine, OrderStatusEvent
 from farmerapp.payments.models import DayClose, Payment, WebhookEvent
-from farmerapp.stock.models import StockBatch, StockMovement
+from farmerapp.stock.models import StockBatch, StockMovement, StockReservation
 from farmerapp.sync.models import SyncChange, SyncOp
 from farmerapp.tenants.models import Cluster, Store, Village
 from farmerapp.uploads.models import UploadChunk, UploadSession
@@ -26,6 +26,7 @@ __all__ = [
     "AuditLog",
     "Cluster",
     "ConsentRecord",
+    "CreditApprovalRequest",
     "CreditLimit",
     "Crop",
     "CropPlot",
@@ -42,6 +43,7 @@ __all__ = [
     "Notification",
     "Order",
     "OrderLine",
+    "OrderStatusEvent",
     "OtpChallenge",
     "OverrideRequest",
     "Payment",
@@ -53,6 +55,7 @@ __all__ = [
     "Sku",
     "StockBatch",
     "StockMovement",
+    "StockReservation",
     "Store",
     "SyncChange",
     "SyncOp",

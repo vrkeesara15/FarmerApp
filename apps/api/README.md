@@ -340,9 +340,74 @@ balance = await khata_balance(session, farmer_id, store_id)
   `GET /v1/farmers/{id}/khata`; scope helpers in `auth/scope.py` (`store_filters`,
   `order_filters`, `payment_filters`, `khata_farmer_filters`).
 - Sync: `order`, `order_line`, `payment`, `khata_entry` are in the feed with `server_wins`;
-  device writes return `unsupported_action` until FA-020 / FA-021 / FA-022 land.
+  device writes return `unsupported_action` until FA-020 / FA-021 / FA-022 land (the
+  `order` create is wired since FA-020, see below).
 - Seed: `jobs/seed_catalog.py` (static products, packs, problems, claims) and
   `jobs/seed_m3.py` (`M3_FULL` / `M3_SMALL` via `SeedProfile.m3`).
+
+## Orders, stock movements, credit and khata (FA-020 / ST-003 / ST-005 / ST-007 / FA-022)
+
+Alembic `0012_orders_stock_credit` (branch `orders`): `stock_reservation`, append-only
+`order_status_event`, `credit_approval_request`, `stock_movement.reason` / `photo_uri`.
+Design notes and the two shared functions: `docs/prs/FA-020-api.md`.
+
+| Route | Roles | Notes |
+|---|---|---|
+| `POST /v1/orders` | field officer (own farmers), store manager / accountant (own store), farmer (self) | server prices (`price_for`), FEFO reservation, `payment_mode=credit` → credit gate (402) |
+| `POST /v1/orders/{id}/status` | owner, director, tenant admin, cluster head, store manager, accountant (store scope) | ST-005 `TRANSITIONS`; 409 `invalid_transition` |
+| `GET /v1/stores/{id}/order-queue` | store roles (store scope) | open statuses by default, `status=` repeatable |
+| `GET /v1/stores/nearest?farmer_id=&sku_id=` | order placers + management | village store, else nearest by distance; availability per SKU |
+| `POST /v1/stores/{id}/stock/receipts` · `/write-offs` | owner, director, cluster head, store manager | 409 `negative_stock` / `batch_mismatch` |
+| `POST /v1/stock/transfers` | same | `transfer_out` + `transfer_in` atomically, batch identity kept |
+| `POST /v1/stores/{id}/stock/adjustments` | store manager | counted qty, reason, `stock.adjustment` audit event |
+| `PUT /v1/farmers/{id}/credit-limit` | store manager (≤ `store_manager_max_credit_limit_paise`), cluster head, owner, director | tenant setting default ₹50,000 |
+| `GET /v1/credit-approvals`, `POST .../{id}/approve\|reject` | read: store roles; decide: cluster head, owner, director | approved request = that order proceeds once |
+| `POST /v1/farmers/{id}/khata/entries` | store manager (own store) | manual adjustment, reason required, audited, append-only |
+
+```python
+# Stock: available = on hand (ledger sum) - active reservations. Reservations are rows in
+# stock_reservation, not movements; handover turns them into sale movements.
+from farmerapp.stock.service import allocate_fefo, consume_order, release_order
+
+# Credit sales (orders and POS): the gate posts the khata debit itself when allowed.
+from farmerapp.khata.credit import check_and_reserve_credit
+
+decision = await check_and_reserve_credit(
+    session,
+    tenant_id=t,
+    farmer_id=f,
+    store_id=s,
+    amount_paise=total,
+    order_id=order_id,
+    actor=user,
+)
+if not decision.allowed:
+    ...  # answer 402 credit_limit_exceeded WITHOUT raising (the approval request must commit)
+
+# Payments / repayments: a new credit row on the khata.
+from farmerapp.khata.ledger import post_credit
+
+await post_credit(
+    session,
+    tenant_id=t,
+    farmer_id=f,
+    store_id=s,
+    amount_paise=amount,
+    ref_type="payment",
+    ref_id=payment.id,
+    actor=user,
+)
+```
+
+- Tenant settings read by `khata.ledger.CreditSettings`: `store_manager_max_credit_limit_paise`
+  (default 5,000,000) and `credit_due_days` (default 90; due date of a credit sale without a
+  known harvest).
+- `GET /v1/farmers/{id}/khata` adds `open_debits` (FIFO-settled, due date, days overdue,
+  bucket), `overdue_buckets` (`0_30` / `31_60` / `61_90` / `90_plus`, SPEC 5.2) and
+  `payment_history`.
+- Sync: `order` create = offline capture (entity id = order id; replay → `conflict`); a
+  credit sale beyond the limit is `rejected` with `credit_limit_exceeded` (402) and the
+  approval request id in `error.errors[0]`.
 
 ## Farmer registration writes (FA-012 / FA-013)
 

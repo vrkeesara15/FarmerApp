@@ -24,8 +24,10 @@ from farmerapp.stock.models import (
     OUTBOUND_KINDS,
     QTY_SCALE,
     MovementKind,
+    ReservationStatus,
     StockBatch,
     StockMovement,
+    StockReservation,
 )
 
 
@@ -67,6 +69,8 @@ async def apply_movement(
     note: str | None = None,
     created_by: uuid.UUID | None = None,
     at: datetime | None = None,
+    reason: str | None = None,
+    photo_uri: str | None = None,
 ) -> StockMovement:
     """Append a movement and update the batch cache in the same flush.
 
@@ -94,6 +98,8 @@ async def apply_movement(
         ref_id=ref_id,
         note=note,
         created_by=created_by,
+        reason=reason,
+        photo_uri=photo_uri,
         **({"created_at": at} if at is not None else {}),
     )
     session.add(movement)
@@ -140,11 +146,48 @@ async def stock_on_hand_by_batch(
     return {batch_id: _quantize(Decimal(total)) for batch_id, total in rows}
 
 
+async def reserved_by_batch(
+    session: AsyncSession, batch_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, Decimal]:
+    """``batch_id -> qty`` held by active reservations (FA-020); absent = nothing reserved."""
+    if not batch_ids:
+        return {}
+    rows = await session.execute(
+        select(StockReservation.batch_id, func.sum(StockReservation.qty))
+        .where(
+            StockReservation.batch_id.in_(list(batch_ids)),
+            StockReservation.status == ReservationStatus.ACTIVE.value,
+        )
+        .group_by(StockReservation.batch_id)
+    )
+    return {batch_id: _quantize(Decimal(total)) for batch_id, total in rows}
+
+
+async def reserved_by_sku(
+    session: AsyncSession, store_id: uuid.UUID, sku_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, Decimal]:
+    """``sku_id -> qty`` held by active reservations in a store."""
+    if not sku_ids:
+        return {}
+    rows = await session.execute(
+        select(StockReservation.sku_id, func.sum(StockReservation.qty))
+        .where(
+            StockReservation.store_id == store_id,
+            StockReservation.sku_id.in_(list(sku_ids)),
+            StockReservation.status == ReservationStatus.ACTIVE.value,
+        )
+        .group_by(StockReservation.sku_id)
+    )
+    return {sku_id: _quantize(Decimal(total)) for sku_id, total in rows}
+
+
 __all__ = [
     "InsufficientStockError",
     "InvalidMovementError",
     "apply_movement",
     "check_sign",
+    "reserved_by_batch",
+    "reserved_by_sku",
     "stock_on_hand",
     "stock_on_hand_by_batch",
     "stock_on_hand_by_sku",
