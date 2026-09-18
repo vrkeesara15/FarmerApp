@@ -46,7 +46,7 @@ async def test_patch_user_writes_exactly_one_audit_row(
 
     resp = await client.patch(
         f"/v1/users/{target.id}",
-        json={"name": "Renamed Officer", "cluster_id": None},
+        json={"name": "Renamed Officer", "cluster_id": str(target.cluster_id)},
         headers={**bearer(owner), **REQUEST_HEADERS},
     )
     assert resp.status_code == 200, resp.text
@@ -58,7 +58,7 @@ async def test_patch_user_writes_exactly_one_audit_row(
     assert row.actor_id == owner.id and row.actor_role == "owner"
     assert row.action == "user.update" and row.entity == "user"
     assert row.entity_id == target.id
-    # Only the columns that actually changed, plus the id. cluster_id was already NULL.
+    # Only the columns that actually changed, plus the id. cluster_id was sent unchanged.
     assert row.before == {"id": str(target.id), "name": old_name}
     assert row.after == {"id": str(target.id), "name": "Renamed Officer"}
     assert row.ip == CLIENT_IP

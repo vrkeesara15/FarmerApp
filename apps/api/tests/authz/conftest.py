@@ -1,8 +1,11 @@
 """Authz fixtures (SEC-006).
 
 ``world`` seeds both demo tenants through the real seed job (``fcc`` = tenant A, ``gfl`` =
-tenant B) with one active user per role each, and ``bearer`` mints access tokens directly
-through the token service so the matrix does not pay for an OTP round trip per case.
+tenant B) with the ``SMALL`` profile: one active user per role each (plus the extra field
+officers, stores, villages and a few farmers with farms), and ``bearer`` mints access tokens
+directly through the token service so the matrix does not pay for an OTP round trip per case.
+``SeededTenant.user(role)`` is the *role user* (lowest phone number of that role); every
+account of the tenant is in ``everyone``.
 """
 
 from __future__ import annotations
@@ -19,7 +22,8 @@ from farmerapp.auth.deps import AuthServices
 from farmerapp.auth.models import User, UserRole
 from farmerapp.db.models import Tenant
 from farmerapp.db.session import set_tenant, tenant_scope
-from farmerapp.jobs.seed import DEMO_TENANTS, seed_demo
+from farmerapp.farmers.models import Farmer
+from farmerapp.jobs.seed import DEMO_TENANTS, SMALL, seed_demo
 
 ROLES: tuple[str, ...] = tuple(r.value for r in UserRole)
 
@@ -27,7 +31,9 @@ ROLES: tuple[str, ...] = tuple(r.value for r in UserRole)
 @dataclass(frozen=True)
 class SeededTenant:
     tenant: Tenant
-    users: dict[UserRole, User]
+    users: dict[UserRole, User]  # the role user per role (first by phone)
+    everyone: tuple[User, ...] = ()  # every account of the tenant (role users + officers)
+    farmers: tuple[Farmer, ...] = ()  # seeded farmers, oldest registration first
 
     def user(self, role: str | UserRole) -> User:
         return self.users[UserRole(role)]
@@ -35,6 +41,10 @@ class SeededTenant:
     @property
     def owner(self) -> User:
         return self.users[UserRole.OWNER]
+
+    @property
+    def farmer(self) -> Farmer:
+        return self.farmers[0]
 
 
 @dataclass(frozen=True)
@@ -48,17 +58,37 @@ async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
     async with tenant_scope(session, demo.id):  # RLS: rows are only visible in their tenant
         tenant = (await session.execute(select(Tenant).where(Tenant.slug == slug))).scalar_one()
         users = (
-            (await session.execute(select(User).where(User.tenant_id == tenant.id))).scalars().all()
+            (
+                await session.execute(
+                    select(User).where(User.tenant_id == tenant.id).order_by(User.phone)
+                )
+            )
+            .scalars()
+            .all()
         )
-    by_role = {UserRole(u.role): u for u in users}
+        farmers = (
+            (
+                await session.execute(
+                    select(Farmer)
+                    .where(Farmer.tenant_id == tenant.id)
+                    .order_by(Farmer.created_at, Farmer.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+    by_role: dict[UserRole, User] = {}
+    for u in users:
+        by_role.setdefault(UserRole(u.role), u)
     assert set(by_role) == set(UserRole), f"seed for {slug} must have one user per role"
-    return SeededTenant(tenant=tenant, users=by_role)
+    assert farmers, f"seed for {slug} must have farmers"
+    return SeededTenant(tenant=tenant, users=by_role, everyone=tuple(users), farmers=tuple(farmers))
 
 
 @pytest.fixture
 async def world(db_session: AsyncSession) -> World:
-    """Both demo tenants; the session is left bound to tenant A (tests mutate A's rows)."""
-    await seed_demo(db_session)
+    """Both demo tenants (small profile); the session is left bound to tenant A."""
+    await seed_demo(db_session, SMALL)
     slugs = [t.slug for t in DEMO_TENANTS]
     assert slugs == ["fcc", "gfl"]
     world = World(a=await _load_tenant(db_session, "fcc"), b=await _load_tenant(db_session, "gfl"))

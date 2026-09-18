@@ -98,11 +98,16 @@ def _target_owner_id(ctx: Ctx) -> dict[str, str]:
     return {"id": str(ctx.target.owner.id)}
 
 
+def _target_farmer_id(ctx: Ctx) -> dict[str, str]:
+    return {"id": str(ctx.target.farmer.id)}
+
+
 ROUTE_FIXTURES: dict[str, RouteFixture] = {
     "GET /v1/users/{id}": RouteFixture(path_params=_target_owner_id),
     "PATCH /v1/users/{id}": RouteFixture(
         path_params=_target_owner_id, body=lambda _ctx: {"name": "Renamed by test"}
     ),
+    "GET /v1/farmers/{id}": RouteFixture(path_params=_target_farmer_id),
 }
 
 
@@ -153,9 +158,12 @@ def _no_tenant_leak(resp: Response, other: SeededTenant) -> None:
         body.pop("instance", None)
         text = json.dumps(body)
     assert str(other.tenant.id) not in text
-    for user in other.users.values():
+    for user in other.everyone:
         assert str(user.id) not in text
         assert user.phone not in text
+    for farmer in other.farmers:
+        assert str(farmer.id) not in text
+        assert farmer.phone not in text
 
 
 # --------------------------------------------------------------------------- contract shape

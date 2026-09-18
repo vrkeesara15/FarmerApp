@@ -21,7 +21,7 @@ from farmerapp.db.base import BaseColumns
 from farmerapp.db.models import AuditLog, Tenant
 from farmerapp.db.rls import rls_statements
 from farmerapp.db.session import set_tenant, tenant_scope
-from farmerapp.jobs.seed import DEMO_TENANTS, seed_demo
+from farmerapp.jobs.seed import DEMO_TENANTS, SMALL, seed_demo
 from tests.audit.conftest import audit_rows, one_audit_row
 
 
@@ -178,21 +178,24 @@ async def test_writes_without_actor_context_are_attributed_to_the_system(
 
 async def test_seed_creates_user_create_rows(db_session: AsyncSession) -> None:
     """The seed job runs as the system actor: ``user.create`` with ``before`` null."""
-    result = await seed_demo(db_session)
+    result = await seed_demo(db_session, SMALL)
     for slug, tenant_id in result.tenants:
         async with tenant_scope(db_session, tenant_id):
             users = await audit_rows(db_session, action="user.create")
             demo = next(t for t in DEMO_TENANTS if t.slug == slug)
-            assert len(users) == len(demo.users)
+            assert len(users) == len(demo.all_users)
             assert all(r.before is None and r.after is not None for r in users)
             assert all(r.actor_id is None and r.actor_role == audit.SYSTEM_ROLE for r in users)
             assert {r.after["role"] for r in users if r.after} == {r.value for r in UserRole}
             tenants = await audit_rows(db_session, action="tenant.create")
             assert len(tenants) == 1 and tenants[0].entity_id == tenant_id
     # Re-running the (idempotent) seed changes nothing and audits nothing new.
-    await seed_demo(db_session)
     async with tenant_scope(db_session, result.tenant_id):
-        assert len(await audit_rows(db_session, entity="user")) == len(DEMO_TENANTS[0].users)
+        before = len(await audit_rows(db_session))
+    await seed_demo(db_session, SMALL)
+    async with tenant_scope(db_session, result.tenant_id):
+        assert len(await audit_rows(db_session, entity="user")) == len(DEMO_TENANTS[0].all_users)
+        assert len(await audit_rows(db_session)) == before
 
 
 async def test_actor_scope_nests_and_restores() -> None:

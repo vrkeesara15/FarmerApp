@@ -43,7 +43,8 @@ async def test_owner_lists_every_user_in_own_tenant(
     body = resp.json()
     assert body["next_cursor"] is None
     ids = {item["id"] for item in body["items"]}
-    assert ids == {str(u.id) for u in world.a.users.values()}
+    assert ids == {str(u.id) for u in world.a.everyone}
+    assert {str(u.id) for u in world.a.users.values()} <= ids
     assert all(item["tenant_id"] == str(world.a.tenant.id) for item in body["items"])
     assert {item["role"] for item in body["items"]} == {r.value for r in UserRole}
     assert "code_hash" not in resp.text and "device_id" not in body["items"][0]
@@ -55,7 +56,7 @@ async def test_cursor_pagination_is_stable_and_complete(
     headers = bearer(world.a.owner)
     items = await _all_pages(client, headers, limit=3)
     ids = [item["id"] for item in items]
-    assert len(ids) == len(set(ids)) == 10
+    assert len(ids) == len(set(ids)) == len(world.a.everyone) == 14
     ordered = [(item["created_at"], item["id"]) for item in items]
     assert ordered == sorted(ordered)
 
@@ -96,10 +97,11 @@ async def test_cluster_head_is_limited_to_own_cluster(
 
 
 async def test_cluster_head_without_cluster_sees_nobody(
-    client: AsyncClient, world: World, bearer: Bearer
+    client: AsyncClient, world: World, bearer: Bearer, db_session: AsyncSession
 ) -> None:
     head = world.a.user(UserRole.CLUSTER_HEAD)
-    assert head.cluster_id is None
+    head.cluster_id = None  # the seed places the demo cluster head in a cluster
+    await db_session.flush()
     resp = await client.get("/v1/users", headers=bearer(head))
     assert resp.status_code == 200 and resp.json() == {"items": [], "next_cursor": None}
     resp = await client.get(f"/v1/users/{world.a.owner.id}", headers=bearer(head))

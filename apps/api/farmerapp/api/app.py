@@ -22,6 +22,7 @@ from farmerapp.auth.deps import AuthServices, build_auth_services, tick
 from farmerapp.auth.policy import install_policies
 from farmerapp.auth.scheduler import InProcessScheduler
 from farmerapp.db import models as _models  # noqa: F401  (registers models + audit listener)
+from farmerapp.farmers import router as farmer_routes
 from farmerapp.logging import configure_logging, get_logger
 from farmerapp.settings import Settings, get_settings
 from farmerapp.users import router as user_routes
@@ -117,6 +118,7 @@ def create_app(
     v1.include_router(auth_routes.router)
     v1.include_router(auth_routes.me_router)
     v1.include_router(user_routes.router)
+    v1.include_router(farmer_routes.router)
     v1.include_router(audit_routes.router)
     app.include_router(v1)
 

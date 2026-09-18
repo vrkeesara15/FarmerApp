@@ -29,12 +29,14 @@ import contextvars
 import uuid
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from decimal import Decimal
 from enum import Enum
 from typing import Any
 
 import structlog
 from fastapi import Request
+from geoalchemy2.elements import _SpatialElement
 from sqlalchemy import event
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.base import instance_state
@@ -154,13 +156,18 @@ def actor_from_request(request: Request, user: Any, *, device_id: str | None = N
 
 # --------------------------------------------------------------------------- payloads
 def jsonable(value: Any) -> Any:
-    """Plain JSON for column values (uuid/datetime/enum -> str)."""
+    """Plain JSON for column values (uuid/datetime/date/enum/Decimal/geometry -> str)."""
     if isinstance(value, Enum):
         return jsonable(value.value)
     if isinstance(value, uuid.UUID):
         return str(value)
-    if isinstance(value, datetime):
+    if isinstance(value, datetime | date):
         return value.isoformat()
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, _SpatialElement):
+        # WKT as written, or the hex WKB PostGIS returned; either replays into ST_GeomFromEWKT/WKB.
+        return str(value.desc)
     if isinstance(value, dict):
         return {str(k): jsonable(v) for k, v in value.items()}
     if isinstance(value, list | tuple | set | frozenset):

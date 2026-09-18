@@ -355,6 +355,137 @@ paths:
       - director
       - owner
       - tenant_admin
+  /v1/farmers:
+    get:
+      tags:
+      - farmers
+      summary: Farmers visible to the caller (tenant, cluster, store or own), oldest first
+      operationId: listFarmers
+      parameters:
+      - name: village_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Village Id
+      - name: registered_by
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Officer user id.
+          title: Registered By
+        description: Officer user id.
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOut_FarmerOut_'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/farmers/{id}:
+    get:
+      tags:
+      - farmers
+      summary: One farmer with farms, crop plots and consent history
+      operationId: getFarmer
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmerDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
   /v1/audit-logs:
     get:
       tags:
@@ -559,6 +690,412 @@ components:
       - trace_id
       - created_at
       title: AuditLogOut
+    ConsentRecordOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        purpose:
+          type: string
+          title: Purpose
+        version:
+          type: string
+          title: Version
+        language:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Language
+        granted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Granted At
+        withdrawn_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Withdrawn At
+        channel:
+          type: string
+          title: Channel
+        recorded_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Recorded By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - purpose
+      - version
+      - language
+      - granted_at
+      - withdrawn_at
+      - channel
+      - recorded_by
+      - created_at
+      title: ConsentRecordOut
+    CropPlotOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        farm_id:
+          type: string
+          format: uuid
+          title: Farm Id
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        variety:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Variety
+        season:
+          type: string
+          title: Season
+        sowing_date:
+          type: string
+          format: date
+          title: Sowing Date
+        stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Stage
+        expected_harvest:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Expected Harvest
+        area_acres:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Area Acres
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - farm_id
+      - crop_id
+      - variety
+      - season
+      - sowing_date
+      - stage
+      - expected_harvest
+      - area_acres
+      - created_at
+      - updated_at
+      - version
+      title: CropPlotOut
+    FarmOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+        survey_no:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Survey No
+        boundary:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Boundary
+          description: GeoJSON Polygon (WGS84).
+        centroid:
+          anyOf:
+          - $ref: '#/components/schemas/LatLon'
+          - type: 'null'
+        area_acres:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Area Acres
+          description: Declared by the officer / farmer.
+        area_acres_computed:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Area Acres Computed
+          description: ST_Area of the boundary in acres.
+        soil:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Soil
+        irrigation:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Irrigation
+        ownership:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ownership
+        crop_plots:
+          items:
+            $ref: '#/components/schemas/CropPlotOut'
+          type: array
+          title: Crop Plots
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - farmer_id
+      - name
+      - survey_no
+      - boundary
+      - centroid
+      - area_acres
+      - area_acres_computed
+      - soil
+      - irrigation
+      - ownership
+      - created_at
+      - updated_at
+      - version
+      title: FarmOut
+    FarmerDetailOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        phone:
+          type: string
+          title: Phone
+        phone_last4:
+          type: string
+          title: Phone Last4
+        name:
+          type: string
+          title: Name
+        village_id:
+          type: string
+          format: uuid
+          title: Village Id
+        landmark:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Landmark
+        language:
+          type: string
+          title: Language
+        consent_marketing:
+          type: boolean
+          title: Consent Marketing
+        consent_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Consent Version
+        registered_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Registered By
+        user_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: User Id
+        source:
+          type: string
+          title: Source
+        land_ownership:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Land Ownership
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+        farms:
+          items:
+            $ref: '#/components/schemas/FarmOut'
+          type: array
+          title: Farms
+        consents:
+          items:
+            $ref: '#/components/schemas/ConsentRecordOut'
+          type: array
+          title: Consents
+      type: object
+      required:
+      - id
+      - tenant_id
+      - phone
+      - phone_last4
+      - name
+      - village_id
+      - landmark
+      - language
+      - consent_marketing
+      - consent_version
+      - registered_by
+      - user_id
+      - source
+      - land_ownership
+      - created_at
+      - updated_at
+      - version
+      title: FarmerDetailOut
+      description: 'Farmer 360 (WC-003): the farmer with farms, crop plots and consent history.'
+    FarmerOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        phone:
+          type: string
+          title: Phone
+        phone_last4:
+          type: string
+          title: Phone Last4
+        name:
+          type: string
+          title: Name
+        village_id:
+          type: string
+          format: uuid
+          title: Village Id
+        landmark:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Landmark
+        language:
+          type: string
+          title: Language
+        consent_marketing:
+          type: boolean
+          title: Consent Marketing
+        consent_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Consent Version
+        registered_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Registered By
+        user_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: User Id
+        source:
+          type: string
+          title: Source
+        land_ownership:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Land Ownership
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - phone
+      - phone_last4
+      - name
+      - village_id
+      - landmark
+      - language
+      - consent_marketing
+      - consent_version
+      - registered_by
+      - user_id
+      - source
+      - land_ownership
+      - created_at
+      - updated_at
+      - version
+      title: FarmerOut
+      description: Directory row. ``phone`` is masked for roles that read crop data only (agronomist).
     HealthResponse:
       properties:
         status:
@@ -581,6 +1118,19 @@ components:
       - version
       - env
       title: HealthResponse
+    LatLon:
+      properties:
+        lat:
+          type: number
+          title: Lat
+        lon:
+          type: number
+          title: Lon
+      type: object
+      required:
+      - lat
+      - lon
+      title: LatLon
     LogoutRequest:
       properties:
         refresh_token:
@@ -691,6 +1241,22 @@ components:
       required:
       - items
       title: PageOut[AuditLogOut]
+    PageOut_FarmerOut_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/FarmerOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: PageOut[FarmerOut]
     PageOut_UserOut_:
       properties:
         items:

@@ -156,6 +156,6 @@ async def test_other_tenant_rows_are_invisible(
     for tenant, other in ((world.a, world.b), (world.b, world.a)):
         body = await _get(client, bearer(tenant.owner), entity="user", limit=200)
         entity_ids = {item["entity_id"] for item in body["items"]}
-        assert entity_ids == {str(u.id) for u in tenant.users.values()}
-        assert not entity_ids & {str(u.id) for u in other.users.values()}
+        assert entity_ids == {str(u.id) for u in tenant.everyone}
+        assert not entity_ids & {str(u.id) for u in other.everyone}
         assert {item["tenant_id"] for item in body["items"]} == {str(tenant.tenant.id)}

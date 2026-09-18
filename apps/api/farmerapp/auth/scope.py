@@ -27,9 +27,11 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import ColumnElement, SQLColumnExpression, false
+from sqlalchemy import ColumnElement, SQLColumnExpression, false, select
 
 from farmerapp.auth.models import User, UserRole
+from farmerapp.farmers.models import Farmer
+from farmerapp.tenants.models import Store, Village
 
 
 class Visibility(StrEnum):
@@ -103,11 +105,63 @@ def user_scope(actor: User) -> list[ColumnElement[bool]]:
     return scope_filters(actor, USER_SCOPE)
 
 
+# --------------------------------------------------------------------------- farmers
+#: SPEC 2.6 "Farmer profile" row: the agronomist reads crop data (the router redacts PII).
+FARMER_VISIBILITY: Mapping[UserRole, Visibility] = {
+    **DEFAULT_VISIBILITY,
+    UserRole.AGRONOMIST: Visibility.ALL,
+}
+
+
+def farmer_filters(
+    actor: User, visibility: Mapping[UserRole, Visibility] = FARMER_VISIBILITY
+) -> list[ColumnElement[bool]]:
+    """Which ``farmer`` rows ``actor`` may see (SPEC 2.6, "Farmer profile").
+
+    A farmer belongs to a store through its village (``village.store_id``) and to a cluster
+    through that store (``store.cluster_id``); a field officer owns the farmers they
+    registered (``farmer.registered_by``); a farmer is their own record (``farmer.user_id``).
+    """
+    filters: list[ColumnElement[bool]] = [Farmer.tenant_id == actor.tenant_id]
+    role = UserRole(actor.role)
+    match visibility[role]:
+        case Visibility.ALL:
+            pass
+        case Visibility.CLUSTER:
+            if actor.cluster_id is None:
+                filters.append(false())
+            else:
+                villages = (
+                    select(Village.id)
+                    .join(Store, Store.id == Village.store_id)
+                    .where(
+                        Village.tenant_id == actor.tenant_id, Store.cluster_id == actor.cluster_id
+                    )
+                )
+                filters.append(Farmer.village_id.in_(villages))
+        case Visibility.STORE:
+            if actor.store_id is None:
+                filters.append(false())
+            else:
+                villages = select(Village.id).where(
+                    Village.tenant_id == actor.tenant_id, Village.store_id == actor.store_id
+                )
+                filters.append(Farmer.village_id.in_(villages))
+        case Visibility.OWN:
+            owner = Farmer.user_id if role == UserRole.FARMER else Farmer.registered_by
+            filters.append(_eq_or_closed(owner, actor.id))
+        case Visibility.NONE:
+            filters.append(false())
+    return filters
+
+
 __all__ = [
     "DEFAULT_VISIBILITY",
+    "FARMER_VISIBILITY",
     "USER_SCOPE",
     "ScopeColumns",
     "Visibility",
+    "farmer_filters",
     "scope_filters",
     "user_scope",
 ]

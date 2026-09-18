@@ -59,8 +59,8 @@ async def test_list_never_includes_other_tenant(
         assert resp.status_code == 200
         body: dict[str, Any] = resp.json()
         ids = {item["id"] for item in body["items"]}
-        assert ids == {str(u.id) for u in tenant.users.values()}
-        assert not ids & {str(u.id) for u in other.users.values()}
+        assert ids == {str(u.id) for u in tenant.everyone}
+        assert not ids & {str(u.id) for u in other.everyone}
         assert {item["tenant_id"] for item in body["items"]} == {str(tenant.tenant.id)}
 
 

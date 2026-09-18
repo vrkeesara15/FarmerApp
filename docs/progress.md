@@ -26,11 +26,11 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 ## M1 — Farmers and farms (target 2026-10-30)
 | ID | Requirement | Status | Notes |
 |---|---|---|---|
-| M1-KICKOFF | Alembic models for M1 entities, RLS, demo seed | todo | |
-| FA-012 | Farmer registration | todo | |
-| FA-013 | Multiple farms / crop plots | todo | |
+| M1-KICKOFF | Alembic models for M1 entities, RLS, demo seed | done | 2026-09-18. Alembic `0005_m1_farmers_farms_stores`: `cluster`, `store`, `village` (`apps/api/farmerapp/tenants/models.py`), `crop` master + `PILOT_CROPS` (`farmerapp/catalog/crops.py`), `farmer`, `farm` (PostGIS boundary; `centroid` + `area_acres_computed` stored generated columns), `crop_plot`, append-only `consent_record` (`farmerapp/farmers/models.py`); `enable_rls` on all eight, FK + GiST + pg_trgm indexes; `db/geo.py` EWKT helpers; `db/audit.py` JSON for date/Decimal/geometry; `auth/scope.py` `farmer_filters`; `farmers/schemas.py` read models; `GET /v1/farmers` + `GET /v1/farmers/{id}` (§2.6 scope, cursor pagination, agronomist PII masked). Seed rewritten (`jobs/seed.py`, `SeedProfile` FULL/SMALL, uuid5 ids, idempotent, < 1 s): fcc 2 clusters, 5 Telangana stores, 5 officers, 40 villages, 200 farmers (Telugu names), 285 farms (non-overlapping 0.5–5 acre polygons), 403 crop plots, 338 consent rows; gfl 1 store / 1 officer / 10 farmers. Tests: `tests/farmers/` (models + API), `tests/seed/`; 379 total (315 before), 95.9% cov. README seed section. PR: docs/prs/M1-kickoff.md. |
+| FA-012 | Farmer registration | todo | Data model + read endpoints since M1-KICKOFF (2026-09-18): `farmer` unique `(tenant_id, phone)`, `phone_last4`, village/landmark/language/land_ownership/source, `registered_by`; `farm` boundary + soil/irrigation/ownership; `crop_plot` variety/season/sowing; `consent_record`. Left: OTP-verified registration write endpoint (`POST /v1/farmers`, duplicate → 409, consent row), offline capture in the agent app, walk-around / 4-point boundary capture. |
+| FA-013 | Multiple farms / crop plots | todo | Model supports it since M1-KICKOFF (2026-09-18): `farm.farmer_id` 1:n, `crop_plot.farm_id` 1:n per season; acceptance proven at the ORM level (`tests/farmers/test_models.py::test_farmer_with_two_farms_and_three_crop_plots`) and read back via `GET /v1/farmers/{id}`. Left: write endpoints and the app screens. |
 | FA-025 | Offline-first sync engine | todo | |
-| FM-002 | Consent data model | todo | |
+| FM-002 | Consent data model | done | 2026-09-18 (M1-KICKOFF). `consent_record` (subject_type/subject_id, purpose `data` \| `marketing`, version, language, granted_at, withdrawn_at, channel, recorded_by) append-only for the app role (`APPEND_ONLY_TABLES`); withdrawal is a new row; `farmer.consent_marketing` / `consent_version` cache the latest; seed writes data + marketing grants and withdrawals. Consent text version `2026-09-v1` is a placeholder (TODO-LEGAL). The farmer-app consent screen is the M6 FM-002 row. |
 | NF-002 | Offline 72 h | todo | |
 | NF-003 | Sync outbox, idempotency, resumable uploads | todo | |
 | NF-004 | Image budget | todo | |
@@ -77,7 +77,7 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 | M4-KICKOFF | Rules engine (YAML), inline/event/batch modes, fixtures | todo | |
 | WC-001 | Owner home | todo | |
 | WC-002 | Field team | todo | |
-| WC-003 | Farmers directory + 360 | todo | |
+| WC-003 | Farmers directory + 360 | todo | Read endpoints exist since M1-KICKOFF (2026-09-18): `GET /v1/farmers` (§2.6 scope per role, `village_id` / `registered_by` filters, cursor pagination) and `GET /v1/farmers/{id}` (farms with GeoJSON boundary, centroid, computed acres, crop plots, consent history). Left: search, console screens C-003/360. |
 | WC-004 | Stores | todo | |
 | WC-010 | Validation agent inbox | todo | |
 | WC-011 | Users, roles, device binding, forced logout | todo | Minimal `/v1/users` list/get/patch (name, role, status, store_id, cluster_id) exist since FA-002 (2026-09-17) in `apps/api/farmerapp/users/`. Left: create/invite, device binding UI, forced logout (revoke refresh family when disabled; access tokens are already rejected on the next call), re-auth for role change (SEC-028), console screen. Audit rows for every change land automatically since FA-006 (2026-09-18). |
@@ -92,8 +92,8 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 | VA-003 | Routing | todo | |
 | VA-007 | Golden fixtures per rule | todo | |
 | VA-F01 | Phone format / OTP / staff blocklist | todo | |
-| VA-F02 | Duplicate farmer | todo | |
-| VA-F03 | Farm polygon sanity | todo | |
+| VA-F02 | Duplicate farmer | todo | Groundwork since M1-KICKOFF (2026-09-18): unique `(tenant_id, phone)`, pg_trgm index on `farmer.name`, `farm.centroid` for the 50 m check. |
+| VA-F03 | Farm polygon sanity | todo | Groundwork since M1-KICKOFF (2026-09-18): `farm.area_acres_computed` (ST_Area) and `farm.centroid` are stored generated columns with GiST index; overlap / ratio queries proven in `tests/farmers/test_models.py`. |
 | VA-F06 | Registration burst | todo | |
 | VA-F08 | Photo reuse | todo | |
 | VA-E01 | Mock location / root / clock drift | todo | |

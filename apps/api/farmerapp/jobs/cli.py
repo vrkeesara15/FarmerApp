@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 import uuid
 
 import typer
@@ -29,20 +30,31 @@ def hello(name: str = typer.Option("world", help="Who to greet.")) -> None:
 
 
 @cli.command()
-def seed() -> None:
-    """Upsert the demo tenant "Future Crop Care" (fcc) and its test users (one per role).
-
-    M1-KICKOFF adds stores, officers and farmers. Idempotent.
+def seed(
+    small: bool = typer.Option(False, help="Seed the small profile (test fixture size)."),
+) -> None:
+    """Upsert the demo tenants "Future Crop Care" (fcc) and "Green Fields" (gfl): users (one
+    per role), clusters, stores, officers, villages, farmers, farms, crop plots and consent
+    records (SPEC 10.5). Idempotent: running it twice yields the same counts.
     """
     _setup()
-    result = asyncio.run(seed_mod.run_seed())
+    started = time.perf_counter()
+    result = asyncio.run(seed_mod.run_seed(seed_mod.SMALL if small else seed_mod.FULL))
+    elapsed = time.perf_counter() - started
     get_logger("farmerapp.jobs.seed").info(
-        "seed_done", tenant=result.tenant_slug, users_created=result.users_created
+        "seed_done",
+        tenant=result.tenant_slug,
+        users_created=result.users_created,
+        created=dict(result.created),
+        totals=dict(result.totals),
+        seconds=round(elapsed, 2),
     )
     typer.echo(
         f"seed: tenant={result.tenant_slug} ({result.tenant_id}) "
-        f"users_created={result.users_created}"
+        f"users_created={result.users_created} in {elapsed:.1f}s"
     )
+    for table in seed_mod.SEEDED_TABLES:
+        typer.echo(f"  {table:<15} created={result.created[table]:<5} total={result.totals[table]}")
 
 
 @cli.command("purge-audit-logs")
