@@ -12,11 +12,11 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 | FA-003 | Tenant isolation (RLS) | todo | |
 | FA-004 | Localisation, ARB files, no hard-coded strings | todo | |
 | FA-006 | Audit trail | todo | |
-| SEC-001 | Secret scanning (gitleaks) | todo | |
-| SEC-002 | Static analysis (Semgrep, bandit) | todo | |
-| SEC-003 | Dependency vulnerabilities | todo | |
-| SEC-004 | Container image scanning (Trivy) | todo | |
-| SEC-005 | IaC misconfiguration (checkov, tflint) | todo | |
+| SEC-001 | Secret scanning (gitleaks) | done | 2026-09-17. security.yml: gitleaks on PR + nightly. GitHub-side secret scanning with push protection is a repo setting (human, once remote exists). CI not yet exercised: no GitHub remote configured. |
+| SEC-002 | Static analysis (Semgrep, bandit) | done | 2026-09-17. security.yml semgrep p/python p/typescript p/owasp-top-ten; ci-api.yml bandit (also in `make check-api`). CI not yet exercised: no GitHub remote configured. |
+| SEC-003 | Dependency vulnerabilities | done | 2026-09-17. ci-api pip-audit --strict; ci-console npm audit --audit-level=high; security.yml osv-scanner + trivy fs; dependabot.yml weekly for pip/npm/pub/actions/terraform. CI not yet exercised: no GitHub remote configured. |
+| SEC-004 | Container image scanning (Trivy) | done | 2026-09-17. deploy.yml trivy image scan on built images; api/worker/jobs Dockerfiles python:3.12-slim with non-root USER app. CI not yet exercised: no GitHub remote configured. |
+| SEC-005 | IaC misconfiguration (checkov, tflint) | done | 2026-09-17. ci-infra.yml tflint + checkov (infra/.tflint.hcl, infra/.checkov.yaml); security.yml trivy config on Terraform/Dockerfiles. CI not yet exercised: no GitHub remote configured. |
 | SEC-006 | Authz test matrix per endpoint/role | todo | |
 | SEC-010 | One SA per deployable, no keys | todo | |
 | SEC-011 | Cloud SQL private IP, IAM auth, no DDL for app user | todo | |
