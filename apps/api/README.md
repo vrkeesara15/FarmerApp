@@ -315,8 +315,17 @@ Alembic `0011`; design notes in `docs/prs/M3-kickoff.md`. Money is `bigint` pais
 
 ```python
 # stock: never touch stock_batch.qty directly
-await apply_movement(session, tenant_id=t, store_id=s, sku_id=k, kind=MovementKind.SALE,
-                     qty=Decimal(-2), batch=batch, ref_type="order", ref_id=order.id)
+await apply_movement(
+    session,
+    tenant_id=t,
+    store_id=s,
+    sku_id=k,
+    kind=MovementKind.SALE,
+    qty=Decimal(-2),
+    batch=batch,
+    ref_type="order",
+    ref_id=order.id,
+)
 # khata: a correction is a new entry, never an update (the app role cannot UPDATE / DELETE)
 balance = await khata_balance(session, farmer_id, store_id)
 ```
