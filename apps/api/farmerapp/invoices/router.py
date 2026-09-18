@@ -2,6 +2,8 @@
 
 * ``POST /v1/stores/{id}/pos/sales`` (store manager own store, accountant) — counter sale:
   ``pos`` order handed over, stock out, GST invoice + PDF, payment, in one transaction.
+* ``POST /v1/stores/{id}/pos/preview`` (same roles and body) — the invoice the sale would
+  issue (same ``gst.py`` path), without writing anything or taking an invoice number.
 * ``GET /v1/invoices/{id}`` — the invoice JSON (scope of its order).
 * ``GET /v1/invoices/{id}/pdf`` — a signed URL to the PDF (15 min, SEC-016).
 * ``POST /v1/invoices/{id}/share`` — send the PDF link by WhatsApp or SMS.
@@ -24,11 +26,18 @@ from farmerapp.invoices.schemas import (
     InvoiceOut,
     InvoiceShareIn,
     InvoiceShareOut,
+    PosPreviewOut,
     PosSaleIn,
     PosSaleOut,
     SignedUrlOut,
 )
-from farmerapp.invoices.service import pdf_url, pos_sale, share_invoice, visible_invoice
+from farmerapp.invoices.service import (
+    pdf_url,
+    pos_preview,
+    pos_sale,
+    share_invoice,
+    visible_invoice,
+)
 from farmerapp.khata.credit import credit_blocked_response
 from farmerapp.orders.pos import OrdersPosPort
 from farmerapp.payments.service import (
@@ -111,6 +120,28 @@ async def create_pos_sale(
         # Returned, not raised: the credit approval request must commit (ST-007).
         return credit_blocked_response(request, sale.decision)
     return sale
+
+
+@pos_router.post(
+    "/{id}/pos/preview",
+    operation_id="previewPosSale",
+    summary="GST invoice preview for a counter sale; writes nothing (ST-001)",
+    response_model=PosPreviewOut,
+    responses=problem_responses(
+        (404, "not_found"),
+        (404, "farmer_not_found"),
+        (422, "unknown_sku"),
+        (422, "invalid_mode"),
+    ),
+)
+async def preview_pos_sale(
+    id: uuid.UUID,
+    body: PosSaleIn,
+    actor: Annotated[User, require_roles(*POS_ROLES)],
+    session: DbSession,
+    auth: Services,
+) -> PosPreviewOut:
+    return await pos_preview(session, actor, id, body, now=auth.clock.now())
 
 
 @router.get(

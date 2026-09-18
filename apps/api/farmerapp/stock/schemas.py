@@ -112,6 +112,27 @@ class TransferIn(BaseModel):
     lines: list[BatchQtyIn] = Field(min_length=1, max_length=100)
 
 
+class TransferDestinationOut(BaseModel):
+    id: uuid.UUID
+    code: str
+    name: str
+    district: str
+    cluster_id: uuid.UUID | None
+    distance_m: float | None = Field(
+        description="Metres from the origin store (straight line); null without an origin."
+    )
+
+
+class TransferDestinationsOut(BaseModel):
+    """ST-003: where the origin store may send stock, nearest first."""
+
+    from_store_id: uuid.UUID | None = Field(
+        description="The origin: the store manager's own store, else ``from_store_id`` or the "
+        "caller's own store; null when the caller has none."
+    )
+    items: list[TransferDestinationOut]
+
+
 class WriteOffLineIn(BatchQtyIn):
     reason: WriteOffReason = WriteOffReason.DAMAGE
 
@@ -194,6 +215,8 @@ __all__ = [
     "StockMovementOut",
     "StockPage",
     "StockWriteOut",
+    "TransferDestinationOut",
+    "TransferDestinationsOut",
     "TransferIn",
     "WriteOffIn",
     "WriteOffLineIn",

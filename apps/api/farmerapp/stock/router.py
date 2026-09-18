@@ -3,6 +3,8 @@
 * ``GET /v1/stores/{id}/stock`` — batches with on-hand (ledger sum), reserved and available
   quantities.
 * ``POST /v1/stores/{id}/stock/receipts`` — goods receipt.
+* ``GET /v1/stock/transfer-destinations`` — the stores the caller's (or ``from_store_id``)
+  store may transfer to, with distance (``farmerapp.stock.destinations``).
 * ``POST /v1/stock/transfers`` — transfer between two stores (atomic out + in).
 * ``POST /v1/stores/{id}/stock/write-offs`` — damage / expiry write-off with a photo.
 * ``POST /v1/stores/{id}/stock/adjustments`` — stock count correction (store manager only,
@@ -11,7 +13,9 @@
 Store internals follow ``STORE_VISIBILITY``: owner / director / tenant admin / auditor /
 accountant see every store, a cluster head their cluster, a store manager their own store;
 a store outside the caller's scope is a 404. Writes need a store role that runs stock
-(``STOCK_WRITE_ROLES``); the destination of a transfer may be any store of the tenant.
+(``STOCK_WRITE_ROLES``). A store manager transfers from their own store to the other stores
+of its cluster only (403 ``transfer_source_not_allowed`` / ``transfer_destination_not_allowed``);
+for the other write roles the destination may be any store of the tenant.
 """
 
 from __future__ import annotations
@@ -26,10 +30,11 @@ from sqlalchemy import select
 from farmerapp.api.errors import NotFoundError, problem_responses
 from farmerapp.api.pagination import Page
 from farmerapp.auth.deps import DbSession, Services
-from farmerapp.auth.models import User
+from farmerapp.auth.models import User, UserRole
 from farmerapp.auth.policy import Role, require_roles
 from farmerapp.auth.scope import visible_store_filters
 from farmerapp.stock import service
+from farmerapp.stock.destinations import check_transfer, transfer_destinations, transfer_origin
 from farmerapp.stock.ledger import reserved_by_batch, stock_on_hand_by_batch
 from farmerapp.stock.models import StockBatch
 from farmerapp.stock.schemas import (
@@ -38,6 +43,8 @@ from farmerapp.stock.schemas import (
     StockBatchOut,
     StockPage,
     StockWriteOut,
+    TransferDestinationOut,
+    TransferDestinationsOut,
     TransferIn,
     WriteOffIn,
 )
@@ -50,6 +57,15 @@ STOCK_ROLES = (
     Role.DIRECTOR,
     Role.TENANT_ADMIN,
     Role.AUDITOR,
+    Role.ACCOUNTANT,
+    Role.CLUSTER_HEAD,
+    Role.STORE_MANAGER,
+)
+#: Who picks a transfer destination (the accountant reads it for the transfer paperwork).
+TRANSFER_DESTINATION_ROLES = (
+    Role.OWNER,
+    Role.DIRECTOR,
+    Role.TENANT_ADMIN,
     Role.ACCOUNTANT,
     Role.CLUSTER_HEAD,
     Role.STORE_MANAGER,
@@ -169,21 +185,61 @@ async def receive_stock(
     return await service.receive(session, actor, store, body)
 
 
+@router.get(
+    "/stock/transfer-destinations",
+    operation_id="listTransferDestinations",
+    summary="Stores the origin store may transfer stock to, nearest first (ST-003)",
+    response_model=TransferDestinationsOut,
+    responses=problem_responses((403, "transfer_source_not_allowed"), (404, "not_found")),
+)
+async def list_transfer_destinations(
+    actor: Annotated[User, require_roles(*TRANSFER_DESTINATION_ROLES)],
+    session: DbSession,
+    from_store_id: Annotated[
+        uuid.UUID | None,
+        Query(description="Origin store (default: the caller's own store)."),
+    ] = None,
+) -> TransferDestinationsOut:
+    origin = await transfer_origin(session, actor, from_store_id)
+    destinations = await transfer_destinations(session, actor, origin)
+    return TransferDestinationsOut(
+        from_store_id=origin.id if origin is not None else None,
+        items=[
+            TransferDestinationOut(
+                id=d.store.id,
+                code=d.store.code,
+                name=d.store.name,
+                district=d.store.district,
+                cluster_id=d.store.cluster_id,
+                distance_m=d.distance_m,
+            )
+            for d in destinations
+        ],
+    )
+
+
 @router.post(
     "/stock/transfers",
     operation_id="transferStock",
     summary="Transfer batches between stores: transfer_out + transfer_in atomically (ST-003)",
     status_code=201,
     response_model=StockWriteOut,
-    responses=problem_responses(*_WRITE_PROBLEMS),
+    responses=problem_responses(
+        *_WRITE_PROBLEMS,
+        (403, "transfer_source_not_allowed"),
+        (403, "transfer_destination_not_allowed"),
+    ),
 )
 async def transfer_stock(
     body: TransferIn,
     actor: Annotated[User, require_roles(*STOCK_WRITE_ROLES)],
     session: DbSession,
 ) -> StockWriteOut:
+    if actor.role == UserRole.STORE_MANAGER:
+        await transfer_origin(session, actor, body.from_store_id)  # own store, else 403
     source = await visible_store(session, actor, body.from_store_id)
     target = await tenant_store(session, actor, body.to_store_id)
+    await check_transfer(session, actor, source, target)
     return await service.transfer(session, actor, source, target, body)
 
 
@@ -223,4 +279,11 @@ async def adjust_stock(
     return await service.adjust(session, actor, store, body)
 
 
-__all__ = ["STOCK_ROLES", "STOCK_WRITE_ROLES", "router", "tenant_store", "visible_store"]
+__all__ = [
+    "STOCK_ROLES",
+    "STOCK_WRITE_ROLES",
+    "TRANSFER_DESTINATION_ROLES",
+    "router",
+    "tenant_store",
+    "visible_store",
+]

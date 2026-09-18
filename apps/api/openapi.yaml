@@ -4033,6 +4033,56 @@ paths:
       - director
       - owner
       - store_manager
+  /v1/stock/transfer-destinations:
+    get:
+      tags:
+      - stock
+      summary: Stores the origin store may transfer stock to, nearest first (ST-003)
+      operationId: listTransferDestinations
+      parameters:
+      - name: from_store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Origin store (default: the caller''s own store).'
+          title: From Store Id
+        description: 'Origin store (default: the caller''s own store).'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferDestinationsOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: '`transfer_source_not_allowed`, `forbidden`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
   /v1/stock/transfers:
     post:
       tags:
@@ -4070,12 +4120,12 @@ paths:
           description: '`invalid_stock_request`, `validation_error`'
           content:
             application/problem+json: {}
-        '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+        '403':
+          description: '`transfer_source_not_allowed`, `transfer_destination_not_allowed`, `forbidden`'
           content:
             application/problem+json: {}
-        '403':
-          description: '`forbidden`'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
           content:
             application/problem+json: {}
       x-roles:
@@ -5338,6 +5388,58 @@ paths:
       x-roles:
       - accountant
       - store_manager
+  /v1/stores/{id}/pos/preview:
+    post:
+      tags:
+      - pos
+      summary: GST invoice preview for a counter sale; writes nothing (ST-001)
+      operationId: previewPosSale
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PosSaleIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PosPreviewOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`, `farmer_not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`unknown_sku`, `invalid_mode`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - store_manager
   /v1/invoices/{id}:
     get:
       tags:
@@ -5718,6 +5820,7 @@ components:
       - pending
       - approved
       - rejected
+      - consumed
       title: ApprovalStatus
     AuditLogOut:
       properties:
@@ -6260,6 +6363,20 @@ components:
             format: date-time
           - type: 'null'
           title: Used At
+        consumed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Consumed At
+          description: When a sale used this approval (status ``consumed``).
+        consumed_by_order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Consumed By Order Id
+          description: The order of the sale that used this approval.
         created_at:
           type: string
           format: date-time
@@ -8900,6 +9017,16 @@ components:
           - $ref: '#/components/schemas/PaymentMode'
           - type: 'null'
           description: '``credit`` puts the order on the khata (ST-007 limit check at placing).'
+        credit_approval_request_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Credit Approval Request Id
+          description: 'ST-007 retry key: the id of a credit approval request (``approval_request_id``
+            of an earlier 402 ``credit_limit_exceeded``). When a cluster head approved it for this farmer
+            and store and its amount covers this sale, the sale goes through once and the request becomes
+            ``consumed``; otherwise the normal limit check applies.'
         notes:
           anyOf:
           - type: string
@@ -9849,6 +9976,17 @@ components:
           - type: 'null'
           title: Phone
           description: Payment link recipient; defaults to the farmer's phone.
+        credit_approval_request_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Credit Approval Request Id
+          description: 'Mode ``credit`` only (ignored otherwise). ST-007 retry key: the id of a credit
+            approval request (``approval_request_id`` of an earlier 402 ``credit_limit_exceeded``). When
+            a cluster head approved it for this farmer and store and its amount covers this sale, the
+            sale goes through once and the request becomes ``consumed``; otherwise the normal limit check
+            applies.'
       additionalProperties: false
       type: object
       required:
@@ -10513,6 +10651,107 @@ components:
       required:
       - mode
       title: PosPaymentIn
+    PosPreviewOut:
+      properties:
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+        seller_name:
+          type: string
+          title: Seller Name
+        seller_gstin:
+          type: string
+          title: Seller Gstin
+        seller_state:
+          type: string
+          title: Seller State
+        seller_state_code:
+          type: string
+          title: Seller State Code
+        buyer_name:
+          type: string
+          title: Buyer Name
+        buyer_gstin:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Buyer Gstin
+        buyer_state:
+          type: string
+          title: Buyer State
+        place_of_supply:
+          type: string
+          title: Place Of Supply
+        supply_type:
+          type: string
+          enum:
+          - intra
+          - inter
+          title: Supply Type
+        taxable_paise:
+          type: integer
+          title: Taxable Paise
+        cgst_paise:
+          type: integer
+          title: Cgst Paise
+        sgst_paise:
+          type: integer
+          title: Sgst Paise
+        igst_paise:
+          type: integer
+          title: Igst Paise
+        tax_paise:
+          type: integer
+          title: Tax Paise
+        round_off_paise:
+          type: integer
+          title: Round Off Paise
+        total_paise:
+          type: integer
+          title: Total Paise
+          description: 'Rounded to the rupee: what the sale collects.'
+        amount_in_words:
+          type: string
+          title: Amount In Words
+        lines:
+          items:
+            $ref: '#/components/schemas/InvoiceLineOut'
+          type: array
+          title: Lines
+      type: object
+      required:
+      - store_id
+      - farmer_id
+      - seller_name
+      - seller_gstin
+      - seller_state
+      - seller_state_code
+      - buyer_name
+      - buyer_gstin
+      - buyer_state
+      - place_of_supply
+      - supply_type
+      - taxable_paise
+      - cgst_paise
+      - sgst_paise
+      - igst_paise
+      - tax_paise
+      - round_off_paise
+      - total_paise
+      - amount_in_words
+      - lines
+      title: PosPreviewOut
+      description: 'What ``POST /v1/stores/{id}/pos/sales`` would invoice for the same body: the same
+        GST
+
+        computation, but no invoice number, order, stock movement, credit check or payment.'
     PosSaleIn:
       properties:
         farmer_id:
@@ -10558,6 +10797,17 @@ components:
           title: Lines
         payment:
           $ref: '#/components/schemas/PosPaymentIn'
+        credit_approval_request_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Credit Approval Request Id
+          description: 'Payment mode ``credit`` only (ignored otherwise). ST-007 retry key: the id of
+            a credit approval request (``approval_request_id`` of an earlier 402 ``credit_limit_exceeded``).
+            When a cluster head approved it for this farmer and store and its amount covers this sale,
+            the sale goes through once and the request becomes ``consumed``; otherwise the normal limit
+            check applies.'
       additionalProperties: false
       type: object
       required:
@@ -12020,6 +12270,63 @@ components:
       - count
       - points
       title: TrackOut
+    TransferDestinationOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        code:
+          type: string
+          title: Code
+        name:
+          type: string
+          title: Name
+        district:
+          type: string
+          title: District
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+        distance_m:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Distance M
+          description: Metres from the origin store (straight line); null without an origin.
+      type: object
+      required:
+      - id
+      - code
+      - name
+      - district
+      - cluster_id
+      - distance_m
+      title: TransferDestinationOut
+    TransferDestinationsOut:
+      properties:
+        from_store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: From Store Id
+          description: 'The origin: the store manager''s own store, else ``from_store_id`` or the caller''s
+            own store; null when the caller has none.'
+        items:
+          items:
+            $ref: '#/components/schemas/TransferDestinationOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - from_store_id
+      - items
+      title: TransferDestinationsOut
+      description: 'ST-003: where the origin store may send stock, nearest first.'
     TransferIn:
       properties:
         from_store_id:

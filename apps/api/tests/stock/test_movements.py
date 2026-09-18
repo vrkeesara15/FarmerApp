@@ -187,7 +187,7 @@ async def test_transfer_moves_batches_atomically_with_identity(
     for bad, status in (
         ({"to_store_id": str(world.a.store_id)}, 422),  # same store
         ({"to_store_id": str(uuid.uuid4())}, 404),
-        ({"from_store_id": str(north.id)}, 404),  # not the manager's store
+        ({"from_store_id": str(north.id)}, 403),  # not the manager's store
     ):
         payload = {
             "from_store_id": str(world.a.store_id),

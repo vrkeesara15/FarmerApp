@@ -77,6 +77,14 @@ class PaymentCreate(BaseModel):
         pattern=PHONE_PATTERN,
         description="Payment link recipient; defaults to the farmer's phone.",
     )
+    credit_approval_request_id: uuid.UUID | None = Field(
+        default=None,
+        description="Mode ``credit`` only (ignored otherwise). ST-007 retry key:"
+        " the id of a credit approval request (``approval_request_id`` of an "
+        "earlier 402 ``credit_limit_exceeded``). When a cluster head approved it for this farmer "
+        "and store and its amount covers this sale, the sale goes through once and the request "
+        "becomes ``consumed``; otherwise the normal limit check applies.",
+    )
 
     @model_validator(mode="after")
     def _one_target(self) -> Self:

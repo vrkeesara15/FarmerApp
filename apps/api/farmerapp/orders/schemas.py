@@ -143,6 +143,14 @@ class OrderCreate(BaseModel):
         default=None,
         description="``credit`` puts the order on the khata (ST-007 limit check at placing).",
     )
+    credit_approval_request_id: uuid.UUID | None = Field(
+        default=None,
+        description="ST-007 retry key: the id of a credit approval request"
+        " (``approval_request_id`` of an "
+        "earlier 402 ``credit_limit_exceeded``). When a cluster head approved it for this farmer "
+        "and store and its amount covers this sale, the sale goes through once and the request "
+        "becomes ``consumed``; otherwise the normal limit check applies.",
+    )
     notes: str | None = Field(default=None, max_length=1000)
     lines: list[OrderLineIn] = Field(min_length=1, max_length=50)
     expected_total_paise: int | None = Field(

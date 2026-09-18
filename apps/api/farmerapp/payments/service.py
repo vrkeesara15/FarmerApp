@@ -459,6 +459,7 @@ async def create_payment(
                 amount_paise=target.due_paise,
                 order_id=target.order.id,
                 actor=who,
+                approval_request_id=body.credit_approval_request_id,
             )
         if not credit.allowed:
             log.info(

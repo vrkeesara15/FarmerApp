@@ -5,16 +5,21 @@ POS sales with payment mode ``credit`` (ST-001 / ST-002, the payments package ca
 
 1. The farmer row is locked ``FOR UPDATE`` so concurrent credit sales for one farmer
    serialise (the balance they read cannot be stale).
-2. An **approved, unused** ``credit_approval_request`` for the same farmer, store and
-   ``order_id`` covering ``amount_paise`` lets the sale proceed once (``used_at`` is set).
+2. An **approved, unconsumed** ``credit_approval_request`` of the same tenant, farmer and
+   store whose ``amount_paise`` covers the sale lets it proceed **once**: the one named by
+   ``approval_request_id`` (the stable retry key clients send as
+   ``credit_approval_request_id``, since the POS makes a new order id per attempt), else one
+   opened for the same ``order_id``. The request becomes ``consumed`` (``consumed_at``,
+   ``consumed_by_order_id``, ``used_at``), so a second sale needs a new approval.
 3. Otherwise the sale is allowed when ``khata_balance(farmer, store) + amount <= limit``
    (``credit_limit`` for the farmer and store; no row = limit 0).
 4. When allowed, the credit is **reserved by posting the khata debit** (``ref_type =
    order``, ``ref_id = order_id``, due date from ``credit_due_date``) in the caller's
    transaction: callers must not post the debit themselves. ``khata_entry_id`` on the
    decision is that row (for ``payment.khata_entry_id``).
-5. When not allowed, a ``pending`` approval request is created (or the pending one for the
-   same ``order_id`` refreshed) and returned with the shortfall; **nothing is raised**, so
+5. When not allowed, a ``pending`` approval request is created (or the pending one named by
+   ``approval_request_id`` / opened for the same ``order_id`` refreshed) and returned with
+   the shortfall; **nothing is raised**, so
    the request survives the caller's transaction. The caller answers 402
    ``credit_limit_exceeded`` (``CreditLimitExceededError.from_decision``) *without* rolling
    back, i.e. it returns the problem response instead of raising.
@@ -33,7 +38,7 @@ from typing import Any
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from sqlalchemy import select
+from sqlalchemy import ColumnElement, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.api.errors import (
@@ -146,6 +151,25 @@ async def credit_limit_paise(
     return int(limit or 0)
 
 
+async def _lock_request(
+    session: AsyncSession, *where: ColumnElement[bool]
+) -> CreditApprovalRequest | None:
+    stmt = (
+        select(CreditApprovalRequest)
+        .where(CreditApprovalRequest.deleted_at.is_(None), *where)
+        .order_by(CreditApprovalRequest.created_at, CreditApprovalRequest.id)
+        .with_for_update()
+    )
+    return (await session.execute(stmt)).scalars().first()
+
+
+def _consume(request: CreditApprovalRequest, order_id: uuid.UUID | None, now: datetime) -> None:
+    request.status = ApprovalStatus.CONSUMED
+    request.consumed_at = now
+    request.consumed_by_order_id = order_id
+    request.used_at = now
+
+
 async def check_and_reserve_credit(
     session: AsyncSession,
     *,
@@ -155,10 +179,12 @@ async def check_and_reserve_credit(
     amount_paise: int,
     order_id: uuid.UUID | None,
     actor: Actor,
+    approval_request_id: uuid.UUID | None = None,
 ) -> CreditDecision:
     """Allow (and post the khata debit for) a credit sale, or open an approval request.
 
-    See the module docstring for the contract. ``amount_paise`` must be a positive int.
+    See the module docstring for the contract. ``amount_paise`` must be a positive int;
+    ``approval_request_id`` is the approval the client retries with (optional).
     """
     if isinstance(amount_paise, bool) or not isinstance(amount_paise, int) or amount_paise <= 0:
         raise ValueError("amount_paise must be a positive integer")
@@ -175,6 +201,11 @@ async def check_and_reserve_credit(
     now = datetime.now(UTC)
     balance = await khata_balance(session, farmer_id, store_id)
     limit = await credit_limit_paise(session, farmer_id, store_id)
+    same_sale = (
+        CreditApprovalRequest.tenant_id == tenant_id,
+        CreditApprovalRequest.farmer_id == farmer_id,
+        CreditApprovalRequest.store_id == store_id,
+    )
 
     async def _debit() -> uuid.UUID:
         entry = await post_debit(
@@ -190,38 +221,33 @@ async def check_and_reserve_credit(
         )
         return entry.id
 
-    if order_id is not None:
-        approved = (
-            (
-                await session.execute(
-                    select(CreditApprovalRequest)
-                    .where(
-                        CreditApprovalRequest.tenant_id == tenant_id,
-                        CreditApprovalRequest.farmer_id == farmer_id,
-                        CreditApprovalRequest.store_id == store_id,
-                        CreditApprovalRequest.order_id == order_id,
-                        CreditApprovalRequest.status == ApprovalStatus.APPROVED.value,
-                        CreditApprovalRequest.used_at.is_(None),
-                        CreditApprovalRequest.amount_paise >= amount_paise,
-                    )
-                    .order_by(CreditApprovalRequest.created_at)
-                    .with_for_update()
-                )
-            )
-            .scalars()
-            .first()
+    # Step 2: an approval this sale may use — the named one first, else the order's own.
+    usable = (
+        CreditApprovalRequest.status == ApprovalStatus.APPROVED.value,
+        CreditApprovalRequest.consumed_at.is_(None),
+        CreditApprovalRequest.used_at.is_(None),
+        CreditApprovalRequest.amount_paise >= amount_paise,
+    )
+    approved = None
+    if approval_request_id is not None:
+        approved = await _lock_request(
+            session, CreditApprovalRequest.id == approval_request_id, *same_sale, *usable
         )
-        if approved is not None:
-            approved.used_at = now
-            entry_id = await _debit()
-            return CreditDecision(
-                allowed=True,
-                approval_request_id=approved.id,
-                shortfall_paise=0,
-                khata_entry_id=entry_id,
-                balance_paise=balance,
-                limit_paise=limit,
-            )
+    if approved is None and order_id is not None:
+        approved = await _lock_request(
+            session, CreditApprovalRequest.order_id == order_id, *same_sale, *usable
+        )
+    if approved is not None:
+        _consume(approved, order_id, now)
+        entry_id = await _debit()
+        return CreditDecision(
+            allowed=True,
+            approval_request_id=approved.id,
+            shortfall_paise=0,
+            khata_entry_id=entry_id,
+            balance_paise=balance,
+            limit_paise=limit,
+        )
 
     shortfall = balance + amount_paise - limit
     if shortfall <= 0:
@@ -235,24 +261,16 @@ async def check_and_reserve_credit(
             limit_paise=limit,
         )
 
+    # Blocked: refresh the pending request of this sale, or open one (step 5).
+    pending_now = CreditApprovalRequest.status == ApprovalStatus.PENDING.value
     pending = None
-    if order_id is not None:
-        pending = (
-            (
-                await session.execute(
-                    select(CreditApprovalRequest)
-                    .where(
-                        CreditApprovalRequest.tenant_id == tenant_id,
-                        CreditApprovalRequest.farmer_id == farmer_id,
-                        CreditApprovalRequest.store_id == store_id,
-                        CreditApprovalRequest.order_id == order_id,
-                        CreditApprovalRequest.status == ApprovalStatus.PENDING.value,
-                    )
-                    .with_for_update()
-                )
-            )
-            .scalars()
-            .first()
+    if approval_request_id is not None:
+        pending = await _lock_request(
+            session, CreditApprovalRequest.id == approval_request_id, *same_sale, pending_now
+        )
+    if pending is None and order_id is not None:
+        pending = await _lock_request(
+            session, CreditApprovalRequest.order_id == order_id, *same_sale, pending_now
         )
     if pending is None:
         pending = CreditApprovalRequest(

@@ -63,6 +63,7 @@ class SpyLedger(KhataLedgerPort):
         amount_paise: int,
         order_id: uuid.UUID | None,
         actor: Actor,
+        approval_request_id: uuid.UUID | None = None,
     ) -> CreditDecision:
         self.checks.append(
             {
@@ -72,6 +73,7 @@ class SpyLedger(KhataLedgerPort):
                 "amount_paise": amount_paise,
                 "order_id": order_id,
                 "actor": actor,
+                "approval_request_id": approval_request_id,
             }
         )
         decision = await super().check_and_reserve_credit(
@@ -82,6 +84,7 @@ class SpyLedger(KhataLedgerPort):
             amount_paise=amount_paise,
             order_id=order_id,
             actor=actor,
+            approval_request_id=approval_request_id,
         )
         self.decisions.append(decision)
         return decision

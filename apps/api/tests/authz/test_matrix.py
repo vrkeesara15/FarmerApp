@@ -457,6 +457,13 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
             "payment": {"mode": "card_terminal", "reference_note": "matrix"},
         },
     ),
+    "POST /v1/stores/{id}/pos/preview": RouteFixture(
+        path_params=_store_id,
+        body=lambda ctx: {
+            "lines": [{"sku_id": str(ctx.target.sku_id), "qty": "1"}],
+            "payment": {"mode": "cash"},
+        },
+    ),
     "GET /v1/stores/{id}/day-summary": RouteFixture(path_params=_store_id),
     "POST /v1/stores/{id}/day-close": RouteFixture(
         path_params=_store_id,

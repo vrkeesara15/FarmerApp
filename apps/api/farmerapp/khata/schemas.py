@@ -149,6 +149,12 @@ class CreditApprovalOut(BaseModel):
     decided_at: datetime | None
     decision_note: str | None
     used_at: datetime | None
+    consumed_at: datetime | None = Field(
+        default=None, description="When a sale used this approval (status ``consumed``)."
+    )
+    consumed_by_order_id: uuid.UUID | None = Field(
+        default=None, description="The order of the sale that used this approval."
+    )
     created_at: datetime
     updated_at: datetime
     version: int

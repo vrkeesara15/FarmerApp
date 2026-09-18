@@ -416,6 +416,7 @@ async def place_order(
             amount_paise=total,
             order_id=order_id,
             actor=actor,
+            approval_request_id=body.credit_approval_request_id,
         )
         if not decision.allowed:
             return PlaceResult(blocked=decision)

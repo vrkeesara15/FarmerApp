@@ -1,5 +1,9 @@
 """GST invoices and the POS sale (ST-001).
 
+``pos_preview`` (``POST /v1/stores/{id}/pos/preview``) runs the same ``draft_sale`` (store,
+buyer, server prices, ``gst.compute_invoice``) and returns the invoice it would issue without
+writing anything or taking an invoice number.
+
 ``pos_sale`` runs in one transaction: resolve the store (caller's scope), the buyer (farmer
 by id or phone, else walk-in), price every line server-side (store price list, else MRP),
 compute GST (``farmerapp.invoices.gst``), persist the ``pos`` order through the
@@ -38,9 +42,11 @@ from farmerapp.invoices.numbering import financial_year, format_invoice_no, next
 from farmerapp.invoices.pdf import render_invoice_pdf
 from farmerapp.invoices.ports import OrderPort, PosOrderDraft, PosOrderLine
 from farmerapp.invoices.schemas import (
+    InvoiceLineOut,
     InvoiceOut,
     InvoiceShareIn,
     InvoiceShareOut,
+    PosPreviewOut,
     PosSaleIn,
     PosSaleOut,
     SignedUrlOut,
@@ -287,6 +293,64 @@ async def share_invoice(
 
 
 # --------------------------------------------------------------------------- POS
+@dataclass(frozen=True)
+class SaleDraft:
+    """Everything the invoice of a POS sale is computed from (nothing written yet)."""
+
+    store: Store
+    tenant: Tenant
+    buyer: Buyer
+    totals: InvoiceTotals
+
+
+async def draft_sale(
+    session: AsyncSession, actor: User, store_id: uuid.UUID, body: PosSaleIn, now: datetime
+) -> SaleDraft:
+    """Resolve the store (caller's scope), the buyer and the server prices and compute the GST
+    invoice (``gst.compute_invoice``). Read-only: shared by the sale and its preview, so a
+    preview's totals are the sale's totals."""
+    store = await visible_store(session, actor, store_id)
+    tenant = await session.get_one(Tenant, actor.tenant_id)
+    buyer = await _buyer(session, actor, store, body)
+    if body.payment.mode == PaymentMode.CREDIT and buyer.farmer is None:
+        raise InvalidModeError("Credit is for an order of a known farmer, not for dues.")
+    lines = await _priced_lines(session, store, body, now)
+    totals = compute_invoice(lines, supply_type(store.state, buyer.state))
+    return SaleDraft(store=store, tenant=tenant, buyer=buyer, totals=totals)
+
+
+async def pos_preview(
+    session: AsyncSession, actor: User, store_id: uuid.UUID, body: PosSaleIn, *, now: datetime
+) -> PosPreviewOut:
+    """The invoice ``pos_sale`` would issue for ``body`` — no order, stock movement, invoice
+    number, credit check or payment (ST-001 tablet preview)."""
+    draft = await draft_sale(session, actor, store_id, body, now)
+    store, buyer, totals = draft.store, draft.buyer, draft.totals
+    settings = payment_settings(draft.tenant.settings)
+    return PosPreviewOut(
+        store_id=store.id,
+        farmer_id=buyer.farmer.id if buyer.farmer is not None else None,
+        seller_name=settings.legal_name or draft.tenant.name,
+        seller_gstin=settings.gstin_for(store.state),
+        seller_state=store.state,
+        seller_state_code=state_code(store.state),
+        buyer_name=buyer.name,
+        buyer_gstin=buyer.gstin,
+        buyer_state=buyer.state,
+        place_of_supply=f"{buyer.state} ({state_code(buyer.state)})",
+        supply_type=totals.supply_type.value,
+        taxable_paise=totals.taxable_paise,
+        cgst_paise=totals.cgst_paise,
+        sgst_paise=totals.sgst_paise,
+        igst_paise=totals.igst_paise,
+        tax_paise=totals.tax_paise,
+        round_off_paise=totals.round_off_paise,
+        total_paise=totals.total_paise,
+        amount_in_words=amount_in_words(totals.total_paise),
+        lines=[InvoiceLineOut.model_validate(line.as_json()) for line in totals.lines],
+    )
+
+
 async def pos_sale(
     session: AsyncSession,
     actor: User,
@@ -299,16 +363,12 @@ async def pos_sale(
     blobs: BlobStore,
     now: datetime,
 ) -> PosSaleOut | CreditBlocked:
-    store = await visible_store(session, actor, store_id)
-    tenant = await session.get_one(Tenant, actor.tenant_id)
-    buyer = await _buyer(session, actor, store, body)
-    lines = await _priced_lines(session, store, body, now)
-    totals = compute_invoice(lines, supply_type(store.state, buyer.state))
+    draft = await draft_sale(session, actor, store_id, body, now)
+    store, tenant, buyer, totals = draft.store, draft.tenant, draft.buyer, draft.totals
     order_id = uuid.uuid4()
     credit = None
-    if body.payment.mode == PaymentMode.CREDIT:
-        if buyer.farmer is None:
-            raise InvalidModeError("Credit is for an order of a known farmer, not for dues.")
+    if body.payment.mode == PaymentMode.CREDIT and buyer.farmer is not None:
+        # (draft_sale already refused credit for a walk-in buyer.)
         credit = await services.ledger.check_and_reserve_credit(
             session,
             tenant_id=actor.tenant_id,
@@ -317,6 +377,7 @@ async def pos_sale(
             amount_paise=totals.total_paise,
             order_id=order_id,
             actor=actor_of(actor),
+            approval_request_id=body.credit_approval_request_id,
         )
         if not credit.allowed:
             return CreditBlocked(credit)
@@ -393,10 +454,13 @@ async def pos_sale(
 __all__ = [
     "Buyer",
     "FarmerNotFoundError",
+    "SaleDraft",
     "UnknownSkuError",
+    "draft_sale",
     "ensure_pdf",
     "issue_invoice",
     "pdf_url",
+    "pos_preview",
     "pos_sale",
     "share_invoice",
     "visible_invoice",

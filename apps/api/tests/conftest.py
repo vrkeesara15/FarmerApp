@@ -133,7 +133,16 @@ async def app_engine(migrated_database: str) -> AsyncIterator[AsyncEngine]:
     asyncpg "connection is closed"; with it the checkout detects the dead connection,
     invalidates the pool and reconnects. This only happens at checkout, before a test runs a
     statement: a connection that dies *during* a test still fails that test."""
-    engine = create_async_engine(migrated_database, pool_size=2, max_overflow=2, pool_pre_ping=True)
+    engine = create_async_engine(
+        migrated_database,
+        pool_size=2,
+        max_overflow=2,
+        pool_pre_ping=True,
+        # asyncpg waits forever on a half-open socket (a pooled connection whose backend
+        # vanished without a FIN, e.g. across a Docker Desktop network reset): bound connect
+        # and every statement, the pre-ping included, so such a test fails instead of hanging.
+        connect_args={"timeout": 30, "command_timeout": 120},
+    )
     try:
         yield engine
     finally:

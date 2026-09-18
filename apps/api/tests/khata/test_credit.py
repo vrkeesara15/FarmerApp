@@ -305,7 +305,9 @@ def test_check_and_reserve_credit_signature_is_the_shared_contract() -> None:
         "amount_paise",
         "order_id",
         "actor",
+        "approval_request_id",  # optional ST-007 retry key (default None)
     ]
+    assert sig.parameters["approval_request_id"].default is None
     assert all(
         p.kind == inspect.Parameter.KEYWORD_ONLY
         for name, p in sig.parameters.items()

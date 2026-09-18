@@ -117,13 +117,17 @@ class ApprovalStatus(StrEnum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
+    CONSUMED = "consumed"  # approved, then used by exactly one sale (0016)
 
 
 class CreditApprovalRequest(Base, BaseColumns):
     """ST-007 (migration 0012): a credit sale that would take the farmer beyond their limit
-    at a store. A cluster head approves or rejects it; an approved request lets the same
-    ``order_id`` (and amount up to ``amount_paise``) proceed **once** (``used_at``).
-    ``order_id`` has no FK: the order is only written once the credit is allowed."""
+    at a store. A cluster head approves or rejects it; an approved request lets **one** sale
+    of the same farmer at the same store for up to ``amount_paise`` proceed: the client
+    retries with ``credit_approval_request_id`` (or the same ``order_id``) and the gate marks
+    the request ``consumed`` (``consumed_at``, ``consumed_by_order_id``; ``used_at`` kept for
+    0012 readers). ``order_id`` / ``consumed_by_order_id`` have no FK: the order is only
+    written once the credit is allowed."""
 
     __tablename__ = "credit_approval_request"
     __table_args__ = (
@@ -132,10 +136,14 @@ class CreditApprovalRequest(Base, BaseColumns):
         CheckConstraint(
             "(status = 'pending') = (decided_by IS NULL AND decided_at IS NULL)", name="decision"
         ),
-        CheckConstraint("used_at IS NULL OR status = 'approved'", name="used_at"),
+        CheckConstraint("used_at IS NULL OR status IN ('approved', 'consumed')", name="used_at"),
+        CheckConstraint("(status = 'consumed') = (consumed_at IS NOT NULL)", name="consumed"),
         Index("ix_credit_approval_request_farmer_store", "tenant_id", "farmer_id", "store_id"),
         Index("ix_credit_approval_request_order_id", "tenant_id", "order_id"),
         Index("ix_credit_approval_request_status", "tenant_id", "status"),
+        Index(
+            "ix_credit_approval_request_consumed_by_order_id", "tenant_id", "consumed_by_order_id"
+        ),
     )
 
     farmer_id: Mapped[uuid.UUID] = mapped_column(
@@ -159,6 +167,8 @@ class CreditApprovalRequest(Base, BaseColumns):
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     decision_note: Mapped[str | None] = mapped_column(String(500), nullable=True)
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    consumed_by_order_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
 
 
 # --------------------------------------------------------------------------- balance

@@ -4,7 +4,9 @@ Payments never write the khata directly: a credit sale asks the ledger to check 
 credit, and a paid dues payment posts a credit entry. The contract is two functions:
 
 * ``farmerapp.khata.credit.check_and_reserve_credit(session, *, tenant_id, farmer_id,
-  store_id, amount_paise, order_id, actor) -> CreditDecision`` — ST-007 limit enforcement.
+  store_id, amount_paise, order_id, actor, approval_request_id=None) -> CreditDecision`` —
+  ST-007 limit enforcement (``approval_request_id``: the approved request a retried sale
+  uses, consumed once).
   When allowed **the gate posts the khata debit itself** (``decision.khata_entry_id``; the
   caller must not post a second one). When blocked it writes / refreshes a pending
   ``credit_approval_request`` and *returns* the decision: the caller answers 402
@@ -42,6 +44,7 @@ class LedgerPort(Protocol):
         amount_paise: int,
         order_id: uuid.UUID | None,
         actor: Actor,
+        approval_request_id: uuid.UUID | None = None,
     ) -> CreditDecision: ...
 
     async def post_credit(
@@ -71,6 +74,7 @@ class KhataLedgerPort:
         amount_paise: int,
         order_id: uuid.UUID | None,
         actor: Actor,
+        approval_request_id: uuid.UUID | None = None,
     ) -> CreditDecision:
         return await khata_credit.check_and_reserve_credit(
             session,
@@ -80,6 +84,7 @@ class KhataLedgerPort:
             amount_paise=amount_paise,
             order_id=order_id,
             actor=actor,
+            approval_request_id=approval_request_id,
         )
 
     async def post_credit(

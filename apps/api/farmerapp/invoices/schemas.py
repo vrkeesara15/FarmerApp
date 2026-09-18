@@ -128,12 +128,46 @@ class PosSaleIn(BaseModel):
     buyer_gstin: str | None = Field(default=None, pattern=GSTIN_PATTERN)
     lines: list[PosLineIn] = Field(min_length=1, max_length=100)
     payment: PosPaymentIn
+    credit_approval_request_id: uuid.UUID | None = Field(
+        default=None,
+        description="Payment mode ``credit`` only (ignored otherwise). ST-007 retry key:"
+        " the id of a credit approval request (``approval_request_id`` of an "
+        "earlier 402 ``credit_limit_exceeded``). When a cluster head approved it for this farmer "
+        "and store and its amount covers this sale, the sale goes through once and the request "
+        "becomes ``consumed``; otherwise the normal limit check applies.",
+    )
 
     @model_validator(mode="after")
     def _one_farmer_key(self) -> Self:
         if self.farmer_id is not None and self.farmer_phone is not None:
             raise ValueError("give farmer_id or farmer_phone, not both")
         return self
+
+
+class PosPreviewOut(BaseModel):
+    """What ``POST /v1/stores/{id}/pos/sales`` would invoice for the same body: the same GST
+    computation, but no invoice number, order, stock movement, credit check or payment."""
+
+    store_id: uuid.UUID
+    farmer_id: uuid.UUID | None
+    seller_name: str
+    seller_gstin: str
+    seller_state: str
+    seller_state_code: str
+    buyer_name: str
+    buyer_gstin: str | None
+    buyer_state: str
+    place_of_supply: str
+    supply_type: Literal["intra", "inter"]
+    taxable_paise: int
+    cgst_paise: int
+    sgst_paise: int
+    igst_paise: int
+    tax_paise: int
+    round_off_paise: int
+    total_paise: int = Field(description="Rounded to the rupee: what the sale collects.")
+    amount_in_words: str
+    lines: list[InvoiceLineOut]
 
 
 class PosSaleOut(BaseModel):
@@ -150,6 +184,7 @@ __all__ = [
     "InvoiceShareOut",
     "PosLineIn",
     "PosPaymentIn",
+    "PosPreviewOut",
     "PosSaleIn",
     "PosSaleOut",
     "SignedUrlOut",
