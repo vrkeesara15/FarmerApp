@@ -32,8 +32,8 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 | FA-025 | Offline-first sync engine | todo | |
 | FM-002 | Consent data model | done | 2026-09-18 (M1-KICKOFF). `consent_record` (subject_type/subject_id, purpose `data` \| `marketing`, version, language, granted_at, withdrawn_at, channel, recorded_by) append-only for the app role (`APPEND_ONLY_TABLES`); withdrawal is a new row; `farmer.consent_marketing` / `consent_version` cache the latest; seed writes data + marketing grants and withdrawals. Consent text version `2026-09-v1` is a placeholder (TODO-LEGAL). The farmer-app consent screen is the M6 FM-002 row. |
 | NF-002 | Offline 72 h | todo | |
-| NF-003 | Sync outbox, idempotency, resumable uploads | todo | |
-| NF-004 | Image budget | todo | |
+| NF-003 | Sync outbox, idempotency, resumable uploads | todo | Chunk planner exists since NF-004 (2026-09-18): `packages/core/lib/src/photo/chunked_upload_planner.dart` (256 KB chunks, per-chunk + file sha256, resume from `lastAckedChunk`, JSON for the outbox row). Left: outbox table + idempotency keys, HTTP transport with backoff, WorkManager job. |
+| NF-004 | Image budget | done | 2026-09-18. Shared on-device photo pipeline in `apps/mobile/packages/core/lib/src/photo/`: `photo_processor.dart` (`PhotoProcessor.process` via `compute`, `processPhotoSync`: decode, EXIF orientation baked, long edge ≤ 1280 (average interpolation, never upscaled), JPEG q80 4:2:0, EXIF `DateTime`/`DateTimeOriginal`/`DateTimeDigitized` + `OffsetTime*=+00:00` + GPS IFD written with `package:image`, SHA-256; hard cap 300 KB → q70 → q60 with `quality`/`withinBudget` recorded; `PhotoExif`, `PhotoLocation`, `ProcessedPhoto.toJson` upload payload, `PhotoProcessor.readExif`), `photo_quality.dart` (`OnDeviceQualityModel` interface, default `LaplacianQualityModel`: variance of Laplacian + mean luminance on a 320 px gray copy, `PhotoQualityConfig` blur 40 / dark 0.15, tip keys `photo.tip.{blurry,dark,ok}`), `chunked_upload_planner.dart` (256 KB chunks with index/offset/sha256, whole-file sha256, resume from `lastAckedChunk`, JSON). Widgets: `PhotoReviewCard` (+13 ARB keys ×5), `CameraGuideOverlay(tipKey:)` lights the matching tip. Deps `image ^4.10.1`, `crypto`. Measured: 4000×3000 → 1280×960 ≈ 198 KB, textured 1280×960 ≈ 193 KB at q80; ladder case 342 → 328 → 220 KB (q60). Tests +62 (core 202): `test/photo/{photo_processor,photo_quality,chunked_upload_planner}_test.dart` with generated images, `test/widgets/{photo_review_card,camera_guide_overlay}_test.dart`, goldens `photo_review_card_*`, `camera_guide_overlay_tip_*`. Design: `design/components/PhotoReviewCard.md`, `CameraGuideOverlay.md`, `design/screens/A41.md`, `F22.md`. PR: docs/prs/NF-004.md. |
 
 ## M2 — Duty, location and visits (target 2026-11-20)
 | ID | Requirement | Status | Notes |
@@ -42,7 +42,7 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 | FA-010 | Duty toggle, foreground service | todo | |
 | FA-011 | First-run disclosure | todo | |
 | FA-014 | Visit check-in geofence | todo | |
-| FA-015 | Visit capture | todo | |
+| FA-015 | Visit capture | todo | Photo pipeline ready since NF-004 (2026-09-18): `PhotoProcessor.process(bytes, captureTime:, location:)` embeds EXIF time + GPS and returns the `exif` payload for the API's `exif_time` / `exif_point`; design `design/screens/A41.md`. Left: A30-A33 screens, in-app camera (no gallery), server time on upload. |
 | FA-016 | Farmer confirmation | todo | |
 | FA-017 | Check-out and duration | todo | |
 | FA-028 | Mock-location / root / time-tamper detection | todo | |
@@ -132,7 +132,7 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 | ID | Requirement | Status | Notes |
 |---|---|---|---|
 | M6-KICKOFF | Diagnosis pipeline, pluggable encoder/LLM, HNSW index, eval script | todo | |
-| DX-001 | On-device TFLite model | todo | |
+| DX-001 | On-device TFLite model | todo | Interface in place since NF-004 (2026-09-18): `OnDeviceQualityModel.evaluate(bytes) → PhotoQualityResult` with the `LaplacianQualityModel` heuristic as default (blur + darkness, ~100 ms at 1280 px). Left: TFLite model (< 8 MB) for leaf/plant present + crop class, 400 ms budget on a 2 GB device. |
 | DX-002 | Server embedding, pgvector HNSW | todo | |
 | DX-003 | Decision rule | todo | |
 | DX-004 | LLM fallback | todo | |
@@ -145,7 +145,7 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 | FM-001 | Farmer login | todo | |
 | FM-002 | Consent screen | todo | |
 | FM-003 | Profile | todo | |
-| FM-004 | Crop doctor camera | todo | |
+| FM-004 | Crop doctor camera | todo | On-device quality gate and review card exist since NF-004 (2026-09-18): `PhotoQualityCheck.evaluate` → blurry / dark / ok with retake tip keys, `PhotoReviewCard` (Use disabled for a rejected photo), `CameraGuideOverlay(tipKey:)`; design `design/screens/F22.md`. Left: F20/F21/F22/F23 screens, camera plugin, crop auto-detect (DX-001), up-to-3 flow. |
 | FM-005 | Diagnosis result | todo | |
 | FM-006 | One-tap actions | todo | |
 | FM-010 | Orders, khata, pay dues | todo | |

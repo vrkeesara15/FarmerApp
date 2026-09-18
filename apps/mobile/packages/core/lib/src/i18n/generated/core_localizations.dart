@@ -668,6 +668,84 @@ abstract class CoreLocalizations {
   /// **'Place the leaf inside the frame'**
   String get cameraLeafFrame;
 
+  /// No description provided for @photoReviewHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your photo'**
+  String get photoReviewHeading;
+
+  /// No description provided for @photoReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo {index} of {total}'**
+  String photoReviewTitle(int index, int total);
+
+  /// No description provided for @photoQualityOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Good photo'**
+  String get photoQualityOk;
+
+  /// No description provided for @photoQualityBlurry.
+  ///
+  /// In en, this message translates to:
+  /// **'Blurry'**
+  String get photoQualityBlurry;
+
+  /// No description provided for @photoQualityDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Too dark'**
+  String get photoQualityDark;
+
+  /// No description provided for @photoQualityChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking photo'**
+  String get photoQualityChecking;
+
+  /// Retake tip for key photo.tip.blurry (FM-004)
+  ///
+  /// In en, this message translates to:
+  /// **'Hold the phone steady, tap the leaf to focus and take it again'**
+  String get photoTipBlurry;
+
+  /// Retake tip for key photo.tip.dark (FM-004)
+  ///
+  /// In en, this message translates to:
+  /// **'Move into better light, away from shade, and take it again'**
+  String get photoTipDark;
+
+  /// Line for key photo.tip.ok
+  ///
+  /// In en, this message translates to:
+  /// **'Photo looks good'**
+  String get photoTipOk;
+
+  /// No description provided for @photoRetake.
+  ///
+  /// In en, this message translates to:
+  /// **'Retake'**
+  String get photoRetake;
+
+  /// No description provided for @photoUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use photo'**
+  String get photoUse;
+
+  /// No description provided for @photoSizeKb.
+  ///
+  /// In en, this message translates to:
+  /// **'{kb} KB'**
+  String photoSizeKb(int kb);
+
+  /// No description provided for @photoDimensions.
+  ///
+  /// In en, this message translates to:
+  /// **'{width} × {height} px'**
+  String photoDimensions(int width, int height);
+
   /// No description provided for @confidenceHigh.
   ///
   /// In en, this message translates to:

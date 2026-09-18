@@ -322,6 +322,53 @@ class CoreLocalizationsTe extends CoreLocalizations {
   String get cameraLeafFrame => 'ఆకును ఫ్రేమ్ లోపల ఉంచండి';
 
   @override
+  String get photoReviewHeading => 'మీ ఫోటోను చూడండి';
+
+  @override
+  String photoReviewTitle(int index, int total) {
+    return 'ఫోటో $index / $total';
+  }
+
+  @override
+  String get photoQualityOk => 'మంచి ఫోటో';
+
+  @override
+  String get photoQualityBlurry => 'మసకగా ఉంది';
+
+  @override
+  String get photoQualityDark => 'చాలా చీకటిగా ఉంది';
+
+  @override
+  String get photoQualityChecking => 'ఫోటోను చూస్తున్నాం';
+
+  @override
+  String get photoTipBlurry =>
+      'ఫోన్‌ను స్థిరంగా పట్టుకోండి, ఆకుపై నొక్కి ఫోకస్ చేసి మళ్ళీ తీయండి';
+
+  @override
+  String get photoTipDark =>
+      'మంచి వెలుతురులోకి వెళ్ళి, నీడ నుంచి బయటకు వచ్చి మళ్ళీ తీయండి';
+
+  @override
+  String get photoTipOk => 'ఫోటో బాగుంది';
+
+  @override
+  String get photoRetake => 'మళ్ళీ తీయండి';
+
+  @override
+  String get photoUse => 'ఈ ఫోటో వాడండి';
+
+  @override
+  String photoSizeKb(int kb) {
+    return '$kb KB';
+  }
+
+  @override
+  String photoDimensions(int width, int height) {
+    return '$width × $height px';
+  }
+
+  @override
   String get confidenceHigh => 'అధిక నమ్మకం';
 
   @override

@@ -487,6 +487,62 @@ final List<_Case> _cases = <_Case>[
       currentIndex: 2,
     ),
   ),
+  (
+    'photo_review_card',
+    () => const Column(
+      children: <Widget>[
+        PhotoReviewCard(
+          sizeBytes: 186 * 1024,
+          width: 1280,
+          height: 960,
+          index: 1,
+          total: 3,
+          quality: PhotoQualityResult(
+            isBlurry: false,
+            blurScore: 240,
+            isTooDark: false,
+            brightness: 0.45,
+            tipKey: PhotoTipKeys.ok,
+          ),
+          onRetake: _noop,
+          onUse: _noop,
+        ),
+        SizedBox(height: Tokens.space3),
+        PhotoReviewCard(
+          sizeBytes: 172 * 1024,
+          width: 960,
+          height: 1280,
+          quality: PhotoQualityResult(
+            isBlurry: true,
+            blurScore: 12,
+            isTooDark: false,
+            brightness: 0.45,
+            tipKey: PhotoTipKeys.blurry,
+          ),
+          onRetake: _noop,
+          onUse: _noop,
+        ),
+        SizedBox(height: Tokens.space3),
+        PhotoReviewCard(
+          sizeBytes: 90 * 1024,
+          width: 1280,
+          height: 960,
+          onRetake: _noop,
+          onUse: _noop,
+        ),
+      ],
+    ),
+  ),
+  (
+    'camera_guide_overlay_tip',
+    () => const SizedBox(
+      height: 700,
+      child: ColoredBox(
+        color: Color(0xFF3A3A3A),
+        child: CameraGuideOverlay(tipKey: PhotoTipKeys.blurry),
+      ),
+    ),
+  ),
 ];
 
 void main() {
@@ -499,7 +555,7 @@ void main() {
             harness(
               SingleChildScrollView(child: build()),
               mode: mode,
-              padded: name != 'camera_guide_overlay',
+              padded: !name.startsWith('camera_guide_overlay'),
             ),
           );
           await tester.pump();

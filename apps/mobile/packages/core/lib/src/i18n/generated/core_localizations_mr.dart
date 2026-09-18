@@ -319,6 +319,53 @@ class CoreLocalizationsMr extends CoreLocalizations {
   String get cameraLeafFrame => 'पान फ्रेमच्या आत ठेवा';
 
   @override
+  String get photoReviewHeading => 'तुमचा फोटो तपासा';
+
+  @override
+  String photoReviewTitle(int index, int total) {
+    return 'फोटो $index / $total';
+  }
+
+  @override
+  String get photoQualityOk => 'चांगला फोटो';
+
+  @override
+  String get photoQualityBlurry => 'अस्पष्ट आहे';
+
+  @override
+  String get photoQualityDark => 'खूप अंधार आहे';
+
+  @override
+  String get photoQualityChecking => 'फोटो तपासत आहोत';
+
+  @override
+  String get photoTipBlurry =>
+      'फोन स्थिर धरा, पानावर टॅप करून फोकस करा आणि पुन्हा काढा';
+
+  @override
+  String get photoTipDark =>
+      'चांगल्या उजेडात जा, सावलीतून बाहेर या आणि पुन्हा काढा';
+
+  @override
+  String get photoTipOk => 'फोटो चांगला आहे';
+
+  @override
+  String get photoRetake => 'पुन्हा काढा';
+
+  @override
+  String get photoUse => 'हा फोटो वापरा';
+
+  @override
+  String photoSizeKb(int kb) {
+    return '$kb KB';
+  }
+
+  @override
+  String photoDimensions(int width, int height) {
+    return '$width × $height px';
+  }
+
+  @override
   String get confidenceHigh => 'उच्च विश्वास';
 
   @override

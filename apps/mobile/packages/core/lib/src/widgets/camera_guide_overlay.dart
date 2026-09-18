@@ -1,20 +1,43 @@
 import 'package:flutter/material.dart';
 
 import '../i18n/generated/core_localizations.dart';
+import '../photo/photo_quality.dart';
 import '../theme/app_theme.dart';
 import '../tokens/tokens.g.dart';
+import 'photo_tip_text.dart';
 
-/// Static overlay for the in-app camera: leaf frame plus three tips
+/// Overlay for the in-app camera: leaf frame plus three tips
 /// (SPEC 13.1 `CameraGuideOverlay`). Place it on top of the camera preview.
+///
+/// Give it the [tipKey] of the last quality-gate result (FM-004) to
+/// highlight the matching tip and show the retake line: `photo.tip.blurry`
+/// lights "hold steady", `photo.tip.dark` lights "good light".
 class CameraGuideOverlay extends StatelessWidget {
   /// Creates the overlay.
-  const CameraGuideOverlay({super.key});
+  const CameraGuideOverlay({this.tipKey, super.key});
+
+  /// Key of the retake line shown under the frame (see [PhotoTipKeys]).
+  static const Key tipMessageKey = Key('cameraGuideOverlay.tipMessage');
+
+  /// One of [PhotoTipKeys], or null for the static overlay.
+  final String? tipKey;
+
+  /// Index of the tip chip lit for [tipKey] (0 hold steady, 1 good light,
+  /// 2 fill the frame), or null when nothing needs fixing.
+  static int? highlightedTip(String? tipKey) => switch (tipKey) {
+    PhotoTipKeys.blurry => 0,
+    PhotoTipKeys.dark => 1,
+    _ => null,
+  };
 
   @override
   Widget build(BuildContext context) {
     final app = context.app;
     final p = app.palette;
     final l10n = CoreLocalizations.of(context);
+    final lit = highlightedTip(tipKey);
+    final tip = tipKey;
+    final tipOk = tip == PhotoTipKeys.ok;
     return Semantics(
       label: l10n.cameraLeafFrame,
       child: Column(
@@ -42,6 +65,45 @@ class CameraGuideOverlay extends StatelessWidget {
               style: app.text.body.copyWith(color: p.primaryOn),
             ),
           ),
+          if (tip != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Tokens.space4,
+                0,
+                Tokens.space4,
+                Tokens.space3,
+              ),
+              child: Container(
+                key: tipMessageKey,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Tokens.space3,
+                  vertical: Tokens.space2,
+                ),
+                decoration: BoxDecoration(
+                  color: p.text.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(Tokens.radiusChip),
+                  border: Border.all(
+                    color: tipOk ? p.statusSuccess : p.statusWarning,
+                    width: app.borderWidth + 1,
+                  ),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      tipOk ? Icons.check_circle_outline : Icons.error_outline,
+                      color: tipOk ? p.statusSuccess : p.statusWarning,
+                    ),
+                    const SizedBox(width: Tokens.space2),
+                    Expanded(
+                      child: Text(
+                        l10n.photoTip(tip),
+                        style: app.text.body.copyWith(color: p.primaryOn),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: Tokens.space4),
             child: Row(
@@ -50,6 +112,7 @@ class CameraGuideOverlay extends StatelessWidget {
                   child: _Tip(
                     icon: Icons.back_hand_outlined,
                     text: l10n.cameraHoldSteady,
+                    highlighted: lit == 0,
                   ),
                 ),
                 const SizedBox(width: Tokens.space2),
@@ -57,6 +120,7 @@ class CameraGuideOverlay extends StatelessWidget {
                   child: _Tip(
                     icon: Icons.wb_sunny_outlined,
                     text: l10n.cameraGoodLight,
+                    highlighted: lit == 1,
                   ),
                 ),
                 const SizedBox(width: Tokens.space2),
@@ -64,6 +128,7 @@ class CameraGuideOverlay extends StatelessWidget {
                   child: _Tip(
                     icon: Icons.crop_free,
                     text: l10n.cameraFillFrame,
+                    highlighted: lit == 2,
                   ),
                 ),
               ],
@@ -77,15 +142,21 @@ class CameraGuideOverlay extends StatelessWidget {
 }
 
 class _Tip extends StatelessWidget {
-  const _Tip({required this.icon, required this.text});
+  const _Tip({
+    required this.icon,
+    required this.text,
+    this.highlighted = false,
+  });
 
   final IconData icon;
   final String text;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
     final app = context.app;
     final p = app.palette;
+    final accent = highlighted ? p.statusWarning : p.primaryOn;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: Tokens.space2,
@@ -94,17 +165,20 @@ class _Tip extends StatelessWidget {
       decoration: BoxDecoration(
         color: p.text.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(Tokens.radiusChip),
-        border: Border.all(color: p.primaryOn, width: app.borderWidth),
+        border: Border.all(
+          color: accent,
+          width: highlighted ? app.borderWidth + 1 : app.borderWidth,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(icon, color: p.primaryOn),
+          Icon(icon, color: accent),
           const SizedBox(height: Tokens.space1),
           Text(
             text,
             textAlign: TextAlign.center,
-            style: app.text.caption.copyWith(color: p.primaryOn),
+            style: app.text.caption.copyWith(color: accent),
             maxLines: 2,
           ),
         ],

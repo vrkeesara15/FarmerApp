@@ -1,6 +1,6 @@
 # CameraGuideOverlay
 
-Static overlay for the in-app camera: corner-marked leaf frame plus three tips (hold steady, good light, fill the frame).
+Overlay for the in-app camera: corner-marked leaf frame plus three tips (hold steady, good light, fill the frame). After a rejected photo (FM-004) it lights the tip that fixes the problem and shows the retake line.
 
 Source: `apps/mobile/packages/core/lib/src/widgets/camera_guide_overlay.dart` (exported from `package:farmerapp_core/farmerapp_core.dart`).
 
@@ -8,15 +8,19 @@ Source: `apps/mobile/packages/core/lib/src/widgets/camera_guide_overlay.dart` (e
 
 | Prop | Type | Notes |
 |---|---|---|
-| `(none)` | `` | place above the camera preview in a Stack |
+| `tipKey` | `String?` | `PhotoTipKeys.blurry` lights "hold steady", `PhotoTipKeys.dark` lights "good light", `PhotoTipKeys.ok` shows the good-photo line; null = static overlay. Place above the camera preview in a Stack. |
+
+`CameraGuideOverlay.highlightedTip(key)` returns the lit chip index (0/1/null) for screens that want to mirror it.
 
 ## Variants
 
-- default
+- default (static)
+- with tip (`tipKey` set): retake line under the frame label (key `CameraGuideOverlay.tipMessageKey`), lit chip gets the warning colour and a thicker border
 
 ## States
 
 - static
+- blurry (`photo.tip.blurry`), dark (`photo.tip.dark`), ok (`photo.tip.ok`)
 
 ## Accessibility
 

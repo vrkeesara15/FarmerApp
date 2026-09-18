@@ -322,6 +322,53 @@ class CoreLocalizationsKn extends CoreLocalizations {
   String get cameraLeafFrame => 'ಎಲೆಯನ್ನು ಫ್ರೇಮ್ ಒಳಗೆ ಇಡಿ';
 
   @override
+  String get photoReviewHeading => 'ನಿಮ್ಮ ಫೋಟೋ ಪರಿಶೀಲಿಸಿ';
+
+  @override
+  String photoReviewTitle(int index, int total) {
+    return 'ಫೋಟೋ $index / $total';
+  }
+
+  @override
+  String get photoQualityOk => 'ಒಳ್ಳೆಯ ಫೋಟೋ';
+
+  @override
+  String get photoQualityBlurry => 'ಮಸುಕಾಗಿದೆ';
+
+  @override
+  String get photoQualityDark => 'ತುಂಬಾ ಕತ್ತಲಾಗಿದೆ';
+
+  @override
+  String get photoQualityChecking => 'ಫೋಟೋ ಪರಿಶೀಲಿಸುತ್ತಿದ್ದೇವೆ';
+
+  @override
+  String get photoTipBlurry =>
+      'ಫೋನ್ ಅನ್ನು ಸ್ಥಿರವಾಗಿ ಹಿಡಿದು, ಎಲೆಯ ಮೇಲೆ ಒತ್ತಿ ಫೋಕಸ್ ಮಾಡಿ ಮತ್ತೆ ತೆಗೆಯಿರಿ';
+
+  @override
+  String get photoTipDark =>
+      'ಹೆಚ್ಚು ಬೆಳಕಿರುವ ಕಡೆ ಹೋಗಿ, ನೆರಳಿನಿಂದ ಹೊರಬಂದು ಮತ್ತೆ ತೆಗೆಯಿರಿ';
+
+  @override
+  String get photoTipOk => 'ಫೋಟೋ ಚೆನ್ನಾಗಿದೆ';
+
+  @override
+  String get photoRetake => 'ಮತ್ತೆ ತೆಗೆಯಿರಿ';
+
+  @override
+  String get photoUse => 'ಈ ಫೋಟೋ ಬಳಸಿ';
+
+  @override
+  String photoSizeKb(int kb) {
+    return '$kb KB';
+  }
+
+  @override
+  String photoDimensions(int width, int height) {
+    return '$width × $height px';
+  }
+
+  @override
   String get confidenceHigh => 'ಹೆಚ್ಚು ವಿಶ್ವಾಸ';
 
   @override

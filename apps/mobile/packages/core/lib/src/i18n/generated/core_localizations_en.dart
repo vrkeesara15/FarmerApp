@@ -319,6 +319,53 @@ class CoreLocalizationsEn extends CoreLocalizations {
   String get cameraLeafFrame => 'Place the leaf inside the frame';
 
   @override
+  String get photoReviewHeading => 'Check your photo';
+
+  @override
+  String photoReviewTitle(int index, int total) {
+    return 'Photo $index of $total';
+  }
+
+  @override
+  String get photoQualityOk => 'Good photo';
+
+  @override
+  String get photoQualityBlurry => 'Blurry';
+
+  @override
+  String get photoQualityDark => 'Too dark';
+
+  @override
+  String get photoQualityChecking => 'Checking photo';
+
+  @override
+  String get photoTipBlurry =>
+      'Hold the phone steady, tap the leaf to focus and take it again';
+
+  @override
+  String get photoTipDark =>
+      'Move into better light, away from shade, and take it again';
+
+  @override
+  String get photoTipOk => 'Photo looks good';
+
+  @override
+  String get photoRetake => 'Retake';
+
+  @override
+  String get photoUse => 'Use photo';
+
+  @override
+  String photoSizeKb(int kb) {
+    return '$kb KB';
+  }
+
+  @override
+  String photoDimensions(int width, int height) {
+    return '$width × $height px';
+  }
+
+  @override
   String get confidenceHigh => 'High confidence';
 
   @override
