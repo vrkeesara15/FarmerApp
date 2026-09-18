@@ -5,16 +5,25 @@ Run locally with ``uvicorn farmerapp.api.app:app --reload``.
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
+from collections.abc import AsyncIterator
+
 from fastapi import APIRouter, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from farmerapp import __version__
 from farmerapp.api.errors import PROBLEM_MEDIA_TYPE, install_error_handlers
 from farmerapp.api.middleware import TraceMiddleware
 from farmerapp.api.routes import health
-from farmerapp.logging import configure_logging
+from farmerapp.auth import router as auth_routes
+from farmerapp.auth.deps import AuthServices, build_auth_services, tick
+from farmerapp.auth.scheduler import InProcessScheduler
+from farmerapp.logging import configure_logging, get_logger
 from farmerapp.settings import Settings, get_settings
 
 API_PREFIX = "/v1"
+SCHEDULER_INTERVAL_S = 1.0
 
 _PROBLEM_SCHEMA = {
     "type": "object",
@@ -32,11 +41,40 @@ _PROBLEM_SCHEMA = {
 }
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+async def _scheduler_loop(scheduler: InProcessScheduler) -> None:
+    """Local/dev only: run delayed auth tasks (OTP delivery checks) in-process every second."""
+    log = get_logger("farmerapp.api.scheduler")
+    while True:
+        await asyncio.sleep(SCHEDULER_INTERVAL_S)
+        try:
+            await tick(scheduler)
+        except Exception:
+            log.exception("scheduler_tick_failed")
+
+
+@contextlib.asynccontextmanager
+async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
+    services: AuthServices = app.state.auth
+    task: asyncio.Task[None] | None = None
+    if isinstance(services.scheduler, InProcessScheduler):
+        task = asyncio.create_task(_scheduler_loop(services.scheduler))
+    try:
+        yield
+    finally:
+        if task is not None:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
+
+def create_app(
+    settings: Settings | None = None, *, auth_services: AuthServices | None = None
+) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(level=settings.log_level, json_logs=settings.log_json, service="api")
 
     app = FastAPI(
+        lifespan=_lifespan,
         title="FarmerApp API",
         version=__version__,
         openapi_version="3.1.0",
@@ -53,10 +91,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         },
     )
     app.add_middleware(TraceMiddleware)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "X-Request-Id"],
+        expose_headers=["X-Request-Id"],
+    )
     install_error_handlers(app)
+    app.state.auth = auth_services or build_auth_services(settings)
 
     v1 = APIRouter(prefix=API_PREFIX)
     v1.include_router(health.router)
+    v1.include_router(auth_routes.router)
+    v1.include_router(auth_routes.me_router)
     app.include_router(v1)
 
     _register_problem_schema(app)

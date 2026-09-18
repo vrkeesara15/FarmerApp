@@ -20,6 +20,9 @@ KEY_ID = os.environ.get("MOCK_RAZORPAY_KEY_ID", "rzp_test_mock")
 app = FastAPI(title="FarmerApp mock providers", version="0.1.0")
 
 STATE: dict[str, Any] = {"sms": [], "whatsapp": [], "orders": {}, "links": {}, "qrs": {}, "payments": {}}
+# Delivery simulation: SMS are "delivered" as soon as they are sent unless auto_deliver is off
+# (then POST /sms/messages/{id}/deliver marks them, or they stay queued -> WhatsApp fallback).
+SMS_CONFIG: dict[str, Any] = {"auto_deliver": True}
 
 
 def _id(prefix: str) -> str:
@@ -41,6 +44,7 @@ def reset() -> dict[str, str]:
         STATE[k].clear()
     for k in ("orders", "links", "qrs", "payments"):
         STATE[k].clear()
+    SMS_CONFIG["auto_deliver"] = True
     return {"status": "reset"}
 
 
@@ -55,6 +59,7 @@ class SmsSend(BaseModel):
 @app.post("/sms/send", status_code=202)
 def sms_send(body: SmsSend) -> dict[str, Any]:
     rec = {"id": _id("sms"), "ts": _now(), **body.model_dump()}
+    rec["delivered_at"] = _now() if SMS_CONFIG["auto_deliver"] else None
     STATE["sms"].append(rec)
     return {"id": rec["id"], "status": "queued"}
 
@@ -62,6 +67,43 @@ def sms_send(body: SmsSend) -> dict[str, Any]:
 @app.get("/sms/messages")
 def sms_messages(to: str | None = None) -> list[dict[str, Any]]:
     return [m for m in STATE["sms"] if to is None or m["to"] == to]
+
+
+def _sms(message_id: str) -> dict[str, Any]:
+    for m in STATE["sms"]:
+        if m["id"] == message_id:
+            return m
+    raise HTTPException(404, {"error": "no such message"})
+
+
+@app.get("/sms/status/{message_id}")
+def sms_status(message_id: str) -> dict[str, Any]:
+    """Delivery report the API polls 30 s after sending (FA-001 WhatsApp fallback)."""
+    m = _sms(message_id)
+    return {
+        "id": message_id,
+        "status": "delivered" if m.get("delivered_at") else "pending",
+        "delivered_at": m.get("delivered_at"),
+    }
+
+
+@app.post("/sms/messages/{message_id}/deliver")
+def sms_deliver(message_id: str) -> dict[str, Any]:
+    """Test helper: mark a queued message delivered."""
+    m = _sms(message_id)
+    m["delivered_at"] = m.get("delivered_at") or _now()
+    return sms_status(message_id)
+
+
+class SmsConfig(BaseModel):
+    auto_deliver: bool = True
+
+
+@app.post("/_mock/sms/config")
+def sms_config(body: SmsConfig) -> dict[str, Any]:
+    """Test helper: ``auto_deliver=false`` leaves SMS queued so the API falls back to WhatsApp."""
+    SMS_CONFIG["auto_deliver"] = body.auto_deliver
+    return dict(SMS_CONFIG)
 
 
 class WhatsAppSend(BaseModel):
@@ -81,6 +123,14 @@ def whatsapp_send(body: WhatsAppSend) -> dict[str, Any]:
 @app.get("/whatsapp/messages")
 def whatsapp_messages(to: str | None = None) -> list[dict[str, Any]]:
     return [m for m in STATE["whatsapp"] if to is None or m["to"] == to]
+
+
+@app.get("/whatsapp/status/{message_id}")
+def whatsapp_status(message_id: str) -> dict[str, Any]:
+    for m in STATE["whatsapp"]:
+        if m["id"] == message_id:
+            return {"id": message_id, "status": "delivered", "delivered_at": m["ts"]}
+    raise HTTPException(404, {"error": "no such message"})
 
 
 # ---------------------------------------------------------------- Razorpay-like

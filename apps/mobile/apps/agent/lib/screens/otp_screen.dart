@@ -38,8 +38,8 @@ class OtpScreen extends ConsumerWidget {
               ),
               const SizedBox(height: Tokens.space6),
               OtpInput(
-                enabled: !flow.busy,
-                errorText: flow.otpError ? l10n.otpInvalid : null,
+                enabled: !flow.busy && !flow.locked,
+                errorText: flow.otpError ? authFailureText(l10n, flow) : null,
                 onCompleted: notifier.verifyOtp,
                 onResend: notifier.resendOtp,
               ),

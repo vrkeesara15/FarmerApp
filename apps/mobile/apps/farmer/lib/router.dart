@@ -18,9 +18,14 @@ abstract final class AppRoutes {
 }
 
 /// The app router.
-final Provider<GoRouter> routerProvider = Provider<GoRouter>((ref) {
+final Provider<GoRouter> routerProvider = Provider<GoRouter>(
+  (ref) => buildRouter(),
+);
+
+/// Builds the router; tests override [routerProvider] to start elsewhere.
+GoRouter buildRouter({String initialLocation = AppRoutes.language}) {
   return GoRouter(
-    initialLocation: AppRoutes.language,
+    initialLocation: initialLocation,
     routes: <RouteBase>[
       GoRoute(
         path: AppRoutes.language,
@@ -36,4 +41,4 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
-});
+}

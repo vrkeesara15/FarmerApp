@@ -2,7 +2,11 @@
 /// formatting utilities, local database and auth interfaces.
 library;
 
+export 'src/auth/api_config.dart';
 export 'src/auth/auth_api.dart';
+export 'src/auth/auth_copy.dart';
+export 'src/auth/http_auth_api.dart';
+export 'src/auth/token_store.dart';
 export 'src/db/app_database.dart';
 export 'src/i18n/generated/core_localizations.dart';
 export 'src/state/auth_flow.dart';

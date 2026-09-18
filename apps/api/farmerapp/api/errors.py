@@ -63,6 +63,7 @@ class AppError(Exception):
         code: str | None = None,
         status: int | None = None,
         extra: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         super().__init__(detail)
         self.detail = detail
@@ -71,6 +72,7 @@ class AppError(Exception):
         if status is not None:
             self.status = status
         self.extra = extra or {}
+        self.headers = headers or {}
 
 
 class NotFoundError(AppError):
@@ -132,7 +134,7 @@ def install_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(AppError)
     async def _app_error(request: Request, exc: AppError) -> JSONResponse:
-        return problem_response(
+        resp = problem_response(
             request,
             status=exc.status,
             code=exc.code,
@@ -140,6 +142,8 @@ def install_error_handlers(app: FastAPI) -> None:
             title=exc.title,
             extra=exc.extra,
         )
+        resp.headers.update(exc.headers)
+        return resp
 
     @app.exception_handler(StarletteHTTPException)
     async def _http_error(request: Request, exc: StarletteHTTPException) -> JSONResponse:

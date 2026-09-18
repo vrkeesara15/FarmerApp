@@ -133,6 +133,32 @@ class CoreLocalizationsTe extends CoreLocalizations {
   }
 
   @override
+  String otpAttemptsLeft(int count) {
+    return '$count ప్రయత్నాలు మిగిలాయి';
+  }
+
+  @override
+  String otpLocked(int minutes) {
+    return 'చాలా తప్పు ప్రయత్నాలు. $minutes నిమిషాల తర్వాత మళ్ళీ ప్రయత్నించండి.';
+  }
+
+  @override
+  String otpRateLimited(int minutes) {
+    return 'చాలా సార్లు OTP అడిగారు. $minutes నిమిషాల తర్వాత మళ్ళీ ప్రయత్నించండి.';
+  }
+
+  @override
+  String get otpExpired => 'ఈ OTP గడువు ముగిసింది. కొత్తది అడగండి.';
+
+  @override
+  String get phoneNotFound =>
+      'ఈ నంబర్ నమోదు కాలేదు. మిమ్మల్ని జోడించమని మీ మేనేజర్‌ను అడగండి.';
+
+  @override
+  String get networkError =>
+      'కనెక్షన్ లేదు. మీ నెట్‌వర్క్ తనిఖీ చేసి మళ్ళీ ప్రయత్నించండి.';
+
+  @override
   String get consentTitle => 'మీ లొకేషన్ మరియు డేటా';
 
   @override

@@ -133,6 +133,31 @@ class CoreLocalizationsKn extends CoreLocalizations {
   }
 
   @override
+  String otpAttemptsLeft(int count) {
+    return '$count attempts left';
+  }
+
+  @override
+  String otpLocked(int minutes) {
+    return 'Too many wrong attempts. Try again in $minutes min.';
+  }
+
+  @override
+  String otpRateLimited(int minutes) {
+    return 'Too many codes requested. Try again in $minutes min.';
+  }
+
+  @override
+  String get otpExpired => 'This code has expired. Request a new one.';
+
+  @override
+  String get phoneNotFound =>
+      'This number is not registered. Ask your manager to add you.';
+
+  @override
+  String get networkError => 'No connection. Check your network and try again.';
+
+  @override
   String get consentTitle => 'Your location and data';
 
   @override

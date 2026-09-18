@@ -11,7 +11,45 @@ from farmerapp.db.models import Tenant
 from farmerapp.db.session import set_tenant
 
 BASE_COLUMNS = {"id", "tenant_id", "created_at", "updated_at", "deleted_at", "version"}
-TENANT_COLUMNS = BASE_COLUMNS | {"name", "plan", "branding", "settings"}
+TENANT_COLUMNS = BASE_COLUMNS | {"name", "plan", "branding", "settings", "slug"}
+USER_COLUMNS = BASE_COLUMNS | {
+    "phone",
+    "name",
+    "role",
+    "store_id",
+    "cluster_id",
+    "language",
+    "status",
+    "device_id",
+}
+OTP_COLUMNS = BASE_COLUMNS | {
+    "phone",
+    "purpose",
+    "code_hash",
+    "expires_at",
+    "attempts",
+    "resend_count",
+    "window_started_at",
+    "channel",
+    "sms_sent_at",
+    "whatsapp_sent_at",
+    "delivered_at",
+    "consumed_at",
+    "locked_until",
+    "provider_ref",
+    "user_id",
+    "device_id",
+}
+REFRESH_COLUMNS = BASE_COLUMNS | {
+    "user_id",
+    "family_id",
+    "token_hash",
+    "device_id",
+    "device_name",
+    "expires_at",
+    "revoked_at",
+    "replaced_by",
+}
 
 
 async def test_extensions_installed(db_session: AsyncSession) -> None:
@@ -74,3 +112,29 @@ async def test_previous_test_rows_were_rolled_back(db_session: AsyncSession) -> 
     count = await db_session.scalar(select(text("count(*)")).select_from(Tenant))
     assert count == 0
     assert uuid.UUID(int=0)  # keep uuid import meaningful for readers
+
+
+async def _columns(db_session: AsyncSession, table: str) -> set[str]:
+    rows = await db_session.execute(
+        text("SELECT column_name FROM information_schema.columns WHERE table_name = :t"),
+        {"t": table},
+    )
+    return {r[0] for r in rows}
+
+
+async def test_0002_auth_tables(db_session: AsyncSession) -> None:
+    """FA-001 migration: user, otp_challenge, refresh_token (all with the base columns)."""
+    assert await _columns(db_session, "user") == USER_COLUMNS
+    assert await _columns(db_session, "otp_challenge") == OTP_COLUMNS
+    assert await _columns(db_session, "refresh_token") == REFRESH_COLUMNS
+    constraints = await db_session.execute(
+        text(
+            "SELECT conname FROM pg_constraint WHERE conrelid IN "
+            "('\"user\"'::regclass, 'refresh_token'::regclass, 'tenant'::regclass)"
+        )
+    )
+    names = {r[0] for r in constraints}
+    assert "uq_user_tenant_id" in names  # (tenant_id, phone)
+    assert "uq_refresh_token_token_hash" in names
+    assert "uq_tenant_slug" in names
+    assert "ck_user_role" in names and "ck_user_status" in names

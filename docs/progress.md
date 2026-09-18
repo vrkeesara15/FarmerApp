@@ -7,7 +7,7 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 | ID | Requirement | Status | Notes |
 |---|---|---|---|
 | M0-KICKOFF | Scaffold monorepo, docker compose, Makefile, Terraform dev+bootstrap, CI skeletons, design system in Flutter + React | done | 2026-09-17. apps/api (FastAPI, Alembic 0001 extensions+tenant, worker/jobs entrypoints, 24 tests), docker/ + docker-compose.yml + Makefile, apps/console (Next.js 15, 23 DS components, 78 vitest + 4 Playwright), apps/mobile (pub workspace, farmerapp_core with 29 widgets + 5 ARB + 62 goldens, agent/farmer apps), infra/ (bootstrap + 11 modules + dev/stg/prd), .github/ (9 workflows). `make check` green. |
-| FA-001 | Phone + OTP login | todo | |
+| FA-001 | Phone + OTP login | done | 2026-09-17. API: `farmerapp/auth/` (models user/otp_challenge/refresh_token, otp.py, tokens.py, deps.py get_current_user + tenant binding, providers fake/mockserver, scheduler seam, router `/v1/auth/otp/send|verify`, `/v1/auth/refresh|logout`, `/v1/me`), Alembic 0002, settings (OTP_*, JWT_*, CORS, prd guard rails), `jobs seed` (tenant fcc + 6 users), db `set_bypass_rls`, mockserver `/sms/status`, openapi.yaml; 62 75 pytest added under tests/auth (fake clock/provider, 1 `integration`) + 3 elsewhere; 102 total. Console: `lib/api.ts` auth+session, `app/api/session*` httpOnly refresh cookie, mock API in sync, LoginForm error states, +20 vitest, Playwright smoke green. Mobile: `HttpAuthApi`, `TokenStore` (secure storage, device_id), `AuthFailure` states, A03/A04 + F02/F03 wired, ARB en+te, +23 tests. PR: docs/prs/FA-001.md. Deferred: real SMS/WhatsApp adapters (human: DLT), Pub/Sub delayed check (OPS-004), phone in several tenants (WC-014). |
 | FA-002 | Role-based access | todo | |
 | FA-003 | Tenant isolation (RLS) | todo | |
 | FA-004 | Localisation, ARB files, no hard-coded strings | todo | |
@@ -205,8 +205,8 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 | VV-008 | Officer day timeline | todo | |
 | SEC-007 | License compliance | todo | |
 | SEC-008 | MobSF scan | todo | |
-| SEC-020 | JWT lifetimes, rotation, reuse detection | todo | |
-| SEC-021 | OTP hashing, velocity | todo | |
+| SEC-020 | JWT lifetimes, rotation, reuse detection | todo | Partly done with FA-001 (2026-09-17): HS256 access 15 min, refresh 30 days rotated on every use, reuse revokes the family (`refresh_reused`), refresh bound to `device_id` for mobile clients, logout revokes the family; tests in apps/api/tests/auth/test_tokens.py. Left: RS256 + JWKS, key rotation, forced logout (WC-011). |
+| SEC-021 | OTP hashing, velocity | todo | Partly done with FA-001 (2026-09-17): HMAC-SHA256 with server pepper bound to the challenge id, constant-time compare, single use, 5-attempt lockout (15 min), 3 resends / 15 min per phone, no code or full phone in logs. Left: per-country block, IP/ASN velocity (Cloud Armor SEC-014), provider-side SMS pumping controls. |
 | SEC-022 | Input validation, CSP | todo | |
 | SEC-027 | LLM calls: no PII | todo | |
 | SEC-028 | Admin re-auth | todo | |

@@ -1,7 +1,12 @@
 /**
- * Stub API client. Base URL comes from NEXT_PUBLIC_API_URL; when unset the in-app mock
- * (app/api/mock) is used so the console runs and the Playwright smoke test passes without
- * a backend. Errors follow RFC 9457 problem+json and are surfaced as ApiError.
+ * API client. Base URL comes from NEXT_PUBLIC_API_URL (e.g. http://localhost:8000); when unset
+ * the in-app mock (app/api/mock) is used so the console runs and the Playwright smoke test
+ * passes without a backend. Paths include the API version (`v1/...`). Errors follow RFC 9457
+ * problem+json with a stable `code` and are surfaced as ApiError.
+ *
+ * Tokens (FA-001 / SEC-020): the access token (15 min) lives in memory only; the refresh token
+ * (30 days, rotated) is kept in an httpOnly cookie by the Next route handlers under
+ * /api/session, so it is never readable from page JavaScript after login.
  */
 
 export const API_BASE_URL: string = (process.env.NEXT_PUBLIC_API_URL ?? "/api/mock").replace(
@@ -15,8 +20,14 @@ export interface ProblemDetails {
   status: number;
   detail?: string;
   instance?: string;
-  /** FarmerApp extension: per-field validation errors. */
-  errors?: Record<string, string[]>;
+  /** Stable machine-readable code (e.g. `otp_locked`). */
+  code?: string;
+  /** Validation problems: `{ loc, msg, type }` per field. */
+  errors?: Array<{ loc: string[]; msg?: string; type?: string }>;
+  /** Seconds until a locked / rate-limited action may be retried. */
+  retry_after?: number;
+  /** Wrong-code attempts left before lockout. */
+  attempts_left?: number;
   [key: string]: unknown;
 }
 
@@ -97,21 +108,96 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   return (await res.json()) as T;
 }
 
-// ---- Auth endpoints (shape to be confirmed against apps/api OpenAPI) ----
+// ---- Auth endpoints (apps/api/openapi.yaml: sendOtp, verifyOtp, refreshToken, logout, getMe) ----
 
-export interface OtpRequestResponse {
-  requestId: string;
-  expiresInSeconds: number;
+export type UserRole =
+  | "owner"
+  | "director"
+  | "cluster_head"
+  | "auditor"
+  | "store_manager"
+  | "accountant"
+  | "field_officer"
+  | "agronomist"
+  | "tenant_admin"
+  | "farmer";
+
+export interface AuthUser {
+  id: string;
+  tenant_id: string;
+  phone: string;
+  name: string;
+  role: UserRole | string;
+  store_id: string | null;
+  cluster_id: string | null;
+  language: string;
+  status: "active" | "disabled";
 }
 
-export interface OtpVerifyResponse {
-  accessToken: string;
-  user: { id: string; name: string; role: string; tenantId: string; tenantName: string };
+export interface OtpSendResponse {
+  challenge_id: string;
+  phone_masked: string;
+  channel: "sms" | "whatsapp";
+  expires_in: number;
+  resend_after: number;
+  resends_left: number;
 }
+
+export interface TokenResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: "Bearer";
+  expires_in: number;
+  user: AuthUser;
+}
+
+/** Access token + profile as returned by the /api/session/refresh route (no refresh token). */
+export interface SessionResponse {
+  access_token: string;
+  expires_in: number;
+  user: AuthUser;
+}
+
+export const e164 = (phone10: string): string => `+91${phone10}`;
 
 export const auth = {
-  requestOtp: (phone: string) =>
-    apiFetch<OtpRequestResponse>("auth/otp/request", { body: { phone: `+91${phone}` } }),
-  verifyOtp: (requestId: string, code: string) =>
-    apiFetch<OtpVerifyResponse>("auth/otp/verify", { body: { requestId, code } }),
+  sendOtp: (phone10: string) =>
+    apiFetch<OtpSendResponse>("v1/auth/otp/send", { body: { phone: e164(phone10) } }),
+  verifyOtp: (phone10: string, code: string) =>
+    apiFetch<TokenResponse>("v1/auth/otp/verify", {
+      body: { phone: e164(phone10), code, device_name: "console" },
+    }),
+  me: () => apiFetch<AuthUser>("v1/me"),
+};
+
+const SESSION_HEADERS = { "Content-Type": "application/json" };
+
+/** Browser-side session: access token in memory, refresh token in the httpOnly cookie. */
+export const session = {
+  /** After verifyOtp: remember the access token and hand the refresh token to the cookie route. */
+  start: async (tokens: TokenResponse): Promise<void> => {
+    setAuthToken(tokens.access_token);
+    const res = await fetch("/api/session", {
+      method: "POST",
+      headers: SESSION_HEADERS,
+      body: JSON.stringify({ refresh_token: tokens.refresh_token }),
+    });
+    if (!res.ok) throw new ApiError(await parseProblem(res));
+  },
+  /** Rotate via the cookie route; returns null (and clears the token) when signed out. */
+  refresh: async (): Promise<SessionResponse | null> => {
+    const res = await fetch("/api/session/refresh", { method: "POST" });
+    if (!res.ok) {
+      setAuthToken(null);
+      return null;
+    }
+    const data = (await res.json()) as SessionResponse;
+    setAuthToken(data.access_token);
+    return data;
+  },
+  /** Revoke the refresh family server-side and forget the access token. */
+  end: async (): Promise<void> => {
+    setAuthToken(null);
+    await fetch("/api/session", { method: "DELETE" }).catch(() => undefined);
+  },
 };

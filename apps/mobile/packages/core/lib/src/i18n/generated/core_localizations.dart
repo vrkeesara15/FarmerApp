@@ -338,6 +338,42 @@ abstract class CoreLocalizations {
   /// **'Digit {index} of 6'**
   String otpDigitLabel(int index);
 
+  /// No description provided for @otpAttemptsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} attempts left'**
+  String otpAttemptsLeft(int count);
+
+  /// No description provided for @otpLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong attempts. Try again in {minutes} min.'**
+  String otpLocked(int minutes);
+
+  /// No description provided for @otpRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many codes requested. Try again in {minutes} min.'**
+  String otpRateLimited(int minutes);
+
+  /// No description provided for @otpExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This code has expired. Request a new one.'**
+  String get otpExpired;
+
+  /// No description provided for @phoneNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This number is not registered. Ask your manager to add you.'**
+  String get phoneNotFound;
+
+  /// No description provided for @networkError.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Check your network and try again.'**
+  String get networkError;
+
   /// No description provided for @consentTitle.
   ///
   /// In en, this message translates to:

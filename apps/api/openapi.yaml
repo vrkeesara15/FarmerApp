@@ -23,6 +23,169 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /v1/auth/otp/send:
+    post:
+      tags:
+      - auth
+      summary: Send a 6-digit login code by SMS (WhatsApp fallback after 30 s)
+      operationId: sendOtp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpSendRequest'
+        required: true
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpSendResponse'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`user_not_found`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`user_disabled`'
+          content:
+            application/problem+json: {}
+        '423':
+          description: '`otp_locked`'
+          content:
+            application/problem+json: {}
+        '429':
+          description: '`otp_rate_limited`'
+          content:
+            application/problem+json: {}
+  /v1/auth/otp/verify:
+    post:
+      tags:
+      - auth
+      summary: Verify the code; returns access + refresh tokens and the user profile
+      operationId: verifyOtp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpVerifyRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`otp_invalid`, `otp_expired`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`otp_not_found`, `user_not_found`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`user_disabled`'
+          content:
+            application/problem+json: {}
+        '423':
+          description: '`otp_locked`'
+          content:
+            application/problem+json: {}
+  /v1/auth/refresh:
+    post:
+      tags:
+      - auth
+      summary: Rotate the refresh token and issue a new access token
+      operationId: refreshToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`refresh_invalid`, `refresh_expired`, `refresh_reused`, `refresh_device_mismatch`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`user_disabled`'
+          content:
+            application/problem+json: {}
+  /v1/auth/logout:
+    post:
+      tags:
+      - auth
+      summary: Revoke the refresh token family (idempotent)
+      operationId: logout
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+        required: true
+      responses:
+        '204':
+          description: Successful Response
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /v1/me:
+    get:
+      tags:
+      - me
+      summary: Profile of the authenticated user
+      operationId: getMe
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`user_disabled`'
+          content:
+            application/problem+json: {}
 components:
   schemas:
     HealthResponse:
@@ -47,6 +210,193 @@ components:
       - version
       - env
       title: HealthResponse
+    LogoutRequest:
+      properties:
+        refresh_token:
+          type: string
+          maxLength: 256
+          minLength: 1
+          title: Refresh Token
+      type: object
+      required:
+      - refresh_token
+      title: LogoutRequest
+    OtpSendRequest:
+      properties:
+        phone:
+          type: string
+          title: Phone
+        purpose:
+          type: string
+          const: login
+          title: Purpose
+          default: login
+        device_id:
+          anyOf:
+          - type: string
+            maxLength: 128
+            minLength: 1
+          - type: 'null'
+          title: Device Id
+      type: object
+      required:
+      - phone
+      title: OtpSendRequest
+    OtpSendResponse:
+      properties:
+        challenge_id:
+          type: string
+          format: uuid
+          title: Challenge Id
+        phone_masked:
+          type: string
+          title: Phone Masked
+        channel:
+          type: string
+          enum:
+          - sms
+          - whatsapp
+          title: Channel
+        expires_in:
+          type: integer
+          title: Expires In
+          description: Seconds until the code expires.
+        resend_after:
+          type: integer
+          title: Resend After
+          description: Seconds the client should wait before offering resend.
+        resends_left:
+          type: integer
+          title: Resends Left
+      type: object
+      required:
+      - challenge_id
+      - phone_masked
+      - channel
+      - expires_in
+      - resend_after
+      - resends_left
+      title: OtpSendResponse
+    OtpVerifyRequest:
+      properties:
+        phone:
+          type: string
+          title: Phone
+        code:
+          type: string
+          pattern: ^\d{6}$
+          title: Code
+        device_id:
+          anyOf:
+          - type: string
+            maxLength: 128
+            minLength: 1
+          - type: 'null'
+          title: Device Id
+        device_name:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Device Name
+      type: object
+      required:
+      - phone
+      - code
+      title: OtpVerifyRequest
+    RefreshRequest:
+      properties:
+        refresh_token:
+          type: string
+          maxLength: 256
+          minLength: 16
+          title: Refresh Token
+        device_id:
+          anyOf:
+          - type: string
+            maxLength: 128
+            minLength: 1
+          - type: 'null'
+          title: Device Id
+      type: object
+      required:
+      - refresh_token
+      title: RefreshRequest
+    TokenResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        refresh_token:
+          type: string
+          title: Refresh Token
+        token_type:
+          type: string
+          const: Bearer
+          title: Token Type
+          default: Bearer
+        expires_in:
+          type: integer
+          title: Expires In
+          description: Access token lifetime in seconds.
+        user:
+          $ref: '#/components/schemas/UserOut'
+      type: object
+      required:
+      - access_token
+      - refresh_token
+      - expires_in
+      - user
+      title: TokenResponse
+    UserOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        phone:
+          type: string
+          title: Phone
+        name:
+          type: string
+          title: Name
+        role:
+          type: string
+          title: Role
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+        language:
+          type: string
+          title: Language
+        status:
+          type: string
+          title: Status
+      type: object
+      required:
+      - id
+      - tenant_id
+      - phone
+      - name
+      - role
+      - store_id
+      - cluster_id
+      - language
+      - status
+      title: UserOut
     Problem:
       type: object
       required:

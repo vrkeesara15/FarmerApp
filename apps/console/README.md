@@ -35,4 +35,6 @@ All UI strings live in `messages/en.json` (source of truth and the type). `te/kn
 
 ## API
 
-`lib/api.ts` wraps `fetch`, base URL `NEXT_PUBLIC_API_URL` (default `/api/mock`), JSON in/out, RFC 9457 `problem+json` → `ApiError { status, problem }`. The mock (`app/api/mock/[...path]/route.ts`) accepts any `+91` mobile and OTP `123456`.
+`lib/api.ts` wraps `fetch`, base URL `NEXT_PUBLIC_API_URL` (default `/api/mock`), JSON in/out, RFC 9457 `problem+json` → `ApiError { status, problem }` with the stable `problem.code` (`otp_locked`, `otp_rate_limited`, ...). Paths carry the API version (`v1/auth/otp/send`).
+
+Auth (FA-001): `auth.sendOtp` / `auth.verifyOtp` call the real `/v1/auth/*` endpoints; the access token (15 min) is kept in memory only and the refresh token goes to an httpOnly, SameSite=Strict cookie via the Next route handlers `app/api/session` (POST store / DELETE revoke+clear) and `app/api/session/refresh` (rotate against `/v1/auth/refresh`; server-side base URL `API_URL` or `NEXT_PUBLIC_API_URL`). The mock (`app/api/mock/[...path]/route.ts`) mirrors the same shapes: any `+91` mobile, OTP `123456`, lockout after 5 wrong codes, 3 resends per 15 min, `+919999999999` = unknown number.

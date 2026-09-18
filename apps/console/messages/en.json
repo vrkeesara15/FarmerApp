@@ -58,7 +58,7 @@
     "phoneInvalid": "Enter a valid 10-digit mobile number",
     "sendOtp": "Send OTP",
     "otpTitle": "Enter the 6-digit code",
-    "otpSentTo": "We sent a code to +91 {phone}",
+    "otpSentTo": "We sent a code to {phone}",
     "otpLabel": "One-time password",
     "otpInvalid": "Enter the 6-digit code",
     "verify": "Verify and sign in",
@@ -69,22 +69,50 @@
     "ssoSoon": "SSO is not available yet",
     "failed": "Sign-in failed. Check the code and try again.",
     "success": "Signed in",
-    "devHint": "Mock API: any 10-digit number, code 123456"
+    "devHint": "Local API: seeded numbers +91 90000 0000{1..5}; mock API: any number, code 123456",
+    "attemptsLeft": "{n} attempts left.",
+    "expired": "This code has expired. Request a new one.",
+    "alreadyUsed": "That code was already used. Request a new one.",
+    "locked": "Too many wrong attempts. Try again in {minutes} min.",
+    "rateLimited": "Too many codes requested. Try again in {minutes} min.",
+    "notRegistered": "This number is not registered. Ask your tenant admin to add you.",
+    "disabled": "This account is disabled. Contact your tenant admin.",
+    "resendsLeft": "{n} resends left",
+    "resendsLeftOne": "1 resend left",
+    "sentByWhatsApp": "SMS was delayed; we sent the code on WhatsApp instead."
   },
   "home": {
     "title": "Home",
     "empty": "KPIs, trends and alerts will appear here once data flows in."
   },
-  "fieldTeam": { "title": "Field team", "empty": "Officer scorecards will appear here." },
-  "farmers": { "title": "Farmers", "empty": "The farmer directory will appear here." },
-  "stores": { "title": "Stores", "empty": "Store performance will appear here." },
+  "fieldTeam": {
+    "title": "Field team",
+    "empty": "Officer scorecards will appear here."
+  },
+  "farmers": {
+    "title": "Farmers",
+    "empty": "The farmer directory will appear here."
+  },
+  "stores": {
+    "title": "Stores",
+    "empty": "Store performance will appear here."
+  },
   "products": {
     "title": "Products",
     "empty": "The product master and label claims will appear here."
   },
-  "agronomist": { "title": "Agronomist", "empty": "The review queue will appear here." },
-  "flags": { "title": "Flags", "empty": "Validation flags will appear here." },
-  "settings": { "title": "Settings", "empty": "Tenant settings will appear here." },
+  "agronomist": {
+    "title": "Agronomist",
+    "empty": "The review queue will appear here."
+  },
+  "flags": {
+    "title": "Flags",
+    "empty": "Validation flags will appear here."
+  },
+  "settings": {
+    "title": "Settings",
+    "empty": "Tenant settings will appear here."
+  },
   "emptyState": {
     "defaultTitle": "Nothing here yet",
     "defaultHelp": "Data will appear once it is available."
@@ -142,7 +170,9 @@
     "unverified": "Unverified",
     "score": "Visit score {n} of 100"
   },
-  "ownBrand": { "label": "Own brand" },
+  "ownBrand": {
+    "label": "Own brand"
+  },
   "flagCard": {
     "rule": "Rule",
     "officer": "Officer",
@@ -158,9 +188,16 @@
     "trendDown": "Down {value} vs previous period",
     "trendFlat": "No change vs previous period"
   },
-  "dialog": { "close": "Close dialog" },
-  "searchBar": { "placeholder": "Search", "clear": "Clear search" },
-  "skeleton": { "loading": "Loading" },
+  "dialog": {
+    "close": "Close dialog"
+  },
+  "searchBar": {
+    "placeholder": "Search",
+    "clear": "Clear search"
+  },
+  "skeleton": {
+    "loading": "Loading"
+  },
   "toast": {
     "saved": "Saved",
     "error": "Something went wrong"

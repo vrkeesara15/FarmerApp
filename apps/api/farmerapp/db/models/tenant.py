@@ -19,6 +19,7 @@ class Tenant(Base, BaseColumns):
     __tablename__ = "tenant"
 
     name: Mapped[str] = mapped_column(String(200), nullable=False)
+    slug: Mapped[str | None] = mapped_column(String(50), nullable=True, unique=True)
     plan: Mapped[str] = mapped_column(String(50), nullable=False, server_default=text("'pilot'"))
     branding: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")

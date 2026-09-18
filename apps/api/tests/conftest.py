@@ -64,6 +64,8 @@ def _env() -> Iterator[None]:
     os.environ["DATABASE_URL"] = TEST_DATABASE_URL
     os.environ["APP_ENV"] = "test"
     os.environ["LOG_JSON"] = "false"
+    os.environ["OTP_PROVIDER"] = "fake"
+    os.environ["OTP_DEV_CODE"] = ""  # never accept the dev code in tests unless a test opts in
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()

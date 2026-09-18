@@ -18,6 +18,7 @@ dependencies = [
   "structlog>=24.1",
   "typer>=0.12",
   "pyyaml>=6.0",
+  "pyjwt>=2.14.0",
 ]
 
 [dependency-groups]
@@ -90,10 +91,14 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 addopts = "-q --cov=farmerapp --cov-report=term-missing --cov-fail-under=80"
 filterwarnings = ["error::DeprecationWarning:farmerapp.*"]
+markers = ["integration: talks to the docker compose services (skipped when they are down)"]
 
 [tool.coverage.run]
 branch = true
 source = ["farmerapp"]
+# SQLAlchemy's asyncio layer runs the ORM inside greenlets; without this, coverage stops
+# tracing request handlers after their first awaited query.
+concurrency = ["greenlet", "thread"]
 # Process entrypoints are exercised by containers, not unit tests (uvicorn / typer main).
 omit = ["farmerapp/jobs/__main__.py"]
 

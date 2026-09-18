@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import typer
 
+from farmerapp.jobs import seed as seed_mod
 from farmerapp.logging import configure_logging, get_logger
 from farmerapp.settings import get_settings
 
@@ -25,10 +28,19 @@ def hello(name: str = typer.Option("world", help="Who to greet.")) -> None:
 
 @cli.command()
 def seed() -> None:
-    """Load the demo tenant (5 stores, 5 officers, 200 farmers). Stub until M1-KICKOFF."""
+    """Upsert the demo tenant "Future Crop Care" (fcc) and its test users (one per role).
+
+    M1-KICKOFF adds stores, officers and farmers. Idempotent.
+    """
     _setup()
-    get_logger("farmerapp.jobs.seed").info("seed: nothing yet")
-    typer.echo("seed: nothing yet")
+    result = asyncio.run(seed_mod.run_seed())
+    get_logger("farmerapp.jobs.seed").info(
+        "seed_done", tenant=result.tenant_slug, users_created=result.users_created
+    )
+    typer.echo(
+        f"seed: tenant={result.tenant_slug} ({result.tenant_id}) "
+        f"users_created={result.users_created}"
+    )
 
 
 def main() -> None:

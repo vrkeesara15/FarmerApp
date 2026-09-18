@@ -14,8 +14,8 @@ describe("i18n t()", () => {
   });
 
   it("interpolates params", () => {
-    expect(t("login.otpSentTo", { phone: "98765 43210" })).toBe(
-      "We sent a code to +91 98765 43210",
+    expect(t("login.otpSentTo", { phone: "+91******3210" })).toBe(
+      "We sent a code to +91******3210",
     );
     expect(interpolate("{a} and {b}", { a: 1, b: "x" })).toBe("1 and x");
     expect(interpolate("{missing}", {})).toBe("{missing}");
