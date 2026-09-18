@@ -26,12 +26,16 @@ if not config.get_main_option("sqlalchemy.url"):
 
 target_metadata = Base.metadata
 
-# Tables owned by extensions (PostGIS) that autogenerate / `alembic check` must ignore.
+# Tables owned by extensions (PostGIS) that autogenerate / `alembic check` must ignore, and
+# the daily partitions of ``location_point`` (created by a SQL function, not by models).
 EXTENSION_TABLES = {"spatial_ref_sys"}
+PARTITION_PREFIX = "location_point_p"
 
 
 def include_object(obj: object, name: str | None, type_: str, *_: object) -> bool:
-    return not (type_ == "table" and name in EXTENSION_TABLES)
+    if type_ != "table" or name is None:
+        return True
+    return name not in EXTENSION_TABLES and not name.startswith(PARTITION_PREFIX)
 
 
 def run_migrations_offline() -> None:

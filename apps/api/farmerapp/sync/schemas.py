@@ -10,7 +10,16 @@ from pydantic import BaseModel, Field
 
 MAX_OPS = 200
 
-Entity = Literal["farmer", "farm", "crop_plot", "consent_record"]
+Entity = Literal[
+    "farmer",
+    "farm",
+    "crop_plot",
+    "consent_record",
+    "visit",
+    "visit_photo",
+    "duty_session",
+    "policy_acceptance",
+]
 Action = Literal["create", "update", "delete"]
 ResultStatus = Literal["applied", "duplicate", "conflict", "rejected"]
 

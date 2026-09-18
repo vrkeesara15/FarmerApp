@@ -31,7 +31,9 @@ from sqlalchemy import ColumnElement, SQLColumnExpression, false, select
 
 from farmerapp.auth.models import User, UserRole
 from farmerapp.farmers.models import Farmer
+from farmerapp.location.models import DutySession
 from farmerapp.tenants.models import Store, Village
+from farmerapp.visits.models import Visit
 
 
 class Visibility(StrEnum):
@@ -155,13 +157,93 @@ def farmer_filters(
     return filters
 
 
+# --------------------------------------------------------------------------- officers
+#: SPEC 2.6 "Officer location track": owner / director / auditor read, cluster head own
+#: cluster, field officer own; **never** store managers or other officers. Duty sessions
+#: follow the same row.
+TRACK_VISIBILITY: Mapping[UserRole, Visibility] = {
+    **DEFAULT_VISIBILITY,
+    UserRole.ACCOUNTANT: Visibility.NONE,
+    UserRole.STORE_MANAGER: Visibility.NONE,
+    UserRole.AGRONOMIST: Visibility.NONE,
+    UserRole.FARMER: Visibility.NONE,
+}
+
+
+def officer_filters(
+    actor: User, visibility: Mapping[UserRole, Visibility] = TRACK_VISIBILITY
+) -> list[ColumnElement[bool]]:
+    """Which ``user`` rows (officers) ``actor`` may see the duty / track data of."""
+    return scope_filters(actor, USER_SCOPE, visibility)
+
+
+def duty_session_filters(actor: User) -> list[ColumnElement[bool]]:
+    """Which ``duty_session`` rows ``actor`` may see (SPEC 2.6 "Officer location track")."""
+    officers = select(User.id).where(*officer_filters(actor))
+    return [DutySession.tenant_id == actor.tenant_id, DutySession.officer_id.in_(officers)]
+
+
+# --------------------------------------------------------------------------- visits
+#: Visits are officer activity about a farmer: the "Farmer profile" row of SPEC 2.6 minus
+#: the agronomist (notes are not crop data); a farmer sees visits made to them.
+VISIT_VISIBILITY: Mapping[UserRole, Visibility] = {
+    **DEFAULT_VISIBILITY,
+    UserRole.ACCOUNTANT: Visibility.NONE,
+    UserRole.AGRONOMIST: Visibility.NONE,
+}
+
+
+def visit_filters(
+    actor: User, visibility: Mapping[UserRole, Visibility] = VISIT_VISIBILITY
+) -> list[ColumnElement[bool]]:
+    """Which ``visit`` rows ``actor`` may see: by the officer's cluster / store, the
+    officer's own visits, or (farmer) visits to the farmer record linked to the login."""
+    filters: list[ColumnElement[bool]] = [Visit.tenant_id == actor.tenant_id]
+    role = UserRole(actor.role)
+    match visibility[role]:
+        case Visibility.ALL:
+            pass
+        case Visibility.CLUSTER:
+            if actor.cluster_id is None:
+                filters.append(false())
+            else:
+                officers = select(User.id).where(
+                    User.tenant_id == actor.tenant_id, User.cluster_id == actor.cluster_id
+                )
+                filters.append(Visit.officer_id.in_(officers))
+        case Visibility.STORE:
+            if actor.store_id is None:
+                filters.append(false())
+            else:
+                officers = select(User.id).where(
+                    User.tenant_id == actor.tenant_id, User.store_id == actor.store_id
+                )
+                filters.append(Visit.officer_id.in_(officers))
+        case Visibility.OWN:
+            if role == UserRole.FARMER:
+                own = select(Farmer.id).where(
+                    Farmer.tenant_id == actor.tenant_id, Farmer.user_id == actor.id
+                )
+                filters.append(Visit.farmer_id.in_(own))
+            else:
+                filters.append(Visit.officer_id == actor.id)
+        case Visibility.NONE:
+            filters.append(false())
+    return filters
+
+
 __all__ = [
     "DEFAULT_VISIBILITY",
     "FARMER_VISIBILITY",
+    "TRACK_VISIBILITY",
     "USER_SCOPE",
+    "VISIT_VISIBILITY",
     "ScopeColumns",
     "Visibility",
+    "duty_session_filters",
     "farmer_filters",
+    "officer_filters",
     "scope_filters",
     "user_scope",
+    "visit_filters",
 ]

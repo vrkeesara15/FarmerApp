@@ -88,7 +88,10 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
+# One event loop for the whole session so the app-role engine (and its warmed-up asyncpg
+# connections: PostGIS type introspection, statement caches) is shared by every test.
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 addopts = "-q --cov=farmerapp --cov-report=term-missing --cov-fail-under=80"
 filterwarnings = ["error::DeprecationWarning:farmerapp.*"]
 markers = ["integration: talks to the docker compose services (skipped when they are down)"]

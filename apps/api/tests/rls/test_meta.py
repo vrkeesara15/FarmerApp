@@ -23,6 +23,7 @@ MODEL_TABLES = sorted(t.name for t in Base.metadata.sorted_tables)
 
 def test_metadata_has_every_known_table() -> None:
     assert {"tenant", "user", "otp_challenge", "refresh_token"} <= set(MODEL_TABLES)
+    assert {"visit", "duty_session", "location_point", "policy_acceptance"} <= set(MODEL_TABLES)
     assert "alembic_version" not in MODEL_TABLES
 
 
@@ -40,7 +41,7 @@ async def test_catalogue_matches_expectations(migrate_engine: AsyncEngine) -> No
                 text(
                     "SELECT c.relname, c.relrowsecurity, c.relforcerowsecurity "
                     "FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "
-                    "WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relname = ANY(:t)"
+                    "WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p') AND c.relname = ANY(:t)"
                 ),
                 {"t": MODEL_TABLES},
             )

@@ -31,8 +31,22 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from farmerapp.db.base import Base, TenantRow
 
-#: Entities the mobile outbox may write and the changes feed reports (SPEC 8.3).
-SYNC_ENTITIES: tuple[str, ...] = ("farmer", "farm", "crop_plot", "consent_record")
+#: Entities the mobile outbox may write and the changes feed reports (SPEC 8.3). M2 adds
+#: visits, their photos, duty sessions and policy acceptances (writes land with FA-010 /
+#: FA-014 .. FA-017; the feed and the conflict rules are in place).
+SYNC_ENTITIES: tuple[str, ...] = (
+    "farmer",
+    "farm",
+    "crop_plot",
+    "consent_record",
+    "visit",
+    "visit_photo",
+    "duty_session",
+    "policy_acceptance",
+)
+#: Never in the change feed, whatever hook sees them: raw location points are high-volume
+#: telemetry the device already has (VV-001) and other officers must never receive (SPEC 2.6).
+SYNC_EXCLUDED_ENTITIES: frozenset[str] = frozenset({"location_point"})
 
 
 class SyncOp(Base, TenantRow):
@@ -67,4 +81,4 @@ class SyncChange(Base):
     actor_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
 
 
-__all__ = ["SYNC_ENTITIES", "SyncChange", "SyncOp"]
+__all__ = ["SYNC_ENTITIES", "SYNC_EXCLUDED_ENTITIES", "SyncChange", "SyncOp"]

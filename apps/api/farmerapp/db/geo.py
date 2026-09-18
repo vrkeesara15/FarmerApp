@@ -38,6 +38,22 @@ def offset(lon: float, lat: float, east_m: float, north_m: float) -> tuple[float
     return lon + dlon, lat + dlat
 
 
+EARTH_RADIUS_M = 6_371_008.8
+
+
+def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Great-circle distance in metres between two WGS84 positions (scoring, seed paths).
+
+    Within a few metres of PostGIS' spheroid ``ST_Distance`` at village scale; the database
+    stays the authority for geofence decisions (``ST_DWithin`` on ``geography``).
+    """
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = phi2 - phi1
+    dlambda = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+    return 2 * EARTH_RADIUS_M * math.asin(math.sqrt(a))
+
+
 def acres_to_m2(acres: float) -> float:
     return acres * ACRE_M2
 
@@ -49,8 +65,10 @@ def m2_to_acres(m2: float) -> float:
 __all__ = [
     "ACRE_M2",
     "EARTH_M_PER_DEG_LAT",
+    "EARTH_RADIUS_M",
     "SRID",
     "acres_to_m2",
+    "haversine_m",
     "m2_to_acres",
     "offset",
     "point_wkt",

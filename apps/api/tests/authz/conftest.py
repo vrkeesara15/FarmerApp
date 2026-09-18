@@ -26,6 +26,7 @@ from farmerapp.db.models import Tenant
 from farmerapp.db.session import set_tenant, tenant_scope
 from farmerapp.farmers.models import CropPlot, Farm, Farmer
 from farmerapp.jobs.seed import DEMO_TENANTS, SMALL, seed_demo
+from farmerapp.visits.models import Visit
 
 ROLES: tuple[str, ...] = tuple(r.value for r in UserRole)
 
@@ -39,6 +40,7 @@ class SeededTenant:
     farm_id: uuid.UUID | None = None  # a farm of ``farmer`` (route fixtures)
     crop_plot_id: uuid.UUID | None = None  # a crop plot of that farm
     crop_id: uuid.UUID | None = None  # a crop of the tenant
+    visit_id: uuid.UUID | None = None  # a visit by the role officer to ``farmer`` (M2 routes)
 
     def user(self, role: str | UserRole) -> User:
         return self.users[UserRole(role)]
@@ -105,12 +107,24 @@ async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
             else None
         )
         crop = (await session.execute(select(Crop).order_by(Crop.code))).scalars().first()
+        visit = (
+            (
+                await session.execute(
+                    select(Visit.id)
+                    .where(Visit.farmer_id == farmers[0].id)
+                    .order_by(Visit.checkin_at, Visit.id)
+                )
+            )
+            .scalars()
+            .first()
+        )
     by_role: dict[UserRole, User] = {}
     for u in users:
         by_role.setdefault(UserRole(u.role), u)
     assert set(by_role) == set(UserRole), f"seed for {slug} must have one user per role"
     assert farmers, f"seed for {slug} must have farmers"
     assert farm is not None and plot is not None and crop is not None
+    assert visit is not None, f"seed for {slug} must visit its first farmer"
     return SeededTenant(
         tenant=tenant,
         users=by_role,
@@ -119,6 +133,7 @@ async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
         farm_id=farm.id,
         crop_plot_id=plot.id,
         crop_id=crop.id,
+        visit_id=visit,
     )
 
 

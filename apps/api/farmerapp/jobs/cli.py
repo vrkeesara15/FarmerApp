@@ -11,6 +11,8 @@ import typer
 from farmerapp.jobs import purge_audit_logs as purge_mod
 from farmerapp.jobs import purge_expired as expired_mod
 from farmerapp.jobs import seed as seed_mod
+from farmerapp.location import partitions
+from farmerapp.location.models import LOCATION_RETENTION_DAYS
 from farmerapp.logging import configure_logging, get_logger
 from farmerapp.settings import get_settings
 
@@ -95,6 +97,49 @@ def purge_expired(
         typer.echo(
             f"purge-expired: tenant={report.tenant_id} upload_sessions={report.upload_sessions} "
             f"upload_chunks={report.upload_chunks} idempotency_keys={report.idempotency_keys}"
+        )
+
+
+@cli.command("ensure-partitions")
+def ensure_partitions(
+    days_ahead: int = typer.Option(
+        partitions.DEFAULT_DAYS_AHEAD, help="Create location_point partitions up to today + N."
+    ),
+) -> None:
+    """Create the missing daily partitions of ``location_point`` (yesterday .. today + N).
+    Run daily (Cloud Scheduler); idempotent."""
+    _setup()
+    created = asyncio.run(partitions.run_ensure_partitions(days_ahead))
+    typer.echo(f"ensure-partitions: days_ahead={days_ahead} created={len(created)}")
+    for name in created:
+        typer.echo(f"  {name}")
+
+
+@cli.command("purge-location-points")
+def purge_location_points(
+    retention_days: int = typer.Option(
+        LOCATION_RETENTION_DAYS,
+        help="Days of raw points to keep (SPEC 2.6: 180 minimum; the function refuses less).",
+    ),
+    apply: bool = typer.Option(
+        False, "--apply", help="Aggregate into location_daily_agg and drop the partitions."
+    ),
+) -> None:
+    """Report (default) or apply the SPEC 2.6 retention: partitions older than the window
+    are folded into ``location_daily_agg`` (km, points, first / last ts per officer and
+    day) and dropped."""
+    _setup()
+    report = asyncio.run(partitions.run_purge(retention_days=retention_days, apply=apply))
+    mode = "apply" if apply else "dry-run"
+    typer.echo(
+        f"purge-location-points ({mode}): retention_days={retention_days} "
+        f"partitions={len(report)} points={sum(r.points for r in report)}"
+    )
+    for row in report:
+        state = "dropped" if row.dropped else "kept"
+        typer.echo(
+            f"  {row.partition} day={row.day} points={row.points} "
+            f"officer_days={row.officer_days} {state}"
         )
 
 

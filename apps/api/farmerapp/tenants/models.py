@@ -4,7 +4,9 @@
 * ``store`` — a retail store / field base with a location and an optional geofence.
 * ``village`` — where farmers live; mapped to the store that serves it (so a store manager's
   "own store" scope over farmers is village -> store) with a location and an optional
-  meeting point (FA-014 / VV-003 check-in at a village meeting point).
+  meeting point (FA-014 / VV-003 check-in at a village meeting point) whose radius
+  ``meeting_point_radius_m`` falls back to the tenant's ``geofence_radius_m``
+  (``farmerapp.tenants.settings``) when NULL.
 
 All three carry the base columns and RLS (migration 0005). Spatial columns are
 ``geography(..., 4326)``; see ``farmerapp.db.geo``.
@@ -16,7 +18,7 @@ import uuid
 from typing import Any
 
 from geoalchemy2 import Geography
-from sqlalchemy import ForeignKey, Index, String, UniqueConstraint, text
+from sqlalchemy import CheckConstraint, ForeignKey, Index, Integer, String, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from farmerapp.db.base import Base, BaseColumns
@@ -73,6 +75,10 @@ class Village(Base, BaseColumns):
         UniqueConstraint("tenant_id", "district", "mandal", "name"),
         Index("ix_village_store_id", "store_id"),
         Index("ix_village_location", "location", postgresql_using="gist"),
+        CheckConstraint(
+            "meeting_point_radius_m IS NULL OR meeting_point_radius_m > 0",
+            name="meeting_point_radius_m",
+        ),
     )
 
     name: Mapped[str] = mapped_column(String(120), nullable=False)
@@ -90,6 +96,8 @@ class Village(Base, BaseColumns):
     meeting_point: Mapped[Any] = mapped_column(
         Geography(geometry_type="POINT", srid=SRID, spatial_index=False), nullable=True
     )
+    # VV-003: NULL -> tenant setting ``geofence_radius_m`` (default 150 m).
+    meeting_point_radius_m: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 __all__ = ["DEFAULT_STATE", "Cluster", "Store", "Village"]

@@ -23,17 +23,24 @@ farmerapp/
                   scope.py (SPEC 2.6 matrix as SQLAlchemy filters)
   users/          /v1/users list/get/patch (minimal WC-011 slice; cursor pagination in api/pagination.py)
   audit/          GET /v1/audit-logs (FA-006 read endpoint for the WC-103 viewer)
-  tenants/        models: cluster, store, village (M1-KICKOFF; SPEC 8.2 "store / cluster")
+  tenants/        models: cluster, store, village (M1-KICKOFF; SPEC 8.2 "store / cluster");
+                  settings.py: typed tenant.settings with the M2 defaults (geofence, durations, policy)
   catalog/        crops.py: crop master + the six pilot crops (M3 adds products, SKUs, label claims)
   farmers/        models: farmer, farm (PostGIS boundary, generated centroid + area), crop_plot,
                   consent_record (append-only); schemas.py read models; GET /v1/farmers[/{id}] (WC-003 foothold)
+  location/       models: duty_session, location_point (partitioned by day), location_daily_agg,
+                  policy_acceptance (append-only); partitions.py (ensure / purge helpers over the SQL
+                  functions); GET /v1/duty-sessions, GET /v1/officers/{id}/track (M2-KICKOFF)
+  visits/         models: visit, visit_photo, visit_confirmation; scoring.py (VV-004 / VV-005);
+                  GET /v1/visits[/{id}] (M2-KICKOFF)
   db/             async engine/session, tenant binding (set_tenant / tenant_scope / job_session),
                   rls.py (enable_rls for migrations, rls_violations for the meta-test), Base, models,
                   audit.py (FA-006 actor context + flush listener + redaction + audit.record),
                   geo.py (EWKT helpers, acres <-> m2; no shapely)
   worker/         Pub/Sub push receiver + dispatch table by topic (SPEC 9.2)
   jobs/           typer CLI (hello, seed = the Telangana demo tenant "fcc" + "gfl" (see "Seed data");
-                  purge-audit-logs = NF-012 dry run)
+                  purge-audit-logs = NF-012 dry run; purge-expired; ensure-partitions and
+                  purge-location-points = SPEC 2.6 location retention); seed_m2.py = M2 rows
 alembic/          async Alembic env + migrations
 scripts/          export_openapi.py (writes/checks openapi.yaml)
 tests/            pytest (needs the compose db: `make db`)
@@ -74,6 +81,16 @@ The `SMALL` profile (`--small`; what the test fixtures use) keeps the structure 
 farmers and 2 villages per store. Counts of the full profile: 3 clusters, 6 stores, 48 villages,
 12 crops, 210 farmers, 285 farms, 403 crop plots, 338 consent records (`make seed` prints them).
 
+M2 (`farmerapp/jobs/seed_m2.py`, since M2-KICKOFF): for every officer (5 + 1) a location policy
+acceptance and, per duty day (`SeedProfile.duty_days`: 7 ending on 2026-09-18; `SMALL` 2), a duty
+session 09:00-~18:00 IST from the store (one in seven auto-ended at 20:00), a track with a point
+every 2 min moving / 10 min stationary carrying every VV-002 field (~150 points a day), 4-7 visits
+(`SMALL` 2-3) to the officer's farmers — 80 % inside the farm geofence, some outside, some approved
+overrides, meetings at the village meeting point — with 1-3 photos (EXIF near the check-in, a few
+gallery / far ones), ~60 % confirmed by SMS OTP / push / QR, 15 % shorter than 5 minutes, a few
+mock-location / clock-drift days, and scores + statuses from `farmerapp.visits.scoring`. Full
+profile: 6 policy acceptances, 42 duty sessions, 216 visits, 400 visit photos, 137 confirmations, 6,108 location points; 2.0 s for the whole seed, 0.3 s when nothing is missing. The seed creates the daily `location_point` partitions it needs first.
+
 ## Farmers, farms, consent (M1 data model)
 
 Tables `cluster`, `store`, `village`, `crop`, `farmer`, `farm`, `crop_plot`, `consent_record`
@@ -93,6 +110,61 @@ Tables `cluster`, `store`, `village`, `crop`, `farmer`, `farm`, `crop_plot`, `co
 - `GET /v1/farmers` / `GET /v1/farmers/{id}` (farms with crop plots, consent history) use
   `farmerapp.auth.scope.farmer_filters(actor)`; the agronomist gets a masked phone and no
   landmark.
+
+## Duty, location and visits (M2 data model)
+
+Tables `duty_session`, `location_point`, `location_daily_agg`, `policy_acceptance`, `visit`,
+`visit_photo`, `visit_confirmation` (Alembic `0007`), all with `tenant_id` and RLS. Notes for
+the loop:
+
+- `location_point` is **declaratively partitioned by day** (`PARTITION BY RANGE (ts)`, UTC
+  days, primary key `(id, ts)`, no DEFAULT partition). Partitions `location_point_pYYYYMMDD`
+  are created by the SQL function `ensure_location_partitions(from_day, to_day)` /
+  `(days_ahead)` (SECURITY DEFINER, owned by the migrate role, EXECUTE granted to the app
+  role) which also enables + forces RLS and installs both policies on each child: run
+  `python -m farmerapp.jobs ensure-partitions` daily (yesterday .. today + 7). A point whose
+  day has no partition fails loudly. Not audited, never in the sync feed; every point has
+  `accuracy_m, speed_mps, bearing, battery_pct, is_mock, is_rooted, clock_drift_s, provider,
+  received_at` (VV-002 / FA-028).
+- Retention (SPEC 2.6): `python -m farmerapp.jobs purge-location-points` reports the
+  partitions older than 180 days (dry run); `--apply` folds each into `location_daily_agg`
+  (km from consecutive point distances, points, first / last ts per officer and day) and
+  drops it. The function refuses a window under 180 days.
+- `duty_session`: `end_reason` `manual | auto_time | auto_idle | forced` (VV-007; both
+  `end_at` and `end_reason` or neither), `policy_version` = the accepted location policy
+  (VV-010), `km` / `stops` filled by track processing (VV-006).
+- `policy_acceptance` (FA-011 / VV-010) is append-only: a newer policy version is a new row;
+  the latest per `(user_id, policy_key)` is the accepted version. The version the app must
+  accept is the tenant setting `location_policy_version`.
+- `visit`: `geofence_result` `inside | outside | meeting_point | override` (an override needs
+  `override_note`; `override_approved_by` is the cluster head), generated `duration_s`,
+  `score` / `score_components` / `status` from `farmerapp.visits.scoring.score_visit_row`
+  (VV-004: geofence 30, confirmation 30, in-app photo with EXIF time within the visit
+  window and GPS within 150 m 20, duration >= tenant `min_visit_duration_s` 10, device
+  integrity 10; VV-005: verified >= 70, partial 40-69, unverified < 40, `open` until
+  check-out), `device_integrity {is_mock, is_rooted, clock_drift_s}`, `client_visit_id`
+  (device id, unique per tenant). The write endpoints (check-in, photos, confirmation,
+  check-out) are FA-014 .. FA-017; call `score_visit_row` at check-out and on confirmation.
+- `visit_photo` keeps EXIF time + point, `taken_in_app`, device and server time, `sha256`
+  and `phash` (VA-E08); `visit_confirmation` the channel, OTP challenge, farmer phone last4
+  and confirming device (VA-E05), later the FM-011 rating.
+- Tenant settings (`farmerapp/tenants/settings.py`, `tenant_settings(tenant.settings)`):
+  `geofence_radius_m` 150, `min_visit_duration_s` 300, `auto_duty_end_local_time` "20:00",
+  `idle_end_minutes` 60, `location_policy_version` "2026-09-v1" (TODO-LEGAL),
+  `sampling.moving_s` 120 / `stationary_s` 600 / `upload_s` 900; `village.meeting_point_radius_m`
+  overrides the radius per village.
+- Reads: `GET /v1/visits` (`officer_id`, `farmer_id`, `from`, `to`, `status`; cursor) and
+  `GET /v1/visits/{id}` (photos, confirmations, score components) scoped by
+  `farmerapp.auth.scope.visit_filters`; `GET /v1/duty-sessions` and
+  `GET /v1/officers/{id}/track?day=YYYY-MM-DD` (IST day) scoped by `TRACK_VISIBILITY`
+  (SPEC 2.6 "Officer location track": owner / director / auditor / tenant admin all,
+  cluster head own cluster, officer self only; store managers, accountants, agronomists and
+  farmers are not on the routes).
+- Sync: `visit`, `visit_photo`, `duty_session`, `policy_acceptance` are in `SYNC_ENTITIES`
+  and the change feed; conflict rules `merge_fields` for visit / duty_session with
+  `SERVER_OWNED_FIELDS` (score, status, confirmation, geofence decision; km, stops, and the
+  end of an auto-ended session), `server_wins` for photos and acceptances. Their write ops
+  are rejected `unsupported_action` until the FA-010 / FA-014 paths land.
 
 ## Farmer registration writes (FA-012 / FA-013)
 

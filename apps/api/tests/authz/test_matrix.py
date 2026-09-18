@@ -110,6 +110,15 @@ def _target_plot_id(ctx: Ctx) -> dict[str, str]:
     return {"id": str(ctx.target.crop_plot_id)}
 
 
+def _target_visit_id(ctx: Ctx) -> dict[str, str]:
+    return {"id": str(ctx.target.visit_id)}
+
+
+def _target_officer_id(ctx: Ctx) -> dict[str, str]:
+    # The role officer: for the field_officer row of the matrix this is the actor (own track).
+    return {"id": str(ctx.target.user(UserRole.FIELD_OFFICER).id)}
+
+
 def _random_upload(_ctx: Ctx) -> dict[str, str]:
     # Uploads are private to the actor who started them: any id is a 404 for everyone else.
     return {"upload_id": "00000000-0000-0000-0000-000000000000", "index": "0"}
@@ -182,6 +191,10 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
     "PUT /v1/uploads/{upload_id}/chunks/{index}": RouteFixture(path_params=_random_upload),
     "POST /v1/uploads/{upload_id}/complete": RouteFixture(path_params=_random_upload),
     "GET /v1/blobs/signed-url": RouteFixture(query={"uri": "gs://photos/nothing/here"}),
+    "GET /v1/visits/{id}": RouteFixture(path_params=_target_visit_id),
+    "GET /v1/officers/{id}/track": RouteFixture(
+        path_params=_target_officer_id, query={"day": "2026-09-18"}
+    ),
 }
 
 

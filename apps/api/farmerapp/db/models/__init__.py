@@ -10,9 +10,11 @@ from farmerapp.catalog.crops import Crop
 from farmerapp.db.models.audit_log import AuditLog
 from farmerapp.db.models.tenant import Tenant
 from farmerapp.farmers.models import ConsentRecord, CropPlot, Farm, Farmer, FarmPhoto
+from farmerapp.location.models import DutySession, LocationDailyAgg, LocationPoint, PolicyAcceptance
 from farmerapp.sync.models import SyncChange, SyncOp
 from farmerapp.tenants.models import Cluster, Store, Village
 from farmerapp.uploads.models import UploadChunk, UploadSession
+from farmerapp.visits.models import Visit, VisitConfirmation, VisitPhoto
 
 __all__ = [
     "AuditLog",
@@ -20,11 +22,15 @@ __all__ = [
     "ConsentRecord",
     "Crop",
     "CropPlot",
+    "DutySession",
     "Farm",
     "FarmPhoto",
     "Farmer",
     "IdempotencyKey",
+    "LocationDailyAgg",
+    "LocationPoint",
     "OtpChallenge",
+    "PolicyAcceptance",
     "RefreshToken",
     "Store",
     "SyncChange",
@@ -34,4 +40,7 @@ __all__ = [
     "UploadSession",
     "User",
     "Village",
+    "Visit",
+    "VisitConfirmation",
+    "VisitPhoto",
 ]

@@ -14,11 +14,11 @@ from datetime import UTC, datetime
 from sqlalchemy.orm import Session
 
 from farmerapp.db import audit
-from farmerapp.sync.models import SYNC_ENTITIES, SyncChange
+from farmerapp.sync.models import SYNC_ENTITIES, SYNC_EXCLUDED_ENTITIES, SyncChange
 
 
 def record_change(session: Session, change: audit.Change) -> None:
-    if change.table not in SYNC_ENTITIES:
+    if change.table in SYNC_EXCLUDED_ENTITIES or change.table not in SYNC_ENTITIES:
         return
     who = audit.current_actor()
     session.add(

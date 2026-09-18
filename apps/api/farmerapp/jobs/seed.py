@@ -21,6 +21,12 @@ Runs as the app role under RLS (FA-003): every demo tenant has a fixed id (uuid5
 and is seeded inside its own ``tenant_scope``; writes are attributed to the system actor in
 the audit trail (FA-006). Farms are inserted with ``eager_defaults``, so the database's
 generated ``centroid`` / ``area_acres_computed`` come back in the same flush.
+
+M2 (``farmerapp.jobs.seed_m2``): for every officer, ``SeedProfile.duty_days`` days of duty
+sessions ending on ``SEED_TODAY`` with location points, visits (photos, confirmations,
+VV-004 scores) and a policy acceptance. The daily ``location_point`` partitions for that
+window are created first (``ensure_location_partitions``; the function is callable by the
+app role).
 """
 
 from __future__ import annotations
@@ -60,6 +66,8 @@ from farmerapp.farmers.models import (
     Season,
     SoilType,
 )
+from farmerapp.jobs.seed_m2 import M2Generator, M2Profile
+from farmerapp.location import partitions
 from farmerapp.tenants.models import Cluster, Store, Village
 
 DemoUser = tuple[str, str, UserRole, str]  # (phone, name, role, language)
@@ -130,10 +138,32 @@ class SeedProfile:
 
     farmers: Mapping[str, int]  # slug -> farmers
     villages_per_store: int
+    duty_days: int = 7  # M2: duty days per officer, ending on SEED_TODAY
+    visits_per_day: tuple[int, int] = (4, 7)  # M2: visits per officer-day (min, max)
+    sparse_tracks: bool = False  # M2: ~25 points a day instead of ~150 (fixtures)
+    fixed_outcomes: bool = False  # M2: one verified + one partial visit per officer (fixtures)
+
+    @property
+    def m2(self) -> M2Profile:
+        return M2Profile(
+            duty_days=self.duty_days,
+            visits_per_day=self.visits_per_day,
+            sparse=self.sparse_tracks,
+            fixed_outcomes=self.fixed_outcomes,
+        )
 
 
 FULL = SeedProfile(farmers={"fcc": 200, "gfl": 10}, villages_per_store=8)
-SMALL = SeedProfile(farmers={"fcc": 15, "gfl": 4}, villages_per_store=2)
+#: Test fixtures (``world``): cheap on purpose — one duty day per officer with a sparse track
+#: and two visits (verified + partial); the bulk M2 data is the FULL profile only.
+SMALL = SeedProfile(
+    farmers={"fcc": 15, "gfl": 4},
+    villages_per_store=2,
+    duty_days=1,
+    visits_per_day=(2, 2),
+    sparse_tracks=True,
+    fixed_outcomes=True,
+)
 
 DEMO_TENANT_NAME = "Future Crop Care"
 DEMO_TENANT_SLUG = "fcc"
@@ -278,7 +308,8 @@ class SeedResult:
 
 
 SEEDED_TABLES = ("cluster", "store", "village", "crop", "farmer", "farm", "crop_plot",
-                 "consent_record")  # fmt: skip
+                 "consent_record", "policy_acceptance", "duty_session", "visit", "visit_photo",
+                 "visit_confirmation", "location_point")  # fmt: skip
 
 
 # --------------------------------------------------------------------------- generation
@@ -552,6 +583,16 @@ def _generate(
             if withdrawn:
                 later = registered_at + timedelta(days=rng.randint(5, 40))
                 out.add(_consent(farmer, officer, ConsentPurpose.MARKETING, withdrawn_at=later))
+    # M2: duty sessions, tracks, visits, photos, confirmations, policy acceptances.
+    M2Generator(
+        tid,
+        rng,
+        profile.m2,
+        today=SEED_TODAY,
+        users=list(users_by_phone.values()),
+        rows=out.rows,
+        add=out.add,
+    ).generate()
     return out
 
 
@@ -654,6 +695,12 @@ async def _seed_tenant(
 
     users, users_created = await _seed_users(session, demo, tenant)
     generated = _generate(demo, profile, users, rng)
+    # Daily partitions for the M2 tracks (UTC days around the IST duty days).
+    await partitions.ensure_partitions(
+        session,
+        from_day=SEED_TODAY - timedelta(days=profile.duty_days),
+        to_day=SEED_TODAY + timedelta(days=1),
+    )
     existing = await _existing_ids(session, tenant.id)
     created: dict[str, int] = {}
     totals: dict[str, int] = {}

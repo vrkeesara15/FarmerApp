@@ -8,6 +8,10 @@
 * Every test runs inside a transaction that is rolled back. Rows are written under a tenant
   scope (``farmerapp.db.session.tenant_scope``) because the app role cannot write a row whose
   tenant is not the bound one (FA-003).
+* One event loop and one app-role engine for the whole session (``pyproject.toml``
+  ``asyncio_default_*_loop_scope = "session"``): a pooled asyncpg connection is reused across
+  tests, so the per-connection warm-up (PostGIS type introspection, statement caches; ~0.3 s)
+  is paid once instead of once per test.
 """
 
 from __future__ import annotations
@@ -115,11 +119,20 @@ async def migrate_engine(migrated_database: str) -> AsyncIterator[AsyncEngine]:
         await engine.dispose()
 
 
+@pytest.fixture(scope="session")
+async def app_engine(migrated_database: str) -> AsyncIterator[AsyncEngine]:
+    """The app-role engine shared by every test (connections are reused, see module doc)."""
+    engine = create_async_engine(migrated_database, pool_size=2, max_overflow=2)
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
+
+
 @pytest.fixture
-async def db_session(migrated_database: str) -> AsyncIterator[AsyncSession]:
+async def db_session(app_engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
     """An app-role session inside an outer transaction that is always rolled back."""
-    engine = create_async_engine(migrated_database)
-    async with engine.connect() as conn:
+    async with app_engine.connect() as conn:
         trans = await conn.begin()
         session = AsyncSession(
             bind=conn, expire_on_commit=False, join_transaction_mode="create_savepoint"
@@ -129,7 +142,6 @@ async def db_session(migrated_database: str) -> AsyncIterator[AsyncSession]:
         finally:
             await session.close()
             await trans.rollback()
-    await engine.dispose()
 
 
 @pytest.fixture

@@ -1154,6 +1154,314 @@ paths:
       - field_officer
       - store_manager
       - tenant_admin
+  /v1/visits:
+    get:
+      tags:
+      - visits
+      summary: Visits visible to the caller (tenant, cluster, store, own or to self), oldest first
+      operationId: listVisits
+      parameters:
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Officer user id.
+          title: Officer Id
+        description: Officer user id.
+      - name: farmer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: Check-in at or after (RFC 3339).
+          title: From
+        description: Check-in at or after (RFC 3339).
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: Check-in before (RFC 3339).
+          title: To
+        description: Check-in before (RFC 3339).
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/VisitStatus'
+          - type: 'null'
+          title: Status
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOut_VisitOut_'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/visits/{id}:
+    get:
+      tags:
+      - visits
+      summary: One visit with photos, farmer confirmation and VV-004 score components
+      operationId: getVisit
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/duty-sessions:
+    get:
+      tags:
+      - duty
+      summary: Duty sessions of the officers the caller may see (own for officers), oldest first
+      operationId: listDutySessions
+      parameters:
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Officer user id.
+          title: Officer Id
+        description: Officer user id.
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: Started at or after (RFC 3339).
+          title: From
+        description: Started at or after (RFC 3339).
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: Started before (RFC 3339).
+          title: To
+        description: Started before (RFC 3339).
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOut_DutySessionOut_'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - tenant_admin
+  /v1/officers/{id}/track:
+    get:
+      tags:
+      - duty
+      summary: An officer's location points for one IST day (own day for officers)
+      operationId: getOfficerTrack
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: day
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          description: Local (IST) calendar day, YYYY-MM-DD.
+          title: Day
+        description: Local (IST) calendar day, YYYY-MM-DD.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - tenant_admin
   /v1/sync:
     post:
       tags:
@@ -1996,6 +2304,128 @@ components:
       - maturity
       - harvested
       title: CropStage
+    DeviceIntegrityOut:
+      properties:
+        is_mock:
+          type: boolean
+          title: Is Mock
+        is_rooted:
+          type: boolean
+          title: Is Rooted
+        clock_drift_s:
+          type: integer
+          title: Clock Drift S
+      type: object
+      required:
+      - is_mock
+      - is_rooted
+      - clock_drift_s
+      title: DeviceIntegrityOut
+    DutySessionOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        start_at:
+          type: string
+          format: date-time
+          title: Start At
+        end_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End At
+        start_point:
+          anyOf:
+          - $ref: '#/components/schemas/LatLon'
+          - type: 'null'
+        end_point:
+          anyOf:
+          - $ref: '#/components/schemas/LatLon'
+          - type: 'null'
+        km:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Km
+          description: Computed by the track processing (VV-006).
+        stops:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Stops
+        end_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: End Reason
+        policy_version:
+          type: string
+          title: Policy Version
+        device_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Id
+        app_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: App Version
+        duration_s:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Duration S
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - officer_id
+      - start_at
+      - end_at
+      - start_point
+      - end_point
+      - km
+      - stops
+      - end_reason
+      - policy_version
+      - device_id
+      - app_version
+      - duration_s
+      - created_at
+      - updated_at
+      - version
+      title: DutySessionOut
     FarmCreate:
       properties:
         id:
@@ -2651,6 +3081,71 @@ components:
       - lat
       - lon
       title: LatLon
+    LocationPointOut:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        lat:
+          type: number
+          title: Lat
+        lon:
+          type: number
+          title: Lon
+        accuracy_m:
+          type: number
+          title: Accuracy M
+        speed_mps:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Speed Mps
+        bearing:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Bearing
+        battery_pct:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Battery Pct
+        is_mock:
+          type: boolean
+          title: Is Mock
+        is_rooted:
+          type: boolean
+          title: Is Rooted
+        clock_drift_s:
+          type: integer
+          title: Clock Drift S
+        provider:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider
+        duty_session_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Duty Session Id
+      type: object
+      required:
+      - ts
+      - lat
+      - lon
+      - accuracy_m
+      - speed_mps
+      - bearing
+      - battery_pct
+      - is_mock
+      - is_rooted
+      - clock_drift_s
+      - provider
+      - duty_session_id
+      title: LocationPointOut
     LogoutRequest:
       properties:
         refresh_token:
@@ -2761,6 +3256,22 @@ components:
       required:
       - items
       title: PageOut[AuditLogOut]
+    PageOut_DutySessionOut_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/DutySessionOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: PageOut[DutySessionOut]
     PageOut_FarmerOut_:
       properties:
         items:
@@ -2793,6 +3304,22 @@ components:
       required:
       - items
       title: PageOut[UserOut]
+    PageOut_VisitOut_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/VisitOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: PageOut[VisitOut]
     PhoneVerificationTokenOut:
       properties:
         phone_verification_token:
@@ -2941,6 +3468,10 @@ components:
           - farm
           - crop_plot
           - consent_record
+          - visit
+          - visit_photo
+          - duty_session
+          - policy_acceptance
           title: Entity
         action:
           type: string
@@ -3014,6 +3545,10 @@ components:
           - farm
           - crop_plot
           - consent_record
+          - visit
+          - visit_photo
+          - duty_session
+          - policy_acceptance
           title: Entity
         action:
           type: string
@@ -3164,6 +3699,32 @@ components:
       - expires_in
       - user
       title: TokenResponse
+    TrackOut:
+      properties:
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        day:
+          type: string
+          format: date
+          title: Day
+          description: Local (IST) day the points belong to.
+        count:
+          type: integer
+          title: Count
+        points:
+          items:
+            $ref: '#/components/schemas/LocationPointOut'
+          type: array
+          title: Points
+      type: object
+      required:
+      - officer_id
+      - day
+      - count
+      - points
+      title: TrackOut
     UploadCompleteOut:
       properties:
         upload_id:
@@ -3388,6 +3949,463 @@ components:
       type: object
       title: UserUpdate
       description: 'PATCH body: only the fields present are changed; ``null`` clears store/cluster.'
+    VisitConfirmationOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        channel:
+          type: string
+          title: Channel
+        otp_challenge_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Otp Challenge Id
+        farmer_phone_last4:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Farmer Phone Last4
+        confirmed_at:
+          type: string
+          format: date-time
+          title: Confirmed At
+        confirmed_via_device_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Confirmed Via Device Id
+        rating:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Rating
+        rating_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Rating Reason
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - channel
+      - otp_challenge_id
+      - farmer_phone_last4
+      - confirmed_at
+      - confirmed_via_device_id
+      - rating
+      - rating_reason
+      - created_at
+      title: VisitConfirmationOut
+    VisitDetailOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        farm_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farm Id
+        village_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Village Id
+        purpose:
+          type: string
+          title: Purpose
+        checkin_at:
+          type: string
+          format: date-time
+          title: Checkin At
+        checkout_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Checkout At
+        checkin_point:
+          $ref: '#/components/schemas/LatLon'
+        checkin_accuracy_m:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Checkin Accuracy M
+        checkout_point:
+          anyOf:
+          - $ref: '#/components/schemas/LatLon'
+          - type: 'null'
+        geofence_result:
+          type: string
+          title: Geofence Result
+        override_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Override Note
+        override_approved_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Override Approved By
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+        crop_stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Crop Stage
+        duration_s:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Duration S
+          description: Generated by the database (FA-017).
+        score:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Score
+          description: VV-004, 0-100; null while open.
+        status:
+          type: string
+          title: Status
+          description: 'VV-005: verified | partial | unverified | open.'
+        confirmation_channel:
+          type: string
+          title: Confirmation Channel
+        confirmed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Confirmed At
+        device_integrity:
+          $ref: '#/components/schemas/DeviceIntegrityOut'
+        client_visit_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Client Visit Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+        score_components:
+          anyOf:
+          - additionalProperties:
+              type: integer
+            type: object
+          - type: 'null'
+          title: Score Components
+        photos:
+          items:
+            $ref: '#/components/schemas/VisitPhotoOut'
+          type: array
+          title: Photos
+        confirmations:
+          items:
+            $ref: '#/components/schemas/VisitConfirmationOut'
+          type: array
+          title: Confirmations
+      type: object
+      required:
+      - id
+      - tenant_id
+      - officer_id
+      - farmer_id
+      - farm_id
+      - village_id
+      - purpose
+      - checkin_at
+      - checkout_at
+      - checkin_point
+      - checkin_accuracy_m
+      - checkout_point
+      - geofence_result
+      - override_note
+      - override_approved_by
+      - notes
+      - crop_stage
+      - duration_s
+      - score
+      - status
+      - confirmation_channel
+      - confirmed_at
+      - device_integrity
+      - client_visit_id
+      - created_at
+      - updated_at
+      - version
+      - score_components
+      title: VisitDetailOut
+      description: One visit with its photos, confirmations and the VV-004 score components.
+    VisitOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        farm_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farm Id
+        village_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Village Id
+        purpose:
+          type: string
+          title: Purpose
+        checkin_at:
+          type: string
+          format: date-time
+          title: Checkin At
+        checkout_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Checkout At
+        checkin_point:
+          $ref: '#/components/schemas/LatLon'
+        checkin_accuracy_m:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Checkin Accuracy M
+        checkout_point:
+          anyOf:
+          - $ref: '#/components/schemas/LatLon'
+          - type: 'null'
+        geofence_result:
+          type: string
+          title: Geofence Result
+        override_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Override Note
+        override_approved_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Override Approved By
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+        crop_stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Crop Stage
+        duration_s:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Duration S
+          description: Generated by the database (FA-017).
+        score:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Score
+          description: VV-004, 0-100; null while open.
+        status:
+          type: string
+          title: Status
+          description: 'VV-005: verified | partial | unverified | open.'
+        confirmation_channel:
+          type: string
+          title: Confirmation Channel
+        confirmed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Confirmed At
+        device_integrity:
+          $ref: '#/components/schemas/DeviceIntegrityOut'
+        client_visit_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Client Visit Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - officer_id
+      - farmer_id
+      - farm_id
+      - village_id
+      - purpose
+      - checkin_at
+      - checkout_at
+      - checkin_point
+      - checkin_accuracy_m
+      - checkout_point
+      - geofence_result
+      - override_note
+      - override_approved_by
+      - notes
+      - crop_stage
+      - duration_s
+      - score
+      - status
+      - confirmation_channel
+      - confirmed_at
+      - device_integrity
+      - client_visit_id
+      - created_at
+      - updated_at
+      - version
+      title: VisitOut
+    VisitPhotoOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        blob_uri:
+          type: string
+          title: Blob Uri
+        sha256:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sha256
+        phash:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phash
+        exif_time:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Exif Time
+        exif_point:
+          anyOf:
+          - $ref: '#/components/schemas/LatLon'
+          - type: 'null'
+        taken_in_app:
+          type: boolean
+          title: Taken In App
+        device_time:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Device Time
+        server_time:
+          type: string
+          format: date-time
+          title: Server Time
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - blob_uri
+      - sha256
+      - phash
+      - exif_time
+      - exif_point
+      - taken_in_app
+      - device_time
+      - server_time
+      - created_at
+      title: VisitPhotoOut
+    VisitStatus:
+      type: string
+      enum:
+      - verified
+      - partial
+      - unverified
+      - open
+      title: VisitStatus
     Problem:
       type: object
       required:

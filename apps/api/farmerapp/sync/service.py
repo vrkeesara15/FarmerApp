@@ -21,7 +21,16 @@ the entity's strategy decides (``CONFLICT_RULES``):
 * ``server_wins`` — reserved for money-bearing entities (khata, payments; SPEC FA-025
   "server wins for money") and used for the append-only consent record: a mismatch is
   always a ``conflict``.
-* ``merge_fields`` — reserved (per-field merge for visit notes later).
+* ``merge_fields`` — visits and duty sessions (M2): the client's fields are merged over the
+  row whatever the ``base_version``, except the **server-owned** fields
+  (``SERVER_OWNED_FIELDS``: a visit's score / status / confirmation / geofence decision;
+  a duty session's ``end_at`` / ``end_reason`` once the server auto-ended it, VV-007), which
+  are dropped from the payload (``merge_payload``). Visit photos and policy acceptances are
+  immutable once written (``server_wins``).
+
+The M2 write paths (check-in, photos, confirmation, check-out, duty toggle, acceptance)
+land with FA-010 / FA-014 .. FA-017; until then their ops validate and are rejected with
+``unsupported_action`` so nothing is mis-applied.
 
 Changes feed
 ------------
@@ -48,7 +57,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from farmerapp.api.errors import AppError, ForbiddenError, NotFoundError
 from farmerapp.api.pagination import InvalidCursorError
 from farmerapp.auth.models import User
-from farmerapp.auth.scope import farmer_filters
+from farmerapp.auth.scope import (
+    duty_session_filters,
+    farmer_filters,
+    officer_filters,
+    visit_filters,
+)
 from farmerapp.farmers import service as farmers
 from farmerapp.farmers.errors import UnsupportedActionError
 from farmerapp.farmers.models import ConsentRecord, CropPlot, Farm, Farmer
@@ -65,10 +79,14 @@ from farmerapp.farmers.schemas import (
     FarmOut,
     FarmUpdate,
 )
+from farmerapp.location.models import DutySession, PolicyAcceptance
+from farmerapp.location.schemas import DutySessionOut, PolicyAcceptanceOut
 from farmerapp.logging import get_logger
 from farmerapp.settings import Settings
 from farmerapp.sync.models import SyncChange, SyncOp
 from farmerapp.sync.schemas import SyncChangeOut, SyncError, SyncOpIn, SyncResult
+from farmerapp.visits.models import Visit, VisitPhoto
+from farmerapp.visits.schemas import VisitOut, VisitPhotoOut
 
 log = get_logger("farmerapp.sync")
 
@@ -86,8 +104,52 @@ CONFLICT_RULES: dict[str, Strategy] = {
     "farm": Strategy.LAST_WRITER_WINS,
     "crop_plot": Strategy.LAST_WRITER_WINS,
     "consent_record": Strategy.SERVER_WINS,
+    "visit": Strategy.MERGE_FIELDS,  # notes / crop_stage from the device; score etc. server
+    "visit_photo": Strategy.SERVER_WINS,  # immutable once uploaded (EXIF, hashes, server time)
+    "duty_session": Strategy.MERGE_FIELDS,  # server wins for end_at once auto-ended (VV-007)
+    "policy_acceptance": Strategy.SERVER_WINS,  # append-only (FA-011)
     # M3: "khata": Strategy.SERVER_WINS, "payment": Strategy.SERVER_WINS
 }
+
+#: ``merge_fields`` entities: fields a device may never overwrite.
+SERVER_OWNED_FIELDS: dict[str, frozenset[str]] = {
+    "visit": frozenset(
+        {
+            "score",
+            "score_components",
+            "status",
+            "confirmation_channel",
+            "confirmed_at",
+            "geofence_result",
+            "override_approved_by",
+            "duration_s",
+            "officer_id",
+            "farmer_id",
+            "tenant_id",
+        }
+    ),
+    "duty_session": frozenset({"km", "stops", "officer_id", "tenant_id"}),
+}
+
+#: ``duty_session`` end fields become server-owned once the server ended the session.
+_DUTY_END_FIELDS = frozenset({"end_at", "end_reason"})
+_ENTITIES_WITHOUT_WRITE_PATH = frozenset(
+    {"visit", "visit_photo", "duty_session", "policy_acceptance"}
+)
+
+
+def server_owned_fields(entity: str, row: Any) -> frozenset[str]:
+    """The fields the server owns on ``row`` (static list plus the auto-ended duty end)."""
+    owned = SERVER_OWNED_FIELDS.get(entity, frozenset())
+    if entity == "duty_session" and getattr(row, "auto_ended", False):
+        owned = owned | _DUTY_END_FIELDS
+    return owned
+
+
+def merge_payload(entity: str, row: Any, payload: dict[str, Any]) -> dict[str, Any]:
+    """``merge_fields``: the payload without the server-owned fields of ``row``."""
+    owned = server_owned_fields(entity, row)
+    return {k: v for k, v in payload.items() if k not in owned}
 
 
 # --------------------------------------------------------------------------- cursor
@@ -144,13 +206,22 @@ def _loses_conflict(op: SyncOpIn, row: Any) -> bool:
     strategy = CONFLICT_RULES[op.entity]
     if strategy == Strategy.LAST_WRITER_WINS:
         return _aware(op.client_ts) <= _aware(row.updated_at)
-    return True
+    # merge_fields: client-owned fields merge, server-owned ones are dropped anyway.
+    return strategy != Strategy.MERGE_FIELDS
+
+
+def _check_write_path(op: SyncOpIn) -> None:
+    if op.entity in _ENTITIES_WITHOUT_WRITE_PATH:
+        raise UnsupportedActionError(
+            f"{op.entity} sync writes are not available yet (FA-010 / FA-014 .. FA-017)."
+        )
 
 
 # --------------------------------------------------------------------------- dispatch
 async def _create(
     session: AsyncSession, actor: User, op: SyncOpIn, settings: Settings, now: datetime
 ) -> SyncResult:
+    _check_write_path(op)
     payload = {**op.payload, "id": str(op.entity_id)}
     if op.entity == "farmer":
         existing = await session.get(Farmer, op.entity_id)
@@ -191,6 +262,7 @@ async def _create(
 
 
 async def _update(session: AsyncSession, actor: User, op: SyncOpIn) -> SyncResult:
+    _check_write_path(op)
     if op.entity == "farmer":
         farmer = await farmers.visible_farmer(session, actor, op.entity_id)
         if _loses_conflict(op, farmer):
@@ -218,6 +290,7 @@ async def _update(session: AsyncSession, actor: User, op: SyncOpIn) -> SyncResul
 
 
 async def _delete(session: AsyncSession, actor: User, op: SyncOpIn) -> SyncResult:
+    _check_write_path(op)
     if op.entity == "farm":
         farm = await farmers.visible_farm(session, actor, op.entity_id)
         if _loses_conflict(op, farm):
@@ -340,6 +413,8 @@ async def apply_ops(
 def _scope(actor: User) -> Any:
     visible = select(Farmer.id).where(*farmer_filters(actor))
     farms = select(Farm.id).where(Farm.farmer_id.in_(visible))
+    visits = select(Visit.id).where(*visit_filters(actor))
+    officers = select(User.id).where(*officer_filters(actor))
     return or_(
         and_(SyncChange.entity == "farmer", SyncChange.entity_id.in_(visible)),
         and_(SyncChange.entity == "farm", SyncChange.entity_id.in_(farms)),
@@ -351,6 +426,21 @@ def _scope(actor: User) -> Any:
             SyncChange.entity == "consent_record",
             SyncChange.entity_id.in_(
                 select(ConsentRecord.id).where(ConsentRecord.subject_id.in_(visible))
+            ),
+        ),
+        and_(SyncChange.entity == "visit", SyncChange.entity_id.in_(visits)),
+        and_(
+            SyncChange.entity == "visit_photo",
+            SyncChange.entity_id.in_(select(VisitPhoto.id).where(VisitPhoto.visit_id.in_(visits))),
+        ),
+        and_(
+            SyncChange.entity == "duty_session",
+            SyncChange.entity_id.in_(select(DutySession.id).where(*duty_session_filters(actor))),
+        ),
+        and_(
+            SyncChange.entity == "policy_acceptance",
+            SyncChange.entity_id.in_(
+                select(PolicyAcceptance.id).where(PolicyAcceptance.user_id.in_(officers))
             ),
         ),
     )
@@ -381,6 +471,28 @@ async def _current_state(
         )
         for record in records.scalars():
             state[("consent_record", record.id)] = ConsentRecordOut.from_row(record)
+    if ids.get("visit"):
+        visits = await session.execute(select(Visit).where(Visit.id.in_(ids["visit"])))
+        for visit in visits.scalars():
+            state[("visit", visit.id)] = VisitOut.from_row(visit)
+    if ids.get("visit_photo"):
+        photos = await session.execute(
+            select(VisitPhoto).where(VisitPhoto.id.in_(ids["visit_photo"]))
+        )
+        for photo in photos.scalars():
+            state[("visit_photo", photo.id)] = VisitPhotoOut.from_row(photo)
+    if ids.get("duty_session"):
+        sessions = await session.execute(
+            select(DutySession).where(DutySession.id.in_(ids["duty_session"]))
+        )
+        for duty in sessions.scalars():
+            state[("duty_session", duty.id)] = DutySessionOut.from_row(duty)
+    if ids.get("policy_acceptance"):
+        rows = await session.execute(
+            select(PolicyAcceptance).where(PolicyAcceptance.id.in_(ids["policy_acceptance"]))
+        )
+        for acceptance in rows.scalars():
+            state[("policy_acceptance", acceptance.id)] = PolicyAcceptanceOut.from_row(acceptance)
     return state
 
 
@@ -441,9 +553,12 @@ async def changes_since(
 __all__ = [
     "CONFLICT_RULES",
     "MAX_CHANGES",
+    "SERVER_OWNED_FIELDS",
     "Strategy",
     "apply_ops",
     "changes_since",
     "decode_cursor",
     "encode_cursor",
+    "merge_payload",
+    "server_owned_fields",
 ]
