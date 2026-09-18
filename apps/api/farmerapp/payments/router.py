@@ -11,7 +11,8 @@ import uuid
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 
 from farmerapp.api.errors import problem_responses
@@ -20,6 +21,7 @@ from farmerapp.auth.deps import DbSession, Services
 from farmerapp.auth.models import User
 from farmerapp.auth.policy import Role, require_roles
 from farmerapp.auth.scope import payment_filters
+from farmerapp.khata.credit import credit_blocked_response
 from farmerapp.payments.models import Payment, PaymentMode, PaymentStatus
 from farmerapp.payments.schemas import (
     PaymentCreate,
@@ -29,6 +31,7 @@ from farmerapp.payments.schemas import (
     PaymentStatusOut,
 )
 from farmerapp.payments.service import (
+    CreditBlocked,
     Messaging,
     PaymentServices,
     create_payment,
@@ -119,7 +122,7 @@ COLLECT_ROLES = (
         (409, "already_paid"),
         (409, "nothing_due"),
         (409, "order_cancelled"),
-        (409, "credit_limit_exceeded"),
+        (402, "credit_limit_exceeded"),
         (422, "amount_mismatch"),
         (422, "receipt_required"),
         (422, "reference_required"),
@@ -128,18 +131,18 @@ COLLECT_ROLES = (
         (422, "phone_required"),
         (403, "mode_not_allowed"),
         (502, "provider_error"),
-        (503, "credit_unavailable"),
     ),
 )
 async def post_payment(
     body: PaymentCreate,
+    request: Request,
     actor: Annotated[User, require_roles(*COLLECT_ROLES)],
     session: DbSession,
     auth: Services,
     services: Annotated[PaymentServices, Depends(get_payment_services)],
     blobs: Annotated[BlobStore, Depends(get_blob_store)],
-) -> PaymentCreated:
-    return await create_payment(
+) -> PaymentCreated | JSONResponse:
+    created = await create_payment(
         session,
         actor,
         body,
@@ -148,6 +151,10 @@ async def post_payment(
         blobs=blobs,
         now=auth.clock.now(),
     )
+    if isinstance(created, CreditBlocked):
+        # Returned, not raised: the credit approval request must commit (ST-007).
+        return credit_blocked_response(request, created.decision)
+    return created
 
 
 @router.get(

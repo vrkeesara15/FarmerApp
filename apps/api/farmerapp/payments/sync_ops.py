@@ -6,7 +6,10 @@ a replay of an op that already applied is a ``conflict`` carrying the server row
 wins for money, FA-025). Payload = the ``POST /v1/payments`` body. UPI QR and payment links
 need the provider while the farmer is in front of the officer: offline they are rejected
 with ``requires_network``. Amounts are recomputed server-side exactly as for the REST call
-(a stale client amount is ``amount_mismatch``).
+(a stale client amount is ``amount_mismatch``). A credit sale beyond the farmer's limit is
+``blocked``: the sync service rejects the op with ``credit_limit_exceeded`` (402) while the
+approval request written by the credit gate is kept (returned, not raised, inside the op's
+savepoint) — the same shape as the ``order`` op.
 """
 
 from __future__ import annotations
@@ -21,9 +24,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from farmerapp.api.errors import AppError
 from farmerapp.auth.models import User
 from farmerapp.auth.providers import SmsProvider, WhatsAppProvider
+from farmerapp.khata.credit import CreditDecision
 from farmerapp.payments.models import PROVIDER_MODES, Payment, PaymentMode
 from farmerapp.payments.schemas import PaymentCreate, PaymentOut
 from farmerapp.payments.service import (
+    CreditBlocked,
     Messaging,
     PaymentServices,
     create_payment,
@@ -44,8 +49,9 @@ class PaymentSyncUnavailableError(AppError):
 
 @dataclass(frozen=True)
 class Applied:
-    out: PaymentOut
+    out: PaymentOut | None
     conflict: bool
+    blocked: CreditDecision | None = None
 
 
 async def create(
@@ -69,7 +75,7 @@ async def create(
     body = PaymentCreate.model_validate(payload)
     if PaymentMode(body.mode) in PROVIDER_MODES:
         raise RequiresNetworkError("UPI QR and payment links need the network: collect online.")
-    await create_payment(
+    created = await create_payment(
         session,
         actor,
         body,
@@ -79,6 +85,8 @@ async def create(
         now=now,
         payment_id=entity_id,
     )
+    if isinstance(created, CreditBlocked):
+        return Applied(None, conflict=False, blocked=created.decision)
     row = await session.get_one(Payment, entity_id)
     return Applied(PaymentOut.model_validate(row), conflict=False)
 

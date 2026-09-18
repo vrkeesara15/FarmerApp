@@ -4774,7 +4774,11 @@ paths:
           content:
             application/problem+json: {}
         '409':
-          description: '`already_paid`, `nothing_due`, `order_cancelled`, `credit_limit_exceeded`'
+          description: '`already_paid`, `nothing_due`, `order_cancelled`'
+          content:
+            application/problem+json: {}
+        '402':
+          description: '`credit_limit_exceeded`'
           content:
             application/problem+json: {}
         '422':
@@ -4788,10 +4792,6 @@ paths:
             application/problem+json: {}
         '502':
           description: '`provider_error`'
-          content:
-            application/problem+json: {}
-        '503':
-          description: '`credit_unavailable`'
           content:
             application/problem+json: {}
         '401':
@@ -5311,11 +5311,16 @@ paths:
           content:
             application/problem+json: {}
         '409':
-          description: '`insufficient_stock`, `credit_limit_exceeded`'
+          description: '`insufficient_stock`'
+          content:
+            application/problem+json: {}
+        '402':
+          description: '`credit_limit_exceeded`'
           content:
             application/problem+json: {}
         '422':
-          description: '`unknown_sku`, `receipt_required`, `reference_required`, `invalid_blob`, `invalid_mode`'
+          description: '`unknown_sku`, `sku_not_recommendable`, `receipt_required`, `reference_required`,
+            `invalid_blob`, `invalid_mode`'
           content:
             application/problem+json: {}
         '502':
@@ -10459,6 +10464,14 @@ components:
           - type: string
             pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,9}|(?=[\d.]{1,13}0*$)\d{0,9}\.\d{0,3}0*$)
           title: Qty
+        label_claim_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Label Claim Id
+          description: 'Set when the SKU is sold on a recommendation: must be an approved label claim
+            of this SKU (DX-007), else 422 `sku_not_recommendable`.'
       additionalProperties: false
       type: object
       required:

@@ -31,10 +31,18 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from farmerapp.api.errors import AppError, ConflictError, ForbiddenError, NotFoundError
+from farmerapp.api.errors import (
+    AppError,
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+    problem_response,
+)
 from farmerapp.auth.models import User, UserRole
 from farmerapp.farmers.models import Farmer
 from farmerapp.khata.ledger import (
@@ -84,7 +92,7 @@ class CreditLimitExceededError(AppError):
     @classmethod
     def from_decision(cls, decision: CreditDecision) -> CreditLimitExceededError:
         return cls(
-            "This credit sale is beyond the farmer's limit; a cluster head must approve it.",
+            CREDIT_BLOCKED_DETAIL,
             extra=decision_extra(decision),
         )
 
@@ -106,6 +114,23 @@ def decision_extra(decision: CreditDecision) -> dict[str, Any]:
         "balance_paise": decision.balance_paise,
         "limit_paise": decision.limit_paise,
     }
+
+
+CREDIT_BLOCKED_DETAIL = (
+    "This credit sale is beyond the farmer's limit; a cluster head must approve it."
+)
+
+
+def credit_blocked_response(request: Request, decision: CreditDecision) -> JSONResponse:
+    """The 402 ``credit_limit_exceeded`` problem for a blocked decision. Routes *return* it
+    (never raise) so the approval request commits with the request transaction."""
+    return problem_response(
+        request,
+        status=CreditLimitExceededError.status,
+        code=CreditLimitExceededError.code,
+        detail=CREDIT_BLOCKED_DETAIL,
+        extra=decision_extra(decision),
+    )
 
 
 async def credit_limit_paise(
@@ -325,12 +350,14 @@ async def decide(
 
 
 __all__ = [
+    "CREDIT_BLOCKED_DETAIL",
     "LIMIT_APPROVER_ROLES",
     "ApprovalNotPendingError",
     "CreditDecision",
     "CreditLimitExceededError",
     "LimitNeedsApproverError",
     "check_and_reserve_credit",
+    "credit_blocked_response",
     "credit_limit_paise",
     "decide",
     "decision_extra",

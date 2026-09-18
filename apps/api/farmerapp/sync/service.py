@@ -87,7 +87,7 @@ from farmerapp.farmers.schemas import (
     FarmOut,
     FarmUpdate,
 )
-from farmerapp.khata.credit import CreditLimitExceededError, decision_extra
+from farmerapp.khata.credit import CreditDecision, CreditLimitExceededError, decision_extra
 from farmerapp.khata.models import KhataEntry
 from farmerapp.khata.schemas import KhataEntryOut
 from farmerapp.location.ingest import LocationBatchIn, ingest_batch
@@ -271,6 +271,19 @@ def _from_visit(op: SyncOpIn, applied: visit_sync.Applied) -> SyncResult:
     return _applied(op, applied.out, applied.version)
 
 
+def _credit_blocked(op: SyncOpIn, decision: CreditDecision) -> SyncResult:
+    """ST-007 via sync (``order`` / ``payment`` create): rejected, approval request kept."""
+    return _rejected(
+        op,
+        SyncError(
+            code=CreditLimitExceededError.code,
+            status=CreditLimitExceededError.status,
+            detail="The credit sale is beyond the farmer's limit; approval requested.",
+            errors=[decision_extra(decision)],
+        ),
+    )
+
+
 # --------------------------------------------------------------------------- dispatch
 async def _create(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpContext) -> SyncResult:
     if op.entity == "payment":  # FA-021 officer offline cash / credit capture
@@ -287,6 +300,10 @@ async def _create(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpConte
             blobs=ctx.blobs,
             now=ctx.now,
         )
+        if paid.blocked is not None:
+            return _credit_blocked(op, paid.blocked)
+        if paid.out is None:  # pragma: no cover - create returns a payment unless blocked
+            raise RuntimeError("payment sync create returned no payment")
         return (_conflict if paid.conflict else _applied)(op, paid.out, paid.out.version)
     _check_write_path(op)
     settings, now = ctx.settings, ctx.now
@@ -308,15 +325,7 @@ async def _create(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpConte
             session, actor, op.entity_id, dict(op.payload), today=ctx.now.date()
         )
         if placed.blocked is not None:
-            return _rejected(
-                op,
-                SyncError(
-                    code=CreditLimitExceededError.code,
-                    status=CreditLimitExceededError.status,
-                    detail="The credit sale is beyond the farmer's limit; approval requested.",
-                    errors=[decision_extra(placed.blocked)],
-                ),
-            )
+            return _credit_blocked(op, placed.blocked)
         if placed.out is None:  # pragma: no cover - create returns an order unless blocked
             raise RuntimeError("order sync create returned no order")
         if placed.conflict:

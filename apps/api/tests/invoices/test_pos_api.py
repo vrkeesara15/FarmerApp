@@ -16,18 +16,19 @@ from urllib.parse import urlparse
 
 from httpx import AsyncClient
 from pypdf import PdfReader
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from farmerapp.catalog.models import Product, Sku
+from farmerapp.catalog.models import LabelClaim, Product, Sku
 from farmerapp.invoices.models import Invoice
 from farmerapp.invoices.pdf import inr
 from farmerapp.invoices.ports import PosOrderDraft
-from farmerapp.orders.models import Order, OrderLine
+from farmerapp.khata.models import CreditApprovalRequest, KhataEntry, khata_balance
+from farmerapp.orders.models import Order, OrderLine, OrderStatusEvent
 from farmerapp.payments.models import Payment
 from farmerapp.stock.ledger import stock_on_hand
-from farmerapp.stock.models import StockBatch
-from tests.payments.helpers import PayWorld
+from farmerapp.stock.models import StockBatch, StockMovement, StockReservation
+from tests.payments.helpers import PayWorld, request_transactions
 
 
 async def _stocked(pw: PayWorld) -> tuple[Sku, Product, Decimal]:
@@ -262,18 +263,18 @@ async def test_validation_and_scope(client: AsyncClient, pw: PayWorld) -> None:
     assert missing.status_code == 404
 
 
-async def test_credit_sale_blocked_rolls_back_through_the_port(
+async def test_credit_sale_through_a_fake_order_port_uses_the_real_gate(
     client: AsyncClient, pw: PayWorld
 ) -> None:
-    """A fake OrderPort proves the POS only talks to orders through the port."""
-    from tests.payments.helpers import Decision
-
+    """The POS only talks to orders through ``OrderPort`` (a fake here); credit is reserved
+    by the real gate *before* the order exists, for the pre-assigned order id."""
     drafts: list[PosOrderDraft] = []
 
     class FakeOrders:
         async def create_pos_order(self, session: AsyncSession, draft: PosOrderDraft) -> Order:
             drafts.append(draft)
             order = Order(
+                id=draft.order_id,
                 tenant_id=draft.tenant_id,
                 farmer_id=draft.farmer_id,
                 store_id=draft.store_id,
@@ -302,11 +303,34 @@ async def test_credit_sale_blocked_rolls_back_through_the_port(
     )
     assert ok.status_code == 201, ok.text
     assert len(drafts) == 1 and drafts[0].lines[0].qty == Decimal("2")
-    assert pw.ledger.checks[-1]["amount_paise"] == ok.json()["invoice"]["total_paise"]
+    total = ok.json()["invoice"]["total_paise"]
+    check = pw.ledger.checks[-1]
+    assert check["amount_paise"] == total and check["order_id"] == drafts[0].order_id
+    assert ok.json()["order_id"] == str(drafts[0].order_id)
     payment = await pw.session.get_one(Payment, uuid.UUID(ok.json()["payment"]["payment_id"]))
     assert payment.mode == "credit" and payment.status == "paid"
+    debits = (
+        (
+            await pw.session.execute(
+                select(KhataEntry).where(KhataEntry.ref_id == drafts[0].order_id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert [(d.type, d.amount_paise) for d in debits] == [("debit", total)]  # one debit only
+    assert payment.khata_entry_id == debits[0].id
 
-    pw.ledger.decision = Decision(False, None, 100)
+
+async def test_credit_sale_beyond_the_limit_is_402_and_writes_only_the_request(
+    client: AsyncClient, pw: PayWorld
+) -> None:
+    request_transactions(pw)  # a raised error would roll the request back, as in production
+    sku, _product, on_hand = await _stocked(pw)
+    balance = await khata_balance(pw.session, pw.farmer.id, pw.store.id)
+    await pw.set_limit(max(balance, 0) + 1)
+    orders_before = await pw.session.scalar(select(func.count()).select_from(Order))
+    invoices_before = await pw.session.scalar(select(func.count()).select_from(Invoice))
     blocked = await _sale(
         client,
         pw,
@@ -316,4 +340,90 @@ async def test_credit_sale_blocked_rolls_back_through_the_port(
             "payment": {"mode": "credit"},
         },
     )
-    assert blocked.status_code == 409 and blocked.json()["code"] == "credit_limit_exceeded"
+    assert blocked.status_code == 402, blocked.text
+    problem = blocked.json()
+    assert problem["code"] == "credit_limit_exceeded" and problem["shortfall_paise"] > 0
+    request = await pw.session.get_one(
+        CreditApprovalRequest, uuid.UUID(problem["approval_request_id"])
+    )
+    assert request.status == "pending" and request.farmer_id == pw.farmer.id
+    assert request.order_id is not None
+    # Nothing was sold: no order, no invoice (no number taken), no stock out, no debit.
+    assert await pw.session.get(Order, request.order_id) is None
+    assert await pw.session.scalar(select(func.count()).select_from(Order)) == orders_before
+    assert await pw.session.scalar(select(func.count()).select_from(Invoice)) == invoices_before
+    assert await stock_on_hand(pw.session, pw.store.id, sku.id) == on_hand
+    assert await khata_balance(pw.session, pw.farmer.id, pw.store.id) == balance
+
+
+async def test_pos_sale_goes_through_the_orders_service(client: AsyncClient, pw: PayWorld) -> None:
+    """The default ``OrderPort`` is the orders module's: FEFO reservations consumed into
+    sale movements, a status event, and DX-007 on recommended lines."""
+    sku, _product, on_hand = await _stocked(pw)
+    claim = await pw.session.scalar(
+        select(LabelClaim).where(LabelClaim.sku_id == sku.id, LabelClaim.status == "approved")
+    )
+    other = await pw.session.scalar(
+        select(LabelClaim).where(LabelClaim.sku_id != sku.id, LabelClaim.status == "approved")
+    )
+    assert other is not None
+    pay = {"mode": "card_terminal", "reference_note": "RRN 7"}
+    bad = await _sale(
+        client,
+        pw,
+        {
+            "lines": [{"sku_id": str(sku.id), "qty": "1", "label_claim_id": str(other.id)}],
+            "payment": pay,
+        },
+    )
+    assert bad.status_code == 422 and bad.json()["code"] == "sku_not_recommendable"
+    assert bad.json()["errors"][0]["loc"] == ["lines", 0, "label_claim_id"]
+    line: dict[str, Any] = {"sku_id": str(sku.id), "qty": "1"}
+    if claim is not None:
+        line["label_claim_id"] = str(claim.id)
+    ok = await _sale(client, pw, {"lines": [line], "payment": pay})
+    assert ok.status_code == 201, ok.text
+    order_id = uuid.UUID(ok.json()["order_id"])
+    order = await pw.session.get_one(Order, order_id)
+    assert (order.channel, order.status) == ("pos", "handed_over")
+    lines = (
+        (await pw.session.execute(select(OrderLine).where(OrderLine.order_id == order_id)))
+        .scalars()
+        .all()
+    )
+    assert [str(x.label_claim_id) if x.label_claim_id else None for x in lines] == [
+        line.get("label_claim_id")
+    ]
+    reservations = (
+        (
+            await pw.session.execute(
+                select(StockReservation).where(StockReservation.order_id == order_id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert reservations and {r.status for r in reservations} == {"consumed"}
+    sold = (
+        (
+            await pw.session.execute(
+                select(StockMovement).where(
+                    StockMovement.ref_id == order_id, StockMovement.kind == "sale"
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert sum((m.qty for m in sold), Decimal(0)) == Decimal(-1)
+    assert await stock_on_hand(pw.session, pw.store.id, sku.id) == on_hand - 1
+    events = (
+        (
+            await pw.session.execute(
+                select(OrderStatusEvent).where(OrderStatusEvent.order_id == order_id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert [(e.from_status, e.to_status) for e in events] == [(None, "handed_over")]

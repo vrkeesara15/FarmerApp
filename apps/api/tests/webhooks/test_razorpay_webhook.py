@@ -9,10 +9,10 @@ from typing import Any
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 
 from farmerapp.db.models.tenant import Tenant
-from farmerapp.khata.models import khata_balance
+from farmerapp.khata.models import KhataEntry, khata_balance
 from farmerapp.payments.events import PaymentCaptured
 from farmerapp.payments.models import Payment, WebhookEvent
 from farmerapp.payments.publisher import RecordingPublisher
@@ -188,6 +188,29 @@ async def test_dues_capture_moves_the_balance_in_the_same_transaction(
     await pw.session.refresh(payment)
     assert payment.khata_entry_id is not None
     assert pw.ledger.credits[-1]["actor"].actor_role == "system"
+    # Posted by the real ``khata.ledger.post_credit`` (no self-written fallback entry) ...
+    entry = await pw.session.get_one(KhataEntry, payment.khata_entry_id)
+    assert (entry.type, entry.ref_type, entry.ref_id) == ("credit", "payment", payment.id)
+    assert entry.amount_paise == 20_000 and entry.created_by is None  # the system
+    credits_for_payment = await pw.session.scalar(
+        select(func.count()).select_from(KhataEntry).where(KhataEntry.ref_id == payment.id)
+    )
+    assert credits_for_payment == 1
+    # ... and FA-022 holds: the balance is exactly the sum of the ledger's entries.
+    signed = await pw.session.scalar(
+        select(
+            func.coalesce(
+                func.sum(
+                    case(
+                        (KhataEntry.type == "debit", KhataEntry.amount_paise),
+                        else_=-KhataEntry.amount_paise,
+                    )
+                ),
+                0,
+            )
+        ).where(KhataEntry.farmer_id == pw.farmer.id, KhataEntry.store_id == pw.store.id)
+    )
+    assert await khata_balance(pw.session, pw.farmer.id, pw.store.id) == signed
 
 
 async def test_payment_found_by_provider_ids_when_notes_are_missing(

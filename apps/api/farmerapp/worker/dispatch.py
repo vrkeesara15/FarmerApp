@@ -35,8 +35,10 @@ async def on_diagnosis_requested(message: PubSubMessage) -> None:
 async def on_payment_webhook(message: PubSubMessage) -> None:
     """M3 (SEC-023, FA-021): apply a stored, verified provider webhook (idempotent by event
     id). Imported lazily so the worker app does not load the payments stack at import."""
+    from farmerapp.orders import payment_events
     from farmerapp.payments.worker import handle_payment_webhook
 
+    payment_events.register()  # a paid order moves on in the same transaction (ST-005)
     await handle_payment_webhook(message)
 
 

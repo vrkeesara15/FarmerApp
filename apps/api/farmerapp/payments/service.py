@@ -17,12 +17,17 @@
    ``cash`` — needs ``receipt_uri`` (a completed upload of this tenant);
    ``pending_reconciliation`` until the day close counts it (ST-006).
    ``card_terminal`` — needs ``reference_note`` (the store's own terminal); ``paid``.
-   ``credit`` — orders with a farmer only: ``check_and_reserve_credit`` through the
-   ``LedgerPort`` (ST-007); allowed -> ``paid`` on the khata (the debit is the orders
-   branch's), refused -> 409 ``credit_limit_exceeded`` with the approval request.
-4. **Effects.** Money in hand for dues posts the khata credit through the port in the same
-   transaction (FM-010: the balance moves immediately); money in hand for an order emits
-   ``PaymentCaptured`` on the in-process bus (the orders branch moves the order on).
+   ``credit`` — orders with a farmer only: ``khata.credit.check_and_reserve_credit``
+   through the ``LedgerPort`` (ST-007), called *before* anything is written. Allowed ->
+   ``paid``; the gate already posted the khata debit, which becomes
+   ``payment.khata_entry_id`` (no second debit here). Blocked -> nothing but the gate's
+   ``credit_approval_request`` is written and ``CreditBlocked`` is *returned*: callers
+   answer 402 ``credit_limit_exceeded`` without raising so the request commits.
+   The POS reserves the credit itself before the order exists and passes the decision in.
+4. **Effects.** Money in hand for dues posts the khata credit through
+   ``khata.ledger.post_credit`` in the same transaction (FM-010: the balance moves
+   immediately); money in hand for an order emits ``PaymentCaptured`` on the in-process bus
+   (``farmerapp.orders.payment_events`` moves a waiting order on, in this transaction).
 
 Provider payments become ``paid`` in ``farmerapp.payments.webhooks`` (SEC-023).
 """
@@ -35,7 +40,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 from fastapi import Request
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.api.errors import AppError, ForbiddenError, NotFoundError
@@ -44,7 +49,8 @@ from farmerapp.auth.providers import ProviderError, SmsProvider, WhatsAppProvide
 from farmerapp.auth.scope import khata_farmer_filters, order_filters, payment_filters, store_filters
 from farmerapp.db import audit
 from farmerapp.farmers.models import Farmer
-from farmerapp.khata.models import khata_balance
+from farmerapp.khata.credit import CreditDecision
+from farmerapp.khata.models import EntryRef, EntryType, KhataEntry, khata_balance
 from farmerapp.logging import get_logger
 from farmerapp.orders.models import Order, OrderStatus
 from farmerapp.payments.events import PaymentCaptured, bus
@@ -120,11 +126,6 @@ class PhoneRequiredError(AppError):
 class InvalidModeError(AppError):
     status = 422
     code = "invalid_mode"
-
-
-class CreditLimitExceededError(AppError):
-    status = 409
-    code = "credit_limit_exceeded"
 
 
 class ProviderUnavailableError(AppError):
@@ -339,10 +340,12 @@ async def _send_link(
         raise ProviderUnavailableError("The message could not be sent; try again.") from exc
 
 
-def emit_captured(payment: Payment, at: datetime) -> None:
+async def emit_captured(session: AsyncSession, payment: Payment, at: datetime) -> None:
+    """``PaymentCaptured`` for an order payment; writing subscribers run in ``session``."""
     if payment.order_id is None:
         return
-    bus.publish(
+    await bus.dispatch(
+        session,
         PaymentCaptured(
             tenant_id=payment.tenant_id,
             payment_id=payment.id,
@@ -353,7 +356,7 @@ def emit_captured(payment: Payment, at: datetime) -> None:
             amount_paise=payment.amount_paise,
             provider_event_id=payment.provider_event_id,
             at=at,
-        )
+        ),
     )
 
 
@@ -376,11 +379,40 @@ async def settle_dues(
     payment.khata_entry_id = entry.id
 
 
+async def _order_on_khata(session: AsyncSession, order_id: uuid.UUID) -> bool:
+    """Whether a credit sale debit for the order is on the khata (net of reversals)."""
+    signed = await session.scalar(
+        select(
+            func.coalesce(
+                func.sum(
+                    case(
+                        (KhataEntry.type == EntryType.DEBIT.value, KhataEntry.amount_paise),
+                        else_=-KhataEntry.amount_paise,
+                    )
+                ),
+                0,
+            )
+        ).where(
+            KhataEntry.ref_id == order_id,
+            KhataEntry.ref_type.in_([EntryRef.ORDER.value, EntryRef.ADJUSTMENT.value]),
+        )
+    )
+    return int(signed or 0) > 0
+
+
 # --------------------------------------------------------------------------- create
 @dataclass
 class Messaging:
     sms: SmsProvider
     whatsapp: WhatsAppProvider
+
+
+@dataclass(frozen=True)
+class CreditBlocked:
+    """A credit sale beyond the limit: only the approval request was written. Answer 402
+    ``credit_limit_exceeded`` (``khata.credit.decision_extra``) **without raising**."""
+
+    decision: CreditDecision
 
 
 async def create_payment(
@@ -394,7 +426,11 @@ async def create_payment(
     now: datetime,
     payment_id: uuid.UUID | None = None,
     target: Target | None = None,
-) -> PaymentCreated:
+    credit: CreditDecision | None = None,
+) -> PaymentCreated | CreditBlocked:
+    """Collect a payment (see the module doc). ``credit`` = a decision the caller already
+    obtained from the credit gate for this order and amount (the POS); without it a credit
+    payment calls the gate here."""
     mode = PaymentMode(body.mode)
     if UserRole(actor.role) == UserRole.FARMER and mode not in PROVIDER_MODES:
         raise ModeNotAllowedError("Farmers pay by UPI QR or payment link.")
@@ -410,6 +446,27 @@ async def create_payment(
         await validate_blob(body.receipt_uri, actor.tenant_id, blobs)
 
     who = actor_of(actor)
+    if mode == PaymentMode.CREDIT and target.farmer_id is not None and target.order is not None:
+        if credit is None:
+            if await _order_on_khata(session, target.order.id):
+                # Placed on credit (FA-020): the gate already posted its debit.
+                raise AlreadyPaidError("The order is already on the farmer's khata.")
+            credit = await services.ledger.check_and_reserve_credit(
+                session,
+                tenant_id=actor.tenant_id,
+                farmer_id=target.farmer_id,
+                store_id=target.store_id,
+                amount_paise=target.due_paise,
+                order_id=target.order.id,
+                actor=who,
+            )
+        if not credit.allowed:
+            log.info(
+                "payment_credit_blocked",
+                order_id=str(target.order.id),
+                approval_request_id=str(credit.approval_request_id),
+            )
+            return CreditBlocked(credit)
     payment = Payment(
         id=payment_id or uuid.uuid4(),
         tenant_id=actor.tenant_id,
@@ -423,6 +480,8 @@ async def create_payment(
         collected_by=actor.id if UserRole(actor.role) != UserRole.FARMER else None,
         receipt_uri=body.receipt_uri if mode == PaymentMode.CASH else None,
         reference_note=body.reference_note if mode == PaymentMode.CARD_TERMINAL else None,
+        # ST-007: the gate posted the debit of a credit sale; link it (never a second one).
+        khata_entry_id=credit.khata_entry_id if credit is not None else None,
     )
     # The provider is called before the row is written: a provider failure leaves nothing
     # behind, and no row lock is held across the HTTP call.
@@ -483,26 +542,6 @@ async def create_payment(
 
     session.add(payment)
     await session.flush()
-    if mode == PaymentMode.CREDIT and target.farmer_id is not None:
-        decision = await services.ledger.check_and_reserve_credit(
-            session,
-            tenant_id=actor.tenant_id,
-            farmer_id=target.farmer_id,
-            store_id=target.store_id,
-            amount_paise=payment.amount_paise,
-            order_id=payment.order_id,
-            actor=who,
-        )
-        if not decision.allowed:
-            raise CreditLimitExceededError(
-                "The sale is beyond the farmer's credit limit; a cluster head must approve.",
-                extra={
-                    "approval_request_id": str(decision.approval_request_id)
-                    if decision.approval_request_id
-                    else None,
-                    "shortfall_paise": decision.shortfall_paise,
-                },
-            )
     if mode not in PROVIDER_MODES:  # money (or credit) in hand now
         payment.status = (
             PaymentStatus.PENDING_RECONCILIATION.value
@@ -516,7 +555,7 @@ async def create_payment(
     out.status = PaymentStatus(payment.status)
     out.khata_entry_id = payment.khata_entry_id
     if mode not in PROVIDER_MODES:
-        emit_captured(payment, now)
+        await emit_captured(session, payment, now)
     log.info(
         "payment_created",
         payment_id=str(payment.id),
@@ -562,7 +601,7 @@ def status_out(payment: Payment) -> PaymentStatusOut:
 __all__ = [
     "AlreadyPaidError",
     "AmountMismatchError",
-    "CreditLimitExceededError",
+    "CreditBlocked",
     "InvalidBlobError",
     "InvalidModeError",
     "Messaging",

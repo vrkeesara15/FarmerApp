@@ -30,6 +30,7 @@ from farmerapp.khata import router as khata_routes
 from farmerapp.location import batch_router as location_batch_routes
 from farmerapp.location import router as location_routes
 from farmerapp.logging import configure_logging, get_logger
+from farmerapp.orders import payment_events as order_payment_events
 from farmerapp.orders import router as order_routes
 from farmerapp.payments import day_close as day_close_routes
 from farmerapp.payments import router as payment_routes
@@ -136,6 +137,7 @@ def create_app(
     app.state.auth = auth_services or build_auth_services(settings)
     app.state.blobs = blob_store or build_blob_store(settings)  # NF-003 / SEC-016
     app.state.payments = payment_services or build_payment_services(settings)  # FA-021
+    order_payment_events.register()  # FA-020 x FA-021: a captured payment advances its order
 
     v1 = APIRouter(prefix=API_PREFIX)
     v1.include_router(health.router)

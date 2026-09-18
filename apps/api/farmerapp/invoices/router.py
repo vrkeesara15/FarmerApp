@@ -13,12 +13,13 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, status
+from fastapi.responses import JSONResponse
 
 from farmerapp.api.errors import problem_responses
 from farmerapp.auth.deps import DbSession, Services
 from farmerapp.auth.models import User
 from farmerapp.auth.policy import Role, require_roles
-from farmerapp.invoices.ports import LedgerOrderPort, OrderPort
+from farmerapp.invoices.ports import OrderPort
 from farmerapp.invoices.schemas import (
     InvoiceOut,
     InvoiceShareIn,
@@ -28,7 +29,14 @@ from farmerapp.invoices.schemas import (
     SignedUrlOut,
 )
 from farmerapp.invoices.service import pdf_url, pos_sale, share_invoice, visible_invoice
-from farmerapp.payments.service import Messaging, PaymentServices, get_payment_services
+from farmerapp.khata.credit import credit_blocked_response
+from farmerapp.orders.pos import OrdersPosPort
+from farmerapp.payments.service import (
+    CreditBlocked,
+    Messaging,
+    PaymentServices,
+    get_payment_services,
+)
 from farmerapp.settings import get_settings
 from farmerapp.uploads.blobstore import BlobStore
 from farmerapp.uploads.router import get_blob_store
@@ -50,7 +58,7 @@ INVOICE_SHARE_ROLES = (Role.OWNER, Role.ACCOUNTANT, Role.CLUSTER_HEAD, Role.STOR
 
 def get_order_port(request: Request) -> OrderPort:
     port: OrderPort | None = getattr(request.app.state, "pos_orders", None)
-    return port or LedgerOrderPort()
+    return port or OrdersPosPort()
 
 
 pos_router = APIRouter(prefix="/stores", tags=["pos"])
@@ -67,8 +75,9 @@ router = APIRouter(prefix="/invoices", tags=["invoices"])
         (404, "not_found"),
         (404, "farmer_not_found"),
         (409, "insufficient_stock"),
-        (409, "credit_limit_exceeded"),
+        (402, "credit_limit_exceeded"),
         (422, "unknown_sku"),
+        (422, "sku_not_recommendable"),
         (422, "receipt_required"),
         (422, "reference_required"),
         (422, "invalid_blob"),
@@ -79,14 +88,15 @@ router = APIRouter(prefix="/invoices", tags=["invoices"])
 async def create_pos_sale(
     id: uuid.UUID,
     body: PosSaleIn,
+    request: Request,
     actor: Annotated[User, require_roles(*POS_ROLES)],
     session: DbSession,
     auth: Services,
     services: Annotated[PaymentServices, Depends(get_payment_services)],
     blobs: Annotated[BlobStore, Depends(get_blob_store)],
     orders: Annotated[OrderPort, Depends(get_order_port)],
-) -> PosSaleOut:
-    return await pos_sale(
+) -> PosSaleOut | JSONResponse:
+    sale = await pos_sale(
         session,
         actor,
         id,
@@ -97,6 +107,10 @@ async def create_pos_sale(
         blobs=blobs,
         now=auth.clock.now(),
     )
+    if isinstance(sale, CreditBlocked):
+        # Returned, not raised: the credit approval request must commit (ST-007).
+        return credit_blocked_response(request, sale.decision)
+    return sale
 
 
 @router.get(

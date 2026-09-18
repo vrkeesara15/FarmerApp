@@ -1,7 +1,8 @@
 """Shared helpers for the FA-021 / SEC-023 / ST-001 / ST-002 / ST-006 tests.
 
 ``PayWorld`` = the seeded world (SMALL) plus: the store manager's store, a farmer of that
-store, fake payment services installed on the app (``FakePaymentProvider``, ``FakeLedger``),
+store, fake payment provider installed on the app (``FakePaymentProvider``; the ledger is the real
+khata port wrapped in ``SpyLedger``, with a generous credit limit for the farmer),
 and builders for orders, khata debits, uploaded blobs and signed webhooks.
 """
 
@@ -23,9 +24,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from farmerapp.auth.models import User, UserRole
 from farmerapp.auth.providers import FakeProvider
 from farmerapp.db.audit import Actor
+from farmerapp.db.session import get_session
 from farmerapp.farmers.models import Farmer
-from farmerapp.khata.models import EntryRef, EntryType, KhataEntry
+from farmerapp.khata.credit import CreditDecision
+from farmerapp.khata.models import CreditLimit, EntryRef, EntryType, KhataEntry
 from farmerapp.orders.models import Order, OrderChannel, OrderStatus
+from farmerapp.payments.ports import KhataLedgerPort
 from farmerapp.payments.providers import (
     FakePaymentProvider,
     hmac_sha256_hex,
@@ -40,20 +44,13 @@ from tests.authz.conftest import Bearer, World
 WEBHOOK_KEY = "unit-test-webhook-hmac-key"
 
 
-@dataclass(frozen=True)
-class Decision:
-    allowed: bool
-    approval_request_id: uuid.UUID | None = None
-    shortfall_paise: int = 0
-
-
 @dataclass
-class FakeLedger:
-    """``LedgerPort`` fake: records calls; ``post_credit`` appends a real credit entry so
-    balances move exactly as with the orders branch's ``post_credit``."""
+class SpyLedger(KhataLedgerPort):
+    """The real ``LedgerPort`` (``khata.credit`` / ``khata.ledger``) that also records its
+    calls, so tests can check the exact contract the payments package uses."""
 
-    decision: Decision = field(default_factory=lambda: Decision(True))
     checks: list[dict[str, Any]] = field(default_factory=list)
+    decisions: list[CreditDecision] = field(default_factory=list)
     credits: list[dict[str, Any]] = field(default_factory=list)
 
     async def check_and_reserve_credit(
@@ -66,7 +63,7 @@ class FakeLedger:
         amount_paise: int,
         order_id: uuid.UUID | None,
         actor: Actor,
-    ) -> Decision:
+    ) -> CreditDecision:
         self.checks.append(
             {
                 "tenant_id": tenant_id,
@@ -77,7 +74,17 @@ class FakeLedger:
                 "actor": actor,
             }
         )
-        return self.decision
+        decision = await super().check_and_reserve_credit(
+            session,
+            tenant_id=tenant_id,
+            farmer_id=farmer_id,
+            store_id=store_id,
+            amount_paise=amount_paise,
+            order_id=order_id,
+            actor=actor,
+        )
+        self.decisions.append(decision)
+        return decision
 
     async def post_credit(
         self,
@@ -91,21 +98,23 @@ class FakeLedger:
         ref_id: uuid.UUID,
         actor: Actor,
     ) -> KhataEntry:
-        entry = KhataEntry(
+        entry = await super().post_credit(
+            session,
             tenant_id=tenant_id,
-            created_at=datetime.now(UTC),
             farmer_id=farmer_id,
             store_id=store_id,
-            type=EntryType.CREDIT,
             amount_paise=amount_paise,
-            ref_type=EntryRef(ref_type),
+            ref_type=ref_type,
             ref_id=ref_id,
-            created_by=actor.actor_id,
+            actor=actor,
         )
-        session.add(entry)
-        await session.flush()
         self.credits.append({"amount_paise": amount_paise, "ref_id": ref_id, "actor": actor})
         return entry
+
+
+#: Credit limit given to ``PayWorld.farmer`` at the store (₹5 lakh): credit sales pass
+#: unless a test lowers it with ``PayWorld.set_limit``.
+DEFAULT_TEST_LIMIT_PAISE = 50_000_000
 
 
 @dataclass
@@ -118,7 +127,7 @@ class PayWorld:
     other_store: Store | None
     farmer: Farmer  # a farmer of ``store`` (village -> store)
     provider: FakePaymentProvider
-    ledger: FakeLedger
+    ledger: SpyLedger
     services: PaymentServices
 
     @property
@@ -170,6 +179,32 @@ class PayWorld:
         self.session.add(order)
         await self.session.flush()
         return order
+
+    async def set_limit(
+        self, limit_paise: int, *, farmer: Farmer | None = None, store: Store | None = None
+    ) -> CreditLimit:
+        """Upsert the farmer's credit limit at the store (ST-007)."""
+        farmer_id, store_id = (farmer or self.farmer).id, (store or self.store).id
+        row = (
+            await self.session.execute(
+                select(CreditLimit).where(
+                    CreditLimit.farmer_id == farmer_id, CreditLimit.store_id == store_id
+                )
+            )
+        ).scalar_one_or_none()
+        if row is None:
+            row = CreditLimit(
+                tenant_id=self.tenant_id,
+                farmer_id=farmer_id,
+                store_id=store_id,
+                limit_paise=limit_paise,
+                set_by=self.user(UserRole.CLUSTER_HEAD).id,
+            )
+            self.session.add(row)
+        else:
+            row.limit_paise, row.deleted_at = limit_paise, None
+        await self.session.flush()
+        return row
 
     async def debit(
         self, amount_paise: int, *, farmer: Farmer | None = None, store: Store | None = None
@@ -251,10 +286,10 @@ async def make_pay_world(
         )
     ).scalar_one_or_none()
     provider = FakePaymentProvider(webhook_secret=WEBHOOK_KEY)
-    ledger = FakeLedger()
+    ledger = SpyLedger()
     services = PaymentServices(settings=get_settings(), provider=provider, ledger=ledger)
     app.state.payments = services
-    return PayWorld(
+    pay_world = PayWorld(
         world=world,
         app=app,
         session=session,
@@ -266,6 +301,20 @@ async def make_pay_world(
         ledger=ledger,
         services=services,
     )
+    await pay_world.set_limit(DEFAULT_TEST_LIMIT_PAISE)
+    return pay_world
+
+
+def request_transactions(pw: PayWorld) -> None:
+    """Make every request of ``pw.app`` a savepoint of the test transaction that rolls back
+    when the route raises — the production ``get_session`` behaviour (one transaction per
+    request) — so a test can prove what a *returned* problem response commits."""
+
+    async def _request_tx() -> AsyncIterator[AsyncSession]:
+        async with pw.session.begin_nested():
+            yield pw.session
+
+    pw.app.dependency_overrides[get_session] = _request_tx
 
 
 @asynccontextmanager
@@ -280,12 +329,13 @@ def as_json(body: bytes) -> dict[str, Any]:
 
 
 __all__ = [
+    "DEFAULT_TEST_LIMIT_PAISE",
     "WEBHOOK_KEY",
-    "Decision",
-    "FakeLedger",
     "PayWorld",
+    "SpyLedger",
     "as_json",
     "farmer_of_store",
     "make_pay_world",
+    "request_transactions",
     "same_session",
 ]

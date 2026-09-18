@@ -13,12 +13,11 @@ from httpx import AsyncClient
 from sqlalchemy import func, select
 
 from farmerapp.auth.models import UserRole
-from farmerapp.khata.models import khata_balance
+from farmerapp.khata.models import CreditApprovalRequest, KhataEntry, khata_balance
 from farmerapp.orders.models import OrderStatus
 from farmerapp.payments.events import PaymentCaptured
 from farmerapp.payments.models import Payment
-from farmerapp.payments.ports import KhataLedgerPort
-from tests.payments.helpers import Decision, PayWorld
+from tests.payments.helpers import PayWorld, request_transactions
 
 
 async def _pay(
@@ -230,25 +229,55 @@ async def test_card_needs_the_terminal_reference_and_emits_capture(
 
 
 # --------------------------------------------------------------------------- credit
-async def test_credit_goes_through_the_ledger_port(client: AsyncClient, pw: PayWorld) -> None:
+async def test_credit_goes_through_the_real_credit_gate(client: AsyncClient, pw: PayWorld) -> None:
     order = await pw.order(60_000)
+    before = await khata_balance(pw.session, pw.farmer.id, pw.store.id)
     resp = await _pay(client, pw, {"order_id": str(order.id), "mode": "credit"})
     assert resp.status_code == 201, resp.text
-    assert resp.json()["status"] == "paid" and resp.json()["mode"] == "credit"
+    body = resp.json()
+    assert body["status"] == "paid" and body["mode"] == "credit"
     check = pw.ledger.checks[-1]
     assert check["order_id"] == order.id and check["amount_paise"] == 60_000
     assert check["farmer_id"] == pw.farmer.id and check["store_id"] == pw.store.id
-    assert pw.ledger.credits == []  # the khata debit is the orders branch's, not ours
+    assert pw.ledger.credits == []
+    # ST-007: the gate posted exactly one debit for the order; the payment links it.
+    debits = (
+        (await pw.session.execute(select(KhataEntry).where(KhataEntry.ref_id == order.id)))
+        .scalars()
+        .all()
+    )
+    assert [(d.type, d.ref_type, d.amount_paise) for d in debits] == [("debit", "order", 60_000)]
+    assert body["khata_entry_id"] == str(debits[0].id)
+    payment = await pw.session.get_one(Payment, uuid.UUID(body["payment_id"]))
+    assert payment.khata_entry_id == debits[0].id
+    assert await khata_balance(pw.session, pw.farmer.id, pw.store.id) == before + 60_000
 
 
-async def test_credit_beyond_the_limit_is_blocked(client: AsyncClient, pw: PayWorld) -> None:
-    approval = uuid.uuid4()
-    pw.ledger.decision = Decision(False, approval, 12_500)
+async def test_credit_beyond_the_limit_is_402_and_the_approval_request_commits(
+    client: AsyncClient, pw: PayWorld
+) -> None:
+    request_transactions(pw)  # a raised error would roll the request back, as in production
+    balance = await khata_balance(pw.session, pw.farmer.id, pw.store.id)
+    await pw.set_limit(max(balance, 0) + 10_000)
     order = await pw.order(60_000)
     resp = await _pay(client, pw, {"order_id": str(order.id), "mode": "credit"})
-    assert resp.status_code == 409 and resp.json()["code"] == "credit_limit_exceeded"
-    assert resp.json()["approval_request_id"] == str(approval)
-    assert resp.json()["shortfall_paise"] == 12_500
+    assert resp.status_code == 402, resp.text
+    problem = resp.json()
+    assert problem["code"] == "credit_limit_exceeded"
+    assert problem["shortfall_paise"] == 50_000 - min(balance, 0)
+    request = await pw.session.get_one(
+        CreditApprovalRequest, uuid.UUID(problem["approval_request_id"])
+    )
+    assert request.status == "pending" and request.order_id == order.id
+    assert request.amount_paise == 60_000
+    # Nothing else was written: no payment, no khata debit.
+    assert (
+        await pw.session.scalar(
+            select(func.count()).select_from(Payment).where(Payment.order_id == order.id)
+        )
+        == 0
+    )
+    assert await khata_balance(pw.session, pw.farmer.id, pw.store.id) == balance
 
 
 async def test_credit_needs_an_order_of_a_known_farmer(client: AsyncClient, pw: PayWorld) -> None:
@@ -262,13 +291,6 @@ async def test_credit_needs_an_order_of_a_known_farmer(client: AsyncClient, pw: 
     walk_in = await pw.order(1_000, farmer=False)
     resp = await _pay(client, pw, {"order_id": str(walk_in.id), "mode": "credit"})
     assert resp.status_code == 422 and resp.json()["code"] == "invalid_mode"
-
-
-async def test_credit_without_the_credit_service_is_503(client: AsyncClient, pw: PayWorld) -> None:
-    pw.services.ledger = KhataLedgerPort()  # the orders branch's module is not deployed here
-    order = await pw.order(1_000)
-    resp = await _pay(client, pw, {"order_id": str(order.id), "mode": "credit"})
-    assert resp.status_code == 503 and resp.json()["code"] == "credit_unavailable"
 
 
 # --------------------------------------------------------------------------- roles / scope

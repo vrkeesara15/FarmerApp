@@ -6,8 +6,13 @@ compute GST (``farmerapp.invoices.gst``), persist the ``pos`` order through the
 ``OrderPort`` (stock sale movements), take the next gapless invoice number, snapshot the
 ``invoice`` row, render the PDF into the blob store and collect the payment through
 ``farmerapp.payments.service.create_payment`` (amount = the invoice's rounded total). Any
-failure — no stock, credit refused, provider down — rolls the whole sale back, invoice
-number included.
+failure — no stock, provider down — rolls the whole sale back, invoice number included.
+
+A **credit** sale asks the credit gate (``khata.credit.check_and_reserve_credit`` through
+the ``LedgerPort``) first, for the invoice total and a pre-assigned order id, before anything
+else is written. Allowed: the gate posted the khata debit and the payment links it.
+Blocked: nothing but the approval request is written and ``CreditBlocked`` is returned —
+the route answers 402 ``credit_limit_exceeded`` without raising so the request commits.
 """
 
 from __future__ import annotations
@@ -45,13 +50,17 @@ from farmerapp.logging import get_logger
 from farmerapp.orders.models import Order
 from farmerapp.payments.config import IST, payment_settings, state_code
 from farmerapp.payments.day_close import visible_store
+from farmerapp.payments.models import PaymentMode
 from farmerapp.payments.schemas import PaymentCreate
 from farmerapp.payments.service import (
+    CreditBlocked,
+    InvalidModeError,
     Messaging,
     PaymentServices,
     PhoneRequiredError,
     ProviderUnavailableError,
     Target,
+    actor_of,
     create_payment,
 )
 from farmerapp.tenants.models import Store, Village
@@ -289,12 +298,28 @@ async def pos_sale(
     messaging: Messaging,
     blobs: BlobStore,
     now: datetime,
-) -> PosSaleOut:
+) -> PosSaleOut | CreditBlocked:
     store = await visible_store(session, actor, store_id)
     tenant = await session.get_one(Tenant, actor.tenant_id)
     buyer = await _buyer(session, actor, store, body)
     lines = await _priced_lines(session, store, body, now)
     totals = compute_invoice(lines, supply_type(store.state, buyer.state))
+    order_id = uuid.uuid4()
+    credit = None
+    if body.payment.mode == PaymentMode.CREDIT:
+        if buyer.farmer is None:
+            raise InvalidModeError("Credit is for an order of a known farmer, not for dues.")
+        credit = await services.ledger.check_and_reserve_credit(
+            session,
+            tenant_id=actor.tenant_id,
+            farmer_id=buyer.farmer.id,
+            store_id=store.id,
+            amount_paise=totals.total_paise,
+            order_id=order_id,
+            actor=actor_of(actor),
+        )
+        if not credit.allowed:
+            return CreditBlocked(credit)
     order = await orders.create_pos_order(
         session,
         PosOrderDraft(
@@ -308,13 +333,15 @@ async def pos_sale(
                     unit_price_paise=line.unit_price_paise,
                     gst_rate_bp=line.gst_rate_bp,
                     line_total_paise=line.taxable_paise,
+                    label_claim_id=wanted.label_claim_id,
                 )
-                for line in totals.lines
+                for line, wanted in zip(totals.lines, body.lines, strict=True)
             ),
             subtotal_paise=totals.taxable_paise,
             tax_paise=totals.tax_paise,
             placed_by=actor.id,
             at=now,
+            order_id=order_id,
         ),
     )
     invoice = await issue_invoice(
@@ -349,7 +376,10 @@ async def pos_sale(
             order=order,
             due_paise=invoice.total_paise,  # the rounded invoice total is what is collected
         ),
+        credit=credit,
     )
+    if isinstance(payment, CreditBlocked):  # pragma: no cover - the gate ran above
+        raise RuntimeError("credit was reserved before the sale")
     log.info(
         "pos_sale",
         order_id=str(order.id),

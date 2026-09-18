@@ -3,8 +3,6 @@ OPS-008 reconciliation job."""
 
 from __future__ import annotations
 
-import sys
-import types
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -16,16 +14,18 @@ from typer.testing import CliRunner
 
 from farmerapp.db.audit import system_actor
 from farmerapp.jobs.cli import cli
-from farmerapp.khata.models import KhataEntry, khata_balance
+from farmerapp.khata.credit import CreditDecision
+from farmerapp.khata.ledger import InvalidKhataEntryError
+from farmerapp.khata.models import CreditApprovalRequest, KhataEntry, khata_balance
 from farmerapp.notifications.models import Notification
 from farmerapp.payments import reconcile as reconcile_mod
 from farmerapp.payments.day_close import ist_today
 from farmerapp.payments.models import Payment
-from farmerapp.payments.ports import CREDIT_MODULE, LEDGER_MODULE, KhataLedgerPort
+from farmerapp.payments.ports import KhataLedgerPort
 from farmerapp.payments.providers import SettlementRecord
 from farmerapp.payments.reconcile import reconcile_payments
 from farmerapp.payments.sync_ops import PaymentSyncUnavailableError, create
-from tests.payments.helpers import Decision, PayWorld
+from tests.payments.helpers import PayWorld
 
 
 def _op(entity_id: uuid.UUID, payload: dict[str, Any]) -> dict[str, Any]:
@@ -132,11 +132,36 @@ async def test_sync_op_without_payment_services(pw: PayWorld) -> None:
 
 
 # --------------------------------------------------------------------------- ports
-async def test_default_ledger_port_falls_back_to_a_credit_entry(pw: PayWorld) -> None:
+async def test_offline_credit_beyond_the_limit_is_rejected_and_the_request_kept(
+    client: AsyncClient, pw: PayWorld
+) -> None:
+    officer = pw.user("field_officer")
+    balance = await khata_balance(pw.session, pw.farmer.id, pw.store.id)
+    await pw.set_limit(max(balance, 0) + 1_000)
+    order = await pw.order(8_000, placed_by=officer)
+    payment_id = uuid.uuid4()
+    results = await _sync(
+        client, pw, [_op(payment_id, {"order_id": str(order.id), "mode": "credit"})]
+    )
+    assert results[0]["status"] == "rejected", results
+    error = results[0]["error"]
+    assert error["code"] == "credit_limit_exceeded" and error["status"] == 402
+    request_id = uuid.UUID(error["errors"][0]["approval_request_id"])
+    request = await pw.session.get_one(CreditApprovalRequest, request_id)
+    assert request.status == "pending" and request.order_id == order.id
+    assert request.requested_by == officer.id
+    assert await pw.session.get(Payment, payment_id) is None
+    assert await khata_balance(pw.session, pw.farmer.id, pw.store.id) == balance
+
+
+async def test_default_ledger_port_is_the_khata_contract(pw: PayWorld) -> None:
+    """``KhataLedgerPort`` delegates to ``khata.credit`` / ``khata.ledger`` (no fallback)."""
+    port = KhataLedgerPort()
+    actor = system_actor(pw.tenant_id)
     await pw.debit(10_000)
     before = await khata_balance(pw.session, pw.farmer.id, pw.store.id)
     ref = uuid.uuid4()
-    entry = await KhataLedgerPort().post_credit(
+    entry = await port.post_credit(
         pw.session,
         tenant_id=pw.tenant_id,
         farmer_id=pw.farmer.id,
@@ -144,63 +169,36 @@ async def test_default_ledger_port_falls_back_to_a_credit_entry(pw: PayWorld) ->
         amount_paise=4_000,
         ref_type="payment",
         ref_id=ref,
-        actor=system_actor(pw.tenant_id),
+        actor=actor,
     )
-    assert entry.type == "credit" and entry.ref_id == ref and entry.ref_type == "payment"
+    assert (entry.type, entry.ref_id, entry.ref_type) == ("credit", ref, "payment")
+    assert entry.note == "Payment received"
     assert await khata_balance(pw.session, pw.farmer.id, pw.store.id) == before - 4_000
-
-
-async def test_default_ledger_port_uses_the_orders_branch_when_present(
-    pw: PayWorld, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    calls: list[str] = []
-
-    async def check_and_reserve_credit(session: Any, **kwargs: Any) -> Decision:
-        calls.append("check")
-        assert set(kwargs) == {
-            "tenant_id",
-            "farmer_id",
-            "store_id",
-            "amount_paise",
-            "order_id",
-            "actor",
-        }
-        return Decision(False, None, 5)
-
-    async def post_credit(session: Any, **kwargs: Any) -> KhataEntry:
-        calls.append("credit")
-        assert kwargs["ref_type"] == "payment"
-        return KhataEntry(id=uuid.uuid4())
-
-    credit = types.ModuleType(CREDIT_MODULE)
-    credit.check_and_reserve_credit = check_and_reserve_credit  # type: ignore[attr-defined]
-    ledger = types.ModuleType(LEDGER_MODULE)
-    ledger.post_credit = post_credit  # type: ignore[attr-defined]
-    monkeypatch.setitem(sys.modules, CREDIT_MODULE, credit)
-    monkeypatch.setitem(sys.modules, LEDGER_MODULE, ledger)
-    port = KhataLedgerPort()
-    actor = system_actor(pw.tenant_id)
+    with pytest.raises(InvalidKhataEntryError):  # the real validation, not a lenient copy
+        await port.post_credit(
+            pw.session,
+            tenant_id=pw.tenant_id,
+            farmer_id=pw.farmer.id,
+            store_id=pw.store.id,
+            amount_paise=0,
+            ref_type="payment",
+            ref_id=ref,
+            actor=actor,
+        )
+    order_id = uuid.uuid4()
     decision = await port.check_and_reserve_credit(
         pw.session,
         tenant_id=pw.tenant_id,
         farmer_id=pw.farmer.id,
         store_id=pw.store.id,
-        amount_paise=1,
-        order_id=None,
+        amount_paise=2_500,
+        order_id=order_id,
         actor=actor,
     )
-    assert decision.allowed is False and decision.shortfall_paise == 5
-    await port.post_credit(
-        pw.session,
-        tenant_id=pw.tenant_id,
-        farmer_id=pw.farmer.id,
-        store_id=pw.store.id,
-        amount_paise=1,
-        ref_type="payment",
-        ref_id=uuid.uuid4(),
-        actor=actor,
-    )
-    assert calls == ["check", "credit"]
+    assert isinstance(decision, CreditDecision) and decision.allowed
+    debit = await pw.session.get_one(KhataEntry, decision.khata_entry_id)
+    assert (debit.type, debit.ref_type, debit.ref_id) == ("debit", "order", order_id)
+    assert await khata_balance(pw.session, pw.farmer.id, pw.store.id) == before - 4_000 + 2_500
 
 
 # --------------------------------------------------------------------------- OPS-008

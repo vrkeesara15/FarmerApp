@@ -340,8 +340,8 @@ balance = await khata_balance(session, farmer_id, store_id)
   `GET /v1/farmers/{id}/khata`; scope helpers in `auth/scope.py` (`store_filters`,
   `order_filters`, `payment_filters`, `khata_farmer_filters`).
 - Sync: `order`, `order_line`, `payment`, `khata_entry` are in the feed with `server_wins`;
-  device writes return `unsupported_action` until FA-020 / FA-021 / FA-022 land (the
-  `order` create is wired since FA-020, see below).
+  device writes: `order` create (FA-020) and `payment` create (FA-021) are live, `order_line`
+  and `khata_entry` stay `unsupported_action` (lines travel inside the order).
 - Seed: `jobs/seed_catalog.py` (static products, packs, problems, claims) and
   `jobs/seed_m3.py` (`M3_FULL` / `M3_SMALL` via `SeedProfile.m3`).
 
@@ -430,11 +430,26 @@ if not decision.allowed:
 from farmerapp.khata.ledger import post_credit
 
 await post_credit(
+    session,
+    tenant_id=t,
+    farmer_id=f,
+    store_id=s,
+    amount_paise=amount,
+    ref_type="payment",
+    ref_id=payment.id,
+    actor=user,
+)
+```
 
-  device writes return `unsupported_action` until FA-020 / FA-022 land (`payment` create is
-  live since FA-021, see below).
-- Seed: `jobs/seed_catalog.py` (static products, packs, problems, claims) and
-  `jobs/seed_m3.py` (`M3_FULL` / `M3_SMALL` via `SeedProfile.m3`).
+- Tenant settings read by `khata.ledger.CreditSettings`: `store_manager_max_credit_limit_paise`
+  (default 5,000,000) and `credit_due_days` (default 90; due date of a credit sale without a
+  known harvest).
+- `GET /v1/farmers/{id}/khata` adds `open_debits` (FIFO-settled, due date, days overdue,
+  bucket), `overdue_buckets` (`0_30` / `31_60` / `61_90` / `90_plus`, SPEC 5.2) and
+  `payment_history`.
+- Sync: `order` create = offline capture (entity id = order id; replay → `conflict`); a
+  credit sale beyond the limit is `rejected` with `credit_limit_exceeded` (402) and the
+  approval request id in `error.errors[0]`.
 
 ## Payments, webhooks, POS invoices and day close (FA-021 / SEC-023 / ST-001 / ST-002 / ST-006)
 
@@ -468,23 +483,6 @@ entry = await services.ledger.post_credit(
     tenant_id=t,
     farmer_id=f,
     store_id=s,
-    amount_paise=amount,
-    ref_type="payment",
-    ref_id=payment.id,
-    actor=user,
-)
-```
-
-- Tenant settings read by `khata.ledger.CreditSettings`: `store_manager_max_credit_limit_paise`
-  (default 5,000,000) and `credit_due_days` (default 90; due date of a credit sale without a
-  known harvest).
-- `GET /v1/farmers/{id}/khata` adds `open_debits` (FIFO-settled, due date, days overdue,
-  bucket), `overdue_buckets` (`0_30` / `31_60` / `61_90` / `90_plus`, SPEC 5.2) and
-  `payment_history`.
-- Sync: `order` create = offline capture (entity id = order id; replay → `conflict`); a
-  credit sale beyond the limit is `rejected` with `credit_limit_exceeded` (402) and the
-  approval request id in `error.errors[0]`.
-
     amount_paise=a,
     ref_type="payment",
     ref_id=p,
@@ -508,6 +506,32 @@ bus.subscribe(PaymentCaptured, on_payment_captured)
   UPI / link -> `rejected` `requires_network`).
 - Job: `python -m farmerapp.jobs reconcile-payments --tenant-id <id> [--date YYYY-MM-DD]`
   (OPS-008 dry run: settlements vs paid payments; accountants notified on mismatches).
+
+## M3 integration: credit, ledger, POS and payment events
+
+Alembic `0015_merge_m3_heads` joins `0012` (orders), `0013` (payments) and `0014` (catalog)
+into one head. Notes: `docs/prs/M3-integration.md`.
+
+- **Credit** (`payment.mode = credit`, POS credit sales, the `payment` sync op) goes through
+  the real `khata.credit.check_and_reserve_credit` via `payments.ports.KhataLedgerPort`
+  (no 503 fallback). Allowed: the gate posted the debit, `payment.khata_entry_id` links it.
+  Blocked: `CreditBlocked` is *returned* and the route answers 402 `credit_limit_exceeded`
+  (`khata.credit.credit_blocked_response`) so the `credit_approval_request` commits. The POS
+  asks the gate before it writes the order (pre-assigned order id), so a refused sale leaves
+  no order, invoice number or stock movement behind.
+- **Dues** paid in cash / card / webhook post their khata credit through the real
+  `khata.ledger.post_credit` (balance = sum of entries).
+- **POS orders**: the default `OrderPort` is `farmerapp.orders.pos.OrdersPosPort` (DX-007
+  check, FEFO via `stock.service.allocate_fefo`, reservations consumed into `sale`
+  movements, status event); `app.state.pos_orders` still swaps it.
+- **Events**: `farmerapp.orders.payment_events` subscribes to `PaymentCaptured` with
+  `bus.subscribe_async` (runs in the payment's transaction, in a savepoint). A prepaid order
+  (`payment_mode` `upi_qr` / `payment_link`) is placed with its stock held and waits in
+  `placed`; once fully paid it moves `placed -> reserved` and the farmer / placing user are
+  notified. Registered by `create_app` and by the worker's `payment.webhook` handler.
+- **DX-007**: every `order_line.label_claim_id` (REST order, `order` sync op, POS
+  `lines[].label_claim_id`) is checked with `catalog.recommendable.assert_sku_recommendable`;
+  otherwise 422 `sku_not_recommendable` with `errors[].loc = ["lines", i, "label_claim_id"]`.
 
 ## Farmer registration writes (FA-012 / FA-013)
 

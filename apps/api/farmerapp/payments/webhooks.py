@@ -193,7 +193,7 @@ async def _apply(
     payment.failure_reason = None
     await session.flush()
     await settle_dues(session, payment, ledger, audit.system_actor(payment.tenant_id))
-    emit_captured(payment, now)
+    await emit_captured(session, payment, now)
     return Applied(WebhookStatus.PROCESSED, None, payment.id)
 
 

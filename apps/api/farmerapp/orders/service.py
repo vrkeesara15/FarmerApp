@@ -20,7 +20,13 @@ Placing (``place_order``)
    ``credit_limit_exceeded`` (``PlaceResult.blocked``).
 5. The order is written ``placed`` then ``reserved`` (two ``order_status_event`` rows) with
    its lines and ``stock_reservation`` rows; the farmer's login and the placing officer get
-   a notification.
+   a notification. A **prepaid** order (``payment_mode`` UPI QR / payment link) holds the
+   same reservations but waits in ``placed`` until its payment is captured:
+   ``farmerapp.orders.payment_events`` then moves it to ``reserved`` (FA-021 ``PaymentCaptured``).
+
+Label claims (DX-007): a line that carries ``label_claim_id`` (a recommendation) is checked
+with ``catalog.recommendable.assert_sku_recommendable``; anything but a live, approved claim
+of that SKU is 422 ``sku_not_recommendable`` — for REST, the ``order`` sync op and the POS.
 
 Queue (``change_status``)
 -------------------------
@@ -46,8 +52,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from farmerapp.api.errors import AppError, ConflictError, NotFoundError
 from farmerapp.auth.models import User, UserRole
 from farmerapp.auth.scope import farmer_filters
-from farmerapp.catalog.models import LabelClaim, Product, Sku
+from farmerapp.catalog.errors import SkuNotRecommendable
+from farmerapp.catalog.models import Product, Sku
 from farmerapp.catalog.pricing import prices_for, resolved_price
+from farmerapp.catalog.recommendable import assert_sku_recommendable
 from farmerapp.farmers.models import Farmer
 from farmerapp.khata.credit import CreditDecision, check_and_reserve_credit
 from farmerapp.khata.ledger import post_credit
@@ -73,11 +81,12 @@ from farmerapp.orders.schemas import (
     OrderStatusEventOut,
     OrderStatusIn,
 )
-from farmerapp.payments.models import Payment, PaymentMode
+from farmerapp.payments.models import PROVIDER_MODES, Payment, PaymentMode
 from farmerapp.payments.schemas import PaymentOut
 from farmerapp.stock.models import StockReservation
 from farmerapp.stock.service import (
     LineDemand,
+    active_reservations,
     allocate_fefo,
     consume_order,
     hold_allocations,
@@ -244,29 +253,11 @@ async def price_lines(
     ]
     if unknown:
         raise InvalidOrderError("Unknown or inactive SKU.", extra={"errors": unknown})
-    claim_ids = {line.label_claim_id for line in body.lines if line.label_claim_id}
-    claims: dict[uuid.UUID, uuid.UUID] = {}
-    if claim_ids:
-        claims = {
-            cid: sku
-            for cid, sku in (
-                await session.execute(
-                    select(LabelClaim.id, LabelClaim.sku_id).where(
-                        LabelClaim.id.in_(claim_ids),
-                        LabelClaim.tenant_id == actor.tenant_id,
-                        LabelClaim.status == "approved",
-                        LabelClaim.deleted_at.is_(None),
-                    )
-                )
-            ).all()
-        }
-    bad_claims = [
-        {"loc": ["lines", i, "label_claim_id"], "msg": "No approved claim for this SKU."}
-        for i, line in enumerate(body.lines)
-        if line.label_claim_id is not None and claims.get(line.label_claim_id) != line.sku_id
-    ]
-    if bad_claims:  # DX-007: a recommendation always rests on an approved claim
-        raise InvalidOrderError("Invalid label claim.", extra={"errors": bad_claims})
+    await assert_lines_recommendable(
+        session,
+        actor.tenant_id,
+        [(line.sku_id, line.label_claim_id) for line in body.lines],
+    )
     prices = await prices_for(session, sku_ids, store.id, today)
     priced: list[PricedLine] = []
     for i, line in enumerate(body.lines):
@@ -286,6 +277,38 @@ async def price_lines(
             )
         )
     return priced
+
+
+async def assert_lines_recommendable(
+    session: AsyncSession,
+    tenant_id: uuid.UUID,
+    lines: list[tuple[uuid.UUID, uuid.UUID | None]],
+) -> None:
+    """DX-007 on every line that sets ``order_line.label_claim_id`` (a recommendation): the
+    claim must be a live, approved claim of that SKU (``assert_sku_recommendable``).
+    Raises 422 ``sku_not_recommendable`` listing the offending lines; nothing is written."""
+    errors: list[dict[str, Any]] = []
+    for i, (sku_id, claim_id) in enumerate(lines):
+        if claim_id is None:
+            continue
+        try:
+            await assert_sku_recommendable(
+                session, tenant_id=tenant_id, sku_id=sku_id, label_claim_id=claim_id
+            )
+        except SkuNotRecommendable:
+            errors.append(
+                {
+                    "loc": ["lines", i, "label_claim_id"],
+                    "msg": "No approved label claim for this SKU (DX-007).",
+                    "sku_id": str(sku_id),
+                    "label_claim_id": str(claim_id),
+                }
+            )
+    if errors:
+        raise SkuNotRecommendable(
+            "This SKU has no approved label claim for the crop and problem (DX-007).",
+            extra={"errors": errors},
+        )
 
 
 def _check_client_amounts(body: OrderCreate, priced: list[PricedLine]) -> tuple[int, int, int]:
@@ -322,7 +345,7 @@ def _check_client_amounts(body: OrderCreate, priced: list[PricedLine]) -> tuple[
 # --------------------------------------------------------------------------- events
 async def _record_status(
     session: AsyncSession,
-    actor: User,
+    actor_id: uuid.UUID | None,
     order: Order,
     farmer_user_id: uuid.UUID | None,
     *,
@@ -338,12 +361,12 @@ async def _record_status(
             from_status=from_status,
             to_status=to_status.value,
             note=note,
-            actor_id=actor.id,
+            actor_id=actor_id,  # None = the system (a captured payment)
         )
     )
     if notify:
         recipients = {u for u in (farmer_user_id, order.placed_by) if u is not None}
-        recipients.discard(actor.id)
+        recipients.discard(actor_id)
         for user_id in sorted(recipients):
             session.add(
                 Notification(
@@ -445,7 +468,7 @@ async def place_order(
     )
     await _record_status(
         session,
-        actor,
+        actor.id,
         order,
         farmer.user_id,
         from_status=None,
@@ -453,10 +476,14 @@ async def place_order(
         note=body.notes,
         notify=False,
     )
+    if body.payment_mode in PROVIDER_MODES:
+        # Prepaid (UPI QR / link): stock is held, the order waits in ``placed`` until the
+        # payment is captured (``farmerapp.orders.payment_events``).
+        return PlaceResult(order=await order_detail(session, order))
     order.status = OrderStatus.RESERVED
     await _record_status(
         session,
-        actor,
+        actor.id,
         order,
         farmer.user_id,
         from_status=OrderStatus.PLACED.value,
@@ -578,6 +605,46 @@ async def _reverse_credit(session: AsyncSession, actor: User, order: Order) -> N
         )
 
 
+async def reserve_placed_order(session: AsyncSession, order: Order, today: date) -> None:
+    """``placed -> reserved`` stock: FEFO-reserve the lines unless the order already holds
+    its reservations (a prepaid order reserved at placing)."""
+    if await active_reservations(session, order.id):
+        return
+    demands = await _line_demands(session, order)
+    allocations = await allocate_fefo(session, order.store_id, demands, today)
+    await hold_allocations(
+        session,
+        tenant_id=order.tenant_id,
+        order_id=order.id,
+        store_id=order.store_id,
+        demands=demands,
+        allocations=allocations,
+    )
+
+
+async def advance_paid_order(
+    session: AsyncSession, order: Order, *, today: date, note: str | None = None
+) -> bool:
+    """A fully paid order waiting in ``placed`` moves to ``reserved`` (ST-005 transition,
+    by the system: ``actor_id`` NULL). Anything else is left alone. Returns whether it
+    moved; the farmer's login and the placing user are notified."""
+    if order.status != OrderStatus.PLACED:
+        return False
+    await reserve_placed_order(session, order, today)
+    order.status = OrderStatus.RESERVED
+    await session.flush()
+    await _record_status(
+        session,
+        None,
+        order,
+        await _farmer_user(session, order),
+        from_status=OrderStatus.PLACED.value,
+        to_status=OrderStatus.RESERVED,
+        note=note,
+    )
+    return True
+
+
 async def change_status(
     session: AsyncSession, actor: User, order: Order, body: OrderStatusIn, *, today: date
 ) -> OrderDetailOut:
@@ -593,16 +660,7 @@ async def change_status(
             },
         )
     if target == OrderStatus.RESERVED:
-        demands = await _line_demands(session, order)
-        allocations = await allocate_fefo(session, order.store_id, demands, today)
-        await hold_allocations(
-            session,
-            tenant_id=order.tenant_id,
-            order_id=order.id,
-            store_id=order.store_id,
-            demands=demands,
-            allocations=allocations,
-        )
+        await reserve_placed_order(session, order, today)
     elif target == OrderStatus.CANCELLED:
         await release_order(session, order.id)
         await _reverse_credit(session, actor, order)
@@ -620,7 +678,7 @@ async def change_status(
     await session.flush()
     await _record_status(
         session,
-        actor,
+        actor.id,
         order,
         await _farmer_user(session, order),
         from_status=current,
@@ -639,9 +697,12 @@ __all__ = [
     "OrderExistsError",
     "PlaceResult",
     "PricedLine",
+    "advance_paid_order",
+    "assert_lines_recommendable",
     "change_status",
     "nearest_store",
     "order_detail",
     "place_order",
     "price_lines",
+    "reserve_placed_order",
 ]

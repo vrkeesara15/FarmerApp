@@ -30,6 +30,7 @@ from tests.farmers.write_fixtures import WriteCtx
 from tests.orders.helpers import (
     available,
     demo_farmer,
+    order_body,
     other_store,
     place,
     receive,
@@ -244,12 +245,52 @@ async def test_invalid_skus_claims_and_duplicate_ids(
         expect=422,
         lines=[{"sku_id": str(world.a.sku_id), "qty": "1", "label_claim_id": str(other_claim.id)}],
     )
-    assert problem["code"] == "invalid_order"  # DX-007: the claim must match the SKU
+    # DX-007 (assert_sku_recommendable): the claim must be an approved claim of this SKU.
+    assert problem["code"] == "sku_not_recommendable"
+    assert problem["errors"][0]["loc"] == ["lines", 0, "label_claim_id"]
+    assert problem["errors"][0]["label_claim_id"] == str(other_claim.id)
     client_id = str(uuid.uuid4())
     first = await place(client, bearer, world, id=client_id)
     assert first["id"] == client_id == first["client_order_id"]
     problem = await place(client, bearer, world, id=client_id, expect=409)
     assert problem["code"] == "order_exists"
+
+
+async def test_order_lines_with_draft_or_retired_claims_are_not_recommendable(
+    client: AsyncClient, ctx: WriteCtx, bearer: Bearer, db_session: AsyncSession
+) -> None:
+    """DX-007 on every write path that sets ``order_line.label_claim_id``: REST and the
+    ``order`` sync op both refuse a claim that is not live and approved; nothing is written."""
+    world = ctx.world
+    await receive(client, bearer, world, qty=20)
+    async with tenant_scope(db_session, world.a.tenant.id):
+        claim = await db_session.scalar(
+            select(LabelClaim).where(
+                LabelClaim.sku_id == world.a.sku_id, LabelClaim.status == "approved"
+            )
+        )
+        assert claim is not None
+        claim.status = "draft"
+        await db_session.flush()
+    line = {"sku_id": str(world.a.sku_id), "qty": "1", "label_claim_id": str(claim.id)}
+    problem = await place(client, bearer, world, expect=422, lines=[line])
+    assert problem["code"] == "sku_not_recommendable"
+    async with tenant_scope(db_session, world.a.tenant.id):
+        claim.status = "retired"
+        await db_session.flush()
+    order_id = uuid.uuid4()
+    body = await sync(
+        client,
+        ctx,
+        [op("order", "create", order_body(world, lines=[line]), entity_id=order_id)],
+        headers=bearer(world.a.user(UserRole.FIELD_OFFICER)),
+    )
+    result = body["results"][0]
+    assert result["status"] == "rejected"
+    assert result["error"]["code"] == "sku_not_recommendable" and result["error"]["status"] == 422
+    assert result["error"]["errors"][0]["loc"] == ["lines", 0, "label_claim_id"]
+    async with tenant_scope(db_session, world.a.tenant.id):
+        assert await db_session.get(Order, order_id) is None
 
 
 # --------------------------------------------------------------------------- nearest store

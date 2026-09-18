@@ -27,14 +27,14 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 
-from farmerapp.api.errors import NotFoundError, problem_response, problem_responses
+from farmerapp.api.errors import NotFoundError, problem_responses
 from farmerapp.api.pagination import Page
 from farmerapp.auth.deps import DbSession, Services
 from farmerapp.auth.models import User, UserRole
 from farmerapp.auth.policy import Role, require_roles
 from farmerapp.auth.scope import farmer_filters, order_filters
 from farmerapp.farmers.models import Farmer
-from farmerapp.khata.credit import CreditLimitExceededError, decision_extra
+from farmerapp.khata.credit import credit_blocked_response
 from farmerapp.orders import service
 from farmerapp.orders.models import OPEN_STATUSES, Order, OrderChannel, OrderLine, OrderStatus
 from farmerapp.orders.schemas import (
@@ -160,13 +160,7 @@ async def place_order(
     result = await service.place_order(session, actor, body, today=services.clock.now().date())
     if result.blocked is not None:
         # Returned, not raised: the approval request must commit with this transaction.
-        return problem_response(
-            request,
-            status=CreditLimitExceededError.status,
-            code=CreditLimitExceededError.code,
-            detail="This credit sale is beyond the farmer's limit; a cluster head must approve it.",
-            extra=decision_extra(result.blocked),
-        )
+        return credit_blocked_response(request, result.blocked)
     if result.order is None:  # pragma: no cover - place_order returns one or the other
         raise RuntimeError("place_order returned neither an order nor a block")
     return result.order

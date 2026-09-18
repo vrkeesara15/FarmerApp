@@ -95,6 +95,11 @@ class PosLineIn(BaseModel):
 
     sku_id: uuid.UUID
     qty: Decimal = Field(gt=0, max_digits=12, decimal_places=3)
+    label_claim_id: uuid.UUID | None = Field(
+        default=None,
+        description="Set when the SKU is sold on a recommendation: must be an approved label "
+        "claim of this SKU (DX-007), else 422 `sku_not_recommendable`.",
+    )
 
 
 class PosPaymentIn(BaseModel):

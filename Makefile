@@ -27,8 +27,12 @@ up: ## Start db, pubsub, gcs, mockserver and wait for health
 down: ## Stop and remove local containers (volumes kept)
 	$(COMPOSE) down --remove-orphans
 
+# --no-recreate: never replace a running db container. Every checkout / worktree shares the
+# compose project `farmerapp`; a worktree without this .env (another DB_PORT) used to recreate
+# farmerapp-db-1 and drop the connections of a test suite running elsewhere. After changing
+# docker/postgres or the port, run `make down` first.
 db: ## Start only Postgres (PostGIS + pgvector) and make sure the app role exists
-	$(COMPOSE) up -d --build --wait db
+	$(COMPOSE) up -d --build --no-recreate --wait db
 	$(MAKE) db-roles
 
 db-roles: ## (Re)apply docker/postgres/initdb roles on an existing volume (idempotent, SEC-011)

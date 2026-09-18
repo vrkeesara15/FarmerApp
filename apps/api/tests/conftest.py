@@ -123,8 +123,17 @@ async def migrate_engine(migrated_database: str) -> AsyncIterator[AsyncEngine]:
 
 @pytest.fixture(scope="session")
 async def app_engine(migrated_database: str) -> AsyncIterator[AsyncEngine]:
-    """The app-role engine shared by every test (connections are reused, see module doc)."""
-    engine = create_async_engine(migrated_database, pool_size=2, max_overflow=2)
+    """The app-role engine shared by every test (connections are reused, see module doc).
+
+    ``pool_pre_ping=True`` as in production (``farmerapp.db.session.get_engine``): the pool
+    outlives any single test, so a pooled connection can be dead by the time a test checks it
+    out — the Postgres container was recreated or restarted underneath the run (another
+    checkout's ``make db`` recreating the shared ``farmerapp-db-1``, Docker Desktop
+    restarting the emulated amd64 image). Without the ping the next test failed in setup with
+    asyncpg "connection is closed"; with it the checkout detects the dead connection,
+    invalidates the pool and reconnects. This only happens at checkout, before a test runs a
+    statement: a connection that dies *during* a test still fails that test."""
+    engine = create_async_engine(migrated_database, pool_size=2, max_overflow=2, pool_pre_ping=True)
     try:
         yield engine
     finally:
