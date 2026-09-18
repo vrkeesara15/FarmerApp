@@ -46,6 +46,10 @@ AUTH_POLICY = "auth_lookup"
 #: Tables that are not tenant data and must stay owner-only.
 NON_TENANT_TABLES = frozenset({"alembic_version", "spatial_ref_sys"})
 
+#: Append-only tenant tables: the app role may SELECT and INSERT but never UPDATE or DELETE
+#: (FA-006 audit trail). Purging past retention is the migrate role's job (NF-012).
+APPEND_ONLY_TABLES = frozenset({"audit_log"})
+
 
 def _q(identifier: str) -> str:
     return '"' + identifier.replace('"', '""') + '"'
@@ -148,10 +152,24 @@ AS $$ SELECT NULLIF(current_setting('{TENANT_SETTING}', true), '')::uuid $$
     ]
 
 
-def rls_statements(table: str, tenant_column: str = "tenant_id") -> list[str]:
-    """Statements that put ``table`` under tenant isolation (idempotent)."""
+def rls_statements(
+    table: str, tenant_column: str = "tenant_id", *, append_only: bool = False
+) -> list[str]:
+    """Statements that put ``table`` under tenant isolation (idempotent).
+
+    ``append_only`` grants the app role SELECT + INSERT only and revokes the UPDATE/DELETE it
+    would otherwise get from the 0003 default privileges.
+    """
     t = _q(table)
     predicate = f"{_q(tenant_column)} = {TENANT_FUNCTION}()"
+    grants = (
+        [
+            f"REVOKE UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON {t} FROM {APP_ROLE}",
+            f"GRANT SELECT, INSERT ON {t} TO {APP_ROLE}",
+        ]
+        if append_only
+        else [f"GRANT SELECT, INSERT, UPDATE, DELETE ON {t} TO {APP_ROLE}"]
+    )
     return [
         f"ALTER TABLE {t} ENABLE ROW LEVEL SECURITY",
         f"ALTER TABLE {t} FORCE ROW LEVEL SECURITY",
@@ -161,18 +179,19 @@ def rls_statements(table: str, tenant_column: str = "tenant_id") -> list[str]:
         f"DROP POLICY IF EXISTS {MAINTENANCE_POLICY} ON {t}",
         f"CREATE POLICY {MAINTENANCE_POLICY} ON {t} AS PERMISSIVE FOR ALL TO {MIGRATE_ROLE} "
         f"USING (true) WITH CHECK (true)",
-        f"GRANT SELECT, INSERT, UPDATE, DELETE ON {t} TO {APP_ROLE}",
+        *grants,
     ]
 
 
-def enable_rls(table: str, tenant_column: str = "tenant_id") -> None:
+def enable_rls(table: str, tenant_column: str = "tenant_id", *, append_only: bool = False) -> None:
     """Alembic helper: call right after ``op.create_table`` of every tenant table.
 
-    ``tenant_column`` is ``"id"`` for the ``tenant`` table itself.
+    ``tenant_column`` is ``"id"`` for the ``tenant`` table itself. ``append_only=True`` for
+    tables listed in ``APPEND_ONLY_TABLES`` (the meta-test checks both agree).
     """
     from alembic import op
 
-    for statement in rls_statements(table, tenant_column):
+    for statement in rls_statements(table, tenant_column, append_only=append_only):
         op.execute(statement)
 
 
@@ -203,9 +222,10 @@ SELECT c.relname AS name,
        (SELECT array_agg(p.polname::text) FROM pg_policy p WHERE p.polrelid = c.oid)
            AS policies,
        has_table_privilege(:app_role, c.oid, 'SELECT')
-           AND has_table_privilege(:app_role, c.oid, 'INSERT')
-           AND has_table_privilege(:app_role, c.oid, 'UPDATE')
-           AND has_table_privilege(:app_role, c.oid, 'DELETE') AS app_dml
+           AND has_table_privilege(:app_role, c.oid, 'INSERT') AS app_read_write,
+       has_table_privilege(:app_role, c.oid, 'UPDATE')
+           OR has_table_privilege(:app_role, c.oid, 'DELETE')
+           OR has_table_privilege(:app_role, c.oid, 'TRUNCATE') AS app_update_delete
 FROM pg_class c
 JOIN pg_namespace n ON n.oid = c.relnamespace
 WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p') AND c.relname = :table
@@ -220,8 +240,9 @@ def rls_violations(
 
     Checks, per table: it exists; it has ``tenant_column`` (``id`` counts for ``tenant``);
     RLS is enabled and forced; the ``tenant_isolation`` policy exists; the app role has DML
-    and is not the owner. Meant for ``Base.metadata`` tables, i.e. ``alembic_version`` and
-    extension tables are the caller's business to exclude.
+    (SELECT + INSERT only for ``APPEND_ONLY_TABLES``, all four otherwise) and is not the
+    owner. Meant for ``Base.metadata`` tables, i.e. ``alembic_version`` and extension tables
+    are the caller's business to exclude.
     """
     problems: list[str] = []
     for table in tables:
@@ -241,14 +262,20 @@ def rls_violations(
         policies = set(row.policies or ())
         if ISOLATION_POLICY not in policies:
             problems.append(f"{table}: no {ISOLATION_POLICY} policy")
-        if not row.app_dml:
-            problems.append(f"{table}: {APP_ROLE} lacks DML privileges")
+        if not row.app_read_write:
+            problems.append(f"{table}: {APP_ROLE} lacks SELECT/INSERT privileges")
+        if table in APPEND_ONLY_TABLES:
+            if row.app_update_delete:
+                problems.append(f"{table}: append-only table but {APP_ROLE} may UPDATE/DELETE")
+        elif not row.app_update_delete:
+            problems.append(f"{table}: {APP_ROLE} lacks UPDATE/DELETE privileges")
         if row.owner == APP_ROLE:
             problems.append(f"{table}: owned by the app role (DDL rights)")
     return problems
 
 
 __all__ = [
+    "APPEND_ONLY_TABLES",
     "APP_ROLE",
     "AUTH_POLICY",
     "AUTH_ROLE",

@@ -19,6 +19,7 @@ from farmerapp.auth.otp import OtpService
 from farmerapp.auth.providers import FakeProvider, MockServerProvider, SmsProvider, WhatsAppProvider
 from farmerapp.auth.scheduler import InProcessScheduler, Scheduler
 from farmerapp.auth.tokens import TokenService
+from farmerapp.db import audit
 from farmerapp.db.session import get_session, get_session_factory, set_tenant
 from farmerapp.settings import Settings
 
@@ -92,7 +93,8 @@ async def get_current_user(
     """Verify the bearer token, bind the tenant on the session and return the active user.
 
     The tenant is bound *before* the user is loaded, so RLS hides the user when the token's
-    tenant claim does not match: a forged claim is just an unknown user (401).
+    tenant claim does not match: a forged claim is just an unknown user (401). Once the user
+    is known it becomes the audit actor for everything this request writes (FA-006).
     """
     header = request.headers.get("authorization", "")
     scheme, _, token = header.partition(" ")
@@ -115,6 +117,7 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     request.state.user = user
+    audit.bind_actor(audit.actor_from_request(request, user))
     return user
 
 

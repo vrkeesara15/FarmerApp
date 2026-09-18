@@ -1,8 +1,14 @@
-"""Declarative base and the column mixin every entity carries (SPEC 8.2).
+"""Declarative base and the column mixins every entity carries (SPEC 8.2).
 
 All entities have: ``id uuid``, ``tenant_id``, ``created_at``, ``updated_at``,
 ``deleted_at`` (soft delete), ``version`` (optimistic locking). Timestamps are UTC in
 the database (``timestamptz``) and rendered in IST by clients.
+
+``TenantRow`` is the lean subset (``id``, ``tenant_id``, ``created_at``) for append-only
+tables such as ``audit_log`` (FA-006): rows are never updated or soft-deleted, so
+``updated_at`` / ``deleted_at`` / ``version`` would be dead columns. Both mixins put the
+table under RLS (``tests/rls/test_meta.py``) and both are audited by
+``farmerapp.db.audit`` unless the model sets ``__audit__ = False``.
 """
 
 from __future__ import annotations
@@ -25,6 +31,18 @@ NAMING_CONVENTION = {
 
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
+
+
+class TenantRow:
+    """Mixin for append-only tenant rows: ``id``, ``tenant_id``, ``created_at`` only."""
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()")
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
 
 
 class BaseColumns:

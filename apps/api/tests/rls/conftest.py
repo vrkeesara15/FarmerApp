@@ -30,6 +30,7 @@ class TenantRows:
     otp_id: uuid.UUID
     refresh_id: uuid.UUID
     token_hash: str
+    audit_id: uuid.UUID
 
 
 @dataclass(frozen=True)
@@ -41,7 +42,7 @@ class TwoTenants:
         return self.a if tenant == "a" else self.b
 
 
-TABLES = ("tenant", "user", "otp_challenge", "refresh_token")
+TABLES = ("tenant", "user", "otp_challenge", "refresh_token", "audit_log")
 
 
 async def _write_tenant(session: AsyncSession, label: str, phone: str) -> TenantRows:
@@ -52,6 +53,7 @@ async def _write_tenant(session: AsyncSession, label: str, phone: str) -> Tenant
         otp_id=uuid.uuid4(),
         refresh_id=uuid.uuid4(),
         token_hash=uuid.uuid4().hex + uuid.uuid4().hex,
+        audit_id=uuid.uuid4(),
     )
     async with tenant_scope(session, rows.tenant_id):
         await session.execute(
@@ -93,6 +95,14 @@ async def _write_tenant(session: AsyncSession, label: str, phone: str) -> Tenant
                 "h": rows.token_hash,
                 "e": NOW + timedelta(days=30),
             },
+        )
+        await session.execute(
+            text(
+                "INSERT INTO audit_log (id, tenant_id, actor_id, actor_role, action, entity, "
+                "entity_id, after) VALUES (:a, :t, :u, 'owner', 'user.create', 'user', :u, "
+                "'{}'::jsonb)"
+            ),
+            {"a": rows.audit_id, "t": rows.tenant_id, "u": rows.user_id},
         )
     return rows
 

@@ -229,10 +229,12 @@ class TokenService:
         log.info("refresh_rotated", family_id=str(row.family_id), user_id=str(user.id))
         return issued
 
-    async def revoke(self, session: AsyncSession, raw: str) -> None:
+    async def revoke(self, session: AsyncSession, raw: str) -> RefreshToken | None:
+        """Revoke the token's family; returns the presented row (``None`` if unknown)."""
         now = self._s.clock.now()
         row = await find_refresh_token(session, raw)
         if row is None:
-            return
+            return None
         await self._revoke_family(session, row.family_id, now)
         log.info("logout", family_id=str(row.family_id), user_id=str(row.user_id))
+        return row

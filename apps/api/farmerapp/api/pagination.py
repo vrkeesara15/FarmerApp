@@ -2,6 +2,8 @@
 
 The cursor is opaque to clients: URL-safe base64 of ``{"c": <created_at iso>, "i": <id>}``
 of the last item returned. Responses are ``{"items": [...], "next_cursor": str | null}``.
+Ascending listings filter with ``after(...)``, descending ones (newest first, e.g. the audit
+trail) with ``before(...)``; ``slice`` builds the cursor from the last item either way.
 """
 
 from __future__ import annotations
@@ -73,6 +75,16 @@ class PageRequest:
         if self.cursor is None:
             return None
         return tuple_(created_at, id) > tuple_(
+            literal(self.cursor.created_at), literal(self.cursor.id)
+        )
+
+    def before(
+        self, created_at: SQLColumnExpression[Any], id: SQLColumnExpression[Any]
+    ) -> ColumnElement[bool] | None:
+        """Keyset filter for rows strictly before the cursor (descending listings)."""
+        if self.cursor is None:
+            return None
+        return tuple_(created_at, id) < tuple_(
             literal(self.cursor.created_at), literal(self.cursor.id)
         )
 

@@ -16,10 +16,12 @@ from farmerapp import __version__
 from farmerapp.api.errors import PROBLEM_MEDIA_TYPE, install_error_handlers
 from farmerapp.api.middleware import TraceMiddleware
 from farmerapp.api.routes import health
+from farmerapp.audit import router as audit_routes
 from farmerapp.auth import router as auth_routes
 from farmerapp.auth.deps import AuthServices, build_auth_services, tick
 from farmerapp.auth.policy import install_policies
 from farmerapp.auth.scheduler import InProcessScheduler
+from farmerapp.db import models as _models  # noqa: F401  (registers models + audit listener)
 from farmerapp.logging import configure_logging, get_logger
 from farmerapp.settings import Settings, get_settings
 from farmerapp.users import router as user_routes
@@ -98,7 +100,13 @@ def create_app(
         allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "X-Request-Id"],
+        allow_headers=[
+            "Authorization",
+            "Content-Type",
+            "Idempotency-Key",
+            "X-Request-Id",
+            "X-Device-Id",
+        ],
         expose_headers=["X-Request-Id"],
     )
     install_error_handlers(app)
@@ -109,6 +117,7 @@ def create_app(
     v1.include_router(auth_routes.router)
     v1.include_router(auth_routes.me_router)
     v1.include_router(user_routes.router)
+    v1.include_router(audit_routes.router)
     app.include_router(v1)
 
     # FA-002: refuse to start unless every route declares a role policy (or is public), and

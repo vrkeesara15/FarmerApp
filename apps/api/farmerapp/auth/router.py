@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, Request, Response, status
 
 from farmerapp.api.errors import problem_responses
 from farmerapp.auth.deps import DbSession, Services
@@ -22,6 +22,7 @@ from farmerapp.auth.schemas import (
     TokenResponse,
     UserOut,
 )
+from farmerapp.db import audit
 from farmerapp.db.session import set_tenant
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -73,7 +74,7 @@ async def send_otp(body: OtpSendRequest, session: DbSession, services: Services)
     ),
 )
 async def verify_otp(
-    body: OtpVerifyRequest, session: DbSession, services: Services
+    request: Request, body: OtpVerifyRequest, session: DbSession, services: Services
 ) -> TokenResponse:
     challenge = await services.otp.verify(session, phone=body.phone, code=body.code)
     user: User | None = None
@@ -88,11 +89,22 @@ async def verify_otp(
         raise UserNotFoundError("No account for this number.")
     if user.status != UserStatus.ACTIVE:
         raise UserDisabledError("This account is disabled.")
+    # FA-006: from here on the user is the actor (device binding, refresh token, login event).
+    audit.bind_actor(audit.actor_from_request(request, user, device_id=body.device_id))
     if body.device_id:
         user.device_id = body.device_id
     issued = await services.tokens.issue_for_login(
         session, user, device_id=body.device_id, device_name=body.device_name
     )
+    audit.record(
+        session,
+        action="auth.login",
+        entity="user",
+        entity_id=user.id,
+        tenant_id=user.tenant_id,
+        after={"device_id": body.device_id, "channel": challenge.channel},
+    )
+    await session.flush()
     return TokenResponse(
         access_token=issued.access_token,
         refresh_token=issued.refresh_token,
@@ -134,8 +146,23 @@ async def refresh_token(
     summary="Revoke the refresh token family (idempotent)",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def logout(body: LogoutRequest, session: DbSession, services: Services) -> Response:
-    await services.tokens.revoke(session, body.refresh_token)
+async def logout(
+    request: Request, body: LogoutRequest, session: DbSession, services: Services
+) -> Response:
+    row = await services.tokens.revoke(session, body.refresh_token)
+    if row is not None:
+        user = await session.get(User, row.user_id)  # tenant bound by the token lookup
+        if user is not None:
+            audit.bind_actor(audit.actor_from_request(request, user, device_id=row.device_id))
+            audit.record(
+                session,
+                action="auth.logout",
+                entity="user",
+                entity_id=user.id,
+                tenant_id=user.tenant_id,
+                after={"family_id": row.family_id, "device_id": row.device_id},
+            )
+            await session.flush()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

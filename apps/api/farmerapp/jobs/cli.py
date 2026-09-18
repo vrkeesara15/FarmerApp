@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import uuid
 
 import typer
 
+from farmerapp.jobs import purge_audit_logs as purge_mod
 from farmerapp.jobs import seed as seed_mod
 from farmerapp.logging import configure_logging, get_logger
 from farmerapp.settings import get_settings
@@ -41,6 +43,30 @@ def seed() -> None:
         f"seed: tenant={result.tenant_slug} ({result.tenant_id}) "
         f"users_created={result.users_created}"
     )
+
+
+@cli.command("purge-audit-logs")
+def purge_audit_logs(
+    tenant_id: list[uuid.UUID] = typer.Option(  # noqa: B008
+        ..., "--tenant-id", help="Tenant(s) to report on (repeatable)."
+    ),
+    older_than_days: int = typer.Option(
+        purge_mod.DEFAULT_RETENTION_DAYS,
+        help="Retention window in days (NF-012: audit logs are kept one year minimum).",
+    ),
+) -> None:
+    """Report audit rows older than the retention window (dry run; nothing is deleted).
+
+    The real purge (archive, then delete as the migrate role) lands with OPS / NF-012.
+    """
+    _setup()
+    reports = asyncio.run(purge_mod.run_purge(tenant_id, older_than_days))
+    for report in reports:
+        typer.echo(
+            f"purge-audit-logs (dry-run): tenant={report.tenant_id} "
+            f"older_than_days={report.older_than_days} cutoff={report.cutoff.isoformat()} "
+            f"rows={report.rows}"
+        )
 
 
 def main() -> None:

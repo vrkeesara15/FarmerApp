@@ -8,7 +8,9 @@ M1-KICKOFF extends this with stores, officers and farmers. Idempotent: re-runnin
 names/roles in place and never duplicates rows. Phones are reserved test numbers.
 
 Runs as the app role under RLS (FA-003): every demo tenant has a fixed id (uuid5 of its slug)
-and is seeded inside its own ``tenant_scope``; no bypass is needed or available.
+and is seeded inside its own ``tenant_scope``; no bypass is needed or available. Writes are
+attributed to the system actor in the audit trail (FA-006): ``tenant.create`` /
+``user.create`` rows with ``before`` null.
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.auth.models import User, UserRole, UserStatus
+from farmerapp.db import audit
 from farmerapp.db.models import Tenant
 from farmerapp.db.session import get_session_factory, tenant_scope
 
@@ -126,8 +129,9 @@ async def seed_demo(session: AsyncSession) -> SeedResult:
     seeded: list[tuple[str, uuid.UUID]] = []
     created = 0
     for demo in DEMO_TENANTS:
-        async with tenant_scope(session, demo.id):
-            tenant, n = await _seed_tenant(session, demo)
+        with audit.actor_scope(audit.system_actor(demo.id)):
+            async with tenant_scope(session, demo.id):
+                tenant, n = await _seed_tenant(session, demo)
         seeded.append((demo.slug, tenant.id))
         created += n
     primary = dict(seeded)[DEMO_TENANT_SLUG]

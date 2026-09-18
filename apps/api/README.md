@@ -22,10 +22,13 @@ farmerapp/
                   FA-002 policy.py (require_roles / PUBLIC, startup check, x-roles in OpenAPI),
                   scope.py (SPEC 2.6 matrix as SQLAlchemy filters)
   users/          /v1/users list/get/patch (minimal WC-011 slice; cursor pagination in api/pagination.py)
+  audit/          GET /v1/audit-logs (FA-006 read endpoint for the WC-103 viewer)
   db/             async engine/session, tenant binding (set_tenant / tenant_scope / job_session),
-                  rls.py (enable_rls for migrations, rls_violations for the meta-test), Base, models
+                  rls.py (enable_rls for migrations, rls_violations for the meta-test), Base, models,
+                  audit.py (FA-006 actor context + flush listener + redaction + audit.record)
   worker/         Pub/Sub push receiver + dispatch table by topic (SPEC 9.2)
-  jobs/           typer CLI (hello, seed = tenants "fcc" + "gfl", one user per role each; runs as the app role)
+  jobs/           typer CLI (hello, seed = tenants "fcc" + "gfl", one user per role each; runs as the app role;
+                  purge-audit-logs = NF-012 dry run)
 alembic/          async Alembic env + migrations
 scripts/          export_openapi.py (writes/checks openapi.yaml)
 tests/            pytest (needs the compose db: `make db`)
@@ -131,3 +134,47 @@ Dev/CI login users come from `docker/postgres/initdb/10-roles.sql` (fresh volume
 `make db-roles` (existing volumes). Cloud SQL: IAM service-account users are created by
 Terraform; after the first migration an admin grants them `farmerapp_app` (api/worker/jobs)
 or `farmerapp_migrate` (migrate job) — see `infra/modules/sql/main.tf`.
+
+## Audit trail (FA-006)
+
+Every create / update / delete of a row with a `tenant_id` writes an `audit_log` row **in the
+same flush** (so it commits or rolls back with the change): who (`actor_id`, `actor_role`;
+NULL + `system` for jobs), what (`action` = `<table>.<create|update|delete>`, `entity`,
+`entity_id`, `before` / `after` = the changed columns plus `id`; full row on create/delete;
+setting `deleted_at` is a `delete`), and from where (`ip`, `device_id`, `user_agent`,
+`trace_id`). The listener lives in `farmerapp/db/audit.py` and is installed for every
+session; a model opts out with `__audit__ = False` (use it for high-volume telemetry only).
+
+Actor context is a `ContextVar`:
+
+```python
+# requests: bound by get_current_user (nothing to do). Clients may send X-Device-Id.
+# jobs / worker / scripts:
+from farmerapp.db import audit
+
+with audit.actor_scope(audit.system_actor(tenant_id)):
+    async with job_session(tenant_id) as session:
+        ...
+
+# events that are not row changes (login, export...):
+audit.record(
+    session,
+    action="auth.login",
+    entity="user",
+    entity_id=user.id,
+    tenant_id=user.tenant_id,
+    after={"device_id": device_id},
+)
+```
+
+Redaction is configured once in `farmerapp/db/audit.py`: `REDACTED_COLUMNS` (`code_hash`,
+`token_hash` — never recorded), `MASKED_COLUMNS` (`phone` → last four digits),
+`EXCLUDED_COLUMNS` (`updated_at`, `version`). Add a column there before storing a new secret
+or PII field.
+
+The table is append-only for the app role (migration 0004 revokes UPDATE/DELETE; tests in
+`tests/audit/test_rls_and_grants.py`) and tenant-scoped like every other table. Read it with
+`GET /v1/audit-logs?entity=user&entity_id=…&actor_id=…&action=…&from=…&to=…` (owner,
+director, auditor, tenant_admin; newest first, cursor pagination). Retention is one year
+minimum (NF-012); `python -m farmerapp.jobs purge-audit-logs --tenant-id <uuid>` only reports
+what a purge would remove (400-day default) until the archive + purge job lands under OPS.

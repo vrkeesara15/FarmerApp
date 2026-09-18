@@ -55,6 +55,7 @@ async def test_select_sees_only_the_bound_tenant(
         two_tenants.b.user_id,
         two_tenants.b.otp_id,
         two_tenants.b.refresh_id,
+        two_tenants.b.audit_id,
     }
     assert not ids & b_ids, f"tenant B {table} rows leaked into tenant A"
     rows = await db_session.execute(text(f'SELECT DISTINCT tenant_id FROM "{table}"'))
@@ -134,6 +135,11 @@ async def test_insert_with_foreign_tenant_id_is_rejected(
         "tenant": (
             "INSERT INTO tenant (id, tenant_id, name) VALUES (:i, :i, 'Intruder')",
             {"i": uuid.uuid4()},
+        ),
+        "audit_log": (
+            "INSERT INTO audit_log (tenant_id, actor_role, action, entity, entity_id) "
+            "VALUES (:t, 'system', 'user.update', 'user', :u)",
+            {"t": two_tenants.b.tenant_id, "u": two_tenants.b.user_id},
         ),
     }
     for table, (sql, params) in statements.items():

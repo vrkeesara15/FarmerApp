@@ -355,8 +355,210 @@ paths:
       - director
       - owner
       - tenant_admin
+  /v1/audit-logs:
+    get:
+      tags:
+      - audit
+      summary: Audit trail of the caller's tenant, newest first
+      operationId: listAuditLogs
+      parameters:
+      - name: entity
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          description: Table name.
+          title: Entity
+        description: Table name.
+      - name: entity_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Entity Id
+      - name: actor_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Actor Id
+      - name: action
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          description: e.g. `user.update`.
+          title: Action
+        description: e.g. `user.update`.
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: Rows at or after this instant.
+          title: From
+        description: Rows at or after this instant.
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: Rows at or before this instant.
+          title: To
+        description: Rows at or before this instant.
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOut_AuditLogOut_'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - director
+      - owner
+      - tenant_admin
 components:
   schemas:
+    AuditLogOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        actor_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Actor Id
+        actor_role:
+          type: string
+          title: Actor Role
+        action:
+          type: string
+          title: Action
+        entity:
+          type: string
+          title: Entity
+        entity_id:
+          type: string
+          format: uuid
+          title: Entity Id
+        before:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Before
+        after:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: After
+        ip:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ip
+        device_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Id
+        user_agent:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: User Agent
+        trace_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Trace Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - tenant_id
+      - actor_id
+      - actor_role
+      - action
+      - entity
+      - entity_id
+      - before
+      - after
+      - ip
+      - device_id
+      - user_agent
+      - trace_id
+      - created_at
+      title: AuditLogOut
     HealthResponse:
       properties:
         status:
@@ -473,6 +675,22 @@ components:
       - phone
       - code
       title: OtpVerifyRequest
+    PageOut_AuditLogOut_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/AuditLogOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: PageOut[AuditLogOut]
     PageOut_UserOut_:
       properties:
         items:

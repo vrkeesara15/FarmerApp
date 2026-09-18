@@ -15,6 +15,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 from starlette.responses import Response
 
+from farmerapp.db import audit
 from farmerapp.logging import get_logger
 
 TRACE_HEADER = "X-Request-Id"
@@ -32,6 +33,7 @@ class TraceMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         trace_id = resolve_trace_id(request)
         structlog.contextvars.clear_contextvars()
+        audit.clear_actor()  # FA-006: no actor until the auth dependency binds one
         structlog.contextvars.bind_contextvars(
             trace_id=trace_id, method=request.method, path=request.url.path
         )
