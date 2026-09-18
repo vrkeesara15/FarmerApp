@@ -73,7 +73,13 @@ class OtpScreen extends ConsumerWidget {
                   key: const Key('otp-continue'),
                   label: l10n.actionContinue,
                   icon: Icons.arrow_forward,
-                  onPressed: () => context.go(AppRoutes.disclosure),
+                  // Store managers and accountants land in store mode
+                  // (SPEC 1.2); everyone else continues the field flow.
+                  onPressed: () => context.go(
+                    storeRoleFor(flow.session?.user.role).opensStoreOnLogin
+                        ? AppRoutes.store
+                        : AppRoutes.disclosure,
+                  ),
                 ),
             ],
           ),

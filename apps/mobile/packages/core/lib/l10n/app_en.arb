@@ -1408,5 +1408,437 @@
   "collectionStateApprovalNeeded": "Approval needed",
   "collectionStateFailed": "Failed",
   "syncEntityOrder": "Order",
-  "syncEntityPayment": "Payment"
+  "syncEntityPayment": "Payment",
+  "storeModeTitle": "Store mode",
+  "storeSettingsEntryHint": "Sales, orders, stock and day close",
+  "storeNavHome": "Home",
+  "storeNavPos": "Sell",
+  "storeNavQueue": "Orders",
+  "storeNavStock": "Stock",
+  "storeNavCredit": "Credit",
+  "storeNavDayClose": "Day close",
+  "storeReadOnlyBanner": "You are viewing this store. Only the store team can make changes.",
+  "storeNotAllowedTitle": "Store mode is not available",
+  "storeNotAllowedHelp": "Store mode is for store managers, accountants and cluster heads.",
+  "storeOfflineTitle": "You are offline",
+  "storeOfflineHelp": "Store mode needs the network. Check the connection and try again.",
+  "storeErrorTitle": "Could not load",
+  "storeErrorHelp": "Something went wrong. Try again.",
+  "storeSwitchStore": "Switch store",
+  "storeHomeTitle": "Store home",
+  "storeTodaySales": "Today''s sales",
+  "storeSalesCount": "Payments: {count}",
+  "@storeSalesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storeModeUpi": "UPI QR",
+  "storeModeCard": "Card",
+  "storeModeCash": "Cash",
+  "storeModeCredit": "Credit (khata)",
+  "storeQueueCounts": "Order queue",
+  "storeTabNew": "New",
+  "storeTabPacking": "Packing",
+  "storeTabReady": "Ready",
+  "storeTabHandedOver": "Handed over",
+  "storeTabWithCount": "{label} ({count})",
+  "@storeTabWithCount": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storeLowStock": "Low stock",
+  "storeLowStockCount": "Items low: {count}",
+  "@storeLowStockCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storeExpiringCount": "Expiring soon: {count}",
+  "@storeExpiringCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storeDayCloseStatus": "Day close",
+  "storeDayOpen": "Open, not closed yet",
+  "storeDayClosed": "Closed at {time}",
+  "@storeDayClosed": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "storeDayReopened": "Reopened",
+  "storeActionNewSale": "New sale",
+  "storeActionReceive": "Goods receipt",
+  "storeActionTransfer": "Stock transfer",
+  "storeActionCloseDay": "Close day",
+  "storePosTitle": "Point of sale",
+  "storeSearchProducts": "Search products",
+  "storeScan": "Scan",
+  "storeEnterCode": "Enter code",
+  "storeCodeHint": "Barcode number",
+  "storeCodeAdd": "Add",
+  "storeScanAdded": "{name} added",
+  "@storeScanAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "storeScanNotFound": "No product with code {code}",
+  "@storeScanNotFound": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "storeScanOffline": "Offline: the code cannot be looked up",
+  "storeCategoryAll": "All",
+  "storeCategorySeed": "Seeds",
+  "storeCategoryFertiliser": "Fertilisers",
+  "storeCategoryPesticide": "Insecticides",
+  "storeCategoryFungicide": "Fungicides",
+  "storeCategoryHerbicide": "Herbicides",
+  "storeCategoryGrowth": "Growth promoters",
+  "storeCategoryTool": "Tools",
+  "storeCategoryOther": "Other",
+  "storeCartTitle": "Cart",
+  "storeCartEmpty": "Cart is empty",
+  "storeCartEmptyHelp": "Scan a barcode or tap a product to add it.",
+  "storeQtyDecrease": "Decrease",
+  "storeQtyIncrease": "Increase",
+  "storeSubtotal": "Subtotal (before GST)",
+  "storeGst": "GST",
+  "storeTotal": "Total",
+  "storeRoundOff": "Round off",
+  "storeBuyerPhone": "Farmer phone",
+  "storeBuyerFind": "Find",
+  "storeBuyerWalkIn": "Leave empty for a walk-in customer",
+  "storeBuyerUnknown": "New number: the sale is recorded against this phone",
+  "storeBuyerClear": "Remove",
+  "storeNoProducts": "No products match",
+  "storeCheckoutTitle": "Checkout",
+  "storePayWith": "Payment method",
+  "storeModeUpiHint": "Farmer scans the QR",
+  "storeModeCardHint": "Card on the store terminal",
+  "storeModeCashHint": "Count the cash, give change",
+  "storeModeCreditHint": "Add to the farmer''s khata",
+  "storeCardReference": "Terminal reference",
+  "storeCardReferenceHint": "Approval code on the slip",
+  "storeCardReferenceRequired": "Enter the terminal reference",
+  "storeCashTendered": "Cash received",
+  "storeCashChange": "Change to give",
+  "storeCashShort": "Cash received is less than the total",
+  "storeCreditNeedsFarmer": "Credit needs a registered farmer. Find the farmer by phone.",
+  "storeInvoicePreview": "GST invoice preview",
+  "storeInvoicePreviewNote": "The invoice number and final tax come from the server when you confirm.",
+  "storeColItem": "Item",
+  "storeColHsn": "HSN",
+  "storeColQty": "Qty",
+  "storeColRate": "Rate",
+  "storeColGst": "GST",
+  "storeColAmount": "Amount",
+  "storeTaxable": "Taxable value",
+  "storeCgst": "CGST",
+  "storeSgst": "SGST",
+  "storeIgst": "IGST",
+  "storeConfirmSale": "Confirm sale",
+  "storeOfflineSaleTitle": "Offline: the sale cannot be completed",
+  "storeOfflineSaleHelp": "The cart is kept. Connect to the network and confirm again.",
+  "storeApprovalNeededTitle": "Credit approval needed",
+  "storeApprovalNeededHelp": "This sale is {amount} over the farmer''s limit. A cluster head must approve it. The cart is kept.",
+  "@storeApprovalNeededHelp": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "storeCreditBalance": "Khata balance",
+  "storeCreditLimit": "Credit limit",
+  "storeChooseAnotherMode": "Choose another method",
+  "storeSaleFailedTitle": "Sale not completed",
+  "storeSaleFailed": "The server refused the sale ({code}). The cart is kept.",
+  "@storeSaleFailed": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "storeInvoiceTitle": "Tax invoice",
+  "storeInvoiceNo": "Invoice {number}",
+  "@storeInvoiceNo": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "storeInvoicePaid": "Sale complete",
+  "storeInvoiceBuyer": "Billed to",
+  "storeGstin": "GSTIN {gstin}",
+  "@storeGstin": {
+    "placeholders": {
+      "gstin": {
+        "type": "String"
+      }
+    }
+  },
+  "storeAmountInWords": "Amount in words",
+  "storeOpenPdf": "Open PDF",
+  "storeShareWhatsApp": "Send on WhatsApp",
+  "storeShareOther": "Share",
+  "storeShareSent": "Sent to {to}",
+  "@storeShareSent": {
+    "placeholders": {
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "storeShareFailed": "Could not send. Try again.",
+  "storePdfFailed": "Could not open the PDF.",
+  "storeShareText": "Invoice {number} for {amount}: {url}",
+  "@storeShareText": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "storeNextSale": "Next sale",
+  "storeQueueTitle": "Order queue",
+  "storeOrderRef": "Order #{ref}",
+  "@storeOrderRef": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "storeChannelOfficer": "Field officer",
+  "storeChannelFarmerApp": "Farmer app",
+  "storeChannelPos": "Counter",
+  "storeFulfilmentPickup": "Pick-up",
+  "storeFulfilmentDelivery": "Delivery",
+  "storeStatusPlaced": "Placed",
+  "storeStatusReserved": "Stock reserved",
+  "storeStatusPacked": "Packed",
+  "storeStatusReady": "Ready",
+  "storeStatusHandedOver": "Handed over",
+  "storeStatusDelivered": "Delivered",
+  "storeStatusCancelled": "Cancelled",
+  "storeActionReserve": "Reserve stock",
+  "storeActionPack": "Mark packed",
+  "storeActionReady": "Mark ready",
+  "storeActionHandOver": "Hand over",
+  "storeActionDeliver": "Mark delivered",
+  "storeActionCancel": "Cancel order",
+  "storeCancelReason": "Reason for cancelling",
+  "storeKeepOrder": "Keep order",
+  "storeTransitionFailed": "This change is not allowed now. The list was refreshed.",
+  "storeQueueEmpty": "No orders here",
+  "storeQueueEmptyHelp": "Orders from field officers and the farmer app appear here.",
+  "storeSelectOrder": "Select an order to see its details",
+  "storeFarmerUnknown": "Farmer {ref}",
+  "@storeFarmerUnknown": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "storeOrderMoved": "Order is now: {status}",
+  "@storeOrderMoved": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "storeStockTitle": "Stock",
+  "storeOnHand": "On hand",
+  "storeReserved": "Reserved",
+  "storeAvailable": "Available",
+  "storeBatch": "Batch {number}",
+  "@storeBatch": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "storeExpires": "Expires {date}",
+  "@storeExpires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "storeNoExpiry": "No expiry",
+  "storeExpired": "Expired",
+  "storeExpiring30": "Expires within 30 days",
+  "storeExpiring60": "Expires within 60 days",
+  "storeFilterLow": "Low stock",
+  "storeFilterExpiring": "Expiring",
+  "storeStockEmpty": "No stock matches",
+  "storeStockEmptyHelp": "Change the filters or receive goods.",
+  "storeSelectSku": "Select an item to see its batches",
+  "storeWriteOff": "Write off",
+  "storeWriteOffTitle": "Write off stock",
+  "storeAdjust": "Adjust count",
+  "storeAdjustTitle": "Adjust to the counted stock",
+  "storeCountedQty": "Counted quantity",
+  "storeAdjustReasonHint": "Why the count differs",
+  "storeReason": "Reason",
+  "storeReasonRequired": "Enter a reason",
+  "storeReasonDamage": "Damaged",
+  "storeReasonExpiry": "Expired",
+  "storeReasonOther": "Other",
+  "storeQuantity": "Quantity",
+  "storeQtyRequired": "Enter a quantity above zero",
+  "storeQtyTooHigh": "More than available ({qty})",
+  "@storeQtyTooHigh": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "storeAvailableQty": "Available: {qty}",
+  "@storeAvailableQty": {
+    "placeholders": {
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "storeAddPhoto": "Add photo",
+  "storePhotoAdded": "Photo added",
+  "storeNote": "Note",
+  "storeSubmit": "Save",
+  "storeSaved": "Saved",
+  "storeNegativeStock": "Not enough unreserved stock",
+  "storeReceiptTitle": "Goods receipt",
+  "storeReference": "Supplier invoice / reference",
+  "storeSku": "Item",
+  "storeFindSku": "Item (pick or scan)",
+  "storeSkuRequired": "Choose an item",
+  "storeBatchNo": "Batch number",
+  "storeBatchNoRequired": "Enter the batch number",
+  "storeExpiryDate": "Expiry date",
+  "storeExpiryPast": "The expiry date has passed",
+  "storeUnitCost": "Unit cost (₹)",
+  "storeCostRequired": "Enter the cost",
+  "storeAddLine": "Add line",
+  "storeRemoveLine": "Remove line",
+  "storeReceiptSubmit": "Receive stock",
+  "storeReceiptDone": "Stock received",
+  "storeReceiptDoneHelp": "Lines: {lines} · units added: {qty}",
+  "@storeReceiptDoneHelp": {
+    "placeholders": {
+      "lines": {
+        "type": "int"
+      },
+      "qty": {
+        "type": "String"
+      }
+    }
+  },
+  "storeBatchMismatch": "This batch already exists with another expiry date",
+  "storeTransferTitle": "Stock transfer",
+  "storeToStore": "To store",
+  "storeToStoreRequired": "Choose the destination store",
+  "storeNoOtherStores": "No other store is available to you. Ask your cluster head.",
+  "storeChooseBatch": "Batch",
+  "storeFefoSuggested": "Earliest expiry first (suggested)",
+  "storeTransferSubmit": "Transfer",
+  "storeTransferDone": "Transfer done",
+  "storeCreditTitle": "Credit",
+  "storeApprovalsEmpty": "No pending approvals",
+  "storeApprovalAmount": "Sale amount",
+  "storeShortfall": "Over the limit by",
+  "storeApprove": "Approve",
+  "storeReject": "Reject",
+  "storeDecisionNote": "Note (optional)",
+  "storeApproved": "Approved. The store can complete the sale once.",
+  "storeRejected": "Rejected",
+  "storeApprovalGone": "This request was already decided",
+  "storeSetLimitTitle": "Set a farmer''s credit limit",
+  "storeLimitAmount": "Limit (₹)",
+  "storeLimitAmountRequired": "Enter the limit in rupees",
+  "storeSetLimit": "Save limit",
+  "storeLimitSaved": "Limit saved: {amount}",
+  "@storeLimitSaved": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "storeLimitNeedsClusterHead": "Limits above {cap} need a cluster head. Ask your cluster head to set this limit.",
+  "@storeLimitNeedsClusterHead": {
+    "placeholders": {
+      "cap": {
+        "type": "String"
+      }
+    }
+  },
+  "storeLimitFarmerNotFound": "No farmer with this phone on this tablet",
+  "storeManagerCapHint": "You can set up to {cap}",
+  "@storeManagerCapHint": {
+    "placeholders": {
+      "cap": {
+        "type": "String"
+      }
+    }
+  },
+  "storeDayCloseTitle": "Day close",
+  "storeCashCount": "Cash count",
+  "storeCoins": "Coins (₹)",
+  "storeExpectedCash": "Expected cash",
+  "storeCountedCash": "Counted cash",
+  "storeVariance": "Variance",
+  "storeVarianceOver": "Variance is over {threshold}: auditors will be notified",
+  "@storeVarianceOver": {
+    "placeholders": {
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+  "storeDepositSlip": "Bank deposit slip photo",
+  "storeTakePhoto": "Take photo",
+  "storeRetakePhoto": "Retake photo",
+  "storeSlipRequired": "Take a photo of the deposit slip",
+  "storeCloseNotes": "Notes",
+  "storeCloseDay": "Close day",
+  "storeDayClosedTitle": "Day closed",
+  "storeDayAlreadyClosed": "Today is already closed. A cluster head can reopen it.",
+  "storeFlagged": "Flagged for audit"
 }

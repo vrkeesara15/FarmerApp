@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'app.dart';
+import 'screens/store/store_platform.dart';
 import 'widgets/share_plus_invoice_sharer.dart';
 
 /// App version sent with duty sessions and policy acceptances (pubspec).
@@ -120,6 +121,20 @@ Future<void> main() async {
       paymentsApiProvider.overrideWithValue(HttpPaymentsApi(rest)),
       khataApiProvider.overrideWithValue(HttpKhataApi(rest)),
       invoiceSharerProvider.overrideWithValue(const SharePlusInvoiceSharer()),
+      // ST-001 .. ST-007 store mode: online API, barcode camera, PDF viewer,
+      // share sheet.
+      storeApiProvider.overrideWithValue(
+        HttpStoreApi(
+          store: store,
+          refreshSession: auth.refresh,
+          onServerDate: drift.record,
+        ),
+      ),
+      barcodeScannerProvider.overrideWithValue(
+        const MobileScannerBarcodeScanner(),
+      ),
+      urlOpenerProvider.overrideWithValue(const LauncherUrlOpener()),
+      textSharerProvider.overrideWithValue(const SharePlusTextSharer()),
       // FA-016: confirmation request / officer-side OTP (online only).
       visitConfirmApiProvider.overrideWithValue(
         HttpVisitConfirmApi(

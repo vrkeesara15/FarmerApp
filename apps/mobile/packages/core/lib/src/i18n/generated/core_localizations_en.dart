@@ -2403,4 +2403,802 @@ class CoreLocalizationsEn extends CoreLocalizations {
 
   @override
   String get syncEntityPayment => 'Payment';
+
+  @override
+  String get storeModeTitle => 'Store mode';
+
+  @override
+  String get storeSettingsEntryHint => 'Sales, orders, stock and day close';
+
+  @override
+  String get storeNavHome => 'Home';
+
+  @override
+  String get storeNavPos => 'Sell';
+
+  @override
+  String get storeNavQueue => 'Orders';
+
+  @override
+  String get storeNavStock => 'Stock';
+
+  @override
+  String get storeNavCredit => 'Credit';
+
+  @override
+  String get storeNavDayClose => 'Day close';
+
+  @override
+  String get storeReadOnlyBanner =>
+      'You are viewing this store. Only the store team can make changes.';
+
+  @override
+  String get storeNotAllowedTitle => 'Store mode is not available';
+
+  @override
+  String get storeNotAllowedHelp =>
+      'Store mode is for store managers, accountants and cluster heads.';
+
+  @override
+  String get storeOfflineTitle => 'You are offline';
+
+  @override
+  String get storeOfflineHelp =>
+      'Store mode needs the network. Check the connection and try again.';
+
+  @override
+  String get storeErrorTitle => 'Could not load';
+
+  @override
+  String get storeErrorHelp => 'Something went wrong. Try again.';
+
+  @override
+  String get storeSwitchStore => 'Switch store';
+
+  @override
+  String get storeHomeTitle => 'Store home';
+
+  @override
+  String get storeTodaySales => 'Today\'s sales';
+
+  @override
+  String storeSalesCount(int count) {
+    return 'Payments: $count';
+  }
+
+  @override
+  String get storeModeUpi => 'UPI QR';
+
+  @override
+  String get storeModeCard => 'Card';
+
+  @override
+  String get storeModeCash => 'Cash';
+
+  @override
+  String get storeModeCredit => 'Credit (khata)';
+
+  @override
+  String get storeQueueCounts => 'Order queue';
+
+  @override
+  String get storeTabNew => 'New';
+
+  @override
+  String get storeTabPacking => 'Packing';
+
+  @override
+  String get storeTabReady => 'Ready';
+
+  @override
+  String get storeTabHandedOver => 'Handed over';
+
+  @override
+  String storeTabWithCount(String label, int count) {
+    return '$label ($count)';
+  }
+
+  @override
+  String get storeLowStock => 'Low stock';
+
+  @override
+  String storeLowStockCount(int count) {
+    return 'Items low: $count';
+  }
+
+  @override
+  String storeExpiringCount(int count) {
+    return 'Expiring soon: $count';
+  }
+
+  @override
+  String get storeDayCloseStatus => 'Day close';
+
+  @override
+  String get storeDayOpen => 'Open, not closed yet';
+
+  @override
+  String storeDayClosed(String time) {
+    return 'Closed at $time';
+  }
+
+  @override
+  String get storeDayReopened => 'Reopened';
+
+  @override
+  String get storeActionNewSale => 'New sale';
+
+  @override
+  String get storeActionReceive => 'Goods receipt';
+
+  @override
+  String get storeActionTransfer => 'Stock transfer';
+
+  @override
+  String get storeActionCloseDay => 'Close day';
+
+  @override
+  String get storePosTitle => 'Point of sale';
+
+  @override
+  String get storeSearchProducts => 'Search products';
+
+  @override
+  String get storeScan => 'Scan';
+
+  @override
+  String get storeEnterCode => 'Enter code';
+
+  @override
+  String get storeCodeHint => 'Barcode number';
+
+  @override
+  String get storeCodeAdd => 'Add';
+
+  @override
+  String storeScanAdded(String name) {
+    return '$name added';
+  }
+
+  @override
+  String storeScanNotFound(String code) {
+    return 'No product with code $code';
+  }
+
+  @override
+  String get storeScanOffline => 'Offline: the code cannot be looked up';
+
+  @override
+  String get storeCategoryAll => 'All';
+
+  @override
+  String get storeCategorySeed => 'Seeds';
+
+  @override
+  String get storeCategoryFertiliser => 'Fertilisers';
+
+  @override
+  String get storeCategoryPesticide => 'Insecticides';
+
+  @override
+  String get storeCategoryFungicide => 'Fungicides';
+
+  @override
+  String get storeCategoryHerbicide => 'Herbicides';
+
+  @override
+  String get storeCategoryGrowth => 'Growth promoters';
+
+  @override
+  String get storeCategoryTool => 'Tools';
+
+  @override
+  String get storeCategoryOther => 'Other';
+
+  @override
+  String get storeCartTitle => 'Cart';
+
+  @override
+  String get storeCartEmpty => 'Cart is empty';
+
+  @override
+  String get storeCartEmptyHelp => 'Scan a barcode or tap a product to add it.';
+
+  @override
+  String get storeQtyDecrease => 'Decrease';
+
+  @override
+  String get storeQtyIncrease => 'Increase';
+
+  @override
+  String get storeSubtotal => 'Subtotal (before GST)';
+
+  @override
+  String get storeGst => 'GST';
+
+  @override
+  String get storeTotal => 'Total';
+
+  @override
+  String get storeRoundOff => 'Round off';
+
+  @override
+  String get storeBuyerPhone => 'Farmer phone';
+
+  @override
+  String get storeBuyerFind => 'Find';
+
+  @override
+  String get storeBuyerWalkIn => 'Leave empty for a walk-in customer';
+
+  @override
+  String get storeBuyerUnknown =>
+      'New number: the sale is recorded against this phone';
+
+  @override
+  String get storeBuyerClear => 'Remove';
+
+  @override
+  String get storeNoProducts => 'No products match';
+
+  @override
+  String get storeCheckoutTitle => 'Checkout';
+
+  @override
+  String get storePayWith => 'Payment method';
+
+  @override
+  String get storeModeUpiHint => 'Farmer scans the QR';
+
+  @override
+  String get storeModeCardHint => 'Card on the store terminal';
+
+  @override
+  String get storeModeCashHint => 'Count the cash, give change';
+
+  @override
+  String get storeModeCreditHint => 'Add to the farmer\'s khata';
+
+  @override
+  String get storeCardReference => 'Terminal reference';
+
+  @override
+  String get storeCardReferenceHint => 'Approval code on the slip';
+
+  @override
+  String get storeCardReferenceRequired => 'Enter the terminal reference';
+
+  @override
+  String get storeCashTendered => 'Cash received';
+
+  @override
+  String get storeCashChange => 'Change to give';
+
+  @override
+  String get storeCashShort => 'Cash received is less than the total';
+
+  @override
+  String get storeCreditNeedsFarmer =>
+      'Credit needs a registered farmer. Find the farmer by phone.';
+
+  @override
+  String get storeInvoicePreview => 'GST invoice preview';
+
+  @override
+  String get storeInvoicePreviewNote =>
+      'The invoice number and final tax come from the server when you confirm.';
+
+  @override
+  String get storeColItem => 'Item';
+
+  @override
+  String get storeColHsn => 'HSN';
+
+  @override
+  String get storeColQty => 'Qty';
+
+  @override
+  String get storeColRate => 'Rate';
+
+  @override
+  String get storeColGst => 'GST';
+
+  @override
+  String get storeColAmount => 'Amount';
+
+  @override
+  String get storeTaxable => 'Taxable value';
+
+  @override
+  String get storeCgst => 'CGST';
+
+  @override
+  String get storeSgst => 'SGST';
+
+  @override
+  String get storeIgst => 'IGST';
+
+  @override
+  String get storeConfirmSale => 'Confirm sale';
+
+  @override
+  String get storeOfflineSaleTitle => 'Offline: the sale cannot be completed';
+
+  @override
+  String get storeOfflineSaleHelp =>
+      'The cart is kept. Connect to the network and confirm again.';
+
+  @override
+  String get storeApprovalNeededTitle => 'Credit approval needed';
+
+  @override
+  String storeApprovalNeededHelp(String amount) {
+    return 'This sale is $amount over the farmer\'s limit. A cluster head must approve it. The cart is kept.';
+  }
+
+  @override
+  String get storeCreditBalance => 'Khata balance';
+
+  @override
+  String get storeCreditLimit => 'Credit limit';
+
+  @override
+  String get storeChooseAnotherMode => 'Choose another method';
+
+  @override
+  String get storeSaleFailedTitle => 'Sale not completed';
+
+  @override
+  String storeSaleFailed(String code) {
+    return 'The server refused the sale ($code). The cart is kept.';
+  }
+
+  @override
+  String get storeInvoiceTitle => 'Tax invoice';
+
+  @override
+  String storeInvoiceNo(String number) {
+    return 'Invoice $number';
+  }
+
+  @override
+  String get storeInvoicePaid => 'Sale complete';
+
+  @override
+  String get storeInvoiceBuyer => 'Billed to';
+
+  @override
+  String storeGstin(String gstin) {
+    return 'GSTIN $gstin';
+  }
+
+  @override
+  String get storeAmountInWords => 'Amount in words';
+
+  @override
+  String get storeOpenPdf => 'Open PDF';
+
+  @override
+  String get storeShareWhatsApp => 'Send on WhatsApp';
+
+  @override
+  String get storeShareOther => 'Share';
+
+  @override
+  String storeShareSent(String to) {
+    return 'Sent to $to';
+  }
+
+  @override
+  String get storeShareFailed => 'Could not send. Try again.';
+
+  @override
+  String get storePdfFailed => 'Could not open the PDF.';
+
+  @override
+  String storeShareText(String number, String amount, String url) {
+    return 'Invoice $number for $amount: $url';
+  }
+
+  @override
+  String get storeNextSale => 'Next sale';
+
+  @override
+  String get storeQueueTitle => 'Order queue';
+
+  @override
+  String storeOrderRef(String ref) {
+    return 'Order #$ref';
+  }
+
+  @override
+  String get storeChannelOfficer => 'Field officer';
+
+  @override
+  String get storeChannelFarmerApp => 'Farmer app';
+
+  @override
+  String get storeChannelPos => 'Counter';
+
+  @override
+  String get storeFulfilmentPickup => 'Pick-up';
+
+  @override
+  String get storeFulfilmentDelivery => 'Delivery';
+
+  @override
+  String get storeStatusPlaced => 'Placed';
+
+  @override
+  String get storeStatusReserved => 'Stock reserved';
+
+  @override
+  String get storeStatusPacked => 'Packed';
+
+  @override
+  String get storeStatusReady => 'Ready';
+
+  @override
+  String get storeStatusHandedOver => 'Handed over';
+
+  @override
+  String get storeStatusDelivered => 'Delivered';
+
+  @override
+  String get storeStatusCancelled => 'Cancelled';
+
+  @override
+  String get storeActionReserve => 'Reserve stock';
+
+  @override
+  String get storeActionPack => 'Mark packed';
+
+  @override
+  String get storeActionReady => 'Mark ready';
+
+  @override
+  String get storeActionHandOver => 'Hand over';
+
+  @override
+  String get storeActionDeliver => 'Mark delivered';
+
+  @override
+  String get storeActionCancel => 'Cancel order';
+
+  @override
+  String get storeCancelReason => 'Reason for cancelling';
+
+  @override
+  String get storeKeepOrder => 'Keep order';
+
+  @override
+  String get storeTransitionFailed =>
+      'This change is not allowed now. The list was refreshed.';
+
+  @override
+  String get storeQueueEmpty => 'No orders here';
+
+  @override
+  String get storeQueueEmptyHelp =>
+      'Orders from field officers and the farmer app appear here.';
+
+  @override
+  String get storeSelectOrder => 'Select an order to see its details';
+
+  @override
+  String storeFarmerUnknown(String ref) {
+    return 'Farmer $ref';
+  }
+
+  @override
+  String storeOrderMoved(String status) {
+    return 'Order is now: $status';
+  }
+
+  @override
+  String get storeStockTitle => 'Stock';
+
+  @override
+  String get storeOnHand => 'On hand';
+
+  @override
+  String get storeReserved => 'Reserved';
+
+  @override
+  String get storeAvailable => 'Available';
+
+  @override
+  String storeBatch(String number) {
+    return 'Batch $number';
+  }
+
+  @override
+  String storeExpires(String date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String get storeNoExpiry => 'No expiry';
+
+  @override
+  String get storeExpired => 'Expired';
+
+  @override
+  String get storeExpiring30 => 'Expires within 30 days';
+
+  @override
+  String get storeExpiring60 => 'Expires within 60 days';
+
+  @override
+  String get storeFilterLow => 'Low stock';
+
+  @override
+  String get storeFilterExpiring => 'Expiring';
+
+  @override
+  String get storeStockEmpty => 'No stock matches';
+
+  @override
+  String get storeStockEmptyHelp => 'Change the filters or receive goods.';
+
+  @override
+  String get storeSelectSku => 'Select an item to see its batches';
+
+  @override
+  String get storeWriteOff => 'Write off';
+
+  @override
+  String get storeWriteOffTitle => 'Write off stock';
+
+  @override
+  String get storeAdjust => 'Adjust count';
+
+  @override
+  String get storeAdjustTitle => 'Adjust to the counted stock';
+
+  @override
+  String get storeCountedQty => 'Counted quantity';
+
+  @override
+  String get storeAdjustReasonHint => 'Why the count differs';
+
+  @override
+  String get storeReason => 'Reason';
+
+  @override
+  String get storeReasonRequired => 'Enter a reason';
+
+  @override
+  String get storeReasonDamage => 'Damaged';
+
+  @override
+  String get storeReasonExpiry => 'Expired';
+
+  @override
+  String get storeReasonOther => 'Other';
+
+  @override
+  String get storeQuantity => 'Quantity';
+
+  @override
+  String get storeQtyRequired => 'Enter a quantity above zero';
+
+  @override
+  String storeQtyTooHigh(String qty) {
+    return 'More than available ($qty)';
+  }
+
+  @override
+  String storeAvailableQty(String qty) {
+    return 'Available: $qty';
+  }
+
+  @override
+  String get storeAddPhoto => 'Add photo';
+
+  @override
+  String get storePhotoAdded => 'Photo added';
+
+  @override
+  String get storeNote => 'Note';
+
+  @override
+  String get storeSubmit => 'Save';
+
+  @override
+  String get storeSaved => 'Saved';
+
+  @override
+  String get storeNegativeStock => 'Not enough unreserved stock';
+
+  @override
+  String get storeReceiptTitle => 'Goods receipt';
+
+  @override
+  String get storeReference => 'Supplier invoice / reference';
+
+  @override
+  String get storeSku => 'Item';
+
+  @override
+  String get storeFindSku => 'Item (pick or scan)';
+
+  @override
+  String get storeSkuRequired => 'Choose an item';
+
+  @override
+  String get storeBatchNo => 'Batch number';
+
+  @override
+  String get storeBatchNoRequired => 'Enter the batch number';
+
+  @override
+  String get storeExpiryDate => 'Expiry date';
+
+  @override
+  String get storeExpiryPast => 'The expiry date has passed';
+
+  @override
+  String get storeUnitCost => 'Unit cost (₹)';
+
+  @override
+  String get storeCostRequired => 'Enter the cost';
+
+  @override
+  String get storeAddLine => 'Add line';
+
+  @override
+  String get storeRemoveLine => 'Remove line';
+
+  @override
+  String get storeReceiptSubmit => 'Receive stock';
+
+  @override
+  String get storeReceiptDone => 'Stock received';
+
+  @override
+  String storeReceiptDoneHelp(int lines, String qty) {
+    return 'Lines: $lines · units added: $qty';
+  }
+
+  @override
+  String get storeBatchMismatch =>
+      'This batch already exists with another expiry date';
+
+  @override
+  String get storeTransferTitle => 'Stock transfer';
+
+  @override
+  String get storeToStore => 'To store';
+
+  @override
+  String get storeToStoreRequired => 'Choose the destination store';
+
+  @override
+  String get storeNoOtherStores =>
+      'No other store is available to you. Ask your cluster head.';
+
+  @override
+  String get storeChooseBatch => 'Batch';
+
+  @override
+  String get storeFefoSuggested => 'Earliest expiry first (suggested)';
+
+  @override
+  String get storeTransferSubmit => 'Transfer';
+
+  @override
+  String get storeTransferDone => 'Transfer done';
+
+  @override
+  String get storeCreditTitle => 'Credit';
+
+  @override
+  String get storeApprovalsEmpty => 'No pending approvals';
+
+  @override
+  String get storeApprovalAmount => 'Sale amount';
+
+  @override
+  String get storeShortfall => 'Over the limit by';
+
+  @override
+  String get storeApprove => 'Approve';
+
+  @override
+  String get storeReject => 'Reject';
+
+  @override
+  String get storeDecisionNote => 'Note (optional)';
+
+  @override
+  String get storeApproved => 'Approved. The store can complete the sale once.';
+
+  @override
+  String get storeRejected => 'Rejected';
+
+  @override
+  String get storeApprovalGone => 'This request was already decided';
+
+  @override
+  String get storeSetLimitTitle => 'Set a farmer\'s credit limit';
+
+  @override
+  String get storeLimitAmount => 'Limit (₹)';
+
+  @override
+  String get storeLimitAmountRequired => 'Enter the limit in rupees';
+
+  @override
+  String get storeSetLimit => 'Save limit';
+
+  @override
+  String storeLimitSaved(String amount) {
+    return 'Limit saved: $amount';
+  }
+
+  @override
+  String storeLimitNeedsClusterHead(String cap) {
+    return 'Limits above $cap need a cluster head. Ask your cluster head to set this limit.';
+  }
+
+  @override
+  String get storeLimitFarmerNotFound =>
+      'No farmer with this phone on this tablet';
+
+  @override
+  String storeManagerCapHint(String cap) {
+    return 'You can set up to $cap';
+  }
+
+  @override
+  String get storeDayCloseTitle => 'Day close';
+
+  @override
+  String get storeCashCount => 'Cash count';
+
+  @override
+  String get storeCoins => 'Coins (₹)';
+
+  @override
+  String get storeExpectedCash => 'Expected cash';
+
+  @override
+  String get storeCountedCash => 'Counted cash';
+
+  @override
+  String get storeVariance => 'Variance';
+
+  @override
+  String storeVarianceOver(String threshold) {
+    return 'Variance is over $threshold: auditors will be notified';
+  }
+
+  @override
+  String get storeDepositSlip => 'Bank deposit slip photo';
+
+  @override
+  String get storeTakePhoto => 'Take photo';
+
+  @override
+  String get storeRetakePhoto => 'Retake photo';
+
+  @override
+  String get storeSlipRequired => 'Take a photo of the deposit slip';
+
+  @override
+  String get storeCloseNotes => 'Notes';
+
+  @override
+  String get storeCloseDay => 'Close day';
+
+  @override
+  String get storeDayClosedTitle => 'Day closed';
+
+  @override
+  String get storeDayAlreadyClosed =>
+      'Today is already closed. A cluster head can reopen it.';
+
+  @override
+  String get storeFlagged => 'Flagged for audit';
 }

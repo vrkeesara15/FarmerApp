@@ -4405,6 +4405,1476 @@ abstract class CoreLocalizations {
   /// In en, this message translates to:
   /// **'Payment'**
   String get syncEntityPayment;
+
+  /// No description provided for @storeModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Store mode'**
+  String get storeModeTitle;
+
+  /// No description provided for @storeSettingsEntryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales, orders, stock and day close'**
+  String get storeSettingsEntryHint;
+
+  /// No description provided for @storeNavHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get storeNavHome;
+
+  /// No description provided for @storeNavPos.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell'**
+  String get storeNavPos;
+
+  /// No description provided for @storeNavQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
+  String get storeNavQueue;
+
+  /// No description provided for @storeNavStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get storeNavStock;
+
+  /// No description provided for @storeNavCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get storeNavCredit;
+
+  /// No description provided for @storeNavDayClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Day close'**
+  String get storeNavDayClose;
+
+  /// No description provided for @storeReadOnlyBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'You are viewing this store. Only the store team can make changes.'**
+  String get storeReadOnlyBanner;
+
+  /// No description provided for @storeNotAllowedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Store mode is not available'**
+  String get storeNotAllowedTitle;
+
+  /// No description provided for @storeNotAllowedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Store mode is for store managers, accountants and cluster heads.'**
+  String get storeNotAllowedHelp;
+
+  /// No description provided for @storeOfflineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You are offline'**
+  String get storeOfflineTitle;
+
+  /// No description provided for @storeOfflineHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Store mode needs the network. Check the connection and try again.'**
+  String get storeOfflineHelp;
+
+  /// No description provided for @storeErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load'**
+  String get storeErrorTitle;
+
+  /// No description provided for @storeErrorHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Try again.'**
+  String get storeErrorHelp;
+
+  /// No description provided for @storeSwitchStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch store'**
+  String get storeSwitchStore;
+
+  /// No description provided for @storeHomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Store home'**
+  String get storeHomeTitle;
+
+  /// No description provided for @storeTodaySales.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'\'s sales'**
+  String get storeTodaySales;
+
+  /// No description provided for @storeSalesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments: {count}'**
+  String storeSalesCount(int count);
+
+  /// No description provided for @storeModeUpi.
+  ///
+  /// In en, this message translates to:
+  /// **'UPI QR'**
+  String get storeModeUpi;
+
+  /// No description provided for @storeModeCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Card'**
+  String get storeModeCard;
+
+  /// No description provided for @storeModeCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get storeModeCash;
+
+  /// No description provided for @storeModeCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit (khata)'**
+  String get storeModeCredit;
+
+  /// No description provided for @storeQueueCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Order queue'**
+  String get storeQueueCounts;
+
+  /// No description provided for @storeTabNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get storeTabNew;
+
+  /// No description provided for @storeTabPacking.
+  ///
+  /// In en, this message translates to:
+  /// **'Packing'**
+  String get storeTabPacking;
+
+  /// No description provided for @storeTabReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get storeTabReady;
+
+  /// No description provided for @storeTabHandedOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Handed over'**
+  String get storeTabHandedOver;
+
+  /// No description provided for @storeTabWithCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} ({count})'**
+  String storeTabWithCount(String label, int count);
+
+  /// No description provided for @storeLowStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock'**
+  String get storeLowStock;
+
+  /// No description provided for @storeLowStockCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Items low: {count}'**
+  String storeLowStockCount(int count);
+
+  /// No description provided for @storeExpiringCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiring soon: {count}'**
+  String storeExpiringCount(int count);
+
+  /// No description provided for @storeDayCloseStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Day close'**
+  String get storeDayCloseStatus;
+
+  /// No description provided for @storeDayOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open, not closed yet'**
+  String get storeDayOpen;
+
+  /// No description provided for @storeDayClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed at {time}'**
+  String storeDayClosed(String time);
+
+  /// No description provided for @storeDayReopened.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopened'**
+  String get storeDayReopened;
+
+  /// No description provided for @storeActionNewSale.
+  ///
+  /// In en, this message translates to:
+  /// **'New sale'**
+  String get storeActionNewSale;
+
+  /// No description provided for @storeActionReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'Goods receipt'**
+  String get storeActionReceive;
+
+  /// No description provided for @storeActionTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock transfer'**
+  String get storeActionTransfer;
+
+  /// No description provided for @storeActionCloseDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Close day'**
+  String get storeActionCloseDay;
+
+  /// No description provided for @storePosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Point of sale'**
+  String get storePosTitle;
+
+  /// No description provided for @storeSearchProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Search products'**
+  String get storeSearchProducts;
+
+  /// No description provided for @storeScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get storeScan;
+
+  /// No description provided for @storeEnterCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter code'**
+  String get storeEnterCode;
+
+  /// No description provided for @storeCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode number'**
+  String get storeCodeHint;
+
+  /// No description provided for @storeCodeAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get storeCodeAdd;
+
+  /// No description provided for @storeScanAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} added'**
+  String storeScanAdded(String name);
+
+  /// No description provided for @storeScanNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No product with code {code}'**
+  String storeScanNotFound(String code);
+
+  /// No description provided for @storeScanOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline: the code cannot be looked up'**
+  String get storeScanOffline;
+
+  /// No description provided for @storeCategoryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get storeCategoryAll;
+
+  /// No description provided for @storeCategorySeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Seeds'**
+  String get storeCategorySeed;
+
+  /// No description provided for @storeCategoryFertiliser.
+  ///
+  /// In en, this message translates to:
+  /// **'Fertilisers'**
+  String get storeCategoryFertiliser;
+
+  /// No description provided for @storeCategoryPesticide.
+  ///
+  /// In en, this message translates to:
+  /// **'Insecticides'**
+  String get storeCategoryPesticide;
+
+  /// No description provided for @storeCategoryFungicide.
+  ///
+  /// In en, this message translates to:
+  /// **'Fungicides'**
+  String get storeCategoryFungicide;
+
+  /// No description provided for @storeCategoryHerbicide.
+  ///
+  /// In en, this message translates to:
+  /// **'Herbicides'**
+  String get storeCategoryHerbicide;
+
+  /// No description provided for @storeCategoryGrowth.
+  ///
+  /// In en, this message translates to:
+  /// **'Growth promoters'**
+  String get storeCategoryGrowth;
+
+  /// No description provided for @storeCategoryTool.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get storeCategoryTool;
+
+  /// No description provided for @storeCategoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get storeCategoryOther;
+
+  /// No description provided for @storeCartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart'**
+  String get storeCartTitle;
+
+  /// No description provided for @storeCartEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart is empty'**
+  String get storeCartEmpty;
+
+  /// No description provided for @storeCartEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a barcode or tap a product to add it.'**
+  String get storeCartEmptyHelp;
+
+  /// No description provided for @storeQtyDecrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease'**
+  String get storeQtyDecrease;
+
+  /// No description provided for @storeQtyIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase'**
+  String get storeQtyIncrease;
+
+  /// No description provided for @storeSubtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal (before GST)'**
+  String get storeSubtotal;
+
+  /// No description provided for @storeGst.
+  ///
+  /// In en, this message translates to:
+  /// **'GST'**
+  String get storeGst;
+
+  /// No description provided for @storeTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get storeTotal;
+
+  /// No description provided for @storeRoundOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Round off'**
+  String get storeRoundOff;
+
+  /// No description provided for @storeBuyerPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer phone'**
+  String get storeBuyerPhone;
+
+  /// No description provided for @storeBuyerFind.
+  ///
+  /// In en, this message translates to:
+  /// **'Find'**
+  String get storeBuyerFind;
+
+  /// No description provided for @storeBuyerWalkIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty for a walk-in customer'**
+  String get storeBuyerWalkIn;
+
+  /// No description provided for @storeBuyerUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'New number: the sale is recorded against this phone'**
+  String get storeBuyerUnknown;
+
+  /// No description provided for @storeBuyerClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get storeBuyerClear;
+
+  /// No description provided for @storeNoProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'No products match'**
+  String get storeNoProducts;
+
+  /// No description provided for @storeCheckoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkout'**
+  String get storeCheckoutTitle;
+
+  /// No description provided for @storePayWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment method'**
+  String get storePayWith;
+
+  /// No description provided for @storeModeUpiHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer scans the QR'**
+  String get storeModeUpiHint;
+
+  /// No description provided for @storeModeCardHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Card on the store terminal'**
+  String get storeModeCardHint;
+
+  /// No description provided for @storeModeCashHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Count the cash, give change'**
+  String get storeModeCashHint;
+
+  /// No description provided for @storeModeCreditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to the farmer\'\'s khata'**
+  String get storeModeCreditHint;
+
+  /// No description provided for @storeCardReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal reference'**
+  String get storeCardReference;
+
+  /// No description provided for @storeCardReferenceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval code on the slip'**
+  String get storeCardReferenceHint;
+
+  /// No description provided for @storeCardReferenceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the terminal reference'**
+  String get storeCardReferenceRequired;
+
+  /// No description provided for @storeCashTendered.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash received'**
+  String get storeCashTendered;
+
+  /// No description provided for @storeCashChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change to give'**
+  String get storeCashChange;
+
+  /// No description provided for @storeCashShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash received is less than the total'**
+  String get storeCashShort;
+
+  /// No description provided for @storeCreditNeedsFarmer.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit needs a registered farmer. Find the farmer by phone.'**
+  String get storeCreditNeedsFarmer;
+
+  /// No description provided for @storeInvoicePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'GST invoice preview'**
+  String get storeInvoicePreview;
+
+  /// No description provided for @storeInvoicePreviewNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The invoice number and final tax come from the server when you confirm.'**
+  String get storeInvoicePreviewNote;
+
+  /// No description provided for @storeColItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get storeColItem;
+
+  /// No description provided for @storeColHsn.
+  ///
+  /// In en, this message translates to:
+  /// **'HSN'**
+  String get storeColHsn;
+
+  /// No description provided for @storeColQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty'**
+  String get storeColQty;
+
+  /// No description provided for @storeColRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate'**
+  String get storeColRate;
+
+  /// No description provided for @storeColGst.
+  ///
+  /// In en, this message translates to:
+  /// **'GST'**
+  String get storeColGst;
+
+  /// No description provided for @storeColAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get storeColAmount;
+
+  /// No description provided for @storeTaxable.
+  ///
+  /// In en, this message translates to:
+  /// **'Taxable value'**
+  String get storeTaxable;
+
+  /// No description provided for @storeCgst.
+  ///
+  /// In en, this message translates to:
+  /// **'CGST'**
+  String get storeCgst;
+
+  /// No description provided for @storeSgst.
+  ///
+  /// In en, this message translates to:
+  /// **'SGST'**
+  String get storeSgst;
+
+  /// No description provided for @storeIgst.
+  ///
+  /// In en, this message translates to:
+  /// **'IGST'**
+  String get storeIgst;
+
+  /// No description provided for @storeConfirmSale.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm sale'**
+  String get storeConfirmSale;
+
+  /// No description provided for @storeOfflineSaleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline: the sale cannot be completed'**
+  String get storeOfflineSaleTitle;
+
+  /// No description provided for @storeOfflineSaleHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The cart is kept. Connect to the network and confirm again.'**
+  String get storeOfflineSaleHelp;
+
+  /// No description provided for @storeApprovalNeededTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit approval needed'**
+  String get storeApprovalNeededTitle;
+
+  /// No description provided for @storeApprovalNeededHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'This sale is {amount} over the farmer\'\'s limit. A cluster head must approve it. The cart is kept.'**
+  String storeApprovalNeededHelp(String amount);
+
+  /// No description provided for @storeCreditBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Khata balance'**
+  String get storeCreditBalance;
+
+  /// No description provided for @storeCreditLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit limit'**
+  String get storeCreditLimit;
+
+  /// No description provided for @storeChooseAnotherMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another method'**
+  String get storeChooseAnotherMode;
+
+  /// No description provided for @storeSaleFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale not completed'**
+  String get storeSaleFailedTitle;
+
+  /// No description provided for @storeSaleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The server refused the sale ({code}). The cart is kept.'**
+  String storeSaleFailed(String code);
+
+  /// No description provided for @storeInvoiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax invoice'**
+  String get storeInvoiceTitle;
+
+  /// No description provided for @storeInvoiceNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice {number}'**
+  String storeInvoiceNo(String number);
+
+  /// No description provided for @storeInvoicePaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale complete'**
+  String get storeInvoicePaid;
+
+  /// No description provided for @storeInvoiceBuyer.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed to'**
+  String get storeInvoiceBuyer;
+
+  /// No description provided for @storeGstin.
+  ///
+  /// In en, this message translates to:
+  /// **'GSTIN {gstin}'**
+  String storeGstin(String gstin);
+
+  /// No description provided for @storeAmountInWords.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount in words'**
+  String get storeAmountInWords;
+
+  /// No description provided for @storeOpenPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Open PDF'**
+  String get storeOpenPdf;
+
+  /// No description provided for @storeShareWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send on WhatsApp'**
+  String get storeShareWhatsApp;
+
+  /// No description provided for @storeShareOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get storeShareOther;
+
+  /// No description provided for @storeShareSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to {to}'**
+  String storeShareSent(String to);
+
+  /// No description provided for @storeShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send. Try again.'**
+  String get storeShareFailed;
+
+  /// No description provided for @storePdfFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the PDF.'**
+  String get storePdfFailed;
+
+  /// No description provided for @storeShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice {number} for {amount}: {url}'**
+  String storeShareText(String number, String amount, String url);
+
+  /// No description provided for @storeNextSale.
+  ///
+  /// In en, this message translates to:
+  /// **'Next sale'**
+  String get storeNextSale;
+
+  /// No description provided for @storeQueueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Order queue'**
+  String get storeQueueTitle;
+
+  /// No description provided for @storeOrderRef.
+  ///
+  /// In en, this message translates to:
+  /// **'Order #{ref}'**
+  String storeOrderRef(String ref);
+
+  /// No description provided for @storeChannelOfficer.
+  ///
+  /// In en, this message translates to:
+  /// **'Field officer'**
+  String get storeChannelOfficer;
+
+  /// No description provided for @storeChannelFarmerApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer app'**
+  String get storeChannelFarmerApp;
+
+  /// No description provided for @storeChannelPos.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter'**
+  String get storeChannelPos;
+
+  /// No description provided for @storeFulfilmentPickup.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick-up'**
+  String get storeFulfilmentPickup;
+
+  /// No description provided for @storeFulfilmentDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery'**
+  String get storeFulfilmentDelivery;
+
+  /// No description provided for @storeStatusPlaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Placed'**
+  String get storeStatusPlaced;
+
+  /// No description provided for @storeStatusReserved.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock reserved'**
+  String get storeStatusReserved;
+
+  /// No description provided for @storeStatusPacked.
+  ///
+  /// In en, this message translates to:
+  /// **'Packed'**
+  String get storeStatusPacked;
+
+  /// No description provided for @storeStatusReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get storeStatusReady;
+
+  /// No description provided for @storeStatusHandedOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Handed over'**
+  String get storeStatusHandedOver;
+
+  /// No description provided for @storeStatusDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get storeStatusDelivered;
+
+  /// No description provided for @storeStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get storeStatusCancelled;
+
+  /// No description provided for @storeActionReserve.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserve stock'**
+  String get storeActionReserve;
+
+  /// No description provided for @storeActionPack.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark packed'**
+  String get storeActionPack;
+
+  /// No description provided for @storeActionReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark ready'**
+  String get storeActionReady;
+
+  /// No description provided for @storeActionHandOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand over'**
+  String get storeActionHandOver;
+
+  /// No description provided for @storeActionDeliver.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark delivered'**
+  String get storeActionDeliver;
+
+  /// No description provided for @storeActionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel order'**
+  String get storeActionCancel;
+
+  /// No description provided for @storeCancelReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for cancelling'**
+  String get storeCancelReason;
+
+  /// No description provided for @storeKeepOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep order'**
+  String get storeKeepOrder;
+
+  /// No description provided for @storeTransitionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This change is not allowed now. The list was refreshed.'**
+  String get storeTransitionFailed;
+
+  /// No description provided for @storeQueueEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No orders here'**
+  String get storeQueueEmpty;
+
+  /// No description provided for @storeQueueEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders from field officers and the farmer app appear here.'**
+  String get storeQueueEmptyHelp;
+
+  /// No description provided for @storeSelectOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an order to see its details'**
+  String get storeSelectOrder;
+
+  /// No description provided for @storeFarmerUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer {ref}'**
+  String storeFarmerUnknown(String ref);
+
+  /// No description provided for @storeOrderMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Order is now: {status}'**
+  String storeOrderMoved(String status);
+
+  /// No description provided for @storeStockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get storeStockTitle;
+
+  /// No description provided for @storeOnHand.
+  ///
+  /// In en, this message translates to:
+  /// **'On hand'**
+  String get storeOnHand;
+
+  /// No description provided for @storeReserved.
+  ///
+  /// In en, this message translates to:
+  /// **'Reserved'**
+  String get storeReserved;
+
+  /// No description provided for @storeAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get storeAvailable;
+
+  /// No description provided for @storeBatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch {number}'**
+  String storeBatch(String number);
+
+  /// No description provided for @storeExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires {date}'**
+  String storeExpires(String date);
+
+  /// No description provided for @storeNoExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'No expiry'**
+  String get storeNoExpiry;
+
+  /// No description provided for @storeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get storeExpired;
+
+  /// No description provided for @storeExpiring30.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires within 30 days'**
+  String get storeExpiring30;
+
+  /// No description provided for @storeExpiring60.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires within 60 days'**
+  String get storeExpiring60;
+
+  /// No description provided for @storeFilterLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock'**
+  String get storeFilterLow;
+
+  /// No description provided for @storeFilterExpiring.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiring'**
+  String get storeFilterExpiring;
+
+  /// No description provided for @storeStockEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No stock matches'**
+  String get storeStockEmpty;
+
+  /// No description provided for @storeStockEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the filters or receive goods.'**
+  String get storeStockEmptyHelp;
+
+  /// No description provided for @storeSelectSku.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an item to see its batches'**
+  String get storeSelectSku;
+
+  /// No description provided for @storeWriteOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Write off'**
+  String get storeWriteOff;
+
+  /// No description provided for @storeWriteOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Write off stock'**
+  String get storeWriteOffTitle;
+
+  /// No description provided for @storeAdjust.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust count'**
+  String get storeAdjust;
+
+  /// No description provided for @storeAdjustTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust to the counted stock'**
+  String get storeAdjustTitle;
+
+  /// No description provided for @storeCountedQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted quantity'**
+  String get storeCountedQty;
+
+  /// No description provided for @storeAdjustReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Why the count differs'**
+  String get storeAdjustReasonHint;
+
+  /// No description provided for @storeReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get storeReason;
+
+  /// No description provided for @storeReasonRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a reason'**
+  String get storeReasonRequired;
+
+  /// No description provided for @storeReasonDamage.
+  ///
+  /// In en, this message translates to:
+  /// **'Damaged'**
+  String get storeReasonDamage;
+
+  /// No description provided for @storeReasonExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get storeReasonExpiry;
+
+  /// No description provided for @storeReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get storeReasonOther;
+
+  /// No description provided for @storeQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get storeQuantity;
+
+  /// No description provided for @storeQtyRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a quantity above zero'**
+  String get storeQtyRequired;
+
+  /// No description provided for @storeQtyTooHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'More than available ({qty})'**
+  String storeQtyTooHigh(String qty);
+
+  /// No description provided for @storeAvailableQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Available: {qty}'**
+  String storeAvailableQty(String qty);
+
+  /// No description provided for @storeAddPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get storeAddPhoto;
+
+  /// No description provided for @storePhotoAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo added'**
+  String get storePhotoAdded;
+
+  /// No description provided for @storeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get storeNote;
+
+  /// No description provided for @storeSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get storeSubmit;
+
+  /// No description provided for @storeSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get storeSaved;
+
+  /// No description provided for @storeNegativeStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough unreserved stock'**
+  String get storeNegativeStock;
+
+  /// No description provided for @storeReceiptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Goods receipt'**
+  String get storeReceiptTitle;
+
+  /// No description provided for @storeReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier invoice / reference'**
+  String get storeReference;
+
+  /// No description provided for @storeSku.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get storeSku;
+
+  /// No description provided for @storeFindSku.
+  ///
+  /// In en, this message translates to:
+  /// **'Item (pick or scan)'**
+  String get storeFindSku;
+
+  /// No description provided for @storeSkuRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an item'**
+  String get storeSkuRequired;
+
+  /// No description provided for @storeBatchNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch number'**
+  String get storeBatchNo;
+
+  /// No description provided for @storeBatchNoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the batch number'**
+  String get storeBatchNoRequired;
+
+  /// No description provided for @storeExpiryDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry date'**
+  String get storeExpiryDate;
+
+  /// No description provided for @storeExpiryPast.
+  ///
+  /// In en, this message translates to:
+  /// **'The expiry date has passed'**
+  String get storeExpiryPast;
+
+  /// No description provided for @storeUnitCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit cost (₹)'**
+  String get storeUnitCost;
+
+  /// No description provided for @storeCostRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the cost'**
+  String get storeCostRequired;
+
+  /// No description provided for @storeAddLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Add line'**
+  String get storeAddLine;
+
+  /// No description provided for @storeRemoveLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove line'**
+  String get storeRemoveLine;
+
+  /// No description provided for @storeReceiptSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive stock'**
+  String get storeReceiptSubmit;
+
+  /// No description provided for @storeReceiptDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock received'**
+  String get storeReceiptDone;
+
+  /// No description provided for @storeReceiptDoneHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Lines: {lines} · units added: {qty}'**
+  String storeReceiptDoneHelp(int lines, String qty);
+
+  /// No description provided for @storeBatchMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This batch already exists with another expiry date'**
+  String get storeBatchMismatch;
+
+  /// No description provided for @storeTransferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock transfer'**
+  String get storeTransferTitle;
+
+  /// No description provided for @storeToStore.
+  ///
+  /// In en, this message translates to:
+  /// **'To store'**
+  String get storeToStore;
+
+  /// No description provided for @storeToStoreRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the destination store'**
+  String get storeToStoreRequired;
+
+  /// No description provided for @storeNoOtherStores.
+  ///
+  /// In en, this message translates to:
+  /// **'No other store is available to you. Ask your cluster head.'**
+  String get storeNoOtherStores;
+
+  /// No description provided for @storeChooseBatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch'**
+  String get storeChooseBatch;
+
+  /// No description provided for @storeFefoSuggested.
+  ///
+  /// In en, this message translates to:
+  /// **'Earliest expiry first (suggested)'**
+  String get storeFefoSuggested;
+
+  /// No description provided for @storeTransferSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get storeTransferSubmit;
+
+  /// No description provided for @storeTransferDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer done'**
+  String get storeTransferDone;
+
+  /// No description provided for @storeCreditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get storeCreditTitle;
+
+  /// No description provided for @storeApprovalsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending approvals'**
+  String get storeApprovalsEmpty;
+
+  /// No description provided for @storeApprovalAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale amount'**
+  String get storeApprovalAmount;
+
+  /// No description provided for @storeShortfall.
+  ///
+  /// In en, this message translates to:
+  /// **'Over the limit by'**
+  String get storeShortfall;
+
+  /// No description provided for @storeApprove.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get storeApprove;
+
+  /// No description provided for @storeReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get storeReject;
+
+  /// No description provided for @storeDecisionNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get storeDecisionNote;
+
+  /// No description provided for @storeApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved. The store can complete the sale once.'**
+  String get storeApproved;
+
+  /// No description provided for @storeRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get storeRejected;
+
+  /// No description provided for @storeApprovalGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This request was already decided'**
+  String get storeApprovalGone;
+
+  /// No description provided for @storeSetLimitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a farmer\'\'s credit limit'**
+  String get storeSetLimitTitle;
+
+  /// No description provided for @storeLimitAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit (₹)'**
+  String get storeLimitAmount;
+
+  /// No description provided for @storeLimitAmountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the limit in rupees'**
+  String get storeLimitAmountRequired;
+
+  /// No description provided for @storeSetLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Save limit'**
+  String get storeSetLimit;
+
+  /// No description provided for @storeLimitSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit saved: {amount}'**
+  String storeLimitSaved(String amount);
+
+  /// No description provided for @storeLimitNeedsClusterHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Limits above {cap} need a cluster head. Ask your cluster head to set this limit.'**
+  String storeLimitNeedsClusterHead(String cap);
+
+  /// No description provided for @storeLimitFarmerNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No farmer with this phone on this tablet'**
+  String get storeLimitFarmerNotFound;
+
+  /// No description provided for @storeManagerCapHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can set up to {cap}'**
+  String storeManagerCapHint(String cap);
+
+  /// No description provided for @storeDayCloseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Day close'**
+  String get storeDayCloseTitle;
+
+  /// No description provided for @storeCashCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash count'**
+  String get storeCashCount;
+
+  /// No description provided for @storeCoins.
+  ///
+  /// In en, this message translates to:
+  /// **'Coins (₹)'**
+  String get storeCoins;
+
+  /// No description provided for @storeExpectedCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected cash'**
+  String get storeExpectedCash;
+
+  /// No description provided for @storeCountedCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Counted cash'**
+  String get storeCountedCash;
+
+  /// No description provided for @storeVariance.
+  ///
+  /// In en, this message translates to:
+  /// **'Variance'**
+  String get storeVariance;
+
+  /// No description provided for @storeVarianceOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Variance is over {threshold}: auditors will be notified'**
+  String storeVarianceOver(String threshold);
+
+  /// No description provided for @storeDepositSlip.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank deposit slip photo'**
+  String get storeDepositSlip;
+
+  /// No description provided for @storeTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get storeTakePhoto;
+
+  /// No description provided for @storeRetakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Retake photo'**
+  String get storeRetakePhoto;
+
+  /// No description provided for @storeSlipRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo of the deposit slip'**
+  String get storeSlipRequired;
+
+  /// No description provided for @storeCloseNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get storeCloseNotes;
+
+  /// No description provided for @storeCloseDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Close day'**
+  String get storeCloseDay;
+
+  /// No description provided for @storeDayClosedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Day closed'**
+  String get storeDayClosedTitle;
+
+  /// No description provided for @storeDayAlreadyClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Today is already closed. A cluster head can reopen it.'**
+  String get storeDayAlreadyClosed;
+
+  /// No description provided for @storeFlagged.
+  ///
+  /// In en, this message translates to:
+  /// **'Flagged for audit'**
+  String get storeFlagged;
 }
 
 class _CoreLocalizationsDelegate

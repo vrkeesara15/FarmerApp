@@ -2395,4 +2395,800 @@ class CoreLocalizationsMr extends CoreLocalizations {
 
   @override
   String get syncEntityPayment => 'पेमेंट';
+
+  @override
+  String get storeModeTitle => 'स्टोअर मोड';
+
+  @override
+  String get storeSettingsEntryHint => 'विक्री, ऑर्डर, स्टॉक आणि दिवस बंद';
+
+  @override
+  String get storeNavHome => 'होम';
+
+  @override
+  String get storeNavPos => 'विक्री';
+
+  @override
+  String get storeNavQueue => 'ऑर्डर';
+
+  @override
+  String get storeNavStock => 'स्टॉक';
+
+  @override
+  String get storeNavCredit => 'उधारी';
+
+  @override
+  String get storeNavDayClose => 'दिवस बंद';
+
+  @override
+  String get storeReadOnlyBanner =>
+      'तुम्ही हे स्टोअर पाहत आहात. बदल फक्त स्टोअर टीम करू शकते.';
+
+  @override
+  String get storeNotAllowedTitle => 'स्टोअर मोड उपलब्ध नाही';
+
+  @override
+  String get storeNotAllowedHelp =>
+      'स्टोअर मोड स्टोअर मॅनेजर, अकाउंटंट आणि क्लस्टर हेडसाठी आहे.';
+
+  @override
+  String get storeOfflineTitle => 'तुम्ही ऑफलाइन आहात';
+
+  @override
+  String get storeOfflineHelp =>
+      'स्टोअर मोडला नेटवर्क लागते. कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.';
+
+  @override
+  String get storeErrorTitle => 'लोड होऊ शकले नाही';
+
+  @override
+  String get storeErrorHelp => 'काहीतरी चुकले. पुन्हा प्रयत्न करा.';
+
+  @override
+  String get storeSwitchStore => 'स्टोअर बदला';
+
+  @override
+  String get storeHomeTitle => 'स्टोअर होम';
+
+  @override
+  String get storeTodaySales => 'आजची विक्री';
+
+  @override
+  String storeSalesCount(int count) {
+    return 'पेमेंट: $count';
+  }
+
+  @override
+  String get storeModeUpi => 'UPI QR';
+
+  @override
+  String get storeModeCard => 'कार्ड';
+
+  @override
+  String get storeModeCash => 'रोख';
+
+  @override
+  String get storeModeCredit => 'उधारी (खाते)';
+
+  @override
+  String get storeQueueCounts => 'ऑर्डर रांग';
+
+  @override
+  String get storeTabNew => 'नवीन';
+
+  @override
+  String get storeTabPacking => 'पॅकिंग';
+
+  @override
+  String get storeTabReady => 'तयार';
+
+  @override
+  String get storeTabHandedOver => 'सुपूर्द केले';
+
+  @override
+  String storeTabWithCount(String label, int count) {
+    return '$label ($count)';
+  }
+
+  @override
+  String get storeLowStock => 'कमी स्टॉक';
+
+  @override
+  String storeLowStockCount(int count) {
+    return 'कमी असलेल्या वस्तू: $count';
+  }
+
+  @override
+  String storeExpiringCount(int count) {
+    return 'लवकरच मुदत संपणारे: $count';
+  }
+
+  @override
+  String get storeDayCloseStatus => 'दिवस बंद';
+
+  @override
+  String get storeDayOpen => 'उघडे, अजून बंद नाही';
+
+  @override
+  String storeDayClosed(String time) {
+    return '$time वाजता बंद केले';
+  }
+
+  @override
+  String get storeDayReopened => 'पुन्हा उघडले';
+
+  @override
+  String get storeActionNewSale => 'नवी विक्री';
+
+  @override
+  String get storeActionReceive => 'माल स्वीकार';
+
+  @override
+  String get storeActionTransfer => 'स्टॉक हस्तांतरण';
+
+  @override
+  String get storeActionCloseDay => 'दिवस बंद करा';
+
+  @override
+  String get storePosTitle => 'विक्री काउंटर';
+
+  @override
+  String get storeSearchProducts => 'उत्पादने शोधा';
+
+  @override
+  String get storeScan => 'स्कॅन';
+
+  @override
+  String get storeEnterCode => 'कोड टाका';
+
+  @override
+  String get storeCodeHint => 'बारकोड क्रमांक';
+
+  @override
+  String get storeCodeAdd => 'जोडा';
+
+  @override
+  String storeScanAdded(String name) {
+    return '$name जोडले';
+  }
+
+  @override
+  String storeScanNotFound(String code) {
+    return '$code कोडचे उत्पादन नाही';
+  }
+
+  @override
+  String get storeScanOffline => 'ऑफलाइन: कोड शोधता येत नाही';
+
+  @override
+  String get storeCategoryAll => 'सर्व';
+
+  @override
+  String get storeCategorySeed => 'बियाणे';
+
+  @override
+  String get storeCategoryFertiliser => 'खते';
+
+  @override
+  String get storeCategoryPesticide => 'कीटकनाशके';
+
+  @override
+  String get storeCategoryFungicide => 'बुरशीनाशके';
+
+  @override
+  String get storeCategoryHerbicide => 'तणनाशके';
+
+  @override
+  String get storeCategoryGrowth => 'वाढ वर्धके';
+
+  @override
+  String get storeCategoryTool => 'अवजारे';
+
+  @override
+  String get storeCategoryOther => 'इतर';
+
+  @override
+  String get storeCartTitle => 'कार्ट';
+
+  @override
+  String get storeCartEmpty => 'कार्ट रिकामे आहे';
+
+  @override
+  String get storeCartEmptyHelp =>
+      'जोडण्यासाठी बारकोड स्कॅन करा किंवा उत्पादनावर टॅप करा.';
+
+  @override
+  String get storeQtyDecrease => 'कमी करा';
+
+  @override
+  String get storeQtyIncrease => 'वाढवा';
+
+  @override
+  String get storeSubtotal => 'उप-एकूण (GST पूर्वी)';
+
+  @override
+  String get storeGst => 'GST';
+
+  @override
+  String get storeTotal => 'एकूण';
+
+  @override
+  String get storeRoundOff => 'राउंड ऑफ';
+
+  @override
+  String get storeBuyerPhone => 'शेतकऱ्याचा फोन';
+
+  @override
+  String get storeBuyerFind => 'शोधा';
+
+  @override
+  String get storeBuyerWalkIn => 'थेट आलेल्या ग्राहकासाठी रिकामे ठेवा';
+
+  @override
+  String get storeBuyerUnknown => 'नवीन नंबर: विक्री या फोनवर नोंदवली जाईल';
+
+  @override
+  String get storeBuyerClear => 'काढा';
+
+  @override
+  String get storeNoProducts => 'जुळणारी उत्पादने नाहीत';
+
+  @override
+  String get storeCheckoutTitle => 'पेमेंट';
+
+  @override
+  String get storePayWith => 'पेमेंट पद्धत';
+
+  @override
+  String get storeModeUpiHint => 'शेतकरी QR स्कॅन करतील';
+
+  @override
+  String get storeModeCardHint => 'स्टोअर टर्मिनलवर कार्ड';
+
+  @override
+  String get storeModeCashHint => 'रोख मोजा, सुट्टे द्या';
+
+  @override
+  String get storeModeCreditHint => 'शेतकऱ्याच्या खात्यात जोडा';
+
+  @override
+  String get storeCardReference => 'टर्मिनल संदर्भ';
+
+  @override
+  String get storeCardReferenceHint => 'स्लिपवरील मंजुरी कोड';
+
+  @override
+  String get storeCardReferenceRequired => 'टर्मिनल संदर्भ टाका';
+
+  @override
+  String get storeCashTendered => 'मिळालेली रोख';
+
+  @override
+  String get storeCashChange => 'परत द्यायचे सुट्टे';
+
+  @override
+  String get storeCashShort => 'मिळालेली रोख एकूण रकमेपेक्षा कमी आहे';
+
+  @override
+  String get storeCreditNeedsFarmer =>
+      'उधारीसाठी नोंदणीकृत शेतकरी हवा. फोनने शेतकरी शोधा.';
+
+  @override
+  String get storeInvoicePreview => 'GST बीजक पूर्वावलोकन';
+
+  @override
+  String get storeInvoicePreviewNote =>
+      'पुष्टी केल्यावर बीजक क्रमांक आणि अंतिम कर सर्व्हरकडून येतो.';
+
+  @override
+  String get storeColItem => 'वस्तू';
+
+  @override
+  String get storeColHsn => 'HSN';
+
+  @override
+  String get storeColQty => 'नग';
+
+  @override
+  String get storeColRate => 'दर';
+
+  @override
+  String get storeColGst => 'GST';
+
+  @override
+  String get storeColAmount => 'रक्कम';
+
+  @override
+  String get storeTaxable => 'करपात्र मूल्य';
+
+  @override
+  String get storeCgst => 'CGST';
+
+  @override
+  String get storeSgst => 'SGST';
+
+  @override
+  String get storeIgst => 'IGST';
+
+  @override
+  String get storeConfirmSale => 'विक्रीची पुष्टी करा';
+
+  @override
+  String get storeOfflineSaleTitle => 'ऑफलाइन: विक्री पूर्ण होऊ शकत नाही';
+
+  @override
+  String get storeOfflineSaleHelp =>
+      'कार्ट जपून ठेवले आहे. नेटवर्कशी जोडा आणि पुन्हा पुष्टी करा.';
+
+  @override
+  String get storeApprovalNeededTitle => 'उधारीची मंजुरी हवी';
+
+  @override
+  String storeApprovalNeededHelp(String amount) {
+    return 'ही विक्री शेतकऱ्याच्या मर्यादेपेक्षा $amount जास्त आहे. क्लस्टर हेडने मंजुरी द्यावी. कार्ट जपून ठेवले आहे.';
+  }
+
+  @override
+  String get storeCreditBalance => 'खाते बाकी';
+
+  @override
+  String get storeCreditLimit => 'उधारी मर्यादा';
+
+  @override
+  String get storeChooseAnotherMode => 'दुसरी पद्धत निवडा';
+
+  @override
+  String get storeSaleFailedTitle => 'विक्री पूर्ण झाली नाही';
+
+  @override
+  String storeSaleFailed(String code) {
+    return 'सर्व्हरने विक्री नाकारली ($code). कार्ट जपून ठेवले आहे.';
+  }
+
+  @override
+  String get storeInvoiceTitle => 'कर बीजक';
+
+  @override
+  String storeInvoiceNo(String number) {
+    return 'बीजक $number';
+  }
+
+  @override
+  String get storeInvoicePaid => 'विक्री पूर्ण झाली';
+
+  @override
+  String get storeInvoiceBuyer => 'बिल कोणाच्या नावे';
+
+  @override
+  String storeGstin(String gstin) {
+    return 'GSTIN $gstin';
+  }
+
+  @override
+  String get storeAmountInWords => 'रक्कम अक्षरी';
+
+  @override
+  String get storeOpenPdf => 'PDF उघडा';
+
+  @override
+  String get storeShareWhatsApp => 'WhatsApp वर पाठवा';
+
+  @override
+  String get storeShareOther => 'शेअर करा';
+
+  @override
+  String storeShareSent(String to) {
+    return '$to ला पाठवले';
+  }
+
+  @override
+  String get storeShareFailed => 'पाठवता आले नाही. पुन्हा प्रयत्न करा.';
+
+  @override
+  String get storePdfFailed => 'PDF उघडता आले नाही.';
+
+  @override
+  String storeShareText(String number, String amount, String url) {
+    return 'बीजक $number, रक्कम $amount: $url';
+  }
+
+  @override
+  String get storeNextSale => 'पुढील विक्री';
+
+  @override
+  String get storeQueueTitle => 'ऑर्डर रांग';
+
+  @override
+  String storeOrderRef(String ref) {
+    return 'ऑर्डर #$ref';
+  }
+
+  @override
+  String get storeChannelOfficer => 'फील्ड ऑफिसर';
+
+  @override
+  String get storeChannelFarmerApp => 'शेतकरी ॲप';
+
+  @override
+  String get storeChannelPos => 'काउंटर';
+
+  @override
+  String get storeFulfilmentPickup => 'स्टोअरमधून नेणे';
+
+  @override
+  String get storeFulfilmentDelivery => 'डिलिव्हरी';
+
+  @override
+  String get storeStatusPlaced => 'ऑर्डर झाले';
+
+  @override
+  String get storeStatusReserved => 'स्टॉक राखीव';
+
+  @override
+  String get storeStatusPacked => 'पॅक झाले';
+
+  @override
+  String get storeStatusReady => 'तयार';
+
+  @override
+  String get storeStatusHandedOver => 'सुपूर्द केले';
+
+  @override
+  String get storeStatusDelivered => 'पोहोचवले';
+
+  @override
+  String get storeStatusCancelled => 'रद्द';
+
+  @override
+  String get storeActionReserve => 'स्टॉक राखीव ठेवा';
+
+  @override
+  String get storeActionPack => 'पॅक झाले म्हणून नोंदवा';
+
+  @override
+  String get storeActionReady => 'तयार म्हणून नोंदवा';
+
+  @override
+  String get storeActionHandOver => 'सुपूर्द करा';
+
+  @override
+  String get storeActionDeliver => 'पोहोचवले म्हणून नोंदवा';
+
+  @override
+  String get storeActionCancel => 'ऑर्डर रद्द करा';
+
+  @override
+  String get storeCancelReason => 'रद्द करण्याचे कारण';
+
+  @override
+  String get storeKeepOrder => 'ऑर्डर ठेवा';
+
+  @override
+  String get storeTransitionFailed =>
+      'हा बदल आता करता येत नाही. यादी ताजी केली.';
+
+  @override
+  String get storeQueueEmpty => 'येथे ऑर्डर नाहीत';
+
+  @override
+  String get storeQueueEmptyHelp =>
+      'फील्ड ऑफिसर आणि शेतकरी ॲपचे ऑर्डर येथे दिसतात.';
+
+  @override
+  String get storeSelectOrder => 'तपशील पाहण्यासाठी ऑर्डर निवडा';
+
+  @override
+  String storeFarmerUnknown(String ref) {
+    return 'शेतकरी $ref';
+  }
+
+  @override
+  String storeOrderMoved(String status) {
+    return 'ऑर्डर आता: $status';
+  }
+
+  @override
+  String get storeStockTitle => 'स्टॉक';
+
+  @override
+  String get storeOnHand => 'हाती';
+
+  @override
+  String get storeReserved => 'राखीव';
+
+  @override
+  String get storeAvailable => 'उपलब्ध';
+
+  @override
+  String storeBatch(String number) {
+    return 'बॅच $number';
+  }
+
+  @override
+  String storeExpires(String date) {
+    return 'मुदत $date';
+  }
+
+  @override
+  String get storeNoExpiry => 'मुदत नाही';
+
+  @override
+  String get storeExpired => 'मुदत संपली';
+
+  @override
+  String get storeExpiring30 => '30 दिवसांत मुदत संपते';
+
+  @override
+  String get storeExpiring60 => '60 दिवसांत मुदत संपते';
+
+  @override
+  String get storeFilterLow => 'कमी स्टॉक';
+
+  @override
+  String get storeFilterExpiring => 'मुदत जवळ';
+
+  @override
+  String get storeStockEmpty => 'जुळणारा स्टॉक नाही';
+
+  @override
+  String get storeStockEmptyHelp => 'फिल्टर बदला किंवा माल स्वीकारा.';
+
+  @override
+  String get storeSelectSku => 'बॅच पाहण्यासाठी वस्तू निवडा';
+
+  @override
+  String get storeWriteOff => 'निर्लेखित करा';
+
+  @override
+  String get storeWriteOffTitle => 'स्टॉक निर्लेखित करा';
+
+  @override
+  String get storeAdjust => 'मोजणी दुरुस्त करा';
+
+  @override
+  String get storeAdjustTitle => 'मोजलेल्या स्टॉकनुसार दुरुस्त करा';
+
+  @override
+  String get storeCountedQty => 'मोजलेले प्रमाण';
+
+  @override
+  String get storeAdjustReasonHint => 'मोजणी वेगळी का आहे';
+
+  @override
+  String get storeReason => 'कारण';
+
+  @override
+  String get storeReasonRequired => 'कारण टाका';
+
+  @override
+  String get storeReasonDamage => 'खराब झाले';
+
+  @override
+  String get storeReasonExpiry => 'मुदत संपली';
+
+  @override
+  String get storeReasonOther => 'इतर';
+
+  @override
+  String get storeQuantity => 'प्रमाण';
+
+  @override
+  String get storeQtyRequired => 'शून्यापेक्षा जास्त प्रमाण टाका';
+
+  @override
+  String storeQtyTooHigh(String qty) {
+    return 'उपलब्धपेक्षा जास्त ($qty)';
+  }
+
+  @override
+  String storeAvailableQty(String qty) {
+    return 'उपलब्ध: $qty';
+  }
+
+  @override
+  String get storeAddPhoto => 'फोटो जोडा';
+
+  @override
+  String get storePhotoAdded => 'फोटो जोडला';
+
+  @override
+  String get storeNote => 'टीप';
+
+  @override
+  String get storeSubmit => 'जतन करा';
+
+  @override
+  String get storeSaved => 'जतन झाले';
+
+  @override
+  String get storeNegativeStock => 'राखीव नसलेला स्टॉक पुरेसा नाही';
+
+  @override
+  String get storeReceiptTitle => 'माल स्वीकार';
+
+  @override
+  String get storeReference => 'पुरवठादार बीजक / संदर्भ';
+
+  @override
+  String get storeSku => 'वस्तू';
+
+  @override
+  String get storeFindSku => 'वस्तू (निवडा किंवा स्कॅन करा)';
+
+  @override
+  String get storeSkuRequired => 'वस्तू निवडा';
+
+  @override
+  String get storeBatchNo => 'बॅच क्रमांक';
+
+  @override
+  String get storeBatchNoRequired => 'बॅच क्रमांक टाका';
+
+  @override
+  String get storeExpiryDate => 'मुदत तारीख';
+
+  @override
+  String get storeExpiryPast => 'मुदत तारीख उलटून गेली';
+
+  @override
+  String get storeUnitCost => 'एकक किंमत (₹)';
+
+  @override
+  String get storeCostRequired => 'किंमत टाका';
+
+  @override
+  String get storeAddLine => 'ओळ जोडा';
+
+  @override
+  String get storeRemoveLine => 'ओळ काढा';
+
+  @override
+  String get storeReceiptSubmit => 'स्टॉक स्वीकारा';
+
+  @override
+  String get storeReceiptDone => 'स्टॉक स्वीकारला';
+
+  @override
+  String storeReceiptDoneHelp(int lines, String qty) {
+    return 'ओळी: $lines · जोडलेली एकके: $qty';
+  }
+
+  @override
+  String get storeBatchMismatch => 'ही बॅच वेगळ्या मुदत तारखेसह आधीच आहे';
+
+  @override
+  String get storeTransferTitle => 'स्टॉक हस्तांतरण';
+
+  @override
+  String get storeToStore => 'कोणत्या स्टोअरला';
+
+  @override
+  String get storeToStoreRequired => 'पोहोचण्याचे स्टोअर निवडा';
+
+  @override
+  String get storeNoOtherStores =>
+      'तुमच्यासाठी दुसरे स्टोअर उपलब्ध नाही. तुमच्या क्लस्टर हेडला विचारा.';
+
+  @override
+  String get storeChooseBatch => 'बॅच';
+
+  @override
+  String get storeFefoSuggested => 'आधी मुदत संपणारे आधी (सूचना)';
+
+  @override
+  String get storeTransferSubmit => 'हस्तांतरित करा';
+
+  @override
+  String get storeTransferDone => 'हस्तांतरण पूर्ण झाले';
+
+  @override
+  String get storeCreditTitle => 'उधारी';
+
+  @override
+  String get storeApprovalsEmpty => 'प्रलंबित मंजुरी नाहीत';
+
+  @override
+  String get storeApprovalAmount => 'विक्री रक्कम';
+
+  @override
+  String get storeShortfall => 'मर्यादेपेक्षा जास्त';
+
+  @override
+  String get storeApprove => 'मंजूर करा';
+
+  @override
+  String get storeReject => 'नाकारा';
+
+  @override
+  String get storeDecisionNote => 'टीप (ऐच्छिक)';
+
+  @override
+  String get storeApproved => 'मंजूर. स्टोअर एकदा विक्री पूर्ण करू शकते.';
+
+  @override
+  String get storeRejected => 'नाकारले';
+
+  @override
+  String get storeApprovalGone => 'या विनंतीवर आधीच निर्णय झाला आहे';
+
+  @override
+  String get storeSetLimitTitle => 'शेतकऱ्याची उधारी मर्यादा ठरवा';
+
+  @override
+  String get storeLimitAmount => 'मर्यादा (₹)';
+
+  @override
+  String get storeLimitAmountRequired => 'मर्यादा रुपयांत टाका';
+
+  @override
+  String get storeSetLimit => 'मर्यादा जतन करा';
+
+  @override
+  String storeLimitSaved(String amount) {
+    return 'मर्यादा जतन झाली: $amount';
+  }
+
+  @override
+  String storeLimitNeedsClusterHead(String cap) {
+    return '$cap पेक्षा जास्त मर्यादेसाठी क्लस्टर हेड हवे. ही मर्यादा ठरवण्यासाठी तुमच्या क्लस्टर हेडला सांगा.';
+  }
+
+  @override
+  String get storeLimitFarmerNotFound => 'या फोनचा शेतकरी या टॅबलेटवर नाही';
+
+  @override
+  String storeManagerCapHint(String cap) {
+    return 'तुम्ही $cap पर्यंत ठरवू शकता';
+  }
+
+  @override
+  String get storeDayCloseTitle => 'दिवस बंद';
+
+  @override
+  String get storeCashCount => 'रोख मोजणी';
+
+  @override
+  String get storeCoins => 'नाणी (₹)';
+
+  @override
+  String get storeExpectedCash => 'अपेक्षित रोख';
+
+  @override
+  String get storeCountedCash => 'मोजलेली रोख';
+
+  @override
+  String get storeVariance => 'फरक';
+
+  @override
+  String storeVarianceOver(String threshold) {
+    return 'फरक $threshold पेक्षा जास्त: ऑडिटरना कळवले जाईल';
+  }
+
+  @override
+  String get storeDepositSlip => 'बँक जमा पावतीचा फोटो';
+
+  @override
+  String get storeTakePhoto => 'फोटो काढा';
+
+  @override
+  String get storeRetakePhoto => 'पुन्हा फोटो काढा';
+
+  @override
+  String get storeSlipRequired => 'जमा पावतीचा फोटो काढा';
+
+  @override
+  String get storeCloseNotes => 'नोंदी';
+
+  @override
+  String get storeCloseDay => 'दिवस बंद करा';
+
+  @override
+  String get storeDayClosedTitle => 'दिवस बंद झाला';
+
+  @override
+  String get storeDayAlreadyClosed =>
+      'आजचा दिवस आधीच बंद आहे. क्लस्टर हेड तो पुन्हा उघडू शकतात.';
+
+  @override
+  String get storeFlagged => 'ऑडिटसाठी चिन्हांकित';
 }

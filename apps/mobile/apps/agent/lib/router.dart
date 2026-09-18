@@ -28,6 +28,7 @@ import 'screens/payments/upi_screen.dart';
 import 'screens/phone_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/store/store_routes.dart';
 import 'screens/visits/confirm_screen.dart';
 import 'screens/visits/start_visit_screen.dart';
 import 'screens/visits/summary_screen.dart';
@@ -90,6 +91,9 @@ abstract final class AppRoutes {
 
   /// A64 Sync details (under Me / settings).
   static const String syncDetails = '/settings/sync';
+
+  /// S01 Store mode home (store manager, accountant, cluster head).
+  static const String store = StoreRoutes.home;
 }
 
 /// The app router.
@@ -296,6 +300,8 @@ GoRouter buildRouter({String initialLocation = AppRoutes.splash}) {
           ),
         ],
       ),
+      // ST-001 .. ST-007 store mode (S01–S10), role-gated in StoreShell.
+      ...storeRoutes(),
     ],
   );
 }

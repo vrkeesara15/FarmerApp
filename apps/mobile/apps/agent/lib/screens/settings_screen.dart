@@ -88,6 +88,33 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => context.push(AppRoutes.syncDetails),
               ),
             ),
+            // Store mode switch (SPEC 1.2): store managers, accountants and
+            // cluster heads (read-only); field officers never see it.
+            if (ref.watch(storeRoleProvider).hasStoreMode) ...<Widget>[
+              const SizedBox(height: Tokens.space3),
+              Material(
+                color: app.palette.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(Tokens.radiusCard),
+                  side: app.borderSide,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: ListTile(
+                  key: const Key('store-mode-setting'),
+                  leading: Icon(
+                    Icons.storefront_outlined,
+                    color: app.palette.primary,
+                  ),
+                  title: Text(l10n.storeModeTitle, style: app.text.label),
+                  subtitle: Text(
+                    l10n.storeSettingsEntryHint,
+                    style: app.text.body,
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.go(AppRoutes.store),
+                ),
+              ),
+            ],
           ],
         ),
       ),

@@ -237,7 +237,15 @@ class FakeAuthApi implements AuthApi {
     this.maxAttempts = 5,
     this.rateLimitAfter,
     this.lockout = const Duration(minutes: 15),
+    this.role = 'field_officer',
+    this.storeId,
   });
+
+  /// Role of the signed-in user (store-mode tests use `store_manager`).
+  final String role;
+
+  /// Store of the signed-in user.
+  final String? storeId;
 
   /// Delay applied to every call to mimic the network.
   final Duration latency;
@@ -312,9 +320,10 @@ class FakeAuthApi implements AuthApi {
             tenantId: 't-fake',
             phone: '+91$phone',
             name: 'Demo user',
-            role: 'field_officer',
+            role: role,
             language: 'en',
             status: 'active',
+            storeId: storeId,
           ),
         ),
       );
