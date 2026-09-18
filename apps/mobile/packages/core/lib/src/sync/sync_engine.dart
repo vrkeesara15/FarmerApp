@@ -499,10 +499,36 @@ class SyncEngine {
 
   /// The op as sent: `base_version` refreshed from the local row so a
   /// queued update following a just-applied create carries the version the
-  /// server assigned.
+  /// server assigned; a farmer create carrying an expired
+  /// `phone_verification_token` sends without it (FA-012: the farmer syncs
+  /// as unverified rather than being rejected 30 minutes after capture).
   Future<SyncOp> _prepare(OutboxRow row) async {
     final op = SyncStore.toOp(row);
-    if (op.action == SyncAction.create) return op;
+    if (op.action == SyncAction.create) {
+      if (op.entity == SyncEntities.farmer &&
+          op.payload.containsKey(phoneVerificationTokenKey)) {
+        final expires = op.payload[phoneVerificationExpiresKey];
+        final expiry = expires is String ? DateTime.tryParse(expires) : null;
+        final expired = expiry != null && !_now().isBefore(expiry.toUtc());
+        final payload = Map<String, Object?>.from(op.payload)
+          ..remove(phoneVerificationExpiresKey);
+        if (expired) {
+          payload
+            ..remove(phoneVerificationTokenKey)
+            ..['phone_verified'] = false;
+          await store.setPayload(
+            op.opId,
+            payload,
+            dependsOnUploadId: row.dependsOnUploadId,
+          );
+          await store.entities.merge(op.entity, op.entityId, <String, Object?>{
+            'phone_verified': false,
+          }, now: _now());
+        }
+        return op.copyWith(payload: payload);
+      }
+      return op;
+    }
     final local = await store.entities.read(op.entity, op.entityId);
     final base = local?.version ?? op.baseVersion;
     if (base != op.baseVersion) await store.setBaseVersion(op.opId, base);

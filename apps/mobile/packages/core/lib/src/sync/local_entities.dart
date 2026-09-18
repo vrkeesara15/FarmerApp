@@ -277,15 +277,32 @@ class LocalEntities {
     }
   }
 
-  /// Upserts a pulled row of an entity without a typed table.
+  /// Upserts a pulled row of an entity without a writable table: villages
+  /// go to the typed `villages` table (merged over the existing row),
+  /// everything else to `synced_refs` as JSON.
   Future<void> writeRef(
     String entity,
     String id,
     Map<String, Object?> data, {
     required int version,
     required DateTime now,
-  }) {
-    return db
+  }) async {
+    if (entity == SyncEntities.village) {
+      final existing = await (db.select(
+        db.villages,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
+      final merged = <String, Object?>{
+        ...?existing == null ? null : villageToData(existing),
+        ...data,
+      };
+      await db
+          .into(db.villages)
+          .insertOnConflictUpdate(
+            villageFromData(id, merged, version: version, now: now),
+          );
+      return;
+    }
+    await db
         .into(db.syncedRefs)
         .insertOnConflictUpdate(
           SyncedRefsCompanion.insert(
@@ -298,8 +315,14 @@ class LocalEntities {
         );
   }
 
-  /// Reads a generic row's data, or null.
+  /// Reads a generic row's data (villages from their typed table), or null.
   Future<Map<String, Object?>?> readRef(String entity, String id) async {
+    if (entity == SyncEntities.village) {
+      final row = await (db.select(
+        db.villages,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
+      return row == null ? null : villageToData(row);
+    }
     final row =
         await (db.select(db.syncedRefs)
               ..where((t) => t.entity.equals(entity) & t.refId.equals(id)))
@@ -310,12 +333,54 @@ class LocalEntities {
 
   /// Deletes a generic row.
   Future<void> deleteRef(String entity, String id) {
+    if (entity == SyncEntities.village) {
+      return (db.delete(db.villages)..where((t) => t.id.equals(id))).go();
+    }
     return (db.delete(
       db.syncedRefs,
     )..where((t) => t.entity.equals(entity) & t.refId.equals(id))).go();
   }
 
   // --- codecs -------------------------------------------------------------
+
+  static double? _num(Object? v) => (v as num?)?.toDouble();
+
+  /// Village row from wire data (`lat`/`lon`, `latitude`/`longitude` or a
+  /// `location: {lat, lon}` object are all accepted).
+  static Village villageFromData(
+    String id,
+    Map<String, Object?> d, {
+    required int version,
+    required DateTime now,
+  }) {
+    final location = d['location'];
+    final loc = location is Map ? Map<String, Object?>.from(location) : null;
+    return Village(
+      id: id,
+      name: (d['name'] as String?) ?? '',
+      district: (d['district'] as String?) ?? '',
+      mandal: (d['mandal'] as String?) ?? '',
+      state: (d['state'] as String?) ?? '',
+      storeId: d['store_id'] as String?,
+      latitude: _num(d['lat'] ?? d['latitude'] ?? loc?['lat']),
+      longitude: _num(d['lon'] ?? d['longitude'] ?? loc?['lon']),
+      version: version,
+      updatedAt: now,
+    );
+  }
+
+  /// Wire data from a village row.
+  static Map<String, Object?> villageToData(Village r) => <String, Object?>{
+    'id': r.id,
+    'name': r.name,
+    'district': r.district,
+    'mandal': r.mandal,
+    'state': r.state,
+    'store_id': r.storeId,
+    'lat': r.latitude,
+    'lon': r.longitude,
+    'version': r.version,
+  };
 
   /// Farmer row from wire data.
   static Farmer farmerFromData(

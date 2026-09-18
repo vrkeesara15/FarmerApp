@@ -59,6 +59,15 @@ Future<void> main() async {
       backgroundWorkSchedulerProvider.overrideWithValue(
         WorkmanagerSyncScheduler(),
       ),
+      // FA-012 A21: farmer OTP, GPS walk-around, in-app camera, photo files.
+      farmerPhoneVerifyApiProvider.overrideWithValue(
+        HttpFarmerPhoneVerifyApi(store: store, refreshSession: auth.refresh),
+      ),
+      locationSourceProvider.overrideWithValue(
+        const GeolocatorLocationSource(),
+      ),
+      cameraSourceProvider.overrideWithValue(ImagePickerCameraSource()),
+      photoStoreProvider.overrideWithValue(const DocumentsPhotoStore()),
     ],
   );
   // Periodic background sync + immediate sync on reconnect (NF-002/NF-003).

@@ -1,10 +1,8 @@
 {
   "@@locale": "hi",
-
   "appNameAgent": "मित्र",
   "appNameFarmer": "किसान",
   "splashTagline": "आपके खेत के लिए भरोसेमंद सलाह",
-
   "actionContinue": "आगे बढ़ें",
   "actionBack": "पीछे",
   "actionNext": "अगला",
@@ -14,7 +12,6 @@
   "actionSkip": "छोड़ें",
   "actionClose": "बंद करें",
   "loading": "लोड हो रहा है",
-
   "languagePickerTitle": "अपनी भाषा चुनें",
   "languagePickerSubtitle": "सुनने के लिए स्पीकर दबाएँ",
   "languagePlayAudio": "सुनें",
@@ -28,14 +25,12 @@
   "languageKannadaName": "कन्नड़",
   "languageHindiName": "हिन्दी",
   "languageMarathiName": "मराठी",
-
   "phoneLoginTitle": "अपना मोबाइल नंबर डालें",
   "phoneLabel": "मोबाइल नंबर",
   "phonePrefix": "+91",
   "phoneHelper": "हम SMS से 6 अंकों का OTP भेजेंगे",
   "phoneInvalid": "सही 10 अंकों का मोबाइल नंबर डालें",
   "phoneSendOtp": "OTP भेजें",
-
   "otpTitle": "OTP डालें",
   "otpSubtitle": "+91 {phone} पर भेजा गया",
   "otpLabel": "6 अंकों का OTP",
@@ -50,7 +45,6 @@
   "otpExpired": "यह OTP समाप्त हो गया है। नया माँगें।",
   "phoneNotFound": "यह नंबर पंजीकृत नहीं है। अपने मैनेजर से जोड़ने को कहें।",
   "networkError": "कनेक्शन नहीं है। नेटवर्क जाँचें और फिर कोशिश करें।",
-
   "consentTitle": "आपकी लोकेशन और डेटा",
   "consentPoint1": "हम आपकी लोकेशन और विज़िट की फ़ोटो लेते हैं।",
   "consentPoint2": "लोकेशन सिर्फ़ ड्यूटी के समय ली जाती है।",
@@ -65,14 +59,12 @@
   "consentOffersCardBody": "उत्पादों और खेती के सुझावों के संदेश।",
   "consentOptional": "वैकल्पिक",
   "consentReadAloud": "पढ़कर सुनाएँ",
-
   "dutyOn": "ड्यूटी पर",
   "dutyOff": "ड्यूटी पर नहीं",
   "dutyGoOn": "ड्यूटी शुरू करें",
   "dutyGoOff": "ड्यूटी खत्म करें",
   "dutyElapsed": "{duration} से ड्यूटी पर",
   "dutyLocationNote": "लोकेशन सिर्फ़ ड्यूटी के समय चालू रहती है",
-
   "syncSynced": "सिंक हो गया",
   "syncPending": "{count} बाकी",
   "syncFailed": "सिंक विफल",
@@ -103,7 +95,6 @@
   "syncRejectedDefault": "सर्वर ने यह आइटम स्वीकार नहीं किया। इसे संपादित करके फिर कोशिश करें।",
   "syncRetryAll": "सभी फिर कोशिश करें",
   "syncDiscard": "हटा दें",
-
   "visitVerified": "सत्यापित",
   "visitPartial": "आंशिक",
   "visitUnverified": "असत्यापित",
@@ -115,7 +106,6 @@
   "visitPurposeCollection": "वसूली",
   "visitPurposeSale": "बिक्री",
   "visitPurposeMeeting": "बैठक",
-
   "proofGeofence": "खेत की सीमा के अंदर",
   "proofGeofenceMissing": "आप खेत की सीमा से बाहर थे",
   "proofPhoto": "फ़ोटो ली गई",
@@ -126,12 +116,10 @@
   "proofDurationMissing": "विज़िट 10 मिनट से कम थी",
   "proofDone": "पूरा",
   "proofMissing": "नहीं",
-
   "cameraHoldSteady": "स्थिर रखें",
   "cameraGoodLight": "अच्छी रोशनी",
   "cameraFillFrame": "फ़्रेम भरें",
   "cameraLeafFrame": "पत्ती को फ़्रेम के अंदर रखें",
-
   "photoReviewHeading": "अपनी फ़ोटो जाँचें",
   "photoReviewTitle": "फ़ोटो {index} / {total}",
   "photoQualityOk": "अच्छी फ़ोटो",
@@ -145,14 +133,12 @@
   "photoUse": "यह फ़ोटो इस्तेमाल करें",
   "photoSizeKb": "{kb} KB",
   "photoDimensions": "{width} × {height} px",
-
   "confidenceHigh": "उच्च भरोसा",
   "confidenceMedium": "मध्यम भरोसा",
   "confidenceLow": "अस्थायी",
   "diagnosisSymptomsTitle": "ये लक्षण जाँचें",
   "diagnosisProvisionalNote": "हमारे विशेषज्ञ 24 घंटे में पुष्टि करेंगे",
   "diagnosisProblem": "समस्या",
-
   "treatmentOrganic": "जैविक",
   "treatmentChemical": "रासायनिक",
   "treatmentActiveIngredient": "सक्रिय तत्व",
@@ -163,18 +149,15 @@
   "treatmentPpeMask": "मास्क",
   "treatmentPpeGoggles": "चश्मा",
   "treatmentPpeTitle": "पहनें",
-
   "ownBrand": "अपना ब्रांड",
   "productAdd": "जोड़ें",
   "productAdded": "जोड़ा गया",
   "productStockAtStore": "{store} में {count} स्टॉक में",
   "productOutOfStock": "स्टॉक नहीं",
   "productPack": "पैक",
-
   "cartItems": "{count} चीज़ें",
   "cartTotal": "कुल",
   "cartCheckout": "भुगतान करें",
-
   "paymentMethodTitle": "आप कैसे भुगतान करेंगे?",
   "paymentUpiQr": "UPI QR",
   "paymentUpiQrHint": "स्कैन करके अभी भुगतान करें",
@@ -184,7 +167,6 @@
   "paymentCashHint": "नकद लें और रसीद दें",
   "paymentCredit": "उधार",
   "paymentCreditHint": "किसान के खाते में जोड़ें",
-
   "upiWaiting": "भुगतान का इंतज़ार है",
   "upiPaid": "भुगतान मिल गया",
   "upiFailed": "भुगतान विफल",
@@ -192,7 +174,6 @@
   "upiAmount": "राशि",
   "upiScanHint": "किसान से किसी भी UPI ऐप से स्कैन करने को कहें",
   "upiRetry": "नया QR दिखाएँ",
-
   "khataBalance": "बकाया राशि",
   "khataDueDate": "{date} तक देय",
   "khataDebit": "दिया",
@@ -200,41 +181,281 @@
   "khataNoEntries": "अभी कोई प्रविष्टि नहीं",
   "khataPayNow": "अभी भुगतान करें",
   "khataCollect": "वसूल करें",
-
   "emptyDefaultTitle": "अभी यहाँ कुछ नहीं है",
   "emptyDefaultHelp": "जोड़ने के बाद चीज़ें यहाँ दिखेंगी।",
   "errorTitle": "कुछ गड़बड़ हो गई",
   "errorHelp": "कनेक्शन जाँचें और फिर कोशिश करें।",
-
   "ratingTitle": "अपनी विज़िट को रेटिंग दें",
   "rating1": "बहुत खराब",
   "rating2": "खराब",
   "rating3": "ठीक",
   "rating4": "अच्छा",
   "rating5": "बहुत अच्छा",
-
   "stepperStepOf": "{total} में से चरण {current}",
-
   "farmerLastVisit": "पिछली विज़िट {date}",
   "farmerNoVisit": "अभी कोई विज़िट नहीं",
   "farmerBalanceDue": "बकाया {amount}",
   "farmerVillage": "गाँव",
-
   "statTrendUp": "बढ़ा",
   "statTrendDown": "घटा",
   "statTrendFlat": "कोई बदलाव नहीं",
-
   "stageSowing": "बुवाई",
   "stageVegetative": "बढ़वार",
   "stageFlowering": "फूल",
   "stageFruiting": "फल",
   "stageHarvest": "कटाई",
-
   "settingsTheme": "थीम",
   "themeLight": "लाइट",
   "themeSunlight": "धूप",
   "settingsTitle": "सेटिंग",
   "settingsLanguage": "भाषा",
-
-  "skeletonLoading": "सामग्री लोड हो रही है"
+  "skeletonLoading": "सामग्री लोड हो रही है",
+  "farmersTitle": "किसान",
+  "farmersSearchHint": "नाम, फ़ोन या गाँव खोजें",
+  "farmersAddFarmer": "किसान जोड़ें",
+  "farmersEmptyTitle": "अभी कोई किसान नहीं",
+  "farmersEmptyHelp": "भेंट और ऑर्डर शुरू करने के लिए पहला किसान जोड़ें।",
+  "farmersNoResults": "आपकी खोज से मेल खाता कोई किसान नहीं",
+  "farmersFilterVillage": "गाँव",
+  "farmersFilterCrop": "फ़सल",
+  "farmersFilterAll": "सभी",
+  "farmersCount": "{count} किसान",
+  "@farmersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "farmerPendingSync": "ऑनलाइन होने पर सिंक होगा",
+  "farmerPhoneUnverified": "फ़ोन सत्यापित नहीं",
+  "farmerRejected": "ध्यान चाहिए",
+  "regTitle": "किसान जोड़ें",
+  "regStepBasics": "किसान का विवरण",
+  "regStepBoundary": "खेत की सीमा",
+  "regStepCrops": "फ़सलें",
+  "regStepConsent": "सहमति",
+  "regStepReview": "जाँचें और सहेजें",
+  "regResumeDraft": "जहाँ छोड़ा था वहीं से जारी",
+  "regDiscardDraft": "ड्राफ़्ट हटाएँ",
+  "regFixIssues": "आगे बढ़ने के लिए चिह्नित फ़ील्ड ठीक करें",
+  "regNameLabel": "किसान का नाम",
+  "regNameHint": "पहचान पत्र के अनुसार",
+  "regPhoneLabel": "किसान का मोबाइल नंबर",
+  "regPhoneHelper": "किसान को OTP भेजा जाएगा",
+  "regSendOtpToFarmer": "किसान को OTP भेजें",
+  "regOtpSent": "किसान को OTP भेजा गया। उनसे कोड पूछें।",
+  "regPhoneVerified": "फ़ोन सत्यापित",
+  "regVerifyLater": "बाद में सत्यापित करें",
+  "regVerifyLaterNote": "सिग्नल नहीं? अभी सहेजें और किसान प्रोफ़ाइल से फ़ोन सत्यापित करें।",
+  "regVerifyLaterChosen": "बाद में सत्यापित होगा",
+  "regDuplicatePhone": "इस नंबर वाला किसान पहले से मौजूद है",
+  "regDuplicateOpen": "मौजूदा किसान खोलें",
+  "regVillageLabel": "गाँव",
+  "regVillageHint": "गाँव चुनें",
+  "regVillageTyped": "गाँव का नाम",
+  "regVillageNoneSynced": "पहले सिंक के बाद गाँव लोड होंगे। अभी गाँव का नाम टाइप करें।",
+  "regLandmarkLabel": "पहचान चिह्न",
+  "regLandmarkHint": "मंदिर, स्कूल के पास…",
+  "regLanguageLabel": "किसान की भाषा",
+  "regOwnershipLabel": "ज़मीन",
+  "regBoundaryWalk": "चारों ओर चलें",
+  "regBoundaryTap": "कोने टैप करें",
+  "regStartWalk": "चलना शुरू करें",
+  "regStopWalk": "रोकें",
+  "regClosePolygon": "सीमा बंद करें",
+  "regUndoPoint": "बिंदु हटाएँ",
+  "regClearBoundary": "साफ़ करें",
+  "regPointsCount": "{count} बिंदु",
+  "@regPointsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "regAccuracy": "GPS सटीकता ±{metres} मी",
+  "@regAccuracy": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "regAccuracyWaiting": "GPS की प्रतीक्षा…",
+  "regLocationOff": "सीमा पर चलने के लिए लोकेशन चालू करें",
+  "regLocationDenied": "सीमा पर चलने के लिए लोकेशन अनुमति चाहिए",
+  "regTapHint": "नक्शे पर खेत के चारों कोने टैप करें",
+  "regWalkHint": "खेत के किनारे-किनारे चलें। चलते हुए बिंदु जुड़ते जाएँगे।",
+  "regComputedArea": "मापा क्षेत्रफल {acres} एकड़",
+  "@regComputedArea": {
+    "placeholders": {
+      "acres": {
+        "type": "String"
+      }
+    }
+  },
+  "regAreaLabel": "क्षेत्रफल एकड़ में",
+  "regAreaHint": "जैसा किसान बताए",
+  "regUseMeasured": "मापा हुआ लें",
+  "regAreaWarning": "दर्ज क्षेत्रफल मापे गए क्षेत्रफल से 30% से अधिक अलग है। सहेजने से पहले जाँचें।",
+  "regBoundaryInvalid": "सीमा खुद को काट रही है। आख़िरी बिंदु हटाकर फिर कोशिश करें।",
+  "regFarmNameLabel": "खेत का नाम (वैकल्पिक)",
+  "regFarmNameHint": "घर का खेत",
+  "regSoilLabel": "मिट्टी का प्रकार",
+  "regIrrigationLabel": "सिंचाई",
+  "regFarmPhoto": "खेत की फ़ोटो (वैकल्पिक)",
+  "regTakePhoto": "फ़ोटो लें",
+  "regPhotoAdded": "फ़ोटो जोड़ी गई",
+  "regPhotoRemove": "हटाएँ",
+  "regFarmPhotosCount": "{count} फ़ोटो",
+  "@regFarmPhotosCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "regCropsHelp": "इस मौसम में इस खेत में उग रही हर फ़सल जोड़ें।",
+  "regAddCrop": "फ़सल जोड़ें",
+  "regCropLabel": "फ़सल",
+  "regVarietyLabel": "किस्म",
+  "regVarietyHint": "जैसे MTU-1010",
+  "regSowingDateLabel": "बुवाई की तारीख़",
+  "regSowingDateHint": "DD-MM-YYYY",
+  "regSeasonAuto": "मौसम: {season}",
+  "@regSeasonAuto": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
+  "regPlotAreaLabel": "क्षेत्रफल (एकड़, वैकल्पिक)",
+  "regRemoveCrop": "फ़सल हटाएँ",
+  "regPlotTitle": "फ़सल {index}",
+  "@regPlotTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "regAddFarm": "एक और खेत जोड़ें",
+  "regFarmsCount": "{count} खेत",
+  "@regFarmsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "regFarmIndex": "खेत {index}",
+  "@regFarmIndex": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "regConsentIntro": "इसे किसान को उनकी भाषा में पढ़कर सुनाएँ।",
+  "regConsentNotice": "फ़सल सलाह देने और भेंट का रिकॉर्ड रखने के लिए हम आपका नाम, फ़ोन, गाँव और खेत का विवरण रखेंगे। आप हमें कभी भी रोकने को कह सकते हैं।",
+  "regConsentMarketingNotice": "आपकी अनुमति से हम SMS या WhatsApp पर ऑफ़र और खेती के सुझाव भी भेजेंगे।",
+  "regConsentGiven": "किसान सहमत हैं",
+  "regReviewFarmer": "किसान",
+  "regReviewFarms": "खेत और फ़सलें",
+  "regReviewConsent": "सहमति",
+  "regReviewSyncNote": "अभी इस फ़ोन में सहेजा गया; नेटवर्क आने पर सर्वर को भेजा जाएगा।",
+  "regSave": "किसान सहेजें",
+  "regSaveFarm": "खेत सहेजें",
+  "regEdit": "संपादित करें",
+  "regSaved": "किसान सहेजा गया",
+  "regIssueName": "किसान का नाम दर्ज करें",
+  "regIssuePhoneUnverified": "फ़ोन सत्यापित करें या बाद में सत्यापित करें चुनें",
+  "regIssueVillage": "गाँव चुनें",
+  "regIssueLanguage": "किसान की भाषा चुनें",
+  "regIssueBoundary": "सीमा के कम से कम 3 बिंदु चिह्नित करें",
+  "regIssueArea": "क्षेत्रफल एकड़ में दर्ज करें",
+  "regIssueCrop": "कम से कम एक फ़सल जोड़ें",
+  "regIssueSowingDate": "हर फ़सल की बुवाई की तारीख़ दर्ज करें",
+  "regIssueConsent": "पंजीकरण के लिए डेटा सहमति ज़रूरी है",
+  "soilBlack": "काली मिट्टी",
+  "soilRed": "लाल मिट्टी",
+  "soilSandy": "रेतीली मिट्टी",
+  "soilLoamy": "दोमट मिट्टी",
+  "soilClay": "चिकनी मिट्टी",
+  "soilAlluvial": "जलोढ़ मिट्टी",
+  "soilLaterite": "लैटेराइट मिट्टी",
+  "irrigationRainfed": "वर्षा आधारित",
+  "irrigationBorewell": "बोरवेल",
+  "irrigationCanal": "नहर",
+  "irrigationTank": "तालाब",
+  "irrigationOpenWell": "खुला कुआँ",
+  "irrigationDrip": "ड्रिप",
+  "irrigationSprinkler": "स्प्रिंकलर",
+  "ownershipOwn": "अपनी",
+  "ownershipLeased": "पट्टे पर",
+  "seasonKharif": "ख़रीफ़",
+  "seasonRabi": "रबी",
+  "seasonZaid": "ज़ायद (गर्मी)",
+  "profileTabOverview": "सारांश",
+  "profileTabVisits": "भेंट",
+  "profileTabDiagnoses": "निदान",
+  "profileTabOrders": "ऑर्डर",
+  "profileTabKhata": "खाता",
+  "profileStartVisit": "भेंट शुरू करें",
+  "profileScout": "फ़सल जाँच",
+  "profileNewOrder": "नया ऑर्डर",
+  "profileCollect": "वसूली",
+  "profileComingSoon": "आगामी अपडेट में आएगा",
+  "profileVisitsEmpty": "अभी कोई भेंट नहीं",
+  "profileDiagnosesEmpty": "अभी कोई निदान नहीं",
+  "profileOrdersEmpty": "अभी कोई ऑर्डर नहीं",
+  "profileKhataEmpty": "अभी खाते में कोई प्रविष्टि नहीं",
+  "profilePhone": "फ़ोन",
+  "profileLandmark": "पहचान चिह्न",
+  "profileLanguage": "भाषा",
+  "profileOwnership": "ज़मीन",
+  "profileFarms": "खेत",
+  "profileAcres": "{acres} एकड़",
+  "@profileAcres": {
+    "placeholders": {
+      "acres": {
+        "type": "String"
+      }
+    }
+  },
+  "profileAddFarm": "खेत जोड़ें",
+  "profileEditFarm": "खेत संपादित करें",
+  "profileFarmPlots": "{count} फ़सलें",
+  "@profileFarmPlots": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profileNoFarms": "अभी कोई खेत नहीं",
+  "profileDuplicateTitle": "डुप्लिकेट — मिलाएँ?",
+  "profileDuplicateBody": "सर्वर पर इस नंबर वाला किसान पहले से है। मौजूदा रिकॉर्ड खोलकर विवरण मिलाएँ।",
+  "profileRejectedTitle": "सिंक अस्वीकृत",
+  "profileRejectedHelp": "ठीक करके फिर कोशिश करने के लिए सिंक विवरण खोलें।",
+  "profileNotFound": "किसान नहीं मिला",
+  "profileVerifyPhone": "फ़ोन सत्यापित करें",
+  "consentGiven": "दी गई",
+  "consentNotGiven": "नहीं दी गई",
+  "farmEditTitle": "खेत संपादित करें",
+  "farmAddTitle": "खेत जोड़ें",
+  "mapNoBoundary": "अभी कोई सीमा नहीं",
+  "mapAttribution": "© OpenStreetMap योगदानकर्ता",
+  "mapCurrentPosition": "आपकी स्थिति",
+  "mapCorner": "कोना {index}",
+  "@mapCorner": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "mapFarmBoundary": "खेत की सीमा"
 }

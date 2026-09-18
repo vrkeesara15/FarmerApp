@@ -1,10 +1,33 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../auth/token_store.dart' show generateUuidV4;
 import '../db/open_database.dart';
 import '../state/auth_flow.dart';
+import 'outbox.dart';
 import 'sync_api.dart';
 import 'sync_engine.dart';
 import 'sync_scheduler.dart';
+
+/// Wall clock (UTC); tests override it with a fixed clock.
+final Provider<DateTime Function()> clockProvider =
+    Provider<DateTime Function()>(
+      (ref) =>
+          () => DateTime.now().toUtc(),
+    );
+
+/// Client-side id generator (uuid v4); tests override it with sequences.
+final Provider<String Function()> idGeneratorProvider =
+    Provider<String Function()>((ref) => generateUuidV4);
+
+/// The outbox over [appDatabaseProvider], [clockProvider] and
+/// [idGeneratorProvider].
+final Provider<Outbox> outboxProvider = Provider<Outbox>(
+  (ref) => Outbox(
+    ref.watch(appDatabaseProvider),
+    clock: ref.watch(clockProvider),
+    ids: ref.watch(idGeneratorProvider),
+  ),
+);
 
 /// The sync transport; apps override it with [HttpSyncApi].
 final Provider<SyncApi> syncApiProvider = Provider<SyncApi>(

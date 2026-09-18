@@ -117,7 +117,7 @@ void main() {
     expect(farmer.dirty, isTrue);
   });
 
-  test('unknown entities are kept as JSON in synced_refs', () async {
+  test('villages land in the typed table, other refs in synced_refs', () async {
     api.addChange(
       entity: 'village',
       action: SyncAction.create,
@@ -151,10 +151,14 @@ void main() {
     await engine.syncNow();
     final refs = await db.select(db.syncedRefs).get();
     expect(refs.map((r) => '${r.entity}/${r.refId}'), [
-      'village/v-1',
       'crop/crop-cotton',
       'weather_alert/w-1',
     ]);
+    final villageRow = await db.select(db.villages).getSingle();
+    expect(villageRow.name, 'Kondapur');
+    expect(villageRow.district, 'Medak');
+    expect(villageRow.latitude, 17.6);
+    expect(villageRow.storeId, 's-1');
     final village = await engine.store.entities.readRef('village', 'v-1');
     expect(village!['name'], 'Kondapur');
     final crop = await engine.store.entities.readRef('crop', 'crop-cotton');
@@ -174,10 +178,19 @@ void main() {
     );
     await engine.syncNow();
     expect(await engine.store.entities.readRef('weather_alert', 'w-1'), isNull);
-    final updated = (await db.select(db.syncedRefs).get()).firstWhere(
-      (r) => r.refId == 'v-1',
-    );
+    final updated = await db.select(db.villages).getSingle();
     expect(updated.version, 2);
+    expect(updated.name, 'Kondapur (new)');
+    // A partial change keeps the fields it did not mention.
+    expect(updated.district, 'Medak');
+
+    api.addChange(
+      entity: 'village',
+      action: SyncAction.delete,
+      entityId: 'v-1',
+    );
+    await engine.syncNow();
+    expect(await db.select(db.villages).get(), isEmpty);
   });
 
   test('a pull with nothing new leaves the cursor alone', () async {

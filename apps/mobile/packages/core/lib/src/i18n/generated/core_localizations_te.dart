@@ -709,4 +709,533 @@ class CoreLocalizationsTe extends CoreLocalizations {
 
   @override
   String get skeletonLoading => 'కంటెంట్ లోడ్ అవుతోంది';
+
+  @override
+  String get farmersTitle => 'రైతులు';
+
+  @override
+  String get farmersSearchHint => 'పేరు, ఫోన్ లేదా గ్రామం వెతకండి';
+
+  @override
+  String get farmersAddFarmer => 'రైతును చేర్చండి';
+
+  @override
+  String get farmersEmptyTitle => 'ఇంకా రైతులు లేరు';
+
+  @override
+  String get farmersEmptyHelp =>
+      'సందర్శనలు, ఆర్డర్లు మొదలుపెట్టడానికి మొదటి రైతును చేర్చండి.';
+
+  @override
+  String get farmersNoResults => 'మీ వెతుకులాటకు సరిపోయే రైతులు లేరు';
+
+  @override
+  String get farmersFilterVillage => 'గ్రామం';
+
+  @override
+  String get farmersFilterCrop => 'పంట';
+
+  @override
+  String get farmersFilterAll => 'అన్నీ';
+
+  @override
+  String farmersCount(int count) {
+    return '$count రైతులు';
+  }
+
+  @override
+  String get farmerPendingSync => 'ఆన్‌లైన్ అయినప్పుడు సింక్ అవుతుంది';
+
+  @override
+  String get farmerPhoneUnverified => 'ఫోన్ ధృవీకరించలేదు';
+
+  @override
+  String get farmerRejected => 'శ్రద్ధ అవసరం';
+
+  @override
+  String get regTitle => 'రైతును చేర్చండి';
+
+  @override
+  String get regStepBasics => 'రైతు వివరాలు';
+
+  @override
+  String get regStepBoundary => 'పొలం సరిహద్దు';
+
+  @override
+  String get regStepCrops => 'పంటలు';
+
+  @override
+  String get regStepConsent => 'అనుమతి';
+
+  @override
+  String get regStepReview => 'సమీక్షించి సేవ్ చేయండి';
+
+  @override
+  String get regResumeDraft => 'మీరు ఆపిన చోటు నుండి కొనసాగుతోంది';
+
+  @override
+  String get regDiscardDraft => 'డ్రాఫ్ట్ తీసివేయండి';
+
+  @override
+  String get regFixIssues => 'కొనసాగడానికి గుర్తించిన ఫీల్డ్‌లను సరిచేయండి';
+
+  @override
+  String get regNameLabel => 'రైతు పేరు';
+
+  @override
+  String get regNameHint => 'గుర్తింపు కార్డులో ఉన్నట్లు';
+
+  @override
+  String get regPhoneLabel => 'రైతు మొబైల్ నంబర్';
+
+  @override
+  String get regPhoneHelper => 'రైతుకు OTP పంపబడుతుంది';
+
+  @override
+  String get regSendOtpToFarmer => 'రైతుకు OTP పంపండి';
+
+  @override
+  String get regOtpSent => 'రైతుకు OTP పంపాం. వారి నుండి కోడ్ అడగండి.';
+
+  @override
+  String get regPhoneVerified => 'ఫోన్ ధృవీకరించబడింది';
+
+  @override
+  String get regVerifyLater => 'తర్వాత ధృవీకరించండి';
+
+  @override
+  String get regVerifyLaterNote =>
+      'సిగ్నల్ లేదా? ఇప్పుడు సేవ్ చేసి, రైతు ప్రొఫైల్ నుండి ఫోన్ ధృవీకరించండి.';
+
+  @override
+  String get regVerifyLaterChosen => 'తర్వాత ధృవీకరించబడుతుంది';
+
+  @override
+  String get regDuplicatePhone => 'ఈ నంబర్‌తో రైతు ఇప్పటికే ఉన్నారు';
+
+  @override
+  String get regDuplicateOpen => 'ఉన్న రైతును తెరవండి';
+
+  @override
+  String get regVillageLabel => 'గ్రామం';
+
+  @override
+  String get regVillageHint => 'గ్రామం ఎంచుకోండి';
+
+  @override
+  String get regVillageTyped => 'గ్రామం పేరు';
+
+  @override
+  String get regVillageNoneSynced =>
+      'మొదటి సింక్ తర్వాత గ్రామాలు లోడ్ అవుతాయి. ప్రస్తుతానికి గ్రామం పేరు టైప్ చేయండి.';
+
+  @override
+  String get regLandmarkLabel => 'గుర్తు';
+
+  @override
+  String get regLandmarkHint => 'గుడి, బడి దగ్గర…';
+
+  @override
+  String get regLanguageLabel => 'రైతు భాష';
+
+  @override
+  String get regOwnershipLabel => 'భూమి';
+
+  @override
+  String get regBoundaryWalk => 'చుట్టూ నడవండి';
+
+  @override
+  String get regBoundaryTap => 'మూలలు నొక్కండి';
+
+  @override
+  String get regStartWalk => 'నడక మొదలుపెట్టండి';
+
+  @override
+  String get regStopWalk => 'ఆపండి';
+
+  @override
+  String get regClosePolygon => 'సరిహద్దు మూసివేయండి';
+
+  @override
+  String get regUndoPoint => 'పాయింట్ వెనక్కి';
+
+  @override
+  String get regClearBoundary => 'తుడిచివేయండి';
+
+  @override
+  String regPointsCount(int count) {
+    return '$count పాయింట్లు';
+  }
+
+  @override
+  String regAccuracy(int metres) {
+    return 'GPS ఖచ్చితత్వం ±$metres మీ';
+  }
+
+  @override
+  String get regAccuracyWaiting => 'GPS కోసం వేచి ఉంది…';
+
+  @override
+  String get regLocationOff => 'సరిహద్దు నడవడానికి లొకేషన్ ఆన్ చేయండి';
+
+  @override
+  String get regLocationDenied => 'సరిహద్దు నడవడానికి లొకేషన్ అనుమతి అవసరం';
+
+  @override
+  String get regTapHint => 'మ్యాప్‌లో పొలం నాలుగు మూలలను నొక్కండి';
+
+  @override
+  String get regWalkHint =>
+      'పొలం అంచు వెంట నడవండి. మీరు నడుస్తుండగా పాయింట్లు చేరుతాయి.';
+
+  @override
+  String regComputedArea(String acres) {
+    return 'కొలిచిన విస్తీర్ణం $acres ఎకరాలు';
+  }
+
+  @override
+  String get regAreaLabel => 'విస్తీర్ణం ఎకరాల్లో';
+
+  @override
+  String get regAreaHint => 'రైతు చెప్పినట్లు';
+
+  @override
+  String get regUseMeasured => 'కొలిచినది వాడండి';
+
+  @override
+  String get regAreaWarning =>
+      'నమోదు చేసిన విస్తీర్ణం కొలిచిన విస్తీర్ణం కంటే 30% కంటే ఎక్కువ తేడాగా ఉంది. సేవ్ చేసే ముందు సరిచూడండి.';
+
+  @override
+  String get regBoundaryInvalid =>
+      'సరిహద్దు తనను తాను దాటుతోంది. చివరి పాయింట్లు వెనక్కి తీసి మళ్లీ ప్రయత్నించండి.';
+
+  @override
+  String get regFarmNameLabel => 'పొలం పేరు (ఐచ్ఛికం)';
+
+  @override
+  String get regFarmNameHint => 'ఇంటి పొలం';
+
+  @override
+  String get regSoilLabel => 'నేల రకం';
+
+  @override
+  String get regIrrigationLabel => 'నీటిపారుదల';
+
+  @override
+  String get regFarmPhoto => 'పొలం ఫోటో (ఐచ్ఛికం)';
+
+  @override
+  String get regTakePhoto => 'ఫోటో తీయండి';
+
+  @override
+  String get regPhotoAdded => 'ఫోటో చేర్చబడింది';
+
+  @override
+  String get regPhotoRemove => 'తీసివేయండి';
+
+  @override
+  String regFarmPhotosCount(int count) {
+    return '$count ఫోటోలు';
+  }
+
+  @override
+  String get regCropsHelp =>
+      'ఈ సీజన్‌లో ఈ పొలంలో పెరుగుతున్న ప్రతి పంటను చేర్చండి.';
+
+  @override
+  String get regAddCrop => 'పంట చేర్చండి';
+
+  @override
+  String get regCropLabel => 'పంట';
+
+  @override
+  String get regVarietyLabel => 'రకం';
+
+  @override
+  String get regVarietyHint => 'ఉదా. MTU-1010';
+
+  @override
+  String get regSowingDateLabel => 'విత్తిన తేదీ';
+
+  @override
+  String get regSowingDateHint => 'DD-MM-YYYY';
+
+  @override
+  String regSeasonAuto(String season) {
+    return 'సీజన్: $season';
+  }
+
+  @override
+  String get regPlotAreaLabel => 'విస్తీర్ణం (ఎకరాలు, ఐచ్ఛికం)';
+
+  @override
+  String get regRemoveCrop => 'పంట తీసివేయండి';
+
+  @override
+  String regPlotTitle(int index) {
+    return 'పంట $index';
+  }
+
+  @override
+  String get regAddFarm => 'మరో పొలం చేర్చండి';
+
+  @override
+  String regFarmsCount(int count) {
+    return '$count పొలాలు';
+  }
+
+  @override
+  String regFarmIndex(int index) {
+    return 'పొలం $index';
+  }
+
+  @override
+  String get regConsentIntro => 'దీన్ని రైతుకు వారి భాషలో చదివి వినిపించండి.';
+
+  @override
+  String get regConsentNotice =>
+      'పంట సలహా ఇవ్వడానికి, సందర్శన రికార్డులు ఉంచడానికి మీ పేరు, ఫోన్, గ్రామం, పొలం వివరాలను మేము భద్రపరుస్తాం. ఎప్పుడైనా ఆపమని మమ్మల్ని అడగవచ్చు.';
+
+  @override
+  String get regConsentMarketingNotice =>
+      'మీ అనుమతితో SMS లేదా WhatsApp ద్వారా ఆఫర్లు, వ్యవసాయ చిట్కాలు కూడా పంపుతాం.';
+
+  @override
+  String get regConsentGiven => 'రైతు అంగీకరిస్తున్నారు';
+
+  @override
+  String get regReviewFarmer => 'రైతు';
+
+  @override
+  String get regReviewFarms => 'పొలాలు, పంటలు';
+
+  @override
+  String get regReviewConsent => 'అనుమతి';
+
+  @override
+  String get regReviewSyncNote =>
+      'ఇప్పుడు ఈ ఫోన్‌లో సేవ్ అయింది; నెట్‌వర్క్ వచ్చాక సర్వర్‌కు పంపబడుతుంది.';
+
+  @override
+  String get regSave => 'రైతును సేవ్ చేయండి';
+
+  @override
+  String get regSaveFarm => 'పొలం సేవ్ చేయండి';
+
+  @override
+  String get regEdit => 'సవరించండి';
+
+  @override
+  String get regSaved => 'రైతు సేవ్ అయ్యారు';
+
+  @override
+  String get regIssueName => 'రైతు పేరు నమోదు చేయండి';
+
+  @override
+  String get regIssuePhoneUnverified =>
+      'ఫోన్ ధృవీకరించండి లేదా తర్వాత ధృవీకరించండి ఎంచుకోండి';
+
+  @override
+  String get regIssueVillage => 'గ్రామం ఎంచుకోండి';
+
+  @override
+  String get regIssueLanguage => 'రైతు భాషను ఎంచుకోండి';
+
+  @override
+  String get regIssueBoundary => 'సరిహద్దుకు కనీసం 3 పాయింట్లు గుర్తించండి';
+
+  @override
+  String get regIssueArea => 'విస్తీర్ణం ఎకరాల్లో నమోదు చేయండి';
+
+  @override
+  String get regIssueCrop => 'కనీసం ఒక పంట చేర్చండి';
+
+  @override
+  String get regIssueSowingDate => 'ప్రతి పంటకు విత్తిన తేదీ నమోదు చేయండి';
+
+  @override
+  String get regIssueConsent => 'నమోదుకు డేటా అనుమతి తప్పనిసరి';
+
+  @override
+  String get soilBlack => 'నల్ల నేల';
+
+  @override
+  String get soilRed => 'ఎర్ర నేల';
+
+  @override
+  String get soilSandy => 'ఇసుక నేల';
+
+  @override
+  String get soilLoamy => 'లోమ్ నేల';
+
+  @override
+  String get soilClay => 'బంక నేల';
+
+  @override
+  String get soilAlluvial => 'ఒండ్రు నేల';
+
+  @override
+  String get soilLaterite => 'లేటరైట్ నేల';
+
+  @override
+  String get irrigationRainfed => 'వర్షాధారం';
+
+  @override
+  String get irrigationBorewell => 'బోరుబావి';
+
+  @override
+  String get irrigationCanal => 'కాలువ';
+
+  @override
+  String get irrigationTank => 'చెరువు';
+
+  @override
+  String get irrigationOpenWell => 'బావి';
+
+  @override
+  String get irrigationDrip => 'డ్రిప్';
+
+  @override
+  String get irrigationSprinkler => 'స్ప్రింక్లర్';
+
+  @override
+  String get ownershipOwn => 'సొంతం';
+
+  @override
+  String get ownershipLeased => 'కౌలు';
+
+  @override
+  String get seasonKharif => 'ఖరీఫ్';
+
+  @override
+  String get seasonRabi => 'రబీ';
+
+  @override
+  String get seasonZaid => 'జైద్ (వేసవి)';
+
+  @override
+  String get profileTabOverview => 'అవలోకనం';
+
+  @override
+  String get profileTabVisits => 'సందర్శనలు';
+
+  @override
+  String get profileTabDiagnoses => 'రోగ నిర్ధారణలు';
+
+  @override
+  String get profileTabOrders => 'ఆర్డర్లు';
+
+  @override
+  String get profileTabKhata => 'ఖాతా';
+
+  @override
+  String get profileStartVisit => 'సందర్శన మొదలు';
+
+  @override
+  String get profileScout => 'పంట పరిశీలన';
+
+  @override
+  String get profileNewOrder => 'కొత్త ఆర్డర్';
+
+  @override
+  String get profileCollect => 'వసూలు';
+
+  @override
+  String get profileComingSoon => 'తర్వాతి అప్‌డేట్‌లో వస్తుంది';
+
+  @override
+  String get profileVisitsEmpty => 'ఇంకా సందర్శనలు లేవు';
+
+  @override
+  String get profileDiagnosesEmpty => 'ఇంకా రోగ నిర్ధారణలు లేవు';
+
+  @override
+  String get profileOrdersEmpty => 'ఇంకా ఆర్డర్లు లేవు';
+
+  @override
+  String get profileKhataEmpty => 'ఇంకా ఖాతా నమోదులు లేవు';
+
+  @override
+  String get profilePhone => 'ఫోన్';
+
+  @override
+  String get profileLandmark => 'గుర్తు';
+
+  @override
+  String get profileLanguage => 'భాష';
+
+  @override
+  String get profileOwnership => 'భూమి';
+
+  @override
+  String get profileFarms => 'పొలాలు';
+
+  @override
+  String profileAcres(String acres) {
+    return '$acres ఎకరాలు';
+  }
+
+  @override
+  String get profileAddFarm => 'పొలం చేర్చండి';
+
+  @override
+  String get profileEditFarm => 'పొలం సవరించండి';
+
+  @override
+  String profileFarmPlots(int count) {
+    return '$count పంటలు';
+  }
+
+  @override
+  String get profileNoFarms => 'ఇంకా పొలాలు లేవు';
+
+  @override
+  String get profileDuplicateTitle => 'నకిలీ — విలీనం చేయాలా?';
+
+  @override
+  String get profileDuplicateBody =>
+      'ఈ నంబర్‌తో సర్వర్‌లో ఇప్పటికే రైతు ఉన్నారు. ఉన్న రికార్డు తెరిచి వివరాలను విలీనం చేయండి.';
+
+  @override
+  String get profileRejectedTitle => 'సింక్ తిరస్కరించబడింది';
+
+  @override
+  String get profileRejectedHelp =>
+      'సరిచేసి మళ్లీ ప్రయత్నించడానికి సింక్ వివరాలు తెరవండి.';
+
+  @override
+  String get profileNotFound => 'రైతు కనబడలేదు';
+
+  @override
+  String get profileVerifyPhone => 'ఫోన్ ధృవీకరించండి';
+
+  @override
+  String get consentGiven => 'ఇచ్చారు';
+
+  @override
+  String get consentNotGiven => 'ఇవ్వలేదు';
+
+  @override
+  String get farmEditTitle => 'పొలం సవరించండి';
+
+  @override
+  String get farmAddTitle => 'పొలం చేర్చండి';
+
+  @override
+  String get mapNoBoundary => 'ఇంకా సరిహద్దు లేదు';
+
+  @override
+  String get mapAttribution => '© OpenStreetMap సహకారులు';
+
+  @override
+  String get mapCurrentPosition => 'మీ స్థానం';
+
+  @override
+  String mapCorner(int index) {
+    return 'మూల $index';
+  }
+
+  @override
+  String get mapFarmBoundary => 'పొలం సరిహద్దు';
 }

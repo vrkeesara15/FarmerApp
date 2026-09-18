@@ -5759,6 +5759,621 @@ class SyncedRefsCompanion extends UpdateCompanion<SyncedRef> {
   }
 }
 
+class $VillagesTable extends Villages with TableInfo<$VillagesTable, Village> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VillagesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _districtMeta = const VerificationMeta(
+    'district',
+  );
+  @override
+  late final GeneratedColumn<String> district = GeneratedColumn<String>(
+    'district',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _mandalMeta = const VerificationMeta('mandal');
+  @override
+  late final GeneratedColumn<String> mandal = GeneratedColumn<String>(
+    'mandal',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _stateMeta = const VerificationMeta('state');
+  @override
+  late final GeneratedColumn<String> state = GeneratedColumn<String>(
+    'state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _storeIdMeta = const VerificationMeta(
+    'storeId',
+  );
+  @override
+  late final GeneratedColumn<String> storeId = GeneratedColumn<String>(
+    'store_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _latitudeMeta = const VerificationMeta(
+    'latitude',
+  );
+  @override
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+    'latitude',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _longitudeMeta = const VerificationMeta(
+    'longitude',
+  );
+  @override
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+    'longitude',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    district,
+    mandal,
+    state,
+    storeId,
+    latitude,
+    longitude,
+    version,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'villages';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Village> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('district')) {
+      context.handle(
+        _districtMeta,
+        district.isAcceptableOrUnknown(data['district']!, _districtMeta),
+      );
+    }
+    if (data.containsKey('mandal')) {
+      context.handle(
+        _mandalMeta,
+        mandal.isAcceptableOrUnknown(data['mandal']!, _mandalMeta),
+      );
+    }
+    if (data.containsKey('state')) {
+      context.handle(
+        _stateMeta,
+        state.isAcceptableOrUnknown(data['state']!, _stateMeta),
+      );
+    }
+    if (data.containsKey('store_id')) {
+      context.handle(
+        _storeIdMeta,
+        storeId.isAcceptableOrUnknown(data['store_id']!, _storeIdMeta),
+      );
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(
+        _latitudeMeta,
+        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
+      );
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(
+        _longitudeMeta,
+        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Village map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Village(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      district: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}district'],
+      )!,
+      mandal: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mandal'],
+      )!,
+      state: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}state'],
+      )!,
+      storeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}store_id'],
+      ),
+      latitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}latitude'],
+      ),
+      longitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}longitude'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $VillagesTable createAlias(String alias) {
+    return $VillagesTable(attachedDatabase, alias);
+  }
+}
+
+class Village extends DataClass implements Insertable<Village> {
+  /// Server id.
+  final String id;
+
+  /// Village name.
+  final String name;
+
+  /// District.
+  final String district;
+
+  /// Mandal / taluk.
+  final String mandal;
+
+  /// State.
+  final String state;
+
+  /// Nearest store, if assigned.
+  final String? storeId;
+
+  /// Village centre latitude.
+  final double? latitude;
+
+  /// Village centre longitude.
+  final double? longitude;
+
+  /// Server row version.
+  final int version;
+
+  /// Last pull that touched the row (UTC).
+  final DateTime updatedAt;
+  const Village({
+    required this.id,
+    required this.name,
+    required this.district,
+    required this.mandal,
+    required this.state,
+    this.storeId,
+    this.latitude,
+    this.longitude,
+    required this.version,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['district'] = Variable<String>(district);
+    map['mandal'] = Variable<String>(mandal);
+    map['state'] = Variable<String>(state);
+    if (!nullToAbsent || storeId != null) {
+      map['store_id'] = Variable<String>(storeId);
+    }
+    if (!nullToAbsent || latitude != null) {
+      map['latitude'] = Variable<double>(latitude);
+    }
+    if (!nullToAbsent || longitude != null) {
+      map['longitude'] = Variable<double>(longitude);
+    }
+    map['version'] = Variable<int>(version);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  VillagesCompanion toCompanion(bool nullToAbsent) {
+    return VillagesCompanion(
+      id: Value(id),
+      name: Value(name),
+      district: Value(district),
+      mandal: Value(mandal),
+      state: Value(state),
+      storeId: storeId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(storeId),
+      latitude: latitude == null && nullToAbsent
+          ? const Value.absent()
+          : Value(latitude),
+      longitude: longitude == null && nullToAbsent
+          ? const Value.absent()
+          : Value(longitude),
+      version: Value(version),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory Village.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Village(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      district: serializer.fromJson<String>(json['district']),
+      mandal: serializer.fromJson<String>(json['mandal']),
+      state: serializer.fromJson<String>(json['state']),
+      storeId: serializer.fromJson<String?>(json['storeId']),
+      latitude: serializer.fromJson<double?>(json['latitude']),
+      longitude: serializer.fromJson<double?>(json['longitude']),
+      version: serializer.fromJson<int>(json['version']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'district': serializer.toJson<String>(district),
+      'mandal': serializer.toJson<String>(mandal),
+      'state': serializer.toJson<String>(state),
+      'storeId': serializer.toJson<String?>(storeId),
+      'latitude': serializer.toJson<double?>(latitude),
+      'longitude': serializer.toJson<double?>(longitude),
+      'version': serializer.toJson<int>(version),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  Village copyWith({
+    String? id,
+    String? name,
+    String? district,
+    String? mandal,
+    String? state,
+    Value<String?> storeId = const Value.absent(),
+    Value<double?> latitude = const Value.absent(),
+    Value<double?> longitude = const Value.absent(),
+    int? version,
+    DateTime? updatedAt,
+  }) => Village(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    district: district ?? this.district,
+    mandal: mandal ?? this.mandal,
+    state: state ?? this.state,
+    storeId: storeId.present ? storeId.value : this.storeId,
+    latitude: latitude.present ? latitude.value : this.latitude,
+    longitude: longitude.present ? longitude.value : this.longitude,
+    version: version ?? this.version,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  Village copyWithCompanion(VillagesCompanion data) {
+    return Village(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      district: data.district.present ? data.district.value : this.district,
+      mandal: data.mandal.present ? data.mandal.value : this.mandal,
+      state: data.state.present ? data.state.value : this.state,
+      storeId: data.storeId.present ? data.storeId.value : this.storeId,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      version: data.version.present ? data.version.value : this.version,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Village(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('district: $district, ')
+          ..write('mandal: $mandal, ')
+          ..write('state: $state, ')
+          ..write('storeId: $storeId, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('version: $version, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    district,
+    mandal,
+    state,
+    storeId,
+    latitude,
+    longitude,
+    version,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Village &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.district == this.district &&
+          other.mandal == this.mandal &&
+          other.state == this.state &&
+          other.storeId == this.storeId &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.version == this.version &&
+          other.updatedAt == this.updatedAt);
+}
+
+class VillagesCompanion extends UpdateCompanion<Village> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> district;
+  final Value<String> mandal;
+  final Value<String> state;
+  final Value<String?> storeId;
+  final Value<double?> latitude;
+  final Value<double?> longitude;
+  final Value<int> version;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const VillagesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.district = const Value.absent(),
+    this.mandal = const Value.absent(),
+    this.state = const Value.absent(),
+    this.storeId = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.version = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VillagesCompanion.insert({
+    required String id,
+    required String name,
+    this.district = const Value.absent(),
+    this.mandal = const Value.absent(),
+    this.state = const Value.absent(),
+    this.storeId = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.version = const Value.absent(),
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       updatedAt = Value(updatedAt);
+  static Insertable<Village> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? district,
+    Expression<String>? mandal,
+    Expression<String>? state,
+    Expression<String>? storeId,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<int>? version,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (district != null) 'district': district,
+      if (mandal != null) 'mandal': mandal,
+      if (state != null) 'state': state,
+      if (storeId != null) 'store_id': storeId,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (version != null) 'version': version,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VillagesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String>? district,
+    Value<String>? mandal,
+    Value<String>? state,
+    Value<String?>? storeId,
+    Value<double?>? latitude,
+    Value<double?>? longitude,
+    Value<int>? version,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return VillagesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      district: district ?? this.district,
+      mandal: mandal ?? this.mandal,
+      state: state ?? this.state,
+      storeId: storeId ?? this.storeId,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      version: version ?? this.version,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (district.present) {
+      map['district'] = Variable<String>(district.value);
+    }
+    if (mandal.present) {
+      map['mandal'] = Variable<String>(mandal.value);
+    }
+    if (state.present) {
+      map['state'] = Variable<String>(state.value);
+    }
+    if (storeId.present) {
+      map['store_id'] = Variable<String>(storeId.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VillagesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('district: $district, ')
+          ..write('mandal: $mandal, ')
+          ..write('state: $state, ')
+          ..write('storeId: $storeId, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('version: $version, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5771,6 +6386,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $UploadsTable uploads = $UploadsTable(this);
   late final $SyncStatesTable syncStates = $SyncStatesTable(this);
   late final $SyncedRefsTable syncedRefs = $SyncedRefsTable(this);
+  late final $VillagesTable villages = $VillagesTable(this);
   late final Index outboxStateSeq = Index(
     'outbox_state_seq',
     'CREATE INDEX outbox_state_seq ON outbox (state, seq)',
@@ -5793,6 +6409,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     uploads,
     syncStates,
     syncedRefs,
+    villages,
     outboxStateSeq,
     outboxEntity,
   ];
@@ -8538,6 +9155,302 @@ typedef $$SyncedRefsTableProcessedTableManager =
       SyncedRef,
       PrefetchHooks Function()
     >;
+typedef $$VillagesTableCreateCompanionBuilder = VillagesCompanion Function({
+  required String id,
+  required String name,
+  Value<String> district,
+  Value<String> mandal,
+  Value<String> state,
+  Value<String?> storeId,
+  Value<double?> latitude,
+  Value<double?> longitude,
+  Value<int> version,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$VillagesTableUpdateCompanionBuilder = VillagesCompanion Function({
+  Value<String> id,
+  Value<String> name,
+  Value<String> district,
+  Value<String> mandal,
+  Value<String> state,
+  Value<String?> storeId,
+  Value<double?> latitude,
+  Value<double?> longitude,
+  Value<int> version,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+class $$VillagesTableFilterComposer
+    extends Composer<_$AppDatabase, $VillagesTable> {
+  $$VillagesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get district => $composableBuilder(
+    column: $table.district,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mandal => $composableBuilder(
+    column: $table.mandal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get storeId => $composableBuilder(
+    column: $table.storeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VillagesTableOrderingComposer
+    extends Composer<_$AppDatabase, $VillagesTable> {
+  $$VillagesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get district => $composableBuilder(
+    column: $table.district,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mandal => $composableBuilder(
+    column: $table.mandal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get state => $composableBuilder(
+    column: $table.state,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get storeId => $composableBuilder(
+    column: $table.storeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VillagesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VillagesTable> {
+  $$VillagesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get district =>
+      $composableBuilder(column: $table.district, builder: (column) => column);
+
+  GeneratedColumn<String> get mandal =>
+      $composableBuilder(column: $table.mandal, builder: (column) => column);
+
+  GeneratedColumn<String> get state =>
+      $composableBuilder(column: $table.state, builder: (column) => column);
+
+  GeneratedColumn<String> get storeId =>
+      $composableBuilder(column: $table.storeId, builder: (column) => column);
+
+  GeneratedColumn<double> get latitude =>
+      $composableBuilder(column: $table.latitude, builder: (column) => column);
+
+  GeneratedColumn<double> get longitude =>
+      $composableBuilder(column: $table.longitude, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$VillagesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VillagesTable,
+          Village,
+          $$VillagesTableFilterComposer,
+          $$VillagesTableOrderingComposer,
+          $$VillagesTableAnnotationComposer,
+          $$VillagesTableCreateCompanionBuilder,
+          $$VillagesTableUpdateCompanionBuilder,
+          (Village, BaseReferences<_$AppDatabase, $VillagesTable, Village>),
+          Village,
+          PrefetchHooks Function()
+        > {
+  $$VillagesTableTableManager(_$AppDatabase db, $VillagesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VillagesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VillagesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VillagesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> district = const Value.absent(),
+                Value<String> mandal = const Value.absent(),
+                Value<String> state = const Value.absent(),
+                Value<String?> storeId = const Value.absent(),
+                Value<double?> latitude = const Value.absent(),
+                Value<double?> longitude = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VillagesCompanion(
+                id: id,
+                name: name,
+                district: district,
+                mandal: mandal,
+                state: state,
+                storeId: storeId,
+                latitude: latitude,
+                longitude: longitude,
+                version: version,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                Value<String> district = const Value.absent(),
+                Value<String> mandal = const Value.absent(),
+                Value<String> state = const Value.absent(),
+                Value<String?> storeId = const Value.absent(),
+                Value<double?> latitude = const Value.absent(),
+                Value<double?> longitude = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => VillagesCompanion.insert(
+                id: id,
+                name: name,
+                district: district,
+                mandal: mandal,
+                state: state,
+                storeId: storeId,
+                latitude: latitude,
+                longitude: longitude,
+                version: version,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$VillagesTable, Village>(table),
+                  BaseReferences<_$AppDatabase, $VillagesTable, Village>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VillagesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VillagesTable,
+      Village,
+      $$VillagesTableFilterComposer,
+      $$VillagesTableOrderingComposer,
+      $$VillagesTableAnnotationComposer,
+      $$VillagesTableCreateCompanionBuilder,
+      $$VillagesTableUpdateCompanionBuilder,
+      (Village, BaseReferences<_$AppDatabase, $VillagesTable, Village>),
+      Village,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -8559,4 +9472,6 @@ class $AppDatabaseManager {
       $$SyncStatesTableTableManager(_db, _db.syncStates);
   $$SyncedRefsTableTableManager get syncedRefs =>
       $$SyncedRefsTableTableManager(_db, _db.syncedRefs);
+  $$VillagesTableTableManager get villages =>
+      $$VillagesTableTableManager(_db, _db.villages);
 }

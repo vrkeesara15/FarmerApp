@@ -15,6 +15,12 @@ abstract final class SyncEntities {
   /// FM-002 consent record.
   static const String consentRecord = 'consent_record';
 
+  /// Village reference data (pull only; typed `villages` table).
+  static const String village = 'village';
+
+  /// Crop reference data (pull only; kept in `synced_refs`).
+  static const String crop = 'crop';
+
   /// Entities with a typed local table and outbox support.
   static const Set<String> writable = <String>{
     farmer,
@@ -23,6 +29,15 @@ abstract final class SyncEntities {
     consentRecord,
   };
 }
+
+/// Farmer create payload key carrying the 30-minute OTP proof from
+/// `POST /v1/farmers/phone/verify/confirm` (FA-012).
+const String phoneVerificationTokenKey = 'phone_verification_token';
+
+/// Client-only companion of [phoneVerificationTokenKey]: ISO-8601 UTC expiry
+/// of the token. The engine drops an expired token before sending (the
+/// farmer then syncs as unverified instead of being rejected).
+const String phoneVerificationExpiresKey = 'phone_verification_expires_at';
 
 /// Maximum ops per `/v1/sync` call (contract).
 const int maxOpsPerSync = 200;

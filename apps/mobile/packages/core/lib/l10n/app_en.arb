@@ -1,12 +1,14 @@
 {
   "@@locale": "en",
-
   "appNameAgent": "Mitra",
-  "@appNameAgent": { "description": "Field agent app name (brand, transliterate only)" },
+  "@appNameAgent": {
+    "description": "Field agent app name (brand, transliterate only)"
+  },
   "appNameFarmer": "Kisan",
-  "@appNameFarmer": { "description": "Farmer app name (brand, transliterate only)" },
+  "@appNameFarmer": {
+    "description": "Farmer app name (brand, transliterate only)"
+  },
   "splashTagline": "Trusted advice for your farm",
-
   "actionContinue": "Continue",
   "actionBack": "Back",
   "actionNext": "Next",
@@ -16,56 +18,103 @@
   "actionSkip": "Skip",
   "actionClose": "Close",
   "loading": "Loading",
-
   "languagePickerTitle": "Choose your language",
   "languagePickerSubtitle": "Tap the speaker to hear it",
   "languagePlayAudio": "Listen",
-  "@languagePlayAudio": { "description": "Label next to the speaker icon on a language tile; shown in that tile's own language" },
+  "@languagePlayAudio": {
+    "description": "Label next to the speaker icon on a language tile; shown in that tile's own language"
+  },
   "languageEnglish": "English",
-  "@languageEnglish": { "description": "Script name; identical in every locale" },
+  "@languageEnglish": {
+    "description": "Script name; identical in every locale"
+  },
   "languageTelugu": "తెలుగు",
-  "@languageTelugu": { "description": "Script name; identical in every locale" },
+  "@languageTelugu": {
+    "description": "Script name; identical in every locale"
+  },
   "languageKannada": "ಕನ್ನಡ",
-  "@languageKannada": { "description": "Script name; identical in every locale" },
+  "@languageKannada": {
+    "description": "Script name; identical in every locale"
+  },
   "languageHindi": "हिन्दी",
-  "@languageHindi": { "description": "Script name; identical in every locale" },
+  "@languageHindi": {
+    "description": "Script name; identical in every locale"
+  },
   "languageMarathi": "मराठी",
-  "@languageMarathi": { "description": "Script name; identical in every locale" },
+  "@languageMarathi": {
+    "description": "Script name; identical in every locale"
+  },
   "languageEnglishName": "English",
-  "@languageEnglishName": { "description": "Name of the English language in the current UI language (tile caption)" },
+  "@languageEnglishName": {
+    "description": "Name of the English language in the current UI language (tile caption)"
+  },
   "languageTeluguName": "Telugu",
   "languageKannadaName": "Kannada",
   "languageHindiName": "Hindi",
   "languageMarathiName": "Marathi",
-
   "phoneLoginTitle": "Enter your mobile number",
   "phoneLabel": "Mobile number",
   "phonePrefix": "+91",
   "phoneHelper": "We will send a 6-digit OTP by SMS",
   "phoneInvalid": "Enter a valid 10-digit mobile number",
   "phoneSendOtp": "Send OTP",
-
   "otpTitle": "Enter the OTP",
   "otpSubtitle": "Sent to +91 {phone}",
-  "@otpSubtitle": { "placeholders": { "phone": { "type": "String" } } },
+  "@otpSubtitle": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
   "otpLabel": "6-digit OTP",
   "otpResend": "Resend OTP",
   "otpResendIn": "Resend in {seconds} s",
-  "@otpResendIn": { "placeholders": { "seconds": { "type": "int" } } },
+  "@otpResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "otpInvalid": "Incorrect OTP. Please try again.",
   "otpVerify": "Verify",
   "otpDigitLabel": "Digit {index} of 6",
-  "@otpDigitLabel": { "description": "Screen-reader label of one OTP box", "placeholders": { "index": { "type": "int" } } },
+  "@otpDigitLabel": {
+    "description": "Screen-reader label of one OTP box",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
   "otpAttemptsLeft": "{count} attempts left",
-  "@otpAttemptsLeft": { "placeholders": { "count": { "type": "int" } } },
+  "@otpAttemptsLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "otpLocked": "Too many wrong attempts. Try again in {minutes} min.",
-  "@otpLocked": { "placeholders": { "minutes": { "type": "int" } } },
+  "@otpLocked": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "otpRateLimited": "Too many codes requested. Try again in {minutes} min.",
-  "@otpRateLimited": { "placeholders": { "minutes": { "type": "int" } } },
+  "@otpRateLimited": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "otpExpired": "This code has expired. Request a new one.",
   "phoneNotFound": "This number is not registered. Ask your manager to add you.",
   "networkError": "No connection. Check your network and try again.",
-
   "consentTitle": "Your location and data",
   "consentPoint1": "We collect your location and visit photos.",
   "consentPoint2": "Location is collected only while you are on duty.",
@@ -80,40 +129,89 @@
   "consentOffersCardBody": "Messages about products and farming tips.",
   "consentOptional": "Optional",
   "consentReadAloud": "Read aloud",
-
   "dutyOn": "On duty",
   "dutyOff": "Off duty",
   "dutyGoOn": "Go on duty",
   "dutyGoOff": "Go off duty",
   "dutyElapsed": "On duty for {duration}",
-  "@dutyElapsed": { "placeholders": { "duration": { "type": "String" } } },
+  "@dutyElapsed": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "dutyLocationNote": "Location is on only while you are on duty",
-
   "syncSynced": "Synced",
   "syncPending": "Pending {count}",
-  "@syncPending": { "placeholders": { "count": { "type": "int" } } },
+  "@syncPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "syncFailed": "Sync failed",
   "offlineBanner": "You are offline. Your work is saved and will sync later.",
   "syncSyncing": "Syncing…",
   "syncDetailsTitle": "Sync details",
   "syncNow": "Sync now",
   "syncLastSync": "Last synced {time}",
-  "@syncLastSync": { "placeholders": { "time": { "type": "String" } } },
+  "@syncLastSync": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "syncNeverSynced": "Not synced yet",
   "syncAllDone": "Everything is synced",
   "syncAllDoneHelp": "New farmers, farms and photos saved offline appear here until they reach the server.",
   "syncPendingSection": "Waiting to sync ({count})",
-  "@syncPendingSection": { "placeholders": { "count": { "type": "int" } } },
+  "@syncPendingSection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "syncFailedSection": "Needs attention ({count})",
-  "@syncFailedSection": { "placeholders": { "count": { "type": "int" } } },
+  "@syncFailedSection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "syncWaitingForPhoto": "Waiting for the photo to upload",
   "syncPhotoUploads": "Photos uploading: {count}",
-  "@syncPhotoUploads": { "placeholders": { "count": { "type": "int" } } },
+  "@syncPhotoUploads": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "syncTransportError": "Could not reach the server. It will try again on its own.",
   "syncNextAttempt": "Next attempt {time}",
-  "@syncNextAttempt": { "placeholders": { "time": { "type": "String" } } },
+  "@syncNextAttempt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "syncItemTitle": "{action} {entity}",
-  "@syncItemTitle": { "placeholders": { "action": { "type": "String" }, "entity": { "type": "String" } } },
+  "@syncItemTitle": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      },
+      "entity": {
+        "type": "String"
+      }
+    }
+  },
   "syncActionCreate": "New",
   "syncActionUpdate": "Edited",
   "syncActionDelete": "Deleted",
@@ -123,28 +221,50 @@
   "syncEntityConsent": "consent",
   "syncEntityOther": "item",
   "syncSavedAt": "Saved {time}",
-  "@syncSavedAt": { "placeholders": { "time": { "type": "String" } } },
+  "@syncSavedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "syncRejectedDefault": "The server did not accept this item. Edit it and retry.",
   "syncRetryAll": "Retry all",
   "syncDiscard": "Discard",
-
   "visitVerified": "Verified",
   "visitPartial": "Partial",
   "visitUnverified": "Unverified",
   "visitScore": "Score {score} of 100",
-  "@visitScore": { "placeholders": { "score": { "type": "int" } } },
+  "@visitScore": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
   "visitDurationMinutes": "{minutes} min",
-  "@visitDurationMinutes": { "placeholders": { "minutes": { "type": "int" } } },
+  "@visitDurationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "visitPurposeAdvisory": "Advisory",
   "visitPurposeScouting": "Scouting",
-  "@visitPurposeScouting": { "description": "Visit purpose: walking the field to look for pests and disease" },
+  "@visitPurposeScouting": {
+    "description": "Visit purpose: walking the field to look for pests and disease"
+  },
   "visitPurposeDemo": "Demo",
-  "@visitPurposeDemo": { "description": "Visit purpose: product demonstration plot" },
+  "@visitPurposeDemo": {
+    "description": "Visit purpose: product demonstration plot"
+  },
   "visitPurposeCollection": "Collection",
-  "@visitPurposeCollection": { "description": "Visit purpose: collecting a payment" },
+  "@visitPurposeCollection": {
+    "description": "Visit purpose: collecting a payment"
+  },
   "visitPurposeSale": "Sale",
   "visitPurposeMeeting": "Meeting",
-
   "proofGeofence": "Inside farm boundary",
   "proofGeofenceMissing": "You were outside the farm boundary",
   "proofPhoto": "Photo taken",
@@ -155,68 +275,120 @@
   "proofDurationMissing": "Visit was shorter than 10 minutes",
   "proofDone": "Done",
   "proofMissing": "Missing",
-
   "cameraHoldSteady": "Hold steady",
   "cameraGoodLight": "Good light",
   "cameraFillFrame": "Fill the frame",
   "cameraLeafFrame": "Place the leaf inside the frame",
-
   "photoReviewHeading": "Check your photo",
   "photoReviewTitle": "Photo {index} of {total}",
-  "@photoReviewTitle": { "placeholders": { "index": { "type": "int" }, "total": { "type": "int" } } },
+  "@photoReviewTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "photoQualityOk": "Good photo",
   "photoQualityBlurry": "Blurry",
   "photoQualityDark": "Too dark",
   "photoQualityChecking": "Checking photo",
   "photoTipBlurry": "Hold the phone steady, tap the leaf to focus and take it again",
-  "@photoTipBlurry": { "description": "Retake tip for key photo.tip.blurry (FM-004)" },
+  "@photoTipBlurry": {
+    "description": "Retake tip for key photo.tip.blurry (FM-004)"
+  },
   "photoTipDark": "Move into better light, away from shade, and take it again",
-  "@photoTipDark": { "description": "Retake tip for key photo.tip.dark (FM-004)" },
+  "@photoTipDark": {
+    "description": "Retake tip for key photo.tip.dark (FM-004)"
+  },
   "photoTipOk": "Photo looks good",
-  "@photoTipOk": { "description": "Line for key photo.tip.ok" },
+  "@photoTipOk": {
+    "description": "Line for key photo.tip.ok"
+  },
   "photoRetake": "Retake",
   "photoUse": "Use photo",
   "photoSizeKb": "{kb} KB",
-  "@photoSizeKb": { "placeholders": { "kb": { "type": "int" } } },
+  "@photoSizeKb": {
+    "placeholders": {
+      "kb": {
+        "type": "int"
+      }
+    }
+  },
   "photoDimensions": "{width} × {height} px",
-  "@photoDimensions": { "placeholders": { "width": { "type": "int" }, "height": { "type": "int" } } },
-
+  "@photoDimensions": {
+    "placeholders": {
+      "width": {
+        "type": "int"
+      },
+      "height": {
+        "type": "int"
+      }
+    }
+  },
   "confidenceHigh": "High confidence",
   "confidenceMedium": "Medium confidence",
   "confidenceLow": "Provisional",
-  "@confidenceLow": { "description": "Diagnosis not yet confirmed by an expert" },
+  "@confidenceLow": {
+    "description": "Diagnosis not yet confirmed by an expert"
+  },
   "diagnosisSymptomsTitle": "Check these signs",
   "diagnosisProvisionalNote": "Our expert will confirm within 24 hours",
   "diagnosisProblem": "Problem",
-
   "treatmentOrganic": "Organic",
   "treatmentChemical": "Chemical",
   "treatmentActiveIngredient": "Active ingredient",
   "treatmentDosePerAcre": "Per acre",
   "treatmentDosePerTank": "Per 15 L tank",
   "treatmentSafetyInterval": "Wait {days} days before harvest",
-  "@treatmentSafetyInterval": { "placeholders": { "days": { "type": "int" } } },
+  "@treatmentSafetyInterval": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "treatmentPpeGloves": "Gloves",
   "treatmentPpeMask": "Mask",
   "treatmentPpeGoggles": "Goggles",
   "treatmentPpeTitle": "Wear",
-  "@treatmentPpeTitle": { "description": "Heading before the protective-equipment icons" },
-
+  "@treatmentPpeTitle": {
+    "description": "Heading before the protective-equipment icons"
+  },
   "ownBrand": "Own brand",
-  "@ownBrand": { "description": "Badge on products of the shop's own brand" },
+  "@ownBrand": {
+    "description": "Badge on products of the shop's own brand"
+  },
   "productAdd": "Add",
   "productAdded": "Added",
   "productStockAtStore": "{count} in stock at {store}",
-  "@productStockAtStore": { "placeholders": { "count": { "type": "int" }, "store": { "type": "String" } } },
+  "@productStockAtStore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "store": {
+        "type": "String"
+      }
+    }
+  },
   "productOutOfStock": "Out of stock",
   "productPack": "Pack",
-  "@productPack": { "description": "Pack size label, e.g. 500 ml" },
-
+  "@productPack": {
+    "description": "Pack size label, e.g. 500 ml"
+  },
   "cartItems": "{count} items",
-  "@cartItems": { "placeholders": { "count": { "type": "int" } } },
+  "@cartItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "cartTotal": "Total",
   "cartCheckout": "Checkout",
-
   "paymentMethodTitle": "How will you pay?",
   "paymentUpiQr": "UPI QR",
   "paymentUpiQrHint": "Scan and pay now",
@@ -225,66 +397,343 @@
   "paymentCash": "Cash",
   "paymentCashHint": "Collect cash and give a receipt",
   "paymentCredit": "Credit",
-  "@paymentCredit": { "description": "Pay later; amount goes to the farmer's khata (ledger)" },
+  "@paymentCredit": {
+    "description": "Pay later; amount goes to the farmer's khata (ledger)"
+  },
   "paymentCreditHint": "Add to farmer khata",
-
   "upiWaiting": "Waiting for payment",
   "upiPaid": "Payment received",
   "upiFailed": "Payment failed",
   "upiExpiresIn": "Expires in {time}",
-  "@upiExpiresIn": { "placeholders": { "time": { "type": "String" } } },
+  "@upiExpiresIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "upiAmount": "Amount",
   "upiScanHint": "Ask the farmer to scan with any UPI app",
   "upiRetry": "Show a new QR",
-
   "khataBalance": "Balance due",
   "khataDueDate": "Due on {date}",
-  "@khataDueDate": { "placeholders": { "date": { "type": "String" } } },
+  "@khataDueDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "khataDebit": "Debit",
   "khataCredit": "Credit",
-  "@khataCredit": { "description": "Ledger column: money received from the farmer" },
+  "@khataCredit": {
+    "description": "Ledger column: money received from the farmer"
+  },
   "khataNoEntries": "No entries yet",
   "khataPayNow": "Pay now",
   "khataCollect": "Collect",
-
   "emptyDefaultTitle": "Nothing here yet",
   "emptyDefaultHelp": "Items will appear here once you add them.",
   "errorTitle": "Something went wrong",
   "errorHelp": "Check your connection and try again.",
-
   "ratingTitle": "Rate your visit",
   "rating1": "Very bad",
   "rating2": "Bad",
   "rating3": "Okay",
   "rating4": "Good",
   "rating5": "Very good",
-
   "stepperStepOf": "Step {current} of {total}",
-  "@stepperStepOf": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } },
-
+  "@stepperStepOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "farmerLastVisit": "Last visit {date}",
-  "@farmerLastVisit": { "placeholders": { "date": { "type": "String" } } },
+  "@farmerLastVisit": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "farmerNoVisit": "No visit yet",
   "farmerBalanceDue": "Due {amount}",
-  "@farmerBalanceDue": { "placeholders": { "amount": { "type": "String" } } },
+  "@farmerBalanceDue": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "farmerVillage": "Village",
-
   "statTrendUp": "Up",
   "statTrendDown": "Down",
   "statTrendFlat": "No change",
-
   "stageSowing": "Sowing",
   "stageVegetative": "Growing",
   "stageFlowering": "Flowering",
   "stageFruiting": "Fruiting",
   "stageHarvest": "Harvest",
-
   "settingsTheme": "Theme",
   "themeLight": "Light",
   "themeSunlight": "Sunlight",
-  "@themeSunlight": { "description": "High-contrast theme for use outdoors in bright sun" },
+  "@themeSunlight": {
+    "description": "High-contrast theme for use outdoors in bright sun"
+  },
   "settingsTitle": "Settings",
   "settingsLanguage": "Language",
-
-  "skeletonLoading": "Loading content"
+  "skeletonLoading": "Loading content",
+  "farmersTitle": "Farmers",
+  "farmersSearchHint": "Search name, phone or village",
+  "farmersAddFarmer": "Add farmer",
+  "farmersEmptyTitle": "No farmers yet",
+  "farmersEmptyHelp": "Add your first farmer to start visits and orders.",
+  "farmersNoResults": "No farmers match your search",
+  "farmersFilterVillage": "Village",
+  "farmersFilterCrop": "Crop",
+  "farmersFilterAll": "All",
+  "farmersCount": "{count} farmers",
+  "@farmersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "farmerPendingSync": "Will sync when online",
+  "farmerPhoneUnverified": "Phone not verified",
+  "farmerRejected": "Needs attention",
+  "regTitle": "Add farmer",
+  "regStepBasics": "Farmer details",
+  "regStepBoundary": "Farm boundary",
+  "regStepCrops": "Crops",
+  "regStepConsent": "Consent",
+  "regStepReview": "Review and save",
+  "regResumeDraft": "Continuing where you left off",
+  "regDiscardDraft": "Discard draft",
+  "regFixIssues": "Fix the highlighted fields to continue",
+  "regNameLabel": "Farmer name",
+  "regNameHint": "As on the ID card",
+  "regPhoneLabel": "Farmer mobile number",
+  "regPhoneHelper": "An OTP will be sent to the farmer",
+  "regSendOtpToFarmer": "Send OTP to farmer",
+  "regOtpSent": "OTP sent to the farmer. Ask them for the code.",
+  "regPhoneVerified": "Phone verified",
+  "regVerifyLater": "Verify later",
+  "regVerifyLaterNote": "No signal? Save now and verify the phone from the farmer profile.",
+  "regVerifyLaterChosen": "Will be verified later",
+  "regDuplicatePhone": "A farmer with this number already exists",
+  "regDuplicateOpen": "Open existing farmer",
+  "regVillageLabel": "Village",
+  "regVillageHint": "Choose the village",
+  "regVillageTyped": "Village name",
+  "regVillageNoneSynced": "Villages will load after the first sync. Type the village name for now.",
+  "regLandmarkLabel": "Landmark",
+  "regLandmarkHint": "Near the temple, school…",
+  "regLanguageLabel": "Language of the farmer",
+  "regOwnershipLabel": "Land",
+  "regBoundaryWalk": "Walk around",
+  "regBoundaryTap": "Tap corners",
+  "regStartWalk": "Start walking",
+  "regStopWalk": "Pause",
+  "regClosePolygon": "Close boundary",
+  "regUndoPoint": "Undo point",
+  "regClearBoundary": "Clear",
+  "regPointsCount": "{count} points",
+  "@regPointsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "regAccuracy": "GPS accuracy ±{metres} m",
+  "@regAccuracy": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "regAccuracyWaiting": "Waiting for GPS…",
+  "regLocationOff": "Turn on location to walk the boundary",
+  "regLocationDenied": "Location permission is needed to walk the boundary",
+  "regTapHint": "Tap the four corners of the farm on the map",
+  "regWalkHint": "Walk along the edge of the farm. Points are added as you go.",
+  "regComputedArea": "Measured area {acres} acres",
+  "@regComputedArea": {
+    "placeholders": {
+      "acres": {
+        "type": "String"
+      }
+    }
+  },
+  "regAreaLabel": "Area in acres",
+  "regAreaHint": "As the farmer says",
+  "regUseMeasured": "Use measured",
+  "regAreaWarning": "The entered area differs from the measured area by more than 30%. Check it before saving.",
+  "regBoundaryInvalid": "The boundary crosses itself. Undo the last points and try again.",
+  "regFarmNameLabel": "Farm name (optional)",
+  "regFarmNameHint": "Home farm",
+  "regSoilLabel": "Soil type",
+  "regIrrigationLabel": "Irrigation",
+  "regFarmPhoto": "Farm photo (optional)",
+  "regTakePhoto": "Take photo",
+  "regPhotoAdded": "Photo added",
+  "regPhotoRemove": "Remove",
+  "regFarmPhotosCount": "{count} photos",
+  "@regFarmPhotosCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "regCropsHelp": "Add every crop growing on this farm this season.",
+  "regAddCrop": "Add crop",
+  "regCropLabel": "Crop",
+  "regVarietyLabel": "Variety",
+  "regVarietyHint": "e.g. MTU-1010",
+  "regSowingDateLabel": "Sowing date",
+  "regSowingDateHint": "DD-MM-YYYY",
+  "regSeasonAuto": "Season: {season}",
+  "@regSeasonAuto": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
+  "regPlotAreaLabel": "Area (acres, optional)",
+  "regRemoveCrop": "Remove crop",
+  "regPlotTitle": "Crop {index}",
+  "@regPlotTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "regAddFarm": "Add another farm",
+  "regFarmsCount": "{count} farms",
+  "@regFarmsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "regFarmIndex": "Farm {index}",
+  "@regFarmIndex": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "regConsentIntro": "Read this to the farmer in their language.",
+  "regConsentNotice": "We will keep your name, phone, village and farm details to give you crop advice and keep visit records. You can ask us to stop at any time.",
+  "regConsentMarketingNotice": "With your permission we will also send offers and farming tips by SMS or WhatsApp.",
+  "regConsentGiven": "Farmer agrees",
+  "regReviewFarmer": "Farmer",
+  "regReviewFarms": "Farms and crops",
+  "regReviewConsent": "Consent",
+  "regReviewSyncNote": "Saved on this phone now; sent to the server when the network is back.",
+  "regSave": "Save farmer",
+  "regSaveFarm": "Save farm",
+  "regEdit": "Edit",
+  "regSaved": "Farmer saved",
+  "regIssueName": "Enter the farmer name",
+  "regIssuePhoneUnverified": "Verify the phone or choose Verify later",
+  "regIssueVillage": "Choose the village",
+  "regIssueLanguage": "Choose the language of the farmer",
+  "regIssueBoundary": "Mark at least 3 points of the boundary",
+  "regIssueArea": "Enter the area in acres",
+  "regIssueCrop": "Add at least one crop",
+  "regIssueSowingDate": "Enter the sowing date for every crop",
+  "regIssueConsent": "Data consent is required to register",
+  "soilBlack": "Black",
+  "soilRed": "Red",
+  "soilSandy": "Sandy",
+  "soilLoamy": "Loamy",
+  "soilClay": "Clay",
+  "soilAlluvial": "Alluvial",
+  "soilLaterite": "Laterite",
+  "irrigationRainfed": "Rainfed",
+  "irrigationBorewell": "Borewell",
+  "irrigationCanal": "Canal",
+  "irrigationTank": "Tank",
+  "irrigationOpenWell": "Open well",
+  "irrigationDrip": "Drip",
+  "irrigationSprinkler": "Sprinkler",
+  "ownershipOwn": "Own",
+  "ownershipLeased": "Leased",
+  "seasonKharif": "Kharif",
+  "seasonRabi": "Rabi",
+  "seasonZaid": "Zaid (summer)",
+  "profileTabOverview": "Overview",
+  "profileTabVisits": "Visits",
+  "profileTabDiagnoses": "Diagnoses",
+  "profileTabOrders": "Orders",
+  "profileTabKhata": "Khata",
+  "profileStartVisit": "Start visit",
+  "profileScout": "Scout",
+  "profileNewOrder": "New order",
+  "profileCollect": "Collect",
+  "profileComingSoon": "Coming in a later update",
+  "profileVisitsEmpty": "No visits yet",
+  "profileDiagnosesEmpty": "No diagnoses yet",
+  "profileOrdersEmpty": "No orders yet",
+  "profileKhataEmpty": "No khata entries yet",
+  "profilePhone": "Phone",
+  "profileLandmark": "Landmark",
+  "profileLanguage": "Language",
+  "profileOwnership": "Land",
+  "profileFarms": "Farms",
+  "profileAcres": "{acres} acres",
+  "@profileAcres": {
+    "placeholders": {
+      "acres": {
+        "type": "String"
+      }
+    }
+  },
+  "profileAddFarm": "Add farm",
+  "profileEditFarm": "Edit farm",
+  "profileFarmPlots": "{count} crops",
+  "@profileFarmPlots": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profileNoFarms": "No farms yet",
+  "profileDuplicateTitle": "Duplicate — merge?",
+  "profileDuplicateBody": "The server already has a farmer with this number. Open the existing record and merge the details.",
+  "profileRejectedTitle": "Sync rejected",
+  "profileRejectedHelp": "Open Sync details to fix and retry.",
+  "profileNotFound": "Farmer not found",
+  "profileVerifyPhone": "Verify phone",
+  "consentGiven": "Given",
+  "consentNotGiven": "Not given",
+  "farmEditTitle": "Edit farm",
+  "farmAddTitle": "Add farm",
+  "mapNoBoundary": "No boundary yet",
+  "mapAttribution": "© OpenStreetMap contributors",
+  "mapCurrentPosition": "Your position",
+  "mapCorner": "Corner {index}",
+  "@mapCorner": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "mapFarmBoundary": "Farm boundary"
 }

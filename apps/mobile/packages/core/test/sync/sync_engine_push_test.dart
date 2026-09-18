@@ -369,6 +369,53 @@ void main() {
     expect(dropping.calls, 1);
   });
 
+  test('a valid phone verification token is sent, its expiry is not', () async {
+    await outbox.enqueueCreate(SyncEntities.farmer, 'f-1', <String, Object?>{
+      ...farmerPayload(1),
+      phoneVerificationTokenKey: 'tok-1',
+      phoneVerificationExpiresKey: t0
+          .add(const Duration(minutes: 30))
+          .toIso8601String(),
+    });
+    clock.advance(const Duration(minutes: 10));
+    await engine.syncNow();
+    final sent = api.appliedOps.single.payload;
+    expect(sent[phoneVerificationTokenKey], 'tok-1');
+    expect(sent.containsKey(phoneVerificationExpiresKey), isFalse);
+    expect(sent['phone_verified'], isTrue);
+  });
+
+  test(
+    'an expired phone verification token is dropped before sending',
+    () async {
+      await outbox.enqueueCreate(SyncEntities.farmer, 'f-1', <String, Object?>{
+        ...farmerPayload(1),
+        phoneVerificationTokenKey: 'tok-1',
+        phoneVerificationExpiresKey: t0
+            .add(const Duration(minutes: 30))
+            .toIso8601String(),
+      });
+      clock.advance(const Duration(hours: 2));
+      await engine.syncNow();
+      final sent = api.appliedOps.single.payload;
+      expect(sent.containsKey(phoneVerificationTokenKey), isFalse);
+      expect(sent.containsKey(phoneVerificationExpiresKey), isFalse);
+      expect(sent['phone_verified'], isFalse);
+      // The stored op and the local row agree with what was sent.
+      final row = await opRow(api.appliedOps.single.opId);
+      expect(
+        SyncStore.payloadOf(row).containsKey(phoneVerificationTokenKey),
+        isFalse,
+      );
+      final local = await engine.store.entities.read(
+        SyncEntities.farmer,
+        'f-1',
+      );
+      expect(local!.data['phone_verified'], isFalse);
+      expect(local.dirty, isFalse);
+    },
+  );
+
   test('delete applied removes the local row', () async {
     await outbox.enqueueCreate(SyncEntities.farmer, 'f-1', farmerPayload(1));
     await engine.syncNow();

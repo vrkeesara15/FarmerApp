@@ -1,10 +1,8 @@
 {
   "@@locale": "te",
-
   "appNameAgent": "మిత్ర",
   "appNameFarmer": "కిసాన్",
   "splashTagline": "మీ పొలానికి నమ్మకమైన సలహా",
-
   "actionContinue": "కొనసాగించు",
   "actionBack": "వెనుకకు",
   "actionNext": "తరువాత",
@@ -14,7 +12,6 @@
   "actionSkip": "దాటవేయి",
   "actionClose": "మూసివేయి",
   "loading": "లోడ్ అవుతోంది",
-
   "languagePickerTitle": "మీ భాషను ఎంచుకోండి",
   "languagePickerSubtitle": "వినడానికి స్పీకర్‌ను నొక్కండి",
   "languagePlayAudio": "వినండి",
@@ -28,14 +25,12 @@
   "languageKannadaName": "కన్నడ",
   "languageHindiName": "హిందీ",
   "languageMarathiName": "మరాఠీ",
-
   "phoneLoginTitle": "మీ మొబైల్ నంబర్ నమోదు చేయండి",
   "phoneLabel": "మొబైల్ నంబర్",
   "phonePrefix": "+91",
   "phoneHelper": "మేము SMS ద్వారా 6 అంకెల OTP పంపుతాము",
   "phoneInvalid": "సరైన 10 అంకెల మొబైల్ నంబర్ నమోదు చేయండి",
   "phoneSendOtp": "OTP పంపండి",
-
   "otpTitle": "OTP నమోదు చేయండి",
   "otpSubtitle": "+91 {phone} కు పంపబడింది",
   "otpLabel": "6 అంకెల OTP",
@@ -50,7 +45,6 @@
   "otpExpired": "ఈ OTP గడువు ముగిసింది. కొత్తది అడగండి.",
   "phoneNotFound": "ఈ నంబర్ నమోదు కాలేదు. మిమ్మల్ని జోడించమని మీ మేనేజర్‌ను అడగండి.",
   "networkError": "కనెక్షన్ లేదు. మీ నెట్‌వర్క్ తనిఖీ చేసి మళ్ళీ ప్రయత్నించండి.",
-
   "consentTitle": "మీ లొకేషన్ మరియు డేటా",
   "consentPoint1": "మేము మీ లొకేషన్ మరియు సందర్శన ఫోటోలను సేకరిస్తాము.",
   "consentPoint2": "మీరు డ్యూటీలో ఉన్నప్పుడు మాత్రమే లొకేషన్ సేకరిస్తాము.",
@@ -65,14 +59,12 @@
   "consentOffersCardBody": "ఉత్పత్తులు మరియు వ్యవసాయ సలహాల గురించి సందేశాలు.",
   "consentOptional": "ఐచ్ఛికం",
   "consentReadAloud": "చదివి వినిపించు",
-
   "dutyOn": "డ్యూటీలో ఉన్నారు",
   "dutyOff": "డ్యూటీలో లేరు",
   "dutyGoOn": "డ్యూటీ ప్రారంభించు",
   "dutyGoOff": "డ్యూటీ ముగించు",
   "dutyElapsed": "{duration} నుండి డ్యూటీలో",
   "dutyLocationNote": "మీరు డ్యూటీలో ఉన్నప్పుడు మాత్రమే లొకేషన్ ఆన్‌లో ఉంటుంది",
-
   "syncSynced": "సింక్ అయింది",
   "syncPending": "{count} పెండింగ్",
   "syncFailed": "సింక్ విఫలమైంది",
@@ -103,7 +95,6 @@
   "syncRejectedDefault": "సర్వర్ ఈ అంశాన్ని అంగీకరించలేదు. సవరించి మళ్లీ ప్రయత్నించండి.",
   "syncRetryAll": "అన్నీ మళ్లీ ప్రయత్నించండి",
   "syncDiscard": "వదిలేయండి",
-
   "visitVerified": "ధృవీకరించబడింది",
   "visitPartial": "పాక్షికం",
   "visitUnverified": "ధృవీకరించలేదు",
@@ -115,7 +106,6 @@
   "visitPurposeCollection": "వసూలు",
   "visitPurposeSale": "అమ్మకం",
   "visitPurposeMeeting": "సమావేశం",
-
   "proofGeofence": "పొలం హద్దుల లోపల",
   "proofGeofenceMissing": "మీరు పొలం హద్దుల బయట ఉన్నారు",
   "proofPhoto": "ఫోటో తీశారు",
@@ -126,12 +116,10 @@
   "proofDurationMissing": "సందర్శన 10 నిమిషాల కంటే తక్కువ",
   "proofDone": "పూర్తి",
   "proofMissing": "లేదు",
-
   "cameraHoldSteady": "కదలకుండా పట్టుకోండి",
   "cameraGoodLight": "మంచి వెలుతురు",
   "cameraFillFrame": "ఫ్రేమ్ నింపండి",
   "cameraLeafFrame": "ఆకును ఫ్రేమ్ లోపల ఉంచండి",
-
   "photoReviewHeading": "మీ ఫోటోను చూడండి",
   "photoReviewTitle": "ఫోటో {index} / {total}",
   "photoQualityOk": "మంచి ఫోటో",
@@ -145,14 +133,12 @@
   "photoUse": "ఈ ఫోటో వాడండి",
   "photoSizeKb": "{kb} KB",
   "photoDimensions": "{width} × {height} px",
-
   "confidenceHigh": "అధిక నమ్మకం",
   "confidenceMedium": "మధ్యస్థ నమ్మకం",
   "confidenceLow": "తాత్కాలికం",
   "diagnosisSymptomsTitle": "ఈ లక్షణాలు చూడండి",
   "diagnosisProvisionalNote": "మా నిపుణులు 24 గంటల్లో ధృవీకరిస్తారు",
   "diagnosisProblem": "సమస్య",
-
   "treatmentOrganic": "సేంద్రియ",
   "treatmentChemical": "రసాయన",
   "treatmentActiveIngredient": "క్రియాశీల పదార్థం",
@@ -163,18 +149,15 @@
   "treatmentPpeMask": "మాస్క్",
   "treatmentPpeGoggles": "కళ్ళజోడు",
   "treatmentPpeTitle": "ధరించండి",
-
   "ownBrand": "సొంత బ్రాండ్",
   "productAdd": "జోడించు",
   "productAdded": "జోడించారు",
   "productStockAtStore": "{store}లో {count} స్టాక్ ఉంది",
   "productOutOfStock": "స్టాక్ లేదు",
   "productPack": "ప్యాక్",
-
   "cartItems": "{count} వస్తువులు",
   "cartTotal": "మొత్తం",
   "cartCheckout": "చెల్లించు",
-
   "paymentMethodTitle": "ఎలా చెల్లిస్తారు?",
   "paymentUpiQr": "UPI QR",
   "paymentUpiQrHint": "స్కాన్ చేసి ఇప్పుడే చెల్లించండి",
@@ -184,7 +167,6 @@
   "paymentCashHint": "నగదు తీసుకుని రసీదు ఇవ్వండి",
   "paymentCredit": "అరువు",
   "paymentCreditHint": "రైతు ఖాతాలో వేయండి",
-
   "upiWaiting": "చెల్లింపు కోసం వేచి ఉన్నాము",
   "upiPaid": "చెల్లింపు అందింది",
   "upiFailed": "చెల్లింపు విఫలమైంది",
@@ -192,7 +174,6 @@
   "upiAmount": "మొత్తం",
   "upiScanHint": "ఏదైనా UPI యాప్‌తో స్కాన్ చేయమని రైతును అడగండి",
   "upiRetry": "కొత్త QR చూపించు",
-
   "khataBalance": "బాకీ మొత్తం",
   "khataDueDate": "{date} లోపు చెల్లించాలి",
   "khataDebit": "ఇచ్చింది",
@@ -200,41 +181,281 @@
   "khataNoEntries": "ఇంకా ఎంట్రీలు లేవు",
   "khataPayNow": "ఇప్పుడే చెల్లించు",
   "khataCollect": "వసూలు చేయి",
-
   "emptyDefaultTitle": "ఇంకా ఏమీ లేదు",
   "emptyDefaultHelp": "మీరు జోడించాక ఇక్కడ కనిపిస్తాయి.",
   "errorTitle": "ఏదో తప్పు జరిగింది",
   "errorHelp": "మీ కనెక్షన్ తనిఖీ చేసి మళ్ళీ ప్రయత్నించండి.",
-
   "ratingTitle": "మీ సందర్శనకు రేటింగ్ ఇవ్వండి",
   "rating1": "చాలా చెడు",
   "rating2": "చెడు",
   "rating3": "పర్వాలేదు",
   "rating4": "బాగుంది",
   "rating5": "చాలా బాగుంది",
-
   "stepperStepOf": "{total}లో {current}వ దశ",
-
   "farmerLastVisit": "చివరి సందర్శన {date}",
   "farmerNoVisit": "ఇంకా సందర్శన లేదు",
   "farmerBalanceDue": "బాకీ {amount}",
   "farmerVillage": "గ్రామం",
-
   "statTrendUp": "పెరిగింది",
   "statTrendDown": "తగ్గింది",
   "statTrendFlat": "మార్పు లేదు",
-
   "stageSowing": "విత్తడం",
   "stageVegetative": "పెరుగుదల",
   "stageFlowering": "పూత",
   "stageFruiting": "కాత",
   "stageHarvest": "కోత",
-
   "settingsTheme": "థీమ్",
   "themeLight": "లైట్",
   "themeSunlight": "ఎండ",
   "settingsTitle": "సెట్టింగ్‌లు",
   "settingsLanguage": "భాష",
-
-  "skeletonLoading": "కంటెంట్ లోడ్ అవుతోంది"
+  "skeletonLoading": "కంటెంట్ లోడ్ అవుతోంది",
+  "farmersTitle": "రైతులు",
+  "farmersSearchHint": "పేరు, ఫోన్ లేదా గ్రామం వెతకండి",
+  "farmersAddFarmer": "రైతును చేర్చండి",
+  "farmersEmptyTitle": "ఇంకా రైతులు లేరు",
+  "farmersEmptyHelp": "సందర్శనలు, ఆర్డర్లు మొదలుపెట్టడానికి మొదటి రైతును చేర్చండి.",
+  "farmersNoResults": "మీ వెతుకులాటకు సరిపోయే రైతులు లేరు",
+  "farmersFilterVillage": "గ్రామం",
+  "farmersFilterCrop": "పంట",
+  "farmersFilterAll": "అన్నీ",
+  "farmersCount": "{count} రైతులు",
+  "@farmersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "farmerPendingSync": "ఆన్‌లైన్ అయినప్పుడు సింక్ అవుతుంది",
+  "farmerPhoneUnverified": "ఫోన్ ధృవీకరించలేదు",
+  "farmerRejected": "శ్రద్ధ అవసరం",
+  "regTitle": "రైతును చేర్చండి",
+  "regStepBasics": "రైతు వివరాలు",
+  "regStepBoundary": "పొలం సరిహద్దు",
+  "regStepCrops": "పంటలు",
+  "regStepConsent": "అనుమతి",
+  "regStepReview": "సమీక్షించి సేవ్ చేయండి",
+  "regResumeDraft": "మీరు ఆపిన చోటు నుండి కొనసాగుతోంది",
+  "regDiscardDraft": "డ్రాఫ్ట్ తీసివేయండి",
+  "regFixIssues": "కొనసాగడానికి గుర్తించిన ఫీల్డ్‌లను సరిచేయండి",
+  "regNameLabel": "రైతు పేరు",
+  "regNameHint": "గుర్తింపు కార్డులో ఉన్నట్లు",
+  "regPhoneLabel": "రైతు మొబైల్ నంబర్",
+  "regPhoneHelper": "రైతుకు OTP పంపబడుతుంది",
+  "regSendOtpToFarmer": "రైతుకు OTP పంపండి",
+  "regOtpSent": "రైతుకు OTP పంపాం. వారి నుండి కోడ్ అడగండి.",
+  "regPhoneVerified": "ఫోన్ ధృవీకరించబడింది",
+  "regVerifyLater": "తర్వాత ధృవీకరించండి",
+  "regVerifyLaterNote": "సిగ్నల్ లేదా? ఇప్పుడు సేవ్ చేసి, రైతు ప్రొఫైల్ నుండి ఫోన్ ధృవీకరించండి.",
+  "regVerifyLaterChosen": "తర్వాత ధృవీకరించబడుతుంది",
+  "regDuplicatePhone": "ఈ నంబర్‌తో రైతు ఇప్పటికే ఉన్నారు",
+  "regDuplicateOpen": "ఉన్న రైతును తెరవండి",
+  "regVillageLabel": "గ్రామం",
+  "regVillageHint": "గ్రామం ఎంచుకోండి",
+  "regVillageTyped": "గ్రామం పేరు",
+  "regVillageNoneSynced": "మొదటి సింక్ తర్వాత గ్రామాలు లోడ్ అవుతాయి. ప్రస్తుతానికి గ్రామం పేరు టైప్ చేయండి.",
+  "regLandmarkLabel": "గుర్తు",
+  "regLandmarkHint": "గుడి, బడి దగ్గర…",
+  "regLanguageLabel": "రైతు భాష",
+  "regOwnershipLabel": "భూమి",
+  "regBoundaryWalk": "చుట్టూ నడవండి",
+  "regBoundaryTap": "మూలలు నొక్కండి",
+  "regStartWalk": "నడక మొదలుపెట్టండి",
+  "regStopWalk": "ఆపండి",
+  "regClosePolygon": "సరిహద్దు మూసివేయండి",
+  "regUndoPoint": "పాయింట్ వెనక్కి",
+  "regClearBoundary": "తుడిచివేయండి",
+  "regPointsCount": "{count} పాయింట్లు",
+  "@regPointsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "regAccuracy": "GPS ఖచ్చితత్వం ±{metres} మీ",
+  "@regAccuracy": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "regAccuracyWaiting": "GPS కోసం వేచి ఉంది…",
+  "regLocationOff": "సరిహద్దు నడవడానికి లొకేషన్ ఆన్ చేయండి",
+  "regLocationDenied": "సరిహద్దు నడవడానికి లొకేషన్ అనుమతి అవసరం",
+  "regTapHint": "మ్యాప్‌లో పొలం నాలుగు మూలలను నొక్కండి",
+  "regWalkHint": "పొలం అంచు వెంట నడవండి. మీరు నడుస్తుండగా పాయింట్లు చేరుతాయి.",
+  "regComputedArea": "కొలిచిన విస్తీర్ణం {acres} ఎకరాలు",
+  "@regComputedArea": {
+    "placeholders": {
+      "acres": {
+        "type": "String"
+      }
+    }
+  },
+  "regAreaLabel": "విస్తీర్ణం ఎకరాల్లో",
+  "regAreaHint": "రైతు చెప్పినట్లు",
+  "regUseMeasured": "కొలిచినది వాడండి",
+  "regAreaWarning": "నమోదు చేసిన విస్తీర్ణం కొలిచిన విస్తీర్ణం కంటే 30% కంటే ఎక్కువ తేడాగా ఉంది. సేవ్ చేసే ముందు సరిచూడండి.",
+  "regBoundaryInvalid": "సరిహద్దు తనను తాను దాటుతోంది. చివరి పాయింట్లు వెనక్కి తీసి మళ్లీ ప్రయత్నించండి.",
+  "regFarmNameLabel": "పొలం పేరు (ఐచ్ఛికం)",
+  "regFarmNameHint": "ఇంటి పొలం",
+  "regSoilLabel": "నేల రకం",
+  "regIrrigationLabel": "నీటిపారుదల",
+  "regFarmPhoto": "పొలం ఫోటో (ఐచ్ఛికం)",
+  "regTakePhoto": "ఫోటో తీయండి",
+  "regPhotoAdded": "ఫోటో చేర్చబడింది",
+  "regPhotoRemove": "తీసివేయండి",
+  "regFarmPhotosCount": "{count} ఫోటోలు",
+  "@regFarmPhotosCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "regCropsHelp": "ఈ సీజన్‌లో ఈ పొలంలో పెరుగుతున్న ప్రతి పంటను చేర్చండి.",
+  "regAddCrop": "పంట చేర్చండి",
+  "regCropLabel": "పంట",
+  "regVarietyLabel": "రకం",
+  "regVarietyHint": "ఉదా. MTU-1010",
+  "regSowingDateLabel": "విత్తిన తేదీ",
+  "regSowingDateHint": "DD-MM-YYYY",
+  "regSeasonAuto": "సీజన్: {season}",
+  "@regSeasonAuto": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
+  "regPlotAreaLabel": "విస్తీర్ణం (ఎకరాలు, ఐచ్ఛికం)",
+  "regRemoveCrop": "పంట తీసివేయండి",
+  "regPlotTitle": "పంట {index}",
+  "@regPlotTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "regAddFarm": "మరో పొలం చేర్చండి",
+  "regFarmsCount": "{count} పొలాలు",
+  "@regFarmsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "regFarmIndex": "పొలం {index}",
+  "@regFarmIndex": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "regConsentIntro": "దీన్ని రైతుకు వారి భాషలో చదివి వినిపించండి.",
+  "regConsentNotice": "పంట సలహా ఇవ్వడానికి, సందర్శన రికార్డులు ఉంచడానికి మీ పేరు, ఫోన్, గ్రామం, పొలం వివరాలను మేము భద్రపరుస్తాం. ఎప్పుడైనా ఆపమని మమ్మల్ని అడగవచ్చు.",
+  "regConsentMarketingNotice": "మీ అనుమతితో SMS లేదా WhatsApp ద్వారా ఆఫర్లు, వ్యవసాయ చిట్కాలు కూడా పంపుతాం.",
+  "regConsentGiven": "రైతు అంగీకరిస్తున్నారు",
+  "regReviewFarmer": "రైతు",
+  "regReviewFarms": "పొలాలు, పంటలు",
+  "regReviewConsent": "అనుమతి",
+  "regReviewSyncNote": "ఇప్పుడు ఈ ఫోన్‌లో సేవ్ అయింది; నెట్‌వర్క్ వచ్చాక సర్వర్‌కు పంపబడుతుంది.",
+  "regSave": "రైతును సేవ్ చేయండి",
+  "regSaveFarm": "పొలం సేవ్ చేయండి",
+  "regEdit": "సవరించండి",
+  "regSaved": "రైతు సేవ్ అయ్యారు",
+  "regIssueName": "రైతు పేరు నమోదు చేయండి",
+  "regIssuePhoneUnverified": "ఫోన్ ధృవీకరించండి లేదా తర్వాత ధృవీకరించండి ఎంచుకోండి",
+  "regIssueVillage": "గ్రామం ఎంచుకోండి",
+  "regIssueLanguage": "రైతు భాషను ఎంచుకోండి",
+  "regIssueBoundary": "సరిహద్దుకు కనీసం 3 పాయింట్లు గుర్తించండి",
+  "regIssueArea": "విస్తీర్ణం ఎకరాల్లో నమోదు చేయండి",
+  "regIssueCrop": "కనీసం ఒక పంట చేర్చండి",
+  "regIssueSowingDate": "ప్రతి పంటకు విత్తిన తేదీ నమోదు చేయండి",
+  "regIssueConsent": "నమోదుకు డేటా అనుమతి తప్పనిసరి",
+  "soilBlack": "నల్ల నేల",
+  "soilRed": "ఎర్ర నేల",
+  "soilSandy": "ఇసుక నేల",
+  "soilLoamy": "లోమ్ నేల",
+  "soilClay": "బంక నేల",
+  "soilAlluvial": "ఒండ్రు నేల",
+  "soilLaterite": "లేటరైట్ నేల",
+  "irrigationRainfed": "వర్షాధారం",
+  "irrigationBorewell": "బోరుబావి",
+  "irrigationCanal": "కాలువ",
+  "irrigationTank": "చెరువు",
+  "irrigationOpenWell": "బావి",
+  "irrigationDrip": "డ్రిప్",
+  "irrigationSprinkler": "స్ప్రింక్లర్",
+  "ownershipOwn": "సొంతం",
+  "ownershipLeased": "కౌలు",
+  "seasonKharif": "ఖరీఫ్",
+  "seasonRabi": "రబీ",
+  "seasonZaid": "జైద్ (వేసవి)",
+  "profileTabOverview": "అవలోకనం",
+  "profileTabVisits": "సందర్శనలు",
+  "profileTabDiagnoses": "రోగ నిర్ధారణలు",
+  "profileTabOrders": "ఆర్డర్లు",
+  "profileTabKhata": "ఖాతా",
+  "profileStartVisit": "సందర్శన మొదలు",
+  "profileScout": "పంట పరిశీలన",
+  "profileNewOrder": "కొత్త ఆర్డర్",
+  "profileCollect": "వసూలు",
+  "profileComingSoon": "తర్వాతి అప్‌డేట్‌లో వస్తుంది",
+  "profileVisitsEmpty": "ఇంకా సందర్శనలు లేవు",
+  "profileDiagnosesEmpty": "ఇంకా రోగ నిర్ధారణలు లేవు",
+  "profileOrdersEmpty": "ఇంకా ఆర్డర్లు లేవు",
+  "profileKhataEmpty": "ఇంకా ఖాతా నమోదులు లేవు",
+  "profilePhone": "ఫోన్",
+  "profileLandmark": "గుర్తు",
+  "profileLanguage": "భాష",
+  "profileOwnership": "భూమి",
+  "profileFarms": "పొలాలు",
+  "profileAcres": "{acres} ఎకరాలు",
+  "@profileAcres": {
+    "placeholders": {
+      "acres": {
+        "type": "String"
+      }
+    }
+  },
+  "profileAddFarm": "పొలం చేర్చండి",
+  "profileEditFarm": "పొలం సవరించండి",
+  "profileFarmPlots": "{count} పంటలు",
+  "@profileFarmPlots": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profileNoFarms": "ఇంకా పొలాలు లేవు",
+  "profileDuplicateTitle": "నకిలీ — విలీనం చేయాలా?",
+  "profileDuplicateBody": "ఈ నంబర్‌తో సర్వర్‌లో ఇప్పటికే రైతు ఉన్నారు. ఉన్న రికార్డు తెరిచి వివరాలను విలీనం చేయండి.",
+  "profileRejectedTitle": "సింక్ తిరస్కరించబడింది",
+  "profileRejectedHelp": "సరిచేసి మళ్లీ ప్రయత్నించడానికి సింక్ వివరాలు తెరవండి.",
+  "profileNotFound": "రైతు కనబడలేదు",
+  "profileVerifyPhone": "ఫోన్ ధృవీకరించండి",
+  "consentGiven": "ఇచ్చారు",
+  "consentNotGiven": "ఇవ్వలేదు",
+  "farmEditTitle": "పొలం సవరించండి",
+  "farmAddTitle": "పొలం చేర్చండి",
+  "mapNoBoundary": "ఇంకా సరిహద్దు లేదు",
+  "mapAttribution": "© OpenStreetMap సహకారులు",
+  "mapCurrentPosition": "మీ స్థానం",
+  "mapCorner": "మూల {index}",
+  "@mapCorner": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "mapFarmBoundary": "పొలం సరిహద్దు"
 }

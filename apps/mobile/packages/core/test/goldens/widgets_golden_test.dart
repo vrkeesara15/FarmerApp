@@ -14,7 +14,65 @@ final DateTime _dueDate = DateTime.utc(2030, 1, 15);
 
 void _noop() {}
 
+/// A 100 m square near Hyderabad for the map golden.
+const List<GeoPoint> _square = <GeoPoint>[
+  GeoPoint(17.4, 78.4),
+  GeoPoint(17.4, 78.40094),
+  GeoPoint(17.4009, 78.40094),
+  GeoPoint(17.4009, 78.4),
+];
+
 final List<_Case> _cases = <_Case>[
+  (
+    'map_panel',
+    () => Column(
+      children: <Widget>[
+        MapPanel(
+          boundary: _square,
+          currentPosition: GeoFix(
+            point: const GeoPoint(17.40045, 78.40047),
+            accuracyMetres: 12,
+            time: DateTime.utc(2026, 9, 20, 4),
+          ),
+          tileProvider: BlankTileProvider(),
+          height: 220,
+        ),
+        const SizedBox(height: Tokens.space4),
+        MapPanel(
+          boundary: const <GeoPoint>[],
+          tileProvider: BlankTileProvider(),
+          height: 160,
+        ),
+      ],
+    ),
+  ),
+  (
+    'consent_card',
+    () => Column(
+      children: <Widget>[
+        ConsentCard(
+          title: 'Use my data to give crop advice',
+          body: 'We look at your crop photos and farm details to help you.',
+          notice:
+              'We will keep your name, phone, village and farm details to '
+              'give you crop advice and keep visit records.',
+          required: true,
+          granted: true,
+          onChanged: (_) {},
+          onReadAloud: _noop,
+        ),
+        const SizedBox(height: Tokens.space3),
+        ConsentCard(
+          title: 'Send me offers and tips',
+          body: 'Messages about products and farming tips.',
+          required: false,
+          granted: false,
+          onChanged: (_) {},
+          onReadAloud: _noop,
+        ),
+      ],
+    ),
+  ),
   (
     'app_button',
     () => const Column(
@@ -184,6 +242,14 @@ final List<_Case> _cases = <_Case>[
         ),
         const SizedBox(height: Tokens.space3),
         const FarmerCard(name: 'Lakshmi Devi', village: 'Peddapalli'),
+        const SizedBox(height: Tokens.space3),
+        const FarmerCard(
+          name: 'Venkat Rao',
+          village: 'Nallagutta',
+          crops: <CropChipData>[CropChipData(name: 'Paddy')],
+          pendingSync: true,
+          attention: true,
+        ),
       ],
     ),
   ),

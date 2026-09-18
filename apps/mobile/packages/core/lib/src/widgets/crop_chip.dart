@@ -80,12 +80,23 @@ class CropChip extends StatelessWidget {
                 children: <Widget>[
                   Icon(data.icon, size: Tokens.sizeIcon, color: fg),
                   const SizedBox(width: Tokens.space2),
-                  Text(data.name, style: app.text.label.copyWith(color: fg)),
+                  Flexible(
+                    child: Text(
+                      data.name,
+                      style: app.text.label.copyWith(color: fg),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                   if (data.stage != null) ...<Widget>[
                     const SizedBox(width: Tokens.space1),
-                    Text(
-                      '· ${data.stage}',
-                      style: app.text.caption.copyWith(color: p.textSecondary),
+                    Flexible(
+                      child: Text(
+                        '· ${data.stage}',
+                        style: app.text.caption.copyWith(
+                          color: p.textSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ],

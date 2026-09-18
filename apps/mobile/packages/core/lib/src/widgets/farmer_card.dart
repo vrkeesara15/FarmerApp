@@ -17,6 +17,8 @@ class FarmerCard extends StatelessWidget {
     this.crops = const <CropChipData>[],
     this.lastVisitUtc,
     this.balanceDuePaise = 0,
+    this.pendingSync = false,
+    this.attention = false,
     this.onTap,
     super.key,
   });
@@ -38,6 +40,13 @@ class FarmerCard extends StatelessWidget {
 
   /// Outstanding balance in paise; the badge is hidden when zero.
   final int balanceDuePaise;
+
+  /// Saved offline; a queued op has not reached the server yet (FA-025).
+  final bool pendingSync;
+
+  /// The server rejected the farmer (A64 / A22 explain); shown as a
+  /// danger row under the footer.
+  final bool attention;
 
   /// Tap handler.
   final VoidCallback? onTap;
@@ -82,6 +91,7 @@ class FarmerCard extends StatelessWidget {
                     ),
                     const SizedBox(width: Tokens.space3),
                     Expanded(
+                      flex: 3,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
@@ -116,9 +126,14 @@ class FarmerCard extends StatelessWidget {
                     ),
                     if (balanceDuePaise > 0) ...<Widget>[
                       const SizedBox(width: Tokens.space2),
-                      _DueBadge(
-                        text: l10n.farmerBalanceDue(
-                          formatInr(balanceDuePaise, showPaise: false),
+                      Flexible(
+                        child: _DueBadge(
+                          text: l10n.farmerBalanceDue(
+                            formatInr(balanceDuePaise, showPaise: false),
+                          ),
+                          icon: Icons.currency_rupee,
+                          color: p.statusWarning,
+                          container: p.statusWarningContainer,
                         ),
                       ),
                     ],
@@ -143,14 +158,64 @@ class FarmerCard extends StatelessWidget {
                       color: p.textSecondary,
                     ),
                     const SizedBox(width: Tokens.space1),
-                    Text(
-                      lastVisitUtc == null
-                          ? l10n.farmerNoVisit
-                          : l10n.farmerLastVisit(formatDateIst(lastVisitUtc!)),
-                      style: app.text.caption.copyWith(color: p.textSecondary),
+                    Expanded(
+                      child: Text(
+                        lastVisitUtc == null
+                            ? l10n.farmerNoVisit
+                            : l10n.farmerLastVisit(
+                                formatDateIst(lastVisitUtc!),
+                              ),
+                        style: app.text.caption.copyWith(
+                          color: p.textSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
+                if (attention) ...<Widget>[
+                  const SizedBox(height: Tokens.space1),
+                  Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.error_outline,
+                        size: Tokens.space4,
+                        color: p.statusDanger,
+                      ),
+                      const SizedBox(width: Tokens.space1),
+                      Expanded(
+                        child: Text(
+                          l10n.farmerRejected,
+                          style: app.text.caption.copyWith(
+                            color: p.statusDanger,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                if (pendingSync) ...<Widget>[
+                  const SizedBox(height: Tokens.space1),
+                  Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.cloud_upload_outlined,
+                        size: Tokens.space4,
+                        color: p.statusInfo,
+                      ),
+                      const SizedBox(width: Tokens.space1),
+                      Expanded(
+                        child: Text(
+                          l10n.farmerPendingSync,
+                          style: app.text.caption.copyWith(color: p.statusInfo),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -161,38 +226,44 @@ class FarmerCard extends StatelessWidget {
 }
 
 class _DueBadge extends StatelessWidget {
-  const _DueBadge({required this.text});
+  const _DueBadge({
+    required this.text,
+    required this.icon,
+    required this.color,
+    required this.container,
+  });
 
   final String text;
+  final IconData icon;
+  final Color color;
+  final Color container;
 
   @override
   Widget build(BuildContext context) {
     final app = context.app;
-    final p = app.palette;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: Tokens.space2,
         vertical: Tokens.space1,
       ),
       decoration: BoxDecoration(
-        color: app.tint(p.statusWarningContainer),
+        color: app.tint(container),
         borderRadius: BorderRadius.circular(Tokens.radiusPill),
-        border: Border.all(color: p.statusWarning, width: app.borderWidth),
+        border: Border.all(color: color, width: app.borderWidth),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(
-            Icons.currency_rupee,
-            size: Tokens.space4,
-            color: p.statusWarning,
-          ),
+          Icon(icon, size: Tokens.space4, color: color),
           const SizedBox(width: Tokens.space1),
-          Text(
-            text,
-            style: app.text.caption.copyWith(
-              color: p.statusWarning,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              text,
+              overflow: TextOverflow.ellipsis,
+              style: app.text.caption.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

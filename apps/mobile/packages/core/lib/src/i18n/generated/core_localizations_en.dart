@@ -707,4 +707,532 @@ class CoreLocalizationsEn extends CoreLocalizations {
 
   @override
   String get skeletonLoading => 'Loading content';
+
+  @override
+  String get farmersTitle => 'Farmers';
+
+  @override
+  String get farmersSearchHint => 'Search name, phone or village';
+
+  @override
+  String get farmersAddFarmer => 'Add farmer';
+
+  @override
+  String get farmersEmptyTitle => 'No farmers yet';
+
+  @override
+  String get farmersEmptyHelp =>
+      'Add your first farmer to start visits and orders.';
+
+  @override
+  String get farmersNoResults => 'No farmers match your search';
+
+  @override
+  String get farmersFilterVillage => 'Village';
+
+  @override
+  String get farmersFilterCrop => 'Crop';
+
+  @override
+  String get farmersFilterAll => 'All';
+
+  @override
+  String farmersCount(int count) {
+    return '$count farmers';
+  }
+
+  @override
+  String get farmerPendingSync => 'Will sync when online';
+
+  @override
+  String get farmerPhoneUnverified => 'Phone not verified';
+
+  @override
+  String get farmerRejected => 'Needs attention';
+
+  @override
+  String get regTitle => 'Add farmer';
+
+  @override
+  String get regStepBasics => 'Farmer details';
+
+  @override
+  String get regStepBoundary => 'Farm boundary';
+
+  @override
+  String get regStepCrops => 'Crops';
+
+  @override
+  String get regStepConsent => 'Consent';
+
+  @override
+  String get regStepReview => 'Review and save';
+
+  @override
+  String get regResumeDraft => 'Continuing where you left off';
+
+  @override
+  String get regDiscardDraft => 'Discard draft';
+
+  @override
+  String get regFixIssues => 'Fix the highlighted fields to continue';
+
+  @override
+  String get regNameLabel => 'Farmer name';
+
+  @override
+  String get regNameHint => 'As on the ID card';
+
+  @override
+  String get regPhoneLabel => 'Farmer mobile number';
+
+  @override
+  String get regPhoneHelper => 'An OTP will be sent to the farmer';
+
+  @override
+  String get regSendOtpToFarmer => 'Send OTP to farmer';
+
+  @override
+  String get regOtpSent => 'OTP sent to the farmer. Ask them for the code.';
+
+  @override
+  String get regPhoneVerified => 'Phone verified';
+
+  @override
+  String get regVerifyLater => 'Verify later';
+
+  @override
+  String get regVerifyLaterNote =>
+      'No signal? Save now and verify the phone from the farmer profile.';
+
+  @override
+  String get regVerifyLaterChosen => 'Will be verified later';
+
+  @override
+  String get regDuplicatePhone => 'A farmer with this number already exists';
+
+  @override
+  String get regDuplicateOpen => 'Open existing farmer';
+
+  @override
+  String get regVillageLabel => 'Village';
+
+  @override
+  String get regVillageHint => 'Choose the village';
+
+  @override
+  String get regVillageTyped => 'Village name';
+
+  @override
+  String get regVillageNoneSynced =>
+      'Villages will load after the first sync. Type the village name for now.';
+
+  @override
+  String get regLandmarkLabel => 'Landmark';
+
+  @override
+  String get regLandmarkHint => 'Near the temple, school…';
+
+  @override
+  String get regLanguageLabel => 'Language of the farmer';
+
+  @override
+  String get regOwnershipLabel => 'Land';
+
+  @override
+  String get regBoundaryWalk => 'Walk around';
+
+  @override
+  String get regBoundaryTap => 'Tap corners';
+
+  @override
+  String get regStartWalk => 'Start walking';
+
+  @override
+  String get regStopWalk => 'Pause';
+
+  @override
+  String get regClosePolygon => 'Close boundary';
+
+  @override
+  String get regUndoPoint => 'Undo point';
+
+  @override
+  String get regClearBoundary => 'Clear';
+
+  @override
+  String regPointsCount(int count) {
+    return '$count points';
+  }
+
+  @override
+  String regAccuracy(int metres) {
+    return 'GPS accuracy ±$metres m';
+  }
+
+  @override
+  String get regAccuracyWaiting => 'Waiting for GPS…';
+
+  @override
+  String get regLocationOff => 'Turn on location to walk the boundary';
+
+  @override
+  String get regLocationDenied =>
+      'Location permission is needed to walk the boundary';
+
+  @override
+  String get regTapHint => 'Tap the four corners of the farm on the map';
+
+  @override
+  String get regWalkHint =>
+      'Walk along the edge of the farm. Points are added as you go.';
+
+  @override
+  String regComputedArea(String acres) {
+    return 'Measured area $acres acres';
+  }
+
+  @override
+  String get regAreaLabel => 'Area in acres';
+
+  @override
+  String get regAreaHint => 'As the farmer says';
+
+  @override
+  String get regUseMeasured => 'Use measured';
+
+  @override
+  String get regAreaWarning =>
+      'The entered area differs from the measured area by more than 30%. Check it before saving.';
+
+  @override
+  String get regBoundaryInvalid =>
+      'The boundary crosses itself. Undo the last points and try again.';
+
+  @override
+  String get regFarmNameLabel => 'Farm name (optional)';
+
+  @override
+  String get regFarmNameHint => 'Home farm';
+
+  @override
+  String get regSoilLabel => 'Soil type';
+
+  @override
+  String get regIrrigationLabel => 'Irrigation';
+
+  @override
+  String get regFarmPhoto => 'Farm photo (optional)';
+
+  @override
+  String get regTakePhoto => 'Take photo';
+
+  @override
+  String get regPhotoAdded => 'Photo added';
+
+  @override
+  String get regPhotoRemove => 'Remove';
+
+  @override
+  String regFarmPhotosCount(int count) {
+    return '$count photos';
+  }
+
+  @override
+  String get regCropsHelp => 'Add every crop growing on this farm this season.';
+
+  @override
+  String get regAddCrop => 'Add crop';
+
+  @override
+  String get regCropLabel => 'Crop';
+
+  @override
+  String get regVarietyLabel => 'Variety';
+
+  @override
+  String get regVarietyHint => 'e.g. MTU-1010';
+
+  @override
+  String get regSowingDateLabel => 'Sowing date';
+
+  @override
+  String get regSowingDateHint => 'DD-MM-YYYY';
+
+  @override
+  String regSeasonAuto(String season) {
+    return 'Season: $season';
+  }
+
+  @override
+  String get regPlotAreaLabel => 'Area (acres, optional)';
+
+  @override
+  String get regRemoveCrop => 'Remove crop';
+
+  @override
+  String regPlotTitle(int index) {
+    return 'Crop $index';
+  }
+
+  @override
+  String get regAddFarm => 'Add another farm';
+
+  @override
+  String regFarmsCount(int count) {
+    return '$count farms';
+  }
+
+  @override
+  String regFarmIndex(int index) {
+    return 'Farm $index';
+  }
+
+  @override
+  String get regConsentIntro => 'Read this to the farmer in their language.';
+
+  @override
+  String get regConsentNotice =>
+      'We will keep your name, phone, village and farm details to give you crop advice and keep visit records. You can ask us to stop at any time.';
+
+  @override
+  String get regConsentMarketingNotice =>
+      'With your permission we will also send offers and farming tips by SMS or WhatsApp.';
+
+  @override
+  String get regConsentGiven => 'Farmer agrees';
+
+  @override
+  String get regReviewFarmer => 'Farmer';
+
+  @override
+  String get regReviewFarms => 'Farms and crops';
+
+  @override
+  String get regReviewConsent => 'Consent';
+
+  @override
+  String get regReviewSyncNote =>
+      'Saved on this phone now; sent to the server when the network is back.';
+
+  @override
+  String get regSave => 'Save farmer';
+
+  @override
+  String get regSaveFarm => 'Save farm';
+
+  @override
+  String get regEdit => 'Edit';
+
+  @override
+  String get regSaved => 'Farmer saved';
+
+  @override
+  String get regIssueName => 'Enter the farmer name';
+
+  @override
+  String get regIssuePhoneUnverified =>
+      'Verify the phone or choose Verify later';
+
+  @override
+  String get regIssueVillage => 'Choose the village';
+
+  @override
+  String get regIssueLanguage => 'Choose the language of the farmer';
+
+  @override
+  String get regIssueBoundary => 'Mark at least 3 points of the boundary';
+
+  @override
+  String get regIssueArea => 'Enter the area in acres';
+
+  @override
+  String get regIssueCrop => 'Add at least one crop';
+
+  @override
+  String get regIssueSowingDate => 'Enter the sowing date for every crop';
+
+  @override
+  String get regIssueConsent => 'Data consent is required to register';
+
+  @override
+  String get soilBlack => 'Black';
+
+  @override
+  String get soilRed => 'Red';
+
+  @override
+  String get soilSandy => 'Sandy';
+
+  @override
+  String get soilLoamy => 'Loamy';
+
+  @override
+  String get soilClay => 'Clay';
+
+  @override
+  String get soilAlluvial => 'Alluvial';
+
+  @override
+  String get soilLaterite => 'Laterite';
+
+  @override
+  String get irrigationRainfed => 'Rainfed';
+
+  @override
+  String get irrigationBorewell => 'Borewell';
+
+  @override
+  String get irrigationCanal => 'Canal';
+
+  @override
+  String get irrigationTank => 'Tank';
+
+  @override
+  String get irrigationOpenWell => 'Open well';
+
+  @override
+  String get irrigationDrip => 'Drip';
+
+  @override
+  String get irrigationSprinkler => 'Sprinkler';
+
+  @override
+  String get ownershipOwn => 'Own';
+
+  @override
+  String get ownershipLeased => 'Leased';
+
+  @override
+  String get seasonKharif => 'Kharif';
+
+  @override
+  String get seasonRabi => 'Rabi';
+
+  @override
+  String get seasonZaid => 'Zaid (summer)';
+
+  @override
+  String get profileTabOverview => 'Overview';
+
+  @override
+  String get profileTabVisits => 'Visits';
+
+  @override
+  String get profileTabDiagnoses => 'Diagnoses';
+
+  @override
+  String get profileTabOrders => 'Orders';
+
+  @override
+  String get profileTabKhata => 'Khata';
+
+  @override
+  String get profileStartVisit => 'Start visit';
+
+  @override
+  String get profileScout => 'Scout';
+
+  @override
+  String get profileNewOrder => 'New order';
+
+  @override
+  String get profileCollect => 'Collect';
+
+  @override
+  String get profileComingSoon => 'Coming in a later update';
+
+  @override
+  String get profileVisitsEmpty => 'No visits yet';
+
+  @override
+  String get profileDiagnosesEmpty => 'No diagnoses yet';
+
+  @override
+  String get profileOrdersEmpty => 'No orders yet';
+
+  @override
+  String get profileKhataEmpty => 'No khata entries yet';
+
+  @override
+  String get profilePhone => 'Phone';
+
+  @override
+  String get profileLandmark => 'Landmark';
+
+  @override
+  String get profileLanguage => 'Language';
+
+  @override
+  String get profileOwnership => 'Land';
+
+  @override
+  String get profileFarms => 'Farms';
+
+  @override
+  String profileAcres(String acres) {
+    return '$acres acres';
+  }
+
+  @override
+  String get profileAddFarm => 'Add farm';
+
+  @override
+  String get profileEditFarm => 'Edit farm';
+
+  @override
+  String profileFarmPlots(int count) {
+    return '$count crops';
+  }
+
+  @override
+  String get profileNoFarms => 'No farms yet';
+
+  @override
+  String get profileDuplicateTitle => 'Duplicate — merge?';
+
+  @override
+  String get profileDuplicateBody =>
+      'The server already has a farmer with this number. Open the existing record and merge the details.';
+
+  @override
+  String get profileRejectedTitle => 'Sync rejected';
+
+  @override
+  String get profileRejectedHelp => 'Open Sync details to fix and retry.';
+
+  @override
+  String get profileNotFound => 'Farmer not found';
+
+  @override
+  String get profileVerifyPhone => 'Verify phone';
+
+  @override
+  String get consentGiven => 'Given';
+
+  @override
+  String get consentNotGiven => 'Not given';
+
+  @override
+  String get farmEditTitle => 'Edit farm';
+
+  @override
+  String get farmAddTitle => 'Add farm';
+
+  @override
+  String get mapNoBoundary => 'No boundary yet';
+
+  @override
+  String get mapAttribution => '© OpenStreetMap contributors';
+
+  @override
+  String get mapCurrentPosition => 'Your position';
+
+  @override
+  String mapCorner(int index) {
+    return 'Corner $index';
+  }
+
+  @override
+  String get mapFarmBoundary => 'Farm boundary';
 }

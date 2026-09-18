@@ -1,4 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- FA-025 sync, OSM map tiles (A21b) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- FA-012 A21b walk-around boundary capture; FA-010: read only on duty / on the boundary step -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- FA-012 farm photo, FA-015 visit photos: in-app camera only -->
+    <uses-permission android:name="android.permission.CAMERA" />
     <application
         android:label="Mitra"
         android:name="${applicationName}"

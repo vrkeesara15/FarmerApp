@@ -1,10 +1,8 @@
 {
   "@@locale": "kn",
-
   "appNameAgent": "ಮಿತ್ರ",
   "appNameFarmer": "ಕಿಸಾನ್",
   "splashTagline": "ನಿಮ್ಮ ಹೊಲಕ್ಕೆ ನಂಬಿಕೆಯ ಸಲಹೆ",
-
   "actionContinue": "ಮುಂದುವರಿಸಿ",
   "actionBack": "ಹಿಂದೆ",
   "actionNext": "ಮುಂದೆ",
@@ -14,7 +12,6 @@
   "actionSkip": "ಬಿಟ್ಟುಬಿಡಿ",
   "actionClose": "ಮುಚ್ಚಿ",
   "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ",
-
   "languagePickerTitle": "ನಿಮ್ಮ ಭಾಷೆ ಆಯ್ಕೆ ಮಾಡಿ",
   "languagePickerSubtitle": "ಕೇಳಲು ಸ್ಪೀಕರ್ ಒತ್ತಿ",
   "languagePlayAudio": "ಕೇಳಿ",
@@ -28,14 +25,12 @@
   "languageKannadaName": "ಕನ್ನಡ",
   "languageHindiName": "ಹಿಂದಿ",
   "languageMarathiName": "ಮರಾಠಿ",
-
   "phoneLoginTitle": "ನಿಮ್ಮ ಮೊಬೈಲ್ ನಂಬರ್ ನಮೂದಿಸಿ",
   "phoneLabel": "ಮೊಬೈಲ್ ನಂಬರ್",
   "phonePrefix": "+91",
   "phoneHelper": "ನಾವು SMS ಮೂಲಕ 6 ಅಂಕಿಯ OTP ಕಳುಹಿಸುತ್ತೇವೆ",
   "phoneInvalid": "ಸರಿಯಾದ 10 ಅಂಕಿಯ ಮೊಬೈಲ್ ನಂಬರ್ ನಮೂದಿಸಿ",
   "phoneSendOtp": "OTP ಕಳುಹಿಸಿ",
-
   "otpTitle": "OTP ನಮೂದಿಸಿ",
   "otpSubtitle": "+91 {phone} ಗೆ ಕಳುಹಿಸಲಾಗಿದೆ",
   "otpLabel": "6 ಅಂಕಿಯ OTP",
@@ -50,7 +45,6 @@
   "otpExpired": "ಈ OTP ಅವಧಿ ಮುಗಿದಿದೆ. ಹೊಸದನ್ನು ಕೇಳಿ.",
   "phoneNotFound": "ಈ ನಂಬರ್ ನೋಂದಣಿ ಆಗಿಲ್ಲ. ನಿಮ್ಮನ್ನು ಸೇರಿಸಲು ಮ್ಯಾನೇಜರ್‌ಗೆ ಕೇಳಿ.",
   "networkError": "ಸಂಪರ್ಕ ಇಲ್ಲ. ನಿಮ್ಮ ನೆಟ್‌ವರ್ಕ್ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
-
   "consentTitle": "ನಿಮ್ಮ ಸ್ಥಳ ಮತ್ತು ಡೇಟಾ",
   "consentPoint1": "ನಾವು ನಿಮ್ಮ ಸ್ಥಳ ಮತ್ತು ಭೇಟಿಯ ಫೋಟೋಗಳನ್ನು ಸಂಗ್ರಹಿಸುತ್ತೇವೆ.",
   "consentPoint2": "ನೀವು ಡ್ಯೂಟಿಯಲ್ಲಿರುವಾಗ ಮಾತ್ರ ಸ್ಥಳ ಸಂಗ್ರಹಿಸುತ್ತೇವೆ.",
@@ -65,14 +59,12 @@
   "consentOffersCardBody": "ಉತ್ಪನ್ನಗಳು ಮತ್ತು ಕೃಷಿ ಸಲಹೆಗಳ ಬಗ್ಗೆ ಸಂದೇಶಗಳು.",
   "consentOptional": "ಐಚ್ಛಿಕ",
   "consentReadAloud": "ಓದಿ ಕೇಳಿಸಿ",
-
   "dutyOn": "ಡ್ಯೂಟಿಯಲ್ಲಿ",
   "dutyOff": "ಡ್ಯೂಟಿಯಲ್ಲಿ ಇಲ್ಲ",
   "dutyGoOn": "ಡ್ಯೂಟಿ ಶುರು ಮಾಡಿ",
   "dutyGoOff": "ಡ್ಯೂಟಿ ಮುಗಿಸಿ",
   "dutyElapsed": "{duration} ಇಂದ ಡ್ಯೂಟಿಯಲ್ಲಿ",
   "dutyLocationNote": "ನೀವು ಡ್ಯೂಟಿಯಲ್ಲಿರುವಾಗ ಮಾತ್ರ ಸ್ಥಳ ಆನ್ ಇರುತ್ತದೆ",
-
   "syncSynced": "ಸಿಂಕ್ ಆಗಿದೆ",
   "syncPending": "{count} ಬಾಕಿ",
   "syncFailed": "ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ",
@@ -103,7 +95,6 @@
   "syncRejectedDefault": "ಸರ್ವರ್ ಈ ಐಟಂ ಅನ್ನು ಸ್ವೀಕರಿಸಲಿಲ್ಲ. ತಿದ್ದಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
   "syncRetryAll": "ಎಲ್ಲವನ್ನೂ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
   "syncDiscard": "ಬಿಟ್ಟುಬಿಡಿ",
-
   "visitVerified": "ಪರಿಶೀಲಿತ",
   "visitPartial": "ಭಾಗಶಃ",
   "visitUnverified": "ಪರಿಶೀಲಿಸಿಲ್ಲ",
@@ -115,7 +106,6 @@
   "visitPurposeCollection": "ವಸೂಲಿ",
   "visitPurposeSale": "ಮಾರಾಟ",
   "visitPurposeMeeting": "ಸಭೆ",
-
   "proofGeofence": "ಹೊಲದ ಗಡಿಯ ಒಳಗೆ",
   "proofGeofenceMissing": "ನೀವು ಹೊಲದ ಗಡಿಯ ಹೊರಗಿದ್ದಿರಿ",
   "proofPhoto": "ಫೋಟೋ ತೆಗೆದಿದೆ",
@@ -126,12 +116,10 @@
   "proofDurationMissing": "ಭೇಟಿ 10 ನಿಮಿಷಕ್ಕಿಂತ ಕಡಿಮೆ",
   "proofDone": "ಆಗಿದೆ",
   "proofMissing": "ಇಲ್ಲ",
-
   "cameraHoldSteady": "ಅಲುಗಾಡಿಸದೆ ಹಿಡಿಯಿರಿ",
   "cameraGoodLight": "ಒಳ್ಳೆಯ ಬೆಳಕು",
   "cameraFillFrame": "ಫ್ರೇಮ್ ತುಂಬಿಸಿ",
   "cameraLeafFrame": "ಎಲೆಯನ್ನು ಫ್ರೇಮ್ ಒಳಗೆ ಇಡಿ",
-
   "photoReviewHeading": "ನಿಮ್ಮ ಫೋಟೋ ಪರಿಶೀಲಿಸಿ",
   "photoReviewTitle": "ಫೋಟೋ {index} / {total}",
   "photoQualityOk": "ಒಳ್ಳೆಯ ಫೋಟೋ",
@@ -145,14 +133,12 @@
   "photoUse": "ಈ ಫೋಟೋ ಬಳಸಿ",
   "photoSizeKb": "{kb} KB",
   "photoDimensions": "{width} × {height} px",
-
   "confidenceHigh": "ಹೆಚ್ಚು ವಿಶ್ವಾಸ",
   "confidenceMedium": "ಮಧ್ಯಮ ವಿಶ್ವಾಸ",
   "confidenceLow": "ತಾತ್ಕಾಲಿಕ",
   "diagnosisSymptomsTitle": "ಈ ಲಕ್ಷಣಗಳನ್ನು ನೋಡಿ",
   "diagnosisProvisionalNote": "ನಮ್ಮ ತಜ್ಞರು 24 ಗಂಟೆಯೊಳಗೆ ದೃಢಪಡಿಸುತ್ತಾರೆ",
   "diagnosisProblem": "ಸಮಸ್ಯೆ",
-
   "treatmentOrganic": "ಸಾವಯವ",
   "treatmentChemical": "ರಾಸಾಯನಿಕ",
   "treatmentActiveIngredient": "ಕ್ರಿಯಾಶೀಲ ಅಂಶ",
@@ -163,18 +149,15 @@
   "treatmentPpeMask": "ಮಾಸ್ಕ್",
   "treatmentPpeGoggles": "ಕನ್ನಡಕ",
   "treatmentPpeTitle": "ಧರಿಸಿ",
-
   "ownBrand": "ಸ್ವಂತ ಬ್ರಾಂಡ್",
   "productAdd": "ಸೇರಿಸಿ",
   "productAdded": "ಸೇರಿಸಿದೆ",
   "productStockAtStore": "{store} ನಲ್ಲಿ {count} ಸ್ಟಾಕ್ ಇದೆ",
   "productOutOfStock": "ಸ್ಟಾಕ್ ಇಲ್ಲ",
   "productPack": "ಪ್ಯಾಕ್",
-
   "cartItems": "{count} ವಸ್ತುಗಳು",
   "cartTotal": "ಒಟ್ಟು",
   "cartCheckout": "ಪಾವತಿಸಿ",
-
   "paymentMethodTitle": "ಹೇಗೆ ಪಾವತಿಸುತ್ತೀರಿ?",
   "paymentUpiQr": "UPI QR",
   "paymentUpiQrHint": "ಸ್ಕ್ಯಾನ್ ಮಾಡಿ ಈಗಲೇ ಪಾವತಿಸಿ",
@@ -184,7 +167,6 @@
   "paymentCashHint": "ನಗದು ಪಡೆದು ರಸೀದಿ ಕೊಡಿ",
   "paymentCredit": "ಸಾಲ",
   "paymentCreditHint": "ರೈತರ ಖಾತೆಗೆ ಸೇರಿಸಿ",
-
   "upiWaiting": "ಪಾವತಿಗಾಗಿ ಕಾಯುತ್ತಿದ್ದೇವೆ",
   "upiPaid": "ಪಾವತಿ ಬಂದಿದೆ",
   "upiFailed": "ಪಾವತಿ ವಿಫಲವಾಗಿದೆ",
@@ -192,7 +174,6 @@
   "upiAmount": "ಮೊತ್ತ",
   "upiScanHint": "ಯಾವುದೇ UPI ಆ್ಯಪ್‌ನಿಂದ ಸ್ಕ್ಯಾನ್ ಮಾಡಲು ರೈತರಿಗೆ ಹೇಳಿ",
   "upiRetry": "ಹೊಸ QR ತೋರಿಸಿ",
-
   "khataBalance": "ಬಾಕಿ ಮೊತ್ತ",
   "khataDueDate": "{date} ಒಳಗೆ ಪಾವತಿಸಬೇಕು",
   "khataDebit": "ಕೊಟ್ಟದ್ದು",
@@ -200,41 +181,281 @@
   "khataNoEntries": "ಇನ್ನೂ ನಮೂದುಗಳಿಲ್ಲ",
   "khataPayNow": "ಈಗಲೇ ಪಾವತಿಸಿ",
   "khataCollect": "ವಸೂಲಿ ಮಾಡಿ",
-
   "emptyDefaultTitle": "ಇನ್ನೂ ಏನೂ ಇಲ್ಲ",
   "emptyDefaultHelp": "ನೀವು ಸೇರಿಸಿದ ಮೇಲೆ ಇಲ್ಲಿ ಕಾಣುತ್ತವೆ.",
   "errorTitle": "ಏನೋ ತಪ್ಪಾಗಿದೆ",
   "errorHelp": "ನಿಮ್ಮ ಸಂಪರ್ಕ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
-
   "ratingTitle": "ನಿಮ್ಮ ಭೇಟಿಗೆ ರೇಟಿಂಗ್ ಕೊಡಿ",
   "rating1": "ತುಂಬಾ ಕೆಟ್ಟದು",
   "rating2": "ಕೆಟ್ಟದು",
   "rating3": "ಪರವಾಗಿಲ್ಲ",
   "rating4": "ಒಳ್ಳೆಯದು",
   "rating5": "ತುಂಬಾ ಒಳ್ಳೆಯದು",
-
   "stepperStepOf": "{total} ರಲ್ಲಿ {current}ನೇ ಹಂತ",
-
   "farmerLastVisit": "ಕೊನೆಯ ಭೇಟಿ {date}",
   "farmerNoVisit": "ಇನ್ನೂ ಭೇಟಿ ಇಲ್ಲ",
   "farmerBalanceDue": "ಬಾಕಿ {amount}",
   "farmerVillage": "ಹಳ್ಳಿ",
-
   "statTrendUp": "ಹೆಚ್ಚಳ",
   "statTrendDown": "ಇಳಿಕೆ",
   "statTrendFlat": "ಬದಲಾವಣೆ ಇಲ್ಲ",
-
   "stageSowing": "ಬಿತ್ತನೆ",
   "stageVegetative": "ಬೆಳವಣಿಗೆ",
   "stageFlowering": "ಹೂವು",
   "stageFruiting": "ಕಾಯಿ",
   "stageHarvest": "ಕೊಯ್ಲು",
-
   "settingsTheme": "ಥೀಮ್",
   "themeLight": "ಲೈಟ್",
   "themeSunlight": "ಬಿಸಿಲು",
   "settingsTitle": "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
   "settingsLanguage": "ಭಾಷೆ",
-
-  "skeletonLoading": "ವಿಷಯ ಲೋಡ್ ಆಗುತ್ತಿದೆ"
+  "skeletonLoading": "ವಿಷಯ ಲೋಡ್ ಆಗುತ್ತಿದೆ",
+  "farmersTitle": "ರೈತರು",
+  "farmersSearchHint": "ಹೆಸರು, ಫೋನ್ ಅಥವಾ ಹಳ್ಳಿ ಹುಡುಕಿ",
+  "farmersAddFarmer": "ರೈತರನ್ನು ಸೇರಿಸಿ",
+  "farmersEmptyTitle": "ಇನ್ನೂ ರೈತರಿಲ್ಲ",
+  "farmersEmptyHelp": "ಭೇಟಿಗಳು ಮತ್ತು ಆರ್ಡರ್‌ಗಳನ್ನು ಆರಂಭಿಸಲು ಮೊದಲ ರೈತರನ್ನು ಸೇರಿಸಿ.",
+  "farmersNoResults": "ನಿಮ್ಮ ಹುಡುಕಾಟಕ್ಕೆ ಹೊಂದುವ ರೈತರಿಲ್ಲ",
+  "farmersFilterVillage": "ಹಳ್ಳಿ",
+  "farmersFilterCrop": "ಬೆಳೆ",
+  "farmersFilterAll": "ಎಲ್ಲಾ",
+  "farmersCount": "{count} ರೈತರು",
+  "@farmersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "farmerPendingSync": "ಆನ್‌ಲೈನ್ ಆದಾಗ ಸಿಂಕ್ ಆಗುತ್ತದೆ",
+  "farmerPhoneUnverified": "ಫೋನ್ ಪರಿಶೀಲಿಸಿಲ್ಲ",
+  "farmerRejected": "ಗಮನ ಅಗತ್ಯ",
+  "regTitle": "ರೈತರನ್ನು ಸೇರಿಸಿ",
+  "regStepBasics": "ರೈತರ ವಿವರಗಳು",
+  "regStepBoundary": "ಹೊಲದ ಗಡಿ",
+  "regStepCrops": "ಬೆಳೆಗಳು",
+  "regStepConsent": "ಒಪ್ಪಿಗೆ",
+  "regStepReview": "ಪರಿಶೀಲಿಸಿ ಉಳಿಸಿ",
+  "regResumeDraft": "ನೀವು ನಿಲ್ಲಿಸಿದ ಕಡೆಯಿಂದ ಮುಂದುವರಿಯುತ್ತಿದೆ",
+  "regDiscardDraft": "ಡ್ರಾಫ್ಟ್ ತೆಗೆದುಹಾಕಿ",
+  "regFixIssues": "ಮುಂದುವರಿಯಲು ಗುರುತಿಸಿದ ಕ್ಷೇತ್ರಗಳನ್ನು ಸರಿಪಡಿಸಿ",
+  "regNameLabel": "ರೈತರ ಹೆಸರು",
+  "regNameHint": "ಗುರುತಿನ ಚೀಟಿಯಲ್ಲಿರುವಂತೆ",
+  "regPhoneLabel": "ರೈತರ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ",
+  "regPhoneHelper": "ರೈತರಿಗೆ OTP ಕಳುಹಿಸಲಾಗುತ್ತದೆ",
+  "regSendOtpToFarmer": "ರೈತರಿಗೆ OTP ಕಳುಹಿಸಿ",
+  "regOtpSent": "ರೈತರಿಗೆ OTP ಕಳುಹಿಸಲಾಗಿದೆ. ಅವರಿಂದ ಕೋಡ್ ಕೇಳಿ.",
+  "regPhoneVerified": "ಫೋನ್ ಪರಿಶೀಲಿಸಲಾಗಿದೆ",
+  "regVerifyLater": "ನಂತರ ಪರಿಶೀಲಿಸಿ",
+  "regVerifyLaterNote": "ಸಿಗ್ನಲ್ ಇಲ್ಲವೇ? ಈಗ ಉಳಿಸಿ, ರೈತರ ಪ್ರೊಫೈಲ್‌ನಿಂದ ಫೋನ್ ಪರಿಶೀಲಿಸಿ.",
+  "regVerifyLaterChosen": "ನಂತರ ಪರಿಶೀಲಿಸಲಾಗುತ್ತದೆ",
+  "regDuplicatePhone": "ಈ ಸಂಖ್ಯೆಯ ರೈತರು ಈಗಾಗಲೇ ಇದ್ದಾರೆ",
+  "regDuplicateOpen": "ಇರುವ ರೈತರನ್ನು ತೆರೆಯಿರಿ",
+  "regVillageLabel": "ಹಳ್ಳಿ",
+  "regVillageHint": "ಹಳ್ಳಿ ಆಯ್ಕೆಮಾಡಿ",
+  "regVillageTyped": "ಹಳ್ಳಿಯ ಹೆಸರು",
+  "regVillageNoneSynced": "ಮೊದಲ ಸಿಂಕ್ ನಂತರ ಹಳ್ಳಿಗಳು ಲೋಡ್ ಆಗುತ್ತವೆ. ಸದ್ಯಕ್ಕೆ ಹಳ್ಳಿಯ ಹೆಸರು ಟೈಪ್ ಮಾಡಿ.",
+  "regLandmarkLabel": "ಗುರುತು",
+  "regLandmarkHint": "ದೇವಸ್ಥಾನ, ಶಾಲೆಯ ಹತ್ತಿರ…",
+  "regLanguageLabel": "ರೈತರ ಭಾಷೆ",
+  "regOwnershipLabel": "ಭೂಮಿ",
+  "regBoundaryWalk": "ಸುತ್ತಲೂ ನಡೆಯಿರಿ",
+  "regBoundaryTap": "ಮೂಲೆಗಳನ್ನು ಒತ್ತಿ",
+  "regStartWalk": "ನಡೆಯಲು ಆರಂಭಿಸಿ",
+  "regStopWalk": "ವಿರಾಮ",
+  "regClosePolygon": "ಗಡಿ ಮುಚ್ಚಿ",
+  "regUndoPoint": "ಬಿಂದು ಹಿಂತೆಗೆಯಿರಿ",
+  "regClearBoundary": "ಅಳಿಸಿ",
+  "regPointsCount": "{count} ಬಿಂದುಗಳು",
+  "@regPointsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "regAccuracy": "GPS ನಿಖರತೆ ±{metres} ಮೀ",
+  "@regAccuracy": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "regAccuracyWaiting": "GPS ಗಾಗಿ ಕಾಯುತ್ತಿದೆ…",
+  "regLocationOff": "ಗಡಿ ನಡೆಯಲು ಲೊಕೇಶನ್ ಆನ್ ಮಾಡಿ",
+  "regLocationDenied": "ಗಡಿ ನಡೆಯಲು ಲೊಕೇಶನ್ ಅನುಮತಿ ಬೇಕು",
+  "regTapHint": "ನಕ್ಷೆಯಲ್ಲಿ ಹೊಲದ ನಾಲ್ಕು ಮೂಲೆಗಳನ್ನು ಒತ್ತಿ",
+  "regWalkHint": "ಹೊಲದ ಅಂಚಿನುದ್ದಕ್ಕೂ ನಡೆಯಿರಿ. ನೀವು ನಡೆದಂತೆ ಬಿಂದುಗಳು ಸೇರುತ್ತವೆ.",
+  "regComputedArea": "ಅಳೆದ ವಿಸ್ತೀರ್ಣ {acres} ಎಕರೆ",
+  "@regComputedArea": {
+    "placeholders": {
+      "acres": {
+        "type": "String"
+      }
+    }
+  },
+  "regAreaLabel": "ವಿಸ್ತೀರ್ಣ ಎಕರೆಗಳಲ್ಲಿ",
+  "regAreaHint": "ರೈತರು ಹೇಳಿದಂತೆ",
+  "regUseMeasured": "ಅಳೆದದ್ದನ್ನು ಬಳಸಿ",
+  "regAreaWarning": "ನಮೂದಿಸಿದ ವಿಸ್ತೀರ್ಣವು ಅಳೆದ ವಿಸ್ತೀರ್ಣಕ್ಕಿಂತ 30% ಕ್ಕೂ ಹೆಚ್ಚು ವ್ಯತ್ಯಾಸವಿದೆ. ಉಳಿಸುವ ಮೊದಲು ಪರಿಶೀಲಿಸಿ.",
+  "regBoundaryInvalid": "ಗಡಿ ತನ್ನನ್ನೇ ದಾಟುತ್ತಿದೆ. ಕೊನೆಯ ಬಿಂದುಗಳನ್ನು ಹಿಂತೆಗೆದು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  "regFarmNameLabel": "ಹೊಲದ ಹೆಸರು (ಐಚ್ಛಿಕ)",
+  "regFarmNameHint": "ಮನೆ ಹೊಲ",
+  "regSoilLabel": "ಮಣ್ಣಿನ ಪ್ರಕಾರ",
+  "regIrrigationLabel": "ನೀರಾವರಿ",
+  "regFarmPhoto": "ಹೊಲದ ಫೋಟೋ (ಐಚ್ಛಿಕ)",
+  "regTakePhoto": "ಫೋಟೋ ತೆಗೆಯಿರಿ",
+  "regPhotoAdded": "ಫೋಟೋ ಸೇರಿಸಲಾಗಿದೆ",
+  "regPhotoRemove": "ತೆಗೆದುಹಾಕಿ",
+  "regFarmPhotosCount": "{count} ಫೋಟೋಗಳು",
+  "@regFarmPhotosCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "regCropsHelp": "ಈ ಋತುವಿನಲ್ಲಿ ಈ ಹೊಲದಲ್ಲಿ ಬೆಳೆಯುತ್ತಿರುವ ಪ್ರತಿ ಬೆಳೆಯನ್ನು ಸೇರಿಸಿ.",
+  "regAddCrop": "ಬೆಳೆ ಸೇರಿಸಿ",
+  "regCropLabel": "ಬೆಳೆ",
+  "regVarietyLabel": "ತಳಿ",
+  "regVarietyHint": "ಉದಾ. MTU-1010",
+  "regSowingDateLabel": "ಬಿತ್ತನೆ ದಿನಾಂಕ",
+  "regSowingDateHint": "DD-MM-YYYY",
+  "regSeasonAuto": "ಋತು: {season}",
+  "@regSeasonAuto": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
+  "regPlotAreaLabel": "ವಿಸ್ತೀರ್ಣ (ಎಕರೆ, ಐಚ್ಛಿಕ)",
+  "regRemoveCrop": "ಬೆಳೆ ತೆಗೆದುಹಾಕಿ",
+  "regPlotTitle": "ಬೆಳೆ {index}",
+  "@regPlotTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "regAddFarm": "ಇನ್ನೊಂದು ಹೊಲ ಸೇರಿಸಿ",
+  "regFarmsCount": "{count} ಹೊಲಗಳು",
+  "@regFarmsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "regFarmIndex": "ಹೊಲ {index}",
+  "@regFarmIndex": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "regConsentIntro": "ಇದನ್ನು ರೈತರಿಗೆ ಅವರ ಭಾಷೆಯಲ್ಲಿ ಓದಿ ಹೇಳಿ.",
+  "regConsentNotice": "ಬೆಳೆ ಸಲಹೆ ನೀಡಲು ಮತ್ತು ಭೇಟಿ ದಾಖಲೆಗಳನ್ನು ಇಡಲು ನಿಮ್ಮ ಹೆಸರು, ಫೋನ್, ಹಳ್ಳಿ ಮತ್ತು ಹೊಲದ ವಿವರಗಳನ್ನು ನಾವು ಇಟ್ಟುಕೊಳ್ಳುತ್ತೇವೆ. ಯಾವಾಗ ಬೇಕಾದರೂ ನಿಲ್ಲಿಸಲು ನಮ್ಮನ್ನು ಕೇಳಬಹುದು.",
+  "regConsentMarketingNotice": "ನಿಮ್ಮ ಅನುಮತಿಯೊಂದಿಗೆ SMS ಅಥವಾ WhatsApp ಮೂಲಕ ಆಫರ್‌ಗಳು ಮತ್ತು ಕೃಷಿ ಸಲಹೆಗಳನ್ನೂ ಕಳುಹಿಸುತ್ತೇವೆ.",
+  "regConsentGiven": "ರೈತರು ಒಪ್ಪುತ್ತಾರೆ",
+  "regReviewFarmer": "ರೈತರು",
+  "regReviewFarms": "ಹೊಲಗಳು ಮತ್ತು ಬೆಳೆಗಳು",
+  "regReviewConsent": "ಒಪ್ಪಿಗೆ",
+  "regReviewSyncNote": "ಈಗ ಈ ಫೋನ್‌ನಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ; ನೆಟ್‌ವರ್ಕ್ ಬಂದಾಗ ಸರ್ವರ್‌ಗೆ ಕಳುಹಿಸಲಾಗುತ್ತದೆ.",
+  "regSave": "ರೈತರನ್ನು ಉಳಿಸಿ",
+  "regSaveFarm": "ಹೊಲ ಉಳಿಸಿ",
+  "regEdit": "ಸಂಪಾದಿಸಿ",
+  "regSaved": "ರೈತರನ್ನು ಉಳಿಸಲಾಗಿದೆ",
+  "regIssueName": "ರೈತರ ಹೆಸರು ನಮೂದಿಸಿ",
+  "regIssuePhoneUnverified": "ಫೋನ್ ಪರಿಶೀಲಿಸಿ ಅಥವಾ ನಂತರ ಪರಿಶೀಲಿಸಿ ಆಯ್ಕೆಮಾಡಿ",
+  "regIssueVillage": "ಹಳ್ಳಿ ಆಯ್ಕೆಮಾಡಿ",
+  "regIssueLanguage": "ರೈತರ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ",
+  "regIssueBoundary": "ಗಡಿಯ ಕನಿಷ್ಠ 3 ಬಿಂದುಗಳನ್ನು ಗುರುತಿಸಿ",
+  "regIssueArea": "ವಿಸ್ತೀರ್ಣವನ್ನು ಎಕರೆಗಳಲ್ಲಿ ನಮೂದಿಸಿ",
+  "regIssueCrop": "ಕನಿಷ್ಠ ಒಂದು ಬೆಳೆ ಸೇರಿಸಿ",
+  "regIssueSowingDate": "ಪ್ರತಿ ಬೆಳೆಗೆ ಬಿತ್ತನೆ ದಿನಾಂಕ ನಮೂದಿಸಿ",
+  "regIssueConsent": "ನೋಂದಣಿಗೆ ಡೇಟಾ ಒಪ್ಪಿಗೆ ಅಗತ್ಯ",
+  "soilBlack": "ಕಪ್ಪು ಮಣ್ಣು",
+  "soilRed": "ಕೆಂಪು ಮಣ್ಣು",
+  "soilSandy": "ಮರಳು ಮಣ್ಣು",
+  "soilLoamy": "ಲೋಮ್ ಮಣ್ಣು",
+  "soilClay": "ಜೇಡಿ ಮಣ್ಣು",
+  "soilAlluvial": "ಮೆಕ್ಕಲು ಮಣ್ಣು",
+  "soilLaterite": "ಲ್ಯಾಟರೈಟ್ ಮಣ್ಣು",
+  "irrigationRainfed": "ಮಳೆಯಾಶ್ರಿತ",
+  "irrigationBorewell": "ಕೊಳವೆಬಾವಿ",
+  "irrigationCanal": "ಕಾಲುವೆ",
+  "irrigationTank": "ಕೆರೆ",
+  "irrigationOpenWell": "ತೆರೆದ ಬಾವಿ",
+  "irrigationDrip": "ಹನಿ ನೀರಾವರಿ",
+  "irrigationSprinkler": "ತುಂತುರು ನೀರಾವರಿ",
+  "ownershipOwn": "ಸ್ವಂತ",
+  "ownershipLeased": "ಗುತ್ತಿಗೆ",
+  "seasonKharif": "ಖಾರಿಫ್",
+  "seasonRabi": "ರಬಿ",
+  "seasonZaid": "ಜೈದ್ (ಬೇಸಿಗೆ)",
+  "profileTabOverview": "ಅವಲೋಕನ",
+  "profileTabVisits": "ಭೇಟಿಗಳು",
+  "profileTabDiagnoses": "ರೋಗ ನಿರ್ಣಯಗಳು",
+  "profileTabOrders": "ಆರ್ಡರ್‌ಗಳು",
+  "profileTabKhata": "ಖಾತೆ",
+  "profileStartVisit": "ಭೇಟಿ ಆರಂಭಿಸಿ",
+  "profileScout": "ಬೆಳೆ ವೀಕ್ಷಣೆ",
+  "profileNewOrder": "ಹೊಸ ಆರ್ಡರ್",
+  "profileCollect": "ವಸೂಲಿ",
+  "profileComingSoon": "ಮುಂದಿನ ಅಪ್‌ಡೇಟ್‌ನಲ್ಲಿ ಬರುತ್ತದೆ",
+  "profileVisitsEmpty": "ಇನ್ನೂ ಭೇಟಿಗಳಿಲ್ಲ",
+  "profileDiagnosesEmpty": "ಇನ್ನೂ ರೋಗ ನಿರ್ಣಯಗಳಿಲ್ಲ",
+  "profileOrdersEmpty": "ಇನ್ನೂ ಆರ್ಡರ್‌ಗಳಿಲ್ಲ",
+  "profileKhataEmpty": "ಇನ್ನೂ ಖಾತೆ ನಮೂದುಗಳಿಲ್ಲ",
+  "profilePhone": "ಫೋನ್",
+  "profileLandmark": "ಗುರುತು",
+  "profileLanguage": "ಭಾಷೆ",
+  "profileOwnership": "ಭೂಮಿ",
+  "profileFarms": "ಹೊಲಗಳು",
+  "profileAcres": "{acres} ಎಕರೆ",
+  "@profileAcres": {
+    "placeholders": {
+      "acres": {
+        "type": "String"
+      }
+    }
+  },
+  "profileAddFarm": "ಹೊಲ ಸೇರಿಸಿ",
+  "profileEditFarm": "ಹೊಲ ಸಂಪಾದಿಸಿ",
+  "profileFarmPlots": "{count} ಬೆಳೆಗಳು",
+  "@profileFarmPlots": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "profileNoFarms": "ಇನ್ನೂ ಹೊಲಗಳಿಲ್ಲ",
+  "profileDuplicateTitle": "ನಕಲು — ವಿಲೀನಗೊಳಿಸಬೇಕೇ?",
+  "profileDuplicateBody": "ಈ ಸಂಖ್ಯೆಯ ರೈತರು ಸರ್ವರ್‌ನಲ್ಲಿ ಈಗಾಗಲೇ ಇದ್ದಾರೆ. ಇರುವ ದಾಖಲೆಯನ್ನು ತೆರೆದು ವಿವರಗಳನ್ನು ವಿಲೀನಗೊಳಿಸಿ.",
+  "profileRejectedTitle": "ಸಿಂಕ್ ತಿರಸ್ಕರಿಸಲಾಗಿದೆ",
+  "profileRejectedHelp": "ಸರಿಪಡಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಲು ಸಿಂಕ್ ವಿವರಗಳನ್ನು ತೆರೆಯಿರಿ.",
+  "profileNotFound": "ರೈತರು ಸಿಗಲಿಲ್ಲ",
+  "profileVerifyPhone": "ಫೋನ್ ಪರಿಶೀಲಿಸಿ",
+  "consentGiven": "ನೀಡಲಾಗಿದೆ",
+  "consentNotGiven": "ನೀಡಿಲ್ಲ",
+  "farmEditTitle": "ಹೊಲ ಸಂಪಾದಿಸಿ",
+  "farmAddTitle": "ಹೊಲ ಸೇರಿಸಿ",
+  "mapNoBoundary": "ಇನ್ನೂ ಗಡಿ ಇಲ್ಲ",
+  "mapAttribution": "© OpenStreetMap ಕೊಡುಗೆದಾರರು",
+  "mapCurrentPosition": "ನಿಮ್ಮ ಸ್ಥಾನ",
+  "mapCorner": "ಮೂಲೆ {index}",
+  "@mapCorner": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "mapFarmBoundary": "ಹೊಲದ ಗಡಿ"
 }

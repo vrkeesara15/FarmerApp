@@ -297,12 +297,50 @@ class SyncedRefs extends Table {
   Set<Column<Object>> get primaryKey => <Column<Object>>{entity, refId};
 }
 
+/// Village reference data pulled from the sync change feed (FA-012 A21a
+/// village picker works offline).
+class Villages extends Table {
+  /// Server id.
+  TextColumn get id => text()();
+
+  /// Village name.
+  TextColumn get name => text()();
+
+  /// District.
+  TextColumn get district => text().withDefault(const Constant(''))();
+
+  /// Mandal / taluk.
+  TextColumn get mandal => text().withDefault(const Constant(''))();
+
+  /// State.
+  TextColumn get state => text().withDefault(const Constant(''))();
+
+  /// Nearest store, if assigned.
+  TextColumn get storeId => text().nullable()();
+
+  /// Village centre latitude.
+  RealColumn get latitude => real().nullable()();
+
+  /// Village centre longitude.
+  RealColumn get longitude => real().nullable()();
+
+  /// Server row version.
+  IntColumn get version => integer().withDefault(const Constant(0))();
+
+  /// Last pull that touched the row (UTC).
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}
+
 /// The on-device SQLite database shared by both apps.
 ///
 /// Schema history:
 /// * v1 (M0): `kv`.
 /// * v2 (FA-025): farmers, farms, crop_plots, consent_records, outbox,
 ///   uploads, sync_states, synced_refs.
+/// * v3 (FA-012): villages.
 @DriftDatabase(
   tables: <Type>[
     Kv,
@@ -314,6 +352,7 @@ class SyncedRefs extends Table {
     Uploads,
     SyncStates,
     SyncedRefs,
+    Villages,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -321,7 +360,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   /// Tables added in schema v2, in creation order.
   List<TableInfo<Table, Object?>> get _v2Tables => <TableInfo<Table, Object?>>[
@@ -345,6 +384,9 @@ class AppDatabase extends _$AppDatabase {
         }
         await m.createIndex(outboxStateSeq);
         await m.createIndex(outboxEntity);
+      }
+      if (from < 3) {
+        await m.createTable(villages);
       }
     },
   );
