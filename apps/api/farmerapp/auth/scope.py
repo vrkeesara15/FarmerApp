@@ -31,7 +31,10 @@ from sqlalchemy import ColumnElement, SQLColumnExpression, false, select
 
 from farmerapp.auth.models import User, UserRole
 from farmerapp.farmers.models import Farmer
+from farmerapp.khata.models import KhataEntry
 from farmerapp.location.models import DutySession
+from farmerapp.orders.models import Order
+from farmerapp.payments.models import Payment
 from farmerapp.tenants.models import Store, Village
 from farmerapp.visits.models import Visit
 
@@ -232,9 +235,126 @@ def visit_filters(
     return filters
 
 
+# --------------------------------------------------------------------------- stores (M3)
+#: SPEC 2.6 "All stores KPIs" row for store-level data (stock, day close): owner / director
+#: / auditor read, cluster head own cluster, store manager own store; the accountant sees
+#: the tenant (finance; same assumption as ``DEFAULT_VISIBILITY``); officers, the
+#: agronomist and farmers see no store internals.
+STORE_VISIBILITY: Mapping[UserRole, Visibility] = {
+    **DEFAULT_VISIBILITY,
+    UserRole.FIELD_OFFICER: Visibility.NONE,
+    UserRole.FARMER: Visibility.NONE,
+}
+
+
+def store_filters(
+    actor: User,
+    store_id: SQLColumnExpression[Any],
+    visibility: Mapping[UserRole, Visibility] = STORE_VISIBILITY,
+) -> list[ColumnElement[bool]] | None:
+    """Filters on a ``store_id`` column for the stores ``actor`` may see, or ``None`` when
+    the role's visibility is ``OWN`` (the caller decides what "own" means for its entity)."""
+    match visibility[UserRole(actor.role)]:
+        case Visibility.ALL:
+            return []
+        case Visibility.CLUSTER:
+            if actor.cluster_id is None:
+                return [false()]
+            stores = select(Store.id).where(
+                Store.tenant_id == actor.tenant_id, Store.cluster_id == actor.cluster_id
+            )
+            return [store_id.in_(stores)]
+        case Visibility.STORE:
+            return [_eq_or_closed(store_id, actor.store_id)]
+        case Visibility.OWN:
+            return None
+        case Visibility.NONE:
+            return [false()]
+
+
+def visible_store_filters(actor: User) -> list[ColumnElement[bool]]:
+    """Which ``store`` rows ``actor`` may read the internals of (stock, day close)."""
+    filters = store_filters(actor, Store.id)
+    return [Store.tenant_id == actor.tenant_id, *(filters if filters is not None else [false()])]
+
+
+# --------------------------------------------------------------------------- orders (M3)
+#: Orders: store scope for store staff / management, a field officer the orders they placed
+#: (FA-020), a farmer their own (FM-010); the agronomist none.
+ORDER_VISIBILITY: Mapping[UserRole, Visibility] = {
+    **DEFAULT_VISIBILITY,
+    UserRole.AGRONOMIST: Visibility.NONE,
+}
+
+
+def _own_farmers(actor: User) -> Any:
+    return select(Farmer.id).where(Farmer.tenant_id == actor.tenant_id, Farmer.user_id == actor.id)
+
+
+def order_filters(
+    actor: User, visibility: Mapping[UserRole, Visibility] = ORDER_VISIBILITY
+) -> list[ColumnElement[bool]]:
+    """Which ``order`` rows ``actor`` may see."""
+    filters: list[ColumnElement[bool]] = [Order.tenant_id == actor.tenant_id]
+    by_store = store_filters(actor, Order.store_id, visibility)
+    if by_store is not None:
+        return [*filters, *by_store]
+    if UserRole(actor.role) == UserRole.FARMER:
+        filters.append(Order.farmer_id.in_(_own_farmers(actor)))
+    else:
+        filters.append(Order.placed_by == actor.id)
+    return filters
+
+
+# --------------------------------------------------------------------------- payments (M3)
+#: Payments: store scope; a field officer the ones they collected (FA-021), a farmer their
+#: own (FM-010 payment history); the agronomist none.
+PAYMENT_VISIBILITY: Mapping[UserRole, Visibility] = ORDER_VISIBILITY
+
+
+def payment_filters(
+    actor: User, visibility: Mapping[UserRole, Visibility] = PAYMENT_VISIBILITY
+) -> list[ColumnElement[bool]]:
+    """Which ``payment`` rows ``actor`` may see."""
+    filters: list[ColumnElement[bool]] = [Payment.tenant_id == actor.tenant_id]
+    by_store = store_filters(actor, Payment.store_id, visibility)
+    if by_store is not None:
+        return [*filters, *by_store]
+    if UserRole(actor.role) == UserRole.FARMER:
+        filters.append(Payment.farmer_id.in_(_own_farmers(actor)))
+    else:
+        filters.append(Payment.collected_by == actor.id)
+    return filters
+
+
+# --------------------------------------------------------------------------- khata (M3)
+#: SPEC 2.6 "Khata" row: owner / director / auditor read, cluster head own cluster, store
+#: manager own store, field officer own farmers, farmer own, agronomist nothing — exactly
+#: the farmer-profile scope minus the agronomist, so a khata is visible with its farmer.
+KHATA_VISIBILITY: Mapping[UserRole, Visibility] = {
+    **DEFAULT_VISIBILITY,
+    UserRole.AGRONOMIST: Visibility.NONE,
+}
+
+
+def khata_farmer_filters(actor: User) -> list[ColumnElement[bool]]:
+    """Which ``farmer`` rows ``actor`` may read the khata of."""
+    return farmer_filters(actor, KHATA_VISIBILITY)
+
+
+def khata_entry_filters(actor: User) -> list[ColumnElement[bool]]:
+    """Which ``khata_entry`` rows ``actor`` may see (through their farmer)."""
+    farmers = select(Farmer.id).where(*khata_farmer_filters(actor))
+    return [KhataEntry.tenant_id == actor.tenant_id, KhataEntry.farmer_id.in_(farmers)]
+
+
 __all__ = [
     "DEFAULT_VISIBILITY",
     "FARMER_VISIBILITY",
+    "KHATA_VISIBILITY",
+    "ORDER_VISIBILITY",
+    "PAYMENT_VISIBILITY",
+    "STORE_VISIBILITY",
     "TRACK_VISIBILITY",
     "USER_SCOPE",
     "VISIT_VISIBILITY",
@@ -242,8 +362,14 @@ __all__ = [
     "Visibility",
     "duty_session_filters",
     "farmer_filters",
+    "khata_entry_filters",
+    "khata_farmer_filters",
     "officer_filters",
+    "order_filters",
+    "payment_filters",
     "scope_filters",
+    "store_filters",
     "user_scope",
+    "visible_store_filters",
     "visit_filters",
 ]

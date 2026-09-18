@@ -46,6 +46,7 @@ from __future__ import annotations
 import base64
 import binascii
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -62,7 +63,10 @@ from farmerapp.auth.models import User
 from farmerapp.auth.scope import (
     duty_session_filters,
     farmer_filters,
+    khata_entry_filters,
     officer_filters,
+    order_filters,
+    payment_filters,
     visit_filters,
 )
 from farmerapp.duty import service as duty
@@ -83,10 +87,16 @@ from farmerapp.farmers.schemas import (
     FarmOut,
     FarmUpdate,
 )
+from farmerapp.khata.models import KhataEntry
+from farmerapp.khata.schemas import KhataEntryOut
 from farmerapp.location.ingest import LocationBatchIn, ingest_batch
 from farmerapp.location.models import DutySession, PolicyAcceptance
 from farmerapp.location.schemas import DutySessionOut, PolicyAcceptanceOut
 from farmerapp.logging import get_logger
+from farmerapp.orders.models import Order, OrderLine
+from farmerapp.orders.schemas import OrderLineOut, OrderOut
+from farmerapp.payments.models import Payment
+from farmerapp.payments.schemas import PaymentOut
 from farmerapp.policies import service as policies
 from farmerapp.policies.schemas import PolicyAcceptIn
 from farmerapp.settings import Settings
@@ -122,7 +132,12 @@ CONFLICT_RULES: dict[str, Strategy] = {
     "duty_session": Strategy.MERGE_FIELDS,  # server wins for end_at once auto-ended (VV-007)
     "policy_acceptance": Strategy.SERVER_WINS,  # append-only (FA-011)
     "location_batch": Strategy.SERVER_WINS,  # write-only telemetry batch (FA-010); no feed row
-    # M3: "khata": Strategy.SERVER_WINS, "payment": Strategy.SERVER_WINS
+    # M3 money-bearing entities (SPEC FA-025 "server wins for money"): totals, stock and
+    # balances are recomputed server-side; a stale device version is always a conflict.
+    "order": Strategy.SERVER_WINS,
+    "order_line": Strategy.SERVER_WINS,
+    "payment": Strategy.SERVER_WINS,
+    "khata_entry": Strategy.SERVER_WINS,  # append-only ledger (FA-022)
 }
 
 #: ``merge_fields`` entities: fields a device may never overwrite.
@@ -147,9 +162,12 @@ SERVER_OWNED_FIELDS: dict[str, frozenset[str]] = {
 
 #: ``duty_session`` end fields become server-owned once the server ended the session.
 _DUTY_END_FIELDS = frozenset({"end_at", "end_reason"})
-#: Every synced entity has a write path now (FA-010 / FA-011 duty + acceptance, FA-014 ..
-#: FA-017 visits); kept so a future entity can be listed before its path lands.
-_ENTITIES_WITHOUT_WRITE_PATH: frozenset[str] = frozenset()
+#: Synced entities whose device write path has not landed yet: M3 orders, lines, payments
+#: and khata entries (FA-020 / FA-021 / FA-022 are the loop's job). Ops on them are rejected
+#: with ``unsupported_action``; they are already in the changes feed.
+_ENTITIES_WITHOUT_WRITE_PATH: frozenset[str] = frozenset(
+    {"order", "order_line", "payment", "khata_entry"}
+)
 
 
 def server_owned_fields(entity: str, row: Any) -> frozenset[str]:
@@ -505,6 +523,7 @@ def _scope(actor: User) -> Any:
     farms = select(Farm.id).where(Farm.farmer_id.in_(visible))
     visits = select(Visit.id).where(*visit_filters(actor))
     officers = select(User.id).where(*officer_filters(actor))
+    orders = select(Order.id).where(*order_filters(actor))
     return or_(
         and_(SyncChange.entity == "farmer", SyncChange.entity_id.in_(visible)),
         and_(SyncChange.entity == "farm", SyncChange.entity_id.in_(farms)),
@@ -538,6 +557,20 @@ def _scope(actor: User) -> Any:
             SyncChange.entity_id.in_(
                 select(PolicyAcceptance.id).where(PolicyAcceptance.user_id.in_(officers))
             ),
+        ),
+        # M3 money entities: the same scope as their REST reads.
+        and_(SyncChange.entity == "order", SyncChange.entity_id.in_(orders)),
+        and_(
+            SyncChange.entity == "order_line",
+            SyncChange.entity_id.in_(select(OrderLine.id).where(OrderLine.order_id.in_(orders))),
+        ),
+        and_(
+            SyncChange.entity == "payment",
+            SyncChange.entity_id.in_(select(Payment.id).where(*payment_filters(actor))),
+        ),
+        and_(
+            SyncChange.entity == "khata_entry",
+            SyncChange.entity_id.in_(select(KhataEntry.id).where(*khata_entry_filters(actor))),
         ),
     )
 
@@ -597,6 +630,18 @@ async def _current_state(
         )
         for acceptance in rows.scalars():
             state[("policy_acceptance", acceptance.id)] = PolicyAcceptanceOut.from_row(acceptance)
+    money: tuple[tuple[str, Any, Callable[[Any], BaseModel]], ...] = (
+        ("order", Order, OrderOut.model_validate),
+        ("order_line", OrderLine, OrderLineOut.model_validate),
+        ("payment", Payment, PaymentOut.model_validate),
+        ("khata_entry", KhataEntry, KhataEntryOut.from_row),
+    )
+    for entity, model, to_out in money:
+        if ids.get(entity):
+            for row in (
+                await session.execute(select(model).where(model.id.in_(ids[entity])))
+            ).scalars():
+                state[(entity, row.id)] = to_out(row)
     return state
 
 

@@ -22,10 +22,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from farmerapp.auth.deps import AuthServices
 from farmerapp.auth.models import User, UserRole
 from farmerapp.catalog.crops import Crop
+from farmerapp.catalog.models import LabelClaim
 from farmerapp.db.models import Tenant
 from farmerapp.db.session import set_tenant, tenant_scope
 from farmerapp.farmers.models import CropPlot, Farm, Farmer
 from farmerapp.jobs.seed import DEMO_TENANTS, SMALL, seed_demo
+from farmerapp.orders.models import Order, OrderChannel
 from farmerapp.visits.models import Visit
 
 ROLES: tuple[str, ...] = tuple(r.value for r in UserRole)
@@ -41,6 +43,9 @@ class SeededTenant:
     crop_plot_id: uuid.UUID | None = None  # a crop plot of that farm
     crop_id: uuid.UUID | None = None  # a crop of the tenant
     visit_id: uuid.UUID | None = None  # a visit by the role officer to ``farmer`` (M2 routes)
+    store_id: uuid.UUID | None = None  # the store of the role store manager (M3 routes)
+    sku_id: uuid.UUID | None = None  # a SKU with an approved label claim (M3 routes)
+    order_id: uuid.UUID | None = None  # an order placed by the role officer (M3 routes)
 
     def user(self, role: str | UserRole) -> User:
         return self.users[UserRole(role)]
@@ -118,6 +123,15 @@ async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
             .scalars()
             .first()
         )
+        sku = await session.scalar(
+            select(LabelClaim.sku_id).order_by(LabelClaim.created_at, LabelClaim.id).limit(1)
+        )
+        order = await session.scalar(
+            select(Order.id)
+            .where(Order.channel == OrderChannel.OFFICER.value)
+            .order_by(Order.created_at, Order.id)
+            .limit(1)
+        )
     by_role: dict[UserRole, User] = {}
     for u in users:
         by_role.setdefault(UserRole(u.role), u)
@@ -125,6 +139,7 @@ async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
     assert farmers, f"seed for {slug} must have farmers"
     assert farm is not None and plot is not None and crop is not None
     assert visit is not None, f"seed for {slug} must visit its first farmer"
+    assert sku is not None and order is not None, f"seed for {slug} must have M3 data"
     return SeededTenant(
         tenant=tenant,
         users=by_role,
@@ -134,6 +149,9 @@ async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
         crop_plot_id=plot.id,
         crop_id=crop.id,
         visit_id=visit,
+        store_id=by_role[UserRole.STORE_MANAGER].store_id,
+        sku_id=sku,
+        order_id=order,
     )
 
 

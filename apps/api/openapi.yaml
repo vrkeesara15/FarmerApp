@@ -2687,6 +2687,753 @@ paths:
       - director
       - owner
       - tenant_admin
+  /v1/catalog/products:
+    get:
+      tags:
+      - catalog
+      summary: Products with their SKUs, prices and (per store) stock; oldest first
+      operationId: listProducts
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          description: Name / brand / ingredient.
+          title: Q
+        description: Name / brand / ingredient.
+      - name: category
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/ProductCategory'
+          - type: 'null'
+          title: Category
+      - name: own_brand
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Own Brand
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Adds the store price and stock on hand.
+          title: Store Id
+        description: Adds the store price and stock on hand.
+      - name: include_inactive
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Inactive
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/catalog/skus/{id}:
+    get:
+      tags:
+      - catalog
+      summary: One SKU with its product, price, stock and label claims
+      operationId: getSku
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkuDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/catalog/label-claims:
+    get:
+      tags:
+      - catalog
+      summary: Approved label claims for a crop and/or problem (DX-007); oldest first
+      operationId: listLabelClaims
+      parameters:
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+      - name: pest_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: pest_or_disease id.
+          title: Pest Id
+        description: pest_or_disease id.
+      - name: sku_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Sku Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ClaimStatus'
+          description: Only the agronomist / owner may ask for draft or retired claims.
+          default: approved
+        description: Only the agronomist / owner may ask for draft or retired claims.
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelClaimPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/stores/{id}/stock:
+    get:
+      tags:
+      - stock
+      summary: Stock batches of a store with on-hand quantity and days to expiry
+      operationId: listStoreStock
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: sku_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Sku Id
+      - name: expiring_within_days
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            minimum: 0
+          - type: 'null'
+          description: Only batches expiring within N days (ST-004).
+          title: Expiring Within Days
+        description: Only batches expiring within N days (ST-004).
+      - name: include_empty
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Include batches with zero stock.
+          default: false
+          title: Include Empty
+        description: Include batches with zero stock.
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/orders:
+    get:
+      tags:
+      - orders
+      summary: Orders visible to the caller, oldest first
+      operationId: listOrders
+      parameters:
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+      - name: farmer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/OrderStatus'
+          - type: 'null'
+          title: Status
+      - name: channel
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/OrderChannel'
+          - type: 'null'
+          title: Channel
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: From
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: To
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/orders/{id}:
+    get:
+      tags:
+      - orders
+      summary: One order with its lines and payments
+      operationId: getOrder
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/payments:
+    get:
+      tags:
+      - payments
+      summary: Payments visible to the caller, oldest first
+      operationId: listPayments
+      parameters:
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+      - name: farmer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+      - name: order_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Order Id
+      - name: mode
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/PaymentMode'
+          - type: 'null'
+          title: Mode
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/PaymentStatus'
+          - type: 'null'
+          title: Status
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: From
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: To
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/farmers/{id}/khata:
+    get:
+      tags:
+      - khata
+      summary: 'A farmer''s khata: balance (sum of entries), overdue amount, due dates, ledger'
+      operationId: getFarmerKhata
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Limit to one store.
+          title: Store Id
+        description: Limit to one store.
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KhataOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
 components:
   schemas:
     AuditLogOut:
@@ -2813,6 +3560,13 @@ components:
       - received_chunks
       - missing_chunks
       title: ChunkAck
+    ClaimStatus:
+      type: string
+      enum:
+      - draft
+      - approved
+      - retired
+      title: ClaimStatus
     ConfirmationRequest:
       properties:
         channel:
@@ -2997,6 +3751,56 @@ components:
       - recorded_by
       - created_at
       title: ConsentRecordOut
+    CreditLimitOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        limit_paise:
+          type: integer
+          title: Limit Paise
+        set_by:
+          type: string
+          format: uuid
+          title: Set By
+        approved_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Approved By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - farmer_id
+      - store_id
+      - limit_paise
+      - set_by
+      - approved_by
+      - created_at
+      - updated_at
+      - version
+      title: CreditLimitOut
     CropPlotCreate:
       properties:
         id:
@@ -4080,6 +4884,276 @@ components:
       - drip
       - sprinkler
       title: IrrigationType
+    KhataEntryOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        type:
+          type: string
+          title: Type
+        amount_paise:
+          type: integer
+          title: Amount Paise
+        signed_paise:
+          type: integer
+          title: Signed Paise
+          description: +amount for a debit, -amount for a credit.
+        due_date:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Due Date
+        ref_type:
+          type: string
+          title: Ref Type
+        ref_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Ref Id
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+        harvest_month:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Harvest Month
+        created_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Created By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - tenant_id
+      - farmer_id
+      - store_id
+      - type
+      - amount_paise
+      - signed_paise
+      - due_date
+      - ref_type
+      - ref_id
+      - note
+      - harvest_month
+      - created_by
+      - created_at
+      title: KhataEntryOut
+    KhataOut:
+      properties:
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+          description: The store the view is filtered to; null = across the tenant's stores.
+        balance_paise:
+          type: integer
+          title: Balance Paise
+          description: 'Sum of the ledger: debits minus credits (FA-022).'
+        overdue_paise:
+          type: integer
+          title: Overdue Paise
+          description: Debits past due minus credits, floored at zero.
+        next_due_date:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Next Due Date
+          description: Earliest unpaid due date still ahead.
+        balances:
+          items:
+            $ref: '#/components/schemas/StoreBalanceOut'
+          type: array
+          title: Balances
+          description: Balance per store.
+        credit_limits:
+          items:
+            $ref: '#/components/schemas/CreditLimitOut'
+          type: array
+          title: Credit Limits
+        entries:
+          items:
+            $ref: '#/components/schemas/KhataEntryOut'
+          type: array
+          title: Entries
+          description: Newest first.
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - farmer_id
+      - store_id
+      - balance_paise
+      - overdue_paise
+      - next_due_date
+      - balances
+      - credit_limits
+      - entries
+      title: KhataOut
+    LabelClaimOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        pest_or_disease_id:
+          type: string
+          format: uuid
+          title: Pest Or Disease Id
+        dose_per_acre:
+          type: string
+          title: Dose Per Acre
+        dose_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Dose Value
+        dose_unit:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Dose Unit
+        dose_per_tank_15l:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Dose Per Tank 15L
+        phi_days:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Phi Days
+        ppe_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ppe Text
+        safety_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Safety Text
+        source_ref:
+          type: string
+          title: Source Ref
+        efficacy_tier:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Efficacy Tier
+        status:
+          type: string
+          title: Status
+        approved_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Approved By
+        approved_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Approved At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+        pest_or_disease:
+          anyOf:
+          - $ref: '#/components/schemas/PestOrDiseaseOut'
+          - type: 'null'
+      type: object
+      required:
+      - id
+      - sku_id
+      - crop_id
+      - pest_or_disease_id
+      - dose_per_acre
+      - dose_value
+      - dose_unit
+      - dose_per_tank_15l
+      - phi_days
+      - ppe_text
+      - safety_text
+      - source_ref
+      - efficacy_tier
+      - status
+      - approved_by
+      - approved_at
+      - created_at
+      - updated_at
+      - version
+      title: LabelClaimOut
+    LabelClaimPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/LabelClaimOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: LabelClaimPage
     LandOwnership:
       type: string
       enum:
@@ -4331,6 +5405,336 @@ components:
       required:
       - refresh_token
       title: LogoutRequest
+    OrderChannel:
+      type: string
+      enum:
+      - officer
+      - farmer_app
+      - pos
+      title: OrderChannel
+    OrderDetailOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        channel:
+          type: string
+          title: Channel
+        status:
+          type: string
+          title: Status
+        fulfilment:
+          type: string
+          title: Fulfilment
+        subtotal_paise:
+          type: integer
+          title: Subtotal Paise
+        discount_paise:
+          type: integer
+          title: Discount Paise
+        tax_paise:
+          type: integer
+          title: Tax Paise
+        total_paise:
+          type: integer
+          title: Total Paise
+        placed_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Placed By
+        placed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Placed At
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+        invoice_no:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Invoice No
+        client_order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Client Order Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+        lines:
+          items:
+            $ref: '#/components/schemas/OrderLineOut'
+          type: array
+          title: Lines
+        payments:
+          items:
+            $ref: '#/components/schemas/PaymentOut'
+          type: array
+          title: Payments
+      type: object
+      required:
+      - id
+      - tenant_id
+      - farmer_id
+      - store_id
+      - channel
+      - status
+      - fulfilment
+      - subtotal_paise
+      - discount_paise
+      - tax_paise
+      - total_paise
+      - placed_by
+      - placed_at
+      - notes
+      - invoice_no
+      - client_order_id
+      - created_at
+      - updated_at
+      - deleted_at
+      - version
+      - lines
+      - payments
+      title: OrderDetailOut
+    OrderLineOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        order_id:
+          type: string
+          format: uuid
+          title: Order Id
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        batch_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Batch Id
+        qty:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Qty
+        unit_price_paise:
+          type: integer
+          title: Unit Price Paise
+        gst_rate_bp:
+          type: integer
+          title: Gst Rate Bp
+        line_total_paise:
+          type: integer
+          title: Line Total Paise
+        label_claim_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Label Claim Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - order_id
+      - sku_id
+      - batch_id
+      - qty
+      - unit_price_paise
+      - gst_rate_bp
+      - line_total_paise
+      - label_claim_id
+      - created_at
+      - updated_at
+      - version
+      title: OrderLineOut
+    OrderOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        channel:
+          type: string
+          title: Channel
+        status:
+          type: string
+          title: Status
+        fulfilment:
+          type: string
+          title: Fulfilment
+        subtotal_paise:
+          type: integer
+          title: Subtotal Paise
+        discount_paise:
+          type: integer
+          title: Discount Paise
+        tax_paise:
+          type: integer
+          title: Tax Paise
+        total_paise:
+          type: integer
+          title: Total Paise
+        placed_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Placed By
+        placed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Placed At
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+        invoice_no:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Invoice No
+        client_order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Client Order Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - farmer_id
+      - store_id
+      - channel
+      - status
+      - fulfilment
+      - subtotal_paise
+      - discount_paise
+      - tax_paise
+      - total_paise
+      - placed_by
+      - placed_at
+      - notes
+      - invoice_no
+      - client_order_id
+      - created_at
+      - updated_at
+      - deleted_at
+      - version
+      title: OrderOut
+    OrderPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/OrderOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: OrderPage
+    OrderStatus:
+      type: string
+      enum:
+      - draft
+      - placed
+      - reserved
+      - packed
+      - ready
+      - handed_over
+      - delivered
+      - cancelled
+      title: OrderStatus
     OtpSendRequest:
       properties:
         phone:
@@ -4573,6 +5977,207 @@ components:
       required:
       - items
       title: PageOut[VisitOut]
+    PaymentMode:
+      type: string
+      enum:
+      - upi_qr
+      - payment_link
+      - cash
+      - card_terminal
+      - credit
+      title: PaymentMode
+    PaymentOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Order Id
+        khata_entry_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Khata Entry Id
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        mode:
+          type: string
+          title: Mode
+        amount_paise:
+          type: integer
+          title: Amount Paise
+        provider:
+          type: string
+          title: Provider
+        provider_ref:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider Ref
+        provider_event_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider Event Id
+        status:
+          type: string
+          title: Status
+        receipt_uri:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Receipt Uri
+        collected_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Collected By
+        reference_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reference Note
+        paid_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Paid At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - order_id
+      - khata_entry_id
+      - farmer_id
+      - store_id
+      - mode
+      - amount_paise
+      - provider
+      - provider_ref
+      - provider_event_id
+      - status
+      - receipt_uri
+      - collected_by
+      - reference_note
+      - paid_at
+      - created_at
+      - updated_at
+      - deleted_at
+      - version
+      title: PaymentOut
+    PaymentPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PaymentOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: PaymentPage
+    PaymentStatus:
+      type: string
+      enum:
+      - created
+      - pending
+      - paid
+      - failed
+      - refunded
+      - reconciled
+      title: PaymentStatus
+    PestOrDiseaseOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        code:
+          type: string
+          title: Code
+        name:
+          type: string
+          title: Name
+        names:
+          additionalProperties: true
+          type: object
+          title: Names
+        type:
+          type: string
+          title: Type
+        crop_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+        scientific_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Scientific Name
+        symptoms:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Symptoms
+        active:
+          type: boolean
+          title: Active
+      type: object
+      required:
+      - id
+      - code
+      - name
+      - names
+      - type
+      - crop_id
+      - scientific_name
+      - symptoms
+      - active
+      title: PestOrDiseaseOut
     PhoneVerificationTokenOut:
       properties:
         phone_verification_token:
@@ -4771,6 +6376,216 @@ components:
       - text_hash
       - created_at
       title: PolicyAcceptanceOut
+    ProductCategory:
+      type: string
+      enum:
+      - seed
+      - fertiliser
+      - pesticide
+      - fungicide
+      - herbicide
+      - growth
+      - tool
+      - other
+      title: ProductCategory
+    ProductOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        name:
+          type: string
+          title: Name
+        brand:
+          type: string
+          title: Brand
+        own_brand:
+          type: boolean
+          title: Own Brand
+        category:
+          type: string
+          title: Category
+        hsn:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Hsn
+        gst_rate_bp:
+          type: integer
+          title: Gst Rate Bp
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        active_ingredient:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Active Ingredient
+        formulation:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Formulation
+        names:
+          additionalProperties: true
+          type: object
+          title: Names
+        image_uri:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Uri
+        active:
+          type: boolean
+          title: Active
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - name
+      - brand
+      - own_brand
+      - category
+      - hsn
+      - gst_rate_bp
+      - description
+      - active_ingredient
+      - formulation
+      - names
+      - image_uri
+      - active
+      - created_at
+      - updated_at
+      - version
+      title: ProductOut
+    ProductPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ProductWithSkusOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: ProductPage
+    ProductWithSkusOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        name:
+          type: string
+          title: Name
+        brand:
+          type: string
+          title: Brand
+        own_brand:
+          type: boolean
+          title: Own Brand
+        category:
+          type: string
+          title: Category
+        hsn:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Hsn
+        gst_rate_bp:
+          type: integer
+          title: Gst Rate Bp
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        active_ingredient:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Active Ingredient
+        formulation:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Formulation
+        names:
+          additionalProperties: true
+          type: object
+          title: Names
+        image_uri:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Uri
+        active:
+          type: boolean
+          title: Active
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+        skus:
+          items:
+            $ref: '#/components/schemas/SkuOut'
+          type: array
+          title: Skus
+      type: object
+      required:
+      - id
+      - tenant_id
+      - name
+      - brand
+      - own_brand
+      - category
+      - hsn
+      - gst_rate_bp
+      - description
+      - active_ingredient
+      - formulation
+      - names
+      - image_uri
+      - active
+      - created_at
+      - updated_at
+      - version
+      - skus
+      title: ProductWithSkusOut
     RefreshRequest:
       properties:
         refresh_token:
@@ -4836,6 +6651,154 @@ components:
       - expires_at
       - note
       title: SignedUrlOut
+    SkuDetailOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        product_id:
+          type: string
+          format: uuid
+          title: Product Id
+        pack_size_value:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Pack Size Value
+        pack_size_unit:
+          type: string
+          title: Pack Size Unit
+        pack_label:
+          type: string
+          title: Pack Label
+        barcode:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Barcode
+        mrp_paise:
+          type: integer
+          title: Mrp Paise
+        active:
+          type: boolean
+          title: Active
+        price_paise:
+          type: integer
+          title: Price Paise
+          description: Selling price resolved for the requested store (or the tenant default), falling
+            back to the MRP.
+        stock_qty:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Stock Qty
+          description: On hand at `store_id` (sum of the movement ledger); null when no store was given.
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+        product:
+          $ref: '#/components/schemas/ProductOut'
+        label_claims:
+          items:
+            $ref: '#/components/schemas/LabelClaimOut'
+          type: array
+          title: Label Claims
+          description: Approved claims; drafts and retired claims only for the agronomist / owner.
+      type: object
+      required:
+      - id
+      - product_id
+      - pack_size_value
+      - pack_size_unit
+      - pack_label
+      - barcode
+      - mrp_paise
+      - active
+      - price_paise
+      - created_at
+      - updated_at
+      - version
+      - product
+      - label_claims
+      title: SkuDetailOut
+    SkuOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        product_id:
+          type: string
+          format: uuid
+          title: Product Id
+        pack_size_value:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Pack Size Value
+        pack_size_unit:
+          type: string
+          title: Pack Size Unit
+        pack_label:
+          type: string
+          title: Pack Label
+        barcode:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Barcode
+        mrp_paise:
+          type: integer
+          title: Mrp Paise
+        active:
+          type: boolean
+          title: Active
+        price_paise:
+          type: integer
+          title: Price Paise
+          description: Selling price resolved for the requested store (or the tenant default), falling
+            back to the MRP.
+        stock_qty:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Stock Qty
+          description: On hand at `store_id` (sum of the movement ledger); null when no store was given.
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - product_id
+      - pack_size_value
+      - pack_size_unit
+      - pack_label
+      - barcode
+      - mrp_paise
+      - active
+      - price_paise
+      - created_at
+      - updated_at
+      - version
+      title: SkuOut
     SoilType:
       type: string
       enum:
@@ -4847,6 +6810,113 @@ components:
       - alluvial
       - laterite
       title: SoilType
+    StockBatchOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        batch_no:
+          type: string
+          title: Batch No
+        expiry:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Expiry
+        qty:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Qty
+          description: Cached quantity, maintained with every movement.
+        on_hand:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: On Hand
+          description: Sum of the movement ledger for this batch (ST-003).
+        days_to_expiry:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Days To Expiry
+        cost_paise:
+          type: integer
+          title: Cost Paise
+        received_at:
+          type: string
+          format: date-time
+          title: Received At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - store_id
+      - sku_id
+      - batch_no
+      - expiry
+      - qty
+      - on_hand
+      - days_to_expiry
+      - cost_paise
+      - received_at
+      - created_at
+      - updated_at
+      - version
+      title: StockBatchOut
+    StockPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/StockBatchOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: StockPage
+    StoreBalanceOut:
+      properties:
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        balance_paise:
+          type: integer
+          title: Balance Paise
+      type: object
+      required:
+      - store_id
+      - balance_paise
+      title: StoreBalanceOut
     SyncChangeOut:
       properties:
         entity:
@@ -4862,6 +6932,10 @@ components:
           - duty_session
           - policy_acceptance
           - location_batch
+          - order
+          - order_line
+          - payment
+          - khata_entry
           title: Entity
         action:
           type: string
@@ -4941,6 +7015,10 @@ components:
           - duty_session
           - policy_acceptance
           - location_batch
+          - order
+          - order_line
+          - payment
+          - khata_entry
           title: Entity
         action:
           type: string

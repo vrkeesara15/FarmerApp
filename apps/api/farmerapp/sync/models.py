@@ -33,7 +33,9 @@ from farmerapp.db.base import Base, TenantRow
 
 #: Entities the mobile outbox may write and the changes feed reports (SPEC 8.3). M2 adds
 #: visits, their photos and confirmations (FA-014 .. FA-017, ``farmerapp.visits.sync_ops``),
-#: duty sessions and policy acceptances (writes land with FA-010 / FA-011).
+#: duty sessions and policy acceptances (writes land with FA-010 / FA-011). M3 adds the
+#: money-bearing entities (orders, lines, payments, khata entries): in the feed now, server
+#: wins on conflict, device writes land with FA-020 / FA-021 / FA-022.
 SYNC_ENTITIES: tuple[str, ...] = (
     "farmer",
     "farm",
@@ -45,6 +47,10 @@ SYNC_ENTITIES: tuple[str, ...] = (
     "duty_session",
     "policy_acceptance",
     "location_batch",  # write-only: points land in location_point, which is never in the feed
+    "order",
+    "order_line",
+    "payment",
+    "khata_entry",
 )
 #: Never in the change feed, whatever hook sees them: raw location points are high-volume
 #: telemetry the device already has (VV-001) and other officers must never receive (SPEC 2.6).

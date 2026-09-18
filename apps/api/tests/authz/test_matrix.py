@@ -257,6 +257,16 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
             "points": [{"ts": "2026-09-18T04:59:00Z", "lat": 18.02, "lon": 79.55, "accuracy_m": 8}],
         }
     ),
+    # M3 reads: scope outcomes (404 outside the caller's store / cluster / own records) are
+    # tested in tests/catalog and tests/orders.
+    "GET /v1/catalog/skus/{id}": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.sku_id)}
+    ),
+    "GET /v1/stores/{id}/stock": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.store_id)}
+    ),
+    "GET /v1/orders/{id}": RouteFixture(path_params=lambda ctx: {"id": str(ctx.target.order_id)}),
+    "GET /v1/farmers/{id}/khata": RouteFixture(path_params=_target_farmer_id),
     "POST /v1/policies/location/accept": RouteFixture(
         body=lambda _ctx: {
             "version": "2026-09-v1",

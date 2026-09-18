@@ -299,6 +299,42 @@ push / QR confirmations on visits made to them; the cluster head of the officer'
   (status / requested / expires), `override_request`, `score_components`,
   `integrity_issues` and `flags`.
 
+## Catalogue, stock, orders, payments, khata (M3 data model)
+
+Alembic `0011`; design notes in `docs/prs/M3-kickoff.md`. Money is `bigint` paise everywhere
+(`tests/catalog/test_models.py` fails on any numeric / float money column); GST is
+`gst_rate_bp` (1800 = 18 %).
+
+| Package | Tables | Helpers |
+|---|---|---|
+| `catalog/` | `product`, `sku`, `price_list`, `pest_or_disease`, `label_claim` | `pricing.price_for(session, sku_id, store_id, day)` (store override, else tenant default, latest `effective_from` in force; `None` → use MRP) |
+| `stock/` | `stock_batch` (qty = cache), `stock_movement` (append-only ledger) | `ledger.apply_movement(...)` (the only way to change stock: appends the movement and updates the batch in one flush, never below zero), `stock_on_hand(store, sku)` = sum of movements |
+| `orders/` | `order`, `order_line` | `line_total_paise`, `tax_paise`; `order_line.label_claim_id` = why a SKU was recommended |
+| `payments/` | `payment`, `webhook_event`, `day_close` | `provider_event_id` / `event_id` unique per tenant + provider (SEC-023 idempotency) |
+| `khata/` | `khata_entry` (append-only), `credit_limit` | `khata_balance(session, farmer, store=None, as_of=None)` = debits − credits (FA-022), `overdue_paise` |
+
+```python
+# stock: never touch stock_batch.qty directly
+await apply_movement(session, tenant_id=t, store_id=s, sku_id=k, kind=MovementKind.SALE,
+                     qty=Decimal(-2), batch=batch, ref_type="order", ref_id=order.id)
+# khata: a correction is a new entry, never an update (the app role cannot UPDATE / DELETE)
+balance = await khata_balance(session, farmer_id, store_id)
+```
+
+- **DX-007**: `label_claim.status` is `draft | approved | retired`; only approved claims are
+  returned to anyone but the agronomist / owner, and only approved claims may back a
+  recommendation. Seed claims carry `source_ref = SEED_SOURCE_REF` until the agronomist
+  replaces them with CIB&RC data (human gate).
+- Reads: `GET /v1/catalog/products` (`q`, `category`, `own_brand`, `store_id` adds price +
+  stock), `GET /v1/catalog/skus/{id}`, `GET /v1/catalog/label-claims`,
+  `GET /v1/stores/{id}/stock`, `GET /v1/orders[/{id}]`, `GET /v1/payments`,
+  `GET /v1/farmers/{id}/khata`; scope helpers in `auth/scope.py` (`store_filters`,
+  `order_filters`, `payment_filters`, `khata_farmer_filters`).
+- Sync: `order`, `order_line`, `payment`, `khata_entry` are in the feed with `server_wins`;
+  device writes return `unsupported_action` until FA-020 / FA-021 / FA-022 land.
+- Seed: `jobs/seed_catalog.py` (static products, packs, problems, claims) and
+  `jobs/seed_m3.py` (`M3_FULL` / `M3_SMALL` via `SeedProfile.m3`).
+
 ## Farmer registration writes (FA-012 / FA-013)
 
 `POST /v1/farmers` registers a farmer with nested `farms[{boundary GeoJSON, area_acres, soil,

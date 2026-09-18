@@ -22,6 +22,10 @@ and is seeded inside its own ``tenant_scope``; writes are attributed to the syst
 the audit trail (FA-006). Farms are inserted with ``eager_defaults``, so the database's
 generated ``centroid`` / ``area_acres_computed`` come back in the same flush.
 
+M3 (``farmerapp.jobs.seed_m3``): products, SKUs, price lists, the pest / disease master,
+label claims, stock batches and movements, orders, payments, webhook events, khata
+entries, credit limits and day closes (``SeedProfile.m3``).
+
 M2 (``farmerapp.jobs.seed_m2``): for every officer, ``SeedProfile.duty_days`` days of duty
 sessions ending on ``SEED_TODAY`` with location points, visits (photos, confirmations,
 VV-004 scores) and a policy acceptance. The daily ``location_point`` partitions for that
@@ -67,6 +71,7 @@ from farmerapp.farmers.models import (
     SoilType,
 )
 from farmerapp.jobs.seed_m2 import M2Generator, M2Profile
+from farmerapp.jobs.seed_m3 import M3_FULL, M3_SMALL, M3Generator, M3Profile
 from farmerapp.location import partitions
 from farmerapp.tenants.models import Cluster, Store, Village
 
@@ -142,6 +147,7 @@ class SeedProfile:
     visits_per_day: tuple[int, int] = (4, 7)  # M2: visits per officer-day (min, max)
     sparse_tracks: bool = False  # M2: ~25 points a day instead of ~150 (fixtures)
     fixed_outcomes: bool = False  # M2: one verified + one partial visit per officer (fixtures)
+    m3: M3Profile = M3_FULL  # M3: catalogue, stock, orders, payments, khata
 
     @property
     def m2(self) -> M2Profile:
@@ -163,6 +169,7 @@ SMALL = SeedProfile(
     visits_per_day=(2, 2),
     sparse_tracks=True,
     fixed_outcomes=True,
+    m3=M3_SMALL,
 )
 
 DEMO_TENANT_NAME = "Future Crop Care"
@@ -309,7 +316,11 @@ class SeedResult:
 
 SEEDED_TABLES = ("cluster", "store", "village", "crop", "farmer", "farm", "crop_plot",
                  "consent_record", "policy_acceptance", "duty_session", "visit", "visit_photo",
-                 "visit_confirmation", "location_point")  # fmt: skip
+                 "visit_confirmation", "location_point",
+                 # M3 (dependency order)
+                 "product", "sku", "price_list", "pest_or_disease", "label_claim",
+                 "stock_batch", "stock_movement", "order", "order_line", "khata_entry",
+                 "payment", "webhook_event", "credit_limit", "day_close")  # fmt: skip
 
 
 # --------------------------------------------------------------------------- generation
@@ -588,6 +599,17 @@ def _generate(
         tid,
         rng,
         profile.m2,
+        today=SEED_TODAY,
+        users=list(users_by_phone.values()),
+        rows=out.rows,
+        add=out.add,
+    ).generate()
+    # M3: catalogue, label claims, stock ledger, orders, payments, khata, day closes.
+    M3Generator(
+        tid,
+        demo.slug,
+        rng,
+        profile.m3,
         today=SEED_TODAY,
         users=list(users_by_phone.values()),
         rows=out.rows,

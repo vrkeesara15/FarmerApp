@@ -21,14 +21,19 @@ from farmerapp.auth import router as auth_routes
 from farmerapp.auth.deps import AuthServices, build_auth_services, tick
 from farmerapp.auth.policy import install_policies
 from farmerapp.auth.scheduler import InProcessScheduler
+from farmerapp.catalog import router as catalog_routes
 from farmerapp.db import models as _models  # noqa: F401  (registers models + audit listener)
 from farmerapp.duty import router as duty_routes
 from farmerapp.farmers import router as farmer_routes
+from farmerapp.khata import router as khata_routes
 from farmerapp.location import batch_router as location_batch_routes
 from farmerapp.location import router as location_routes
 from farmerapp.logging import configure_logging, get_logger
+from farmerapp.orders import router as order_routes
+from farmerapp.payments import router as payment_routes
 from farmerapp.policies import router as policy_routes
 from farmerapp.settings import Settings, get_settings
+from farmerapp.stock import router as stock_routes
 from farmerapp.sync import router as sync_routes
 from farmerapp.uploads import router as upload_routes
 from farmerapp.uploads.blobstore import BlobStore, build_blob_store
@@ -144,6 +149,12 @@ def create_app(
     v1.include_router(upload_routes.router)
     v1.include_router(upload_routes.blob_router)
     v1.include_router(audit_routes.router)
+    # M3: catalogue, stock, orders, payments, khata (read endpoints; writes are the loop's).
+    v1.include_router(catalog_routes.router)
+    v1.include_router(stock_routes.router)
+    v1.include_router(order_routes.router)
+    v1.include_router(payment_routes.router)
+    v1.include_router(khata_routes.router)
     app.include_router(v1)
 
     # FA-002: refuse to start unless every route declares a role policy (or is public), and
