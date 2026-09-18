@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../router.dart';
+import '../visits/visit_copy.dart';
 
 /// Farmers captured today (IST), live.
 final StreamProvider<int> farmersAddedTodayProvider = StreamProvider<int>((
@@ -39,6 +40,7 @@ class HomeScreen extends ConsumerWidget {
     final policy = ref.watch(locationPolicyProvider);
     final controller = ref.read(dutyControllerProvider.notifier);
     final farmersToday = ref.watch(farmersAddedTodayProvider).value ?? 0;
+    final verifiedToday = ref.watch(verifiedVisitsTodayProvider).value ?? 0;
     final blocked = policy.loaded && !policy.accepted;
     final autoEnd = controller.autoEndAt;
 
@@ -130,7 +132,7 @@ class HomeScreen extends ConsumerWidget {
                     children: <Widget>[
                       Expanded(
                         child: StatTile(
-                          value: '0',
+                          value: formatIndianDigits(verifiedToday),
                           label: l10n.statVisitsVerified,
                           icon: Icons.verified_outlined,
                         ),
@@ -187,11 +189,12 @@ class HomeScreen extends ConsumerWidget {
                         onPressed: () => context.push(AppRoutes.addFarmer),
                       ),
                       AppButton(
+                        key: const Key('home-start-visit'),
                         label: l10n.actionStartVisit,
                         icon: Icons.place_outlined,
                         variant: AppButtonVariant.secondary,
                         size: AppButtonSize.medium,
-                        onPressed: null,
+                        onPressed: () => context.push(VisitRoutes.start()),
                       ),
                       AppButton(
                         label: l10n.actionScoutCrop,
@@ -225,9 +228,11 @@ class HomeScreen extends ConsumerWidget {
           switch (i) {
             case 1:
               context.go(AppRoutes.farmers);
+            case 2:
+              context.go(AppRoutes.visits);
             case 4:
               context.go(AppRoutes.settings);
-            case 2 || 3:
+            case 3:
               ScaffoldMessenger.of(context)
                   .showSnackBar(SnackBar(content: Text(l10n.comingSoon)));
             default:

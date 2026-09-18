@@ -606,10 +606,13 @@ class SyncEngine {
             );
           }
         case SyncResultStatus.rejected:
-          await store.setResult(
-            op.opId,
-            OutboxState.rejected,
-            error: result.error ?? const SyncError('rejected'),
+          final error = result.error ?? const SyncError('rejected');
+          await store.setResult(op.opId, OutboxState.rejected, error: error);
+          await store.entities.markRejected(
+            op.entity,
+            op.entityId,
+            error,
+            now: now,
           );
       }
     }

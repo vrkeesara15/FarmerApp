@@ -883,5 +883,200 @@
   "myDayEndReasonRejected": "Not recorded",
   "syncEntityDutySession": "Duty session",
   "syncEntityLocationBatch": "Location points",
-  "syncEntityPolicyAcceptance": "Policy acceptance"
+  "syncEntityPolicyAcceptance": "Policy acceptance",
+  "visitsTitle": "Visits",
+  "visitsTabToday": "Today",
+  "visitsTabWeek": "This week",
+  "visitsFilterAll": "All",
+  "visitsEmptyTitle": "No visits yet",
+  "visitsEmptyHelp": "Start a visit from a farmer profile or with the button below.",
+  "visitStatusOpen": "In progress",
+  "visitCardPending": "Will sync when online",
+  "visitCardFailed": "Needs attention",
+  "visitChooseFarmer": "Choose a farmer",
+  "visitFarmLabel": "Farm",
+  "visitFarmNoBoundary": "No boundary recorded for this farm",
+  "visitPurposeLabel": "Purpose",
+  "visitOffDutyTitle": "Go on duty first",
+  "visitOffDutyBody": "Visits are recorded only while you are on duty. Switch duty on from Home and come back.",
+  "visitGoHome": "Go to Home",
+  "visitLocating": "Getting your location…",
+  "visitNoFix": "Could not get your location. Move under open sky and try again.",
+  "visitRefreshLocation": "Check location again",
+  "visitAccuracy": "Accuracy ±{metres} m",
+  "@visitAccuracy": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "visitInsideGeofence": "You are inside the farm geofence",
+  "visitAtMeetingPoint": "You are at the village meeting point",
+  "visitOutsideFarm": "{distance} m from the farm boundary; the geofence is {radius} m.",
+  "@visitOutsideFarm": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      },
+      "radius": {
+        "type": "int"
+      }
+    }
+  },
+  "visitOutsideMeeting": "{distance} m from the meeting point; the allowed radius is {radius} m.",
+  "@visitOutsideMeeting": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      },
+      "radius": {
+        "type": "int"
+      }
+    }
+  },
+  "visitNoTarget": "This farm has no boundary and the village has no meeting point. Check in with an override note.",
+  "visitRequestOverride": "Request override",
+  "visitOverrideNoteLabel": "Why are you checking in from here?",
+  "visitOverrideNoteHint": "e.g. Met the farmer at the market",
+  "visitOverrideNoteRequired": "Add a note to request an override",
+  "visitOverrideHelp": "Your cluster head reviews the override. The visit earns geofence credit only if it is approved.",
+  "visitCheckIn": "Check in",
+  "visitCheckInOverride": "Check in with override",
+  "visitInProgress": "Visit in progress",
+  "visitTimerLabel": "Time on visit",
+  "visitMinDuration": "Minimum {minutes} min",
+  "@visitMinDuration": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitDurationNeeds": "{minutes} min of {minimum} min",
+  "@visitDurationNeeds": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "minimum": {
+        "type": "int"
+      }
+    }
+  },
+  "visitUnderMinimum": "Under the minimum of {minutes} min. The visit is flagged, not rejected.",
+  "@visitUnderMinimum": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitPhotos": "Photos",
+  "visitTakePhoto": "Take photo",
+  "visitPhotoCount": "{count} photos",
+  "@visitPhotoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "visitPhotosHelp": "In-app camera only. Take at least one photo at the farm.",
+  "visitNotesLabel": "Notes",
+  "visitNotesHint": "What did you observe or advise?",
+  "visitVoiceInputSoon": "Voice input arrives in a later update",
+  "visitCropStageLabel": "Crop stage",
+  "cropStageSown": "Sown",
+  "cropStageMaturity": "Maturity",
+  "cropStageHarvested": "Harvested",
+  "visitProofTitle": "Proof of visit",
+  "visitExpectedScore": "Expected score",
+  "visitServerScore": "Score from the server",
+  "visitConfirmFarmer": "Farmer confirmation",
+  "visitCheckOut": "Check out",
+  "visitCheckInPending": "Check-in will sync when online",
+  "visitCheckInSynced": "Check-in synced",
+  "visitRejectedTitle": "Check-in refused",
+  "visitRejectedOutside": "The server placed you {distance} m outside the geofence.",
+  "@visitRejectedOutside": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      }
+    }
+  },
+  "visitRejectedNoTarget": "The server found nothing to check your location against.",
+  "visitRetryFromFarm": "Retry from the farm",
+  "visitRetryStillOutside": "Still {distance} m outside. Move closer or request an override.",
+  "@visitRetryStillOutside": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      }
+    }
+  },
+  "visitRetryQueued": "Check-in queued again with your current location.",
+  "proofGeofenceOverride": "Override requested; waiting for the cluster head",
+  "proofGeofenceOutside": "Outside the geofence",
+  "proofPhotoDone": "Photo with location taken",
+  "proofDurationDone": "Minimum duration reached",
+  "proofIntegrityIssue": "Device checks reported issues; this part scores 0",
+  "visitConfirmTitle": "Farmer confirmation",
+  "visitConfirmIntro": "Ask the farmer to confirm this visit in one of these ways.",
+  "visitConfirmOtp": "OTP by SMS",
+  "visitConfirmOtpHelp": "A code goes to the farmer’s phone; type it here.",
+  "visitConfirmPush": "Ask in Kisan app",
+  "visitConfirmPushHelp": "The farmer taps Confirm in their app.",
+  "visitConfirmQr": "Show QR",
+  "visitConfirmQrHelp": "The farmer scans this with the Kisan app.",
+  "visitConfirmNeedsNetwork": "This needs network. Try again when you are online.",
+  "visitConfirmQrNeedsSync": "The QR needs one sync first. Connect once and come back.",
+  "visitConfirmNotSynced": "The check-in has not reached the server yet. Sync and try again.",
+  "visitConfirmQueued": "Request saved. It goes to the farmer’s app as soon as you are online.",
+  "visitConfirmWaiting": "Waiting for the farmer…",
+  "visitConfirmWaitingPush": "We asked the farmer in the Kisan app. This screen updates when they confirm.",
+  "visitConfirmQrWaiting": "Waiting for the farmer to scan…",
+  "visitConfirmed": "Farmer confirmed",
+  "visitConfirmedVia": "Confirmed via {channel}",
+  "@visitConfirmedVia": {
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      }
+    }
+  },
+  "visitConfirmOtpSent": "Code sent to {phone}",
+  "@visitConfirmOtpSent": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "visitConfirmAlready": "This visit is already confirmed.",
+  "visitConfirmRefused": "The farmer cannot be asked this way right now. Try another option.",
+  "visitConfirmContinue": "Continue to check-out",
+  "visitConfirmLater": "Confirm later",
+  "visitConfirmExpires": "Expires in {minutes} min",
+  "@visitConfirmExpires": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitConfirmChooseAnother": "Choose another way",
+  "visitSummaryTitle": "Check-out summary",
+  "visitSummaryDuration": "Duration",
+  "visitSummaryMissing": "What was missing",
+  "visitSummaryComplete": "Everything is in place",
+  "visitSummaryPending": "The server confirms the score after the next sync",
+  "visitSummaryServer": "Score confirmed by the server",
+  "visitSummaryNotCheckedOut": "This visit is still open.",
+  "visitSummaryOverridePending": "Override waiting for review",
+  "visitDone": "Done",
+  "syncEntityVisit": "Visit",
+  "syncEntityVisitPhoto": "Visit photo",
+  "syncEntityVisitConfirmation": "Farmer confirmation"
 }

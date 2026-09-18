@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/token_store.dart' show generateUuidV4;
@@ -42,6 +45,14 @@ final Provider<ConnectivityMonitor> connectivityMonitorProvider =
 final Provider<BackgroundWorkScheduler> backgroundWorkSchedulerProvider =
     Provider<BackgroundWorkScheduler>((ref) => FakeBackgroundWorkScheduler());
 
+/// Reads a queued photo file for the uploader; tests override it with the
+/// in-memory photo store.
+final Provider<Future<Uint8List> Function(String path)> fileReaderProvider =
+    Provider<Future<Uint8List> Function(String path)>(
+      (ref) =>
+          (path) => File(path).readAsBytes(),
+    );
+
 /// The engine over [appDatabaseProvider], [syncApiProvider] and the device
 /// id from [tokenStoreProvider].
 final Provider<SyncEngine> syncEngineProvider = Provider<SyncEngine>((ref) {
@@ -50,6 +61,7 @@ final Provider<SyncEngine> syncEngineProvider = Provider<SyncEngine>((ref) {
     db: ref.watch(appDatabaseProvider),
     api: ref.watch(syncApiProvider),
     deviceId: store.deviceId,
+    readFile: ref.watch(fileReaderProvider),
   );
   ref.onDispose(engine.dispose);
   return engine;

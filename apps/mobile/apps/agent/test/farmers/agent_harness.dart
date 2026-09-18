@@ -38,7 +38,12 @@ class AgentDeps {
       probe = FakeDeviceIntegrityProbe(),
       policyApi = FakePolicyApi(),
       permissions = FakePermissionGate(),
-      tokens = InMemoryTokenStore(deviceId: 'device-1');
+      tokens = InMemoryTokenStore(deviceId: 'device-1') {
+    confirmApi = FakeVisitConfirmApi(clock: () => now);
+  }
+
+  /// FA-016 confirmation endpoints.
+  late final FakeVisitConfirmApi confirmApi;
 
   /// The database.
   final AppDatabase db;
@@ -117,6 +122,9 @@ class AgentDeps {
     tokenStoreProvider.overrideWithValue(tokens),
     appVersionProvider.overrideWithValue('0.1.0+1'),
     dutyTickerProvider.overrideWithValue(const Stream<void>.empty()),
+    visitTickerProvider.overrideWithValue(const Stream<void>.empty()),
+    visitConfirmApiProvider.overrideWithValue(confirmApi),
+    fileReaderProvider.overrideWithValue((path) async => photos.files[path]!),
     settingsStoreProvider.overrideWithValue(
       InMemorySettingsStore(AppSettings(locale: locale, themeMode: theme)),
     ),

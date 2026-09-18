@@ -5847,6 +5847,39 @@ class $VillagesTable extends Villages with TableInfo<$VillagesTable, Village> {
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _meetingPointLatMeta = const VerificationMeta(
+    'meetingPointLat',
+  );
+  @override
+  late final GeneratedColumn<double> meetingPointLat = GeneratedColumn<double>(
+    'meeting_point_lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _meetingPointLonMeta = const VerificationMeta(
+    'meetingPointLon',
+  );
+  @override
+  late final GeneratedColumn<double> meetingPointLon = GeneratedColumn<double>(
+    'meeting_point_lon',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _meetingPointRadiusMMeta =
+      const VerificationMeta('meetingPointRadiusM');
+  @override
+  late final GeneratedColumn<double> meetingPointRadiusM =
+      GeneratedColumn<double>(
+        'meeting_point_radius_m',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _versionMeta = const VerificationMeta(
     'version',
   );
@@ -5880,6 +5913,9 @@ class $VillagesTable extends Villages with TableInfo<$VillagesTable, Village> {
     storeId,
     latitude,
     longitude,
+    meetingPointLat,
+    meetingPointLon,
+    meetingPointRadiusM,
     version,
     updatedAt,
   ];
@@ -5944,6 +5980,33 @@ class $VillagesTable extends Villages with TableInfo<$VillagesTable, Village> {
         longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
       );
     }
+    if (data.containsKey('meeting_point_lat')) {
+      context.handle(
+        _meetingPointLatMeta,
+        meetingPointLat.isAcceptableOrUnknown(
+          data['meeting_point_lat']!,
+          _meetingPointLatMeta,
+        ),
+      );
+    }
+    if (data.containsKey('meeting_point_lon')) {
+      context.handle(
+        _meetingPointLonMeta,
+        meetingPointLon.isAcceptableOrUnknown(
+          data['meeting_point_lon']!,
+          _meetingPointLonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('meeting_point_radius_m')) {
+      context.handle(
+        _meetingPointRadiusMMeta,
+        meetingPointRadiusM.isAcceptableOrUnknown(
+          data['meeting_point_radius_m']!,
+          _meetingPointRadiusMMeta,
+        ),
+      );
+    }
     if (data.containsKey('version')) {
       context.handle(
         _versionMeta,
@@ -5999,6 +6062,18 @@ class $VillagesTable extends Villages with TableInfo<$VillagesTable, Village> {
         DriftSqlType.double,
         data['${effectivePrefix}longitude'],
       ),
+      meetingPointLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}meeting_point_lat'],
+      ),
+      meetingPointLon: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}meeting_point_lon'],
+      ),
+      meetingPointRadiusM: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}meeting_point_radius_m'],
+      ),
       version: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}version'],
@@ -6041,6 +6116,15 @@ class Village extends DataClass implements Insertable<Village> {
   /// Village centre longitude.
   final double? longitude;
 
+  /// Meeting point latitude (VV-003), if registered.
+  final double? meetingPointLat;
+
+  /// Meeting point longitude.
+  final double? meetingPointLon;
+
+  /// Meeting point radius (m); null = tenant default.
+  final double? meetingPointRadiusM;
+
   /// Server row version.
   final int version;
 
@@ -6055,6 +6139,9 @@ class Village extends DataClass implements Insertable<Village> {
     this.storeId,
     this.latitude,
     this.longitude,
+    this.meetingPointLat,
+    this.meetingPointLon,
+    this.meetingPointRadiusM,
     required this.version,
     required this.updatedAt,
   });
@@ -6074,6 +6161,15 @@ class Village extends DataClass implements Insertable<Village> {
     }
     if (!nullToAbsent || longitude != null) {
       map['longitude'] = Variable<double>(longitude);
+    }
+    if (!nullToAbsent || meetingPointLat != null) {
+      map['meeting_point_lat'] = Variable<double>(meetingPointLat);
+    }
+    if (!nullToAbsent || meetingPointLon != null) {
+      map['meeting_point_lon'] = Variable<double>(meetingPointLon);
+    }
+    if (!nullToAbsent || meetingPointRadiusM != null) {
+      map['meeting_point_radius_m'] = Variable<double>(meetingPointRadiusM);
     }
     map['version'] = Variable<int>(version);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -6096,6 +6192,15 @@ class Village extends DataClass implements Insertable<Village> {
       longitude: longitude == null && nullToAbsent
           ? const Value.absent()
           : Value(longitude),
+      meetingPointLat: meetingPointLat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(meetingPointLat),
+      meetingPointLon: meetingPointLon == null && nullToAbsent
+          ? const Value.absent()
+          : Value(meetingPointLon),
+      meetingPointRadiusM: meetingPointRadiusM == null && nullToAbsent
+          ? const Value.absent()
+          : Value(meetingPointRadiusM),
       version: Value(version),
       updatedAt: Value(updatedAt),
     );
@@ -6115,6 +6220,11 @@ class Village extends DataClass implements Insertable<Village> {
       storeId: serializer.fromJson<String?>(json['storeId']),
       latitude: serializer.fromJson<double?>(json['latitude']),
       longitude: serializer.fromJson<double?>(json['longitude']),
+      meetingPointLat: serializer.fromJson<double?>(json['meetingPointLat']),
+      meetingPointLon: serializer.fromJson<double?>(json['meetingPointLon']),
+      meetingPointRadiusM: serializer.fromJson<double?>(
+        json['meetingPointRadiusM'],
+      ),
       version: serializer.fromJson<int>(json['version']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -6131,6 +6241,9 @@ class Village extends DataClass implements Insertable<Village> {
       'storeId': serializer.toJson<String?>(storeId),
       'latitude': serializer.toJson<double?>(latitude),
       'longitude': serializer.toJson<double?>(longitude),
+      'meetingPointLat': serializer.toJson<double?>(meetingPointLat),
+      'meetingPointLon': serializer.toJson<double?>(meetingPointLon),
+      'meetingPointRadiusM': serializer.toJson<double?>(meetingPointRadiusM),
       'version': serializer.toJson<int>(version),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -6145,6 +6258,9 @@ class Village extends DataClass implements Insertable<Village> {
     Value<String?> storeId = const Value.absent(),
     Value<double?> latitude = const Value.absent(),
     Value<double?> longitude = const Value.absent(),
+    Value<double?> meetingPointLat = const Value.absent(),
+    Value<double?> meetingPointLon = const Value.absent(),
+    Value<double?> meetingPointRadiusM = const Value.absent(),
     int? version,
     DateTime? updatedAt,
   }) => Village(
@@ -6156,6 +6272,15 @@ class Village extends DataClass implements Insertable<Village> {
     storeId: storeId.present ? storeId.value : this.storeId,
     latitude: latitude.present ? latitude.value : this.latitude,
     longitude: longitude.present ? longitude.value : this.longitude,
+    meetingPointLat: meetingPointLat.present
+        ? meetingPointLat.value
+        : this.meetingPointLat,
+    meetingPointLon: meetingPointLon.present
+        ? meetingPointLon.value
+        : this.meetingPointLon,
+    meetingPointRadiusM: meetingPointRadiusM.present
+        ? meetingPointRadiusM.value
+        : this.meetingPointRadiusM,
     version: version ?? this.version,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -6169,6 +6294,15 @@ class Village extends DataClass implements Insertable<Village> {
       storeId: data.storeId.present ? data.storeId.value : this.storeId,
       latitude: data.latitude.present ? data.latitude.value : this.latitude,
       longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      meetingPointLat: data.meetingPointLat.present
+          ? data.meetingPointLat.value
+          : this.meetingPointLat,
+      meetingPointLon: data.meetingPointLon.present
+          ? data.meetingPointLon.value
+          : this.meetingPointLon,
+      meetingPointRadiusM: data.meetingPointRadiusM.present
+          ? data.meetingPointRadiusM.value
+          : this.meetingPointRadiusM,
       version: data.version.present ? data.version.value : this.version,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -6185,6 +6319,9 @@ class Village extends DataClass implements Insertable<Village> {
           ..write('storeId: $storeId, ')
           ..write('latitude: $latitude, ')
           ..write('longitude: $longitude, ')
+          ..write('meetingPointLat: $meetingPointLat, ')
+          ..write('meetingPointLon: $meetingPointLon, ')
+          ..write('meetingPointRadiusM: $meetingPointRadiusM, ')
           ..write('version: $version, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -6201,6 +6338,9 @@ class Village extends DataClass implements Insertable<Village> {
     storeId,
     latitude,
     longitude,
+    meetingPointLat,
+    meetingPointLon,
+    meetingPointRadiusM,
     version,
     updatedAt,
   );
@@ -6216,6 +6356,9 @@ class Village extends DataClass implements Insertable<Village> {
           other.storeId == this.storeId &&
           other.latitude == this.latitude &&
           other.longitude == this.longitude &&
+          other.meetingPointLat == this.meetingPointLat &&
+          other.meetingPointLon == this.meetingPointLon &&
+          other.meetingPointRadiusM == this.meetingPointRadiusM &&
           other.version == this.version &&
           other.updatedAt == this.updatedAt);
 }
@@ -6229,6 +6372,9 @@ class VillagesCompanion extends UpdateCompanion<Village> {
   final Value<String?> storeId;
   final Value<double?> latitude;
   final Value<double?> longitude;
+  final Value<double?> meetingPointLat;
+  final Value<double?> meetingPointLon;
+  final Value<double?> meetingPointRadiusM;
   final Value<int> version;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -6241,6 +6387,9 @@ class VillagesCompanion extends UpdateCompanion<Village> {
     this.storeId = const Value.absent(),
     this.latitude = const Value.absent(),
     this.longitude = const Value.absent(),
+    this.meetingPointLat = const Value.absent(),
+    this.meetingPointLon = const Value.absent(),
+    this.meetingPointRadiusM = const Value.absent(),
     this.version = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -6254,6 +6403,9 @@ class VillagesCompanion extends UpdateCompanion<Village> {
     this.storeId = const Value.absent(),
     this.latitude = const Value.absent(),
     this.longitude = const Value.absent(),
+    this.meetingPointLat = const Value.absent(),
+    this.meetingPointLon = const Value.absent(),
+    this.meetingPointRadiusM = const Value.absent(),
     this.version = const Value.absent(),
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -6269,6 +6421,9 @@ class VillagesCompanion extends UpdateCompanion<Village> {
     Expression<String>? storeId,
     Expression<double>? latitude,
     Expression<double>? longitude,
+    Expression<double>? meetingPointLat,
+    Expression<double>? meetingPointLon,
+    Expression<double>? meetingPointRadiusM,
     Expression<int>? version,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -6282,6 +6437,10 @@ class VillagesCompanion extends UpdateCompanion<Village> {
       if (storeId != null) 'store_id': storeId,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
+      if (meetingPointLat != null) 'meeting_point_lat': meetingPointLat,
+      if (meetingPointLon != null) 'meeting_point_lon': meetingPointLon,
+      if (meetingPointRadiusM != null)
+        'meeting_point_radius_m': meetingPointRadiusM,
       if (version != null) 'version': version,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -6297,6 +6456,9 @@ class VillagesCompanion extends UpdateCompanion<Village> {
     Value<String?>? storeId,
     Value<double?>? latitude,
     Value<double?>? longitude,
+    Value<double?>? meetingPointLat,
+    Value<double?>? meetingPointLon,
+    Value<double?>? meetingPointRadiusM,
     Value<int>? version,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -6310,6 +6472,9 @@ class VillagesCompanion extends UpdateCompanion<Village> {
       storeId: storeId ?? this.storeId,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      meetingPointLat: meetingPointLat ?? this.meetingPointLat,
+      meetingPointLon: meetingPointLon ?? this.meetingPointLon,
+      meetingPointRadiusM: meetingPointRadiusM ?? this.meetingPointRadiusM,
       version: version ?? this.version,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -6343,6 +6508,17 @@ class VillagesCompanion extends UpdateCompanion<Village> {
     if (longitude.present) {
       map['longitude'] = Variable<double>(longitude.value);
     }
+    if (meetingPointLat.present) {
+      map['meeting_point_lat'] = Variable<double>(meetingPointLat.value);
+    }
+    if (meetingPointLon.present) {
+      map['meeting_point_lon'] = Variable<double>(meetingPointLon.value);
+    }
+    if (meetingPointRadiusM.present) {
+      map['meeting_point_radius_m'] = Variable<double>(
+        meetingPointRadiusM.value,
+      );
+    }
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
@@ -6366,6 +6542,9 @@ class VillagesCompanion extends UpdateCompanion<Village> {
           ..write('storeId: $storeId, ')
           ..write('latitude: $latitude, ')
           ..write('longitude: $longitude, ')
+          ..write('meetingPointLat: $meetingPointLat, ')
+          ..write('meetingPointLon: $meetingPointLon, ')
+          ..write('meetingPointRadiusM: $meetingPointRadiusM, ')
           ..write('version: $version, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -8856,6 +9035,4124 @@ class SyncDocsCompanion extends UpdateCompanion<SyncDoc> {
   }
 }
 
+class $VisitsTable extends Visits with TableInfo<$VisitsTable, Visit> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VisitsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _farmerIdMeta = const VerificationMeta(
+    'farmerId',
+  );
+  @override
+  late final GeneratedColumn<String> farmerId = GeneratedColumn<String>(
+    'farmer_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _farmIdMeta = const VerificationMeta('farmId');
+  @override
+  late final GeneratedColumn<String> farmId = GeneratedColumn<String>(
+    'farm_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _villageIdMeta = const VerificationMeta(
+    'villageId',
+  );
+  @override
+  late final GeneratedColumn<String> villageId = GeneratedColumn<String>(
+    'village_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _purposeMeta = const VerificationMeta(
+    'purpose',
+  );
+  @override
+  late final GeneratedColumn<String> purpose = GeneratedColumn<String>(
+    'purpose',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('advisory'),
+  );
+  static const VerificationMeta _checkinAtMeta = const VerificationMeta(
+    'checkinAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> checkinAt = GeneratedColumn<DateTime>(
+    'checkin_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _checkinLatMeta = const VerificationMeta(
+    'checkinLat',
+  );
+  @override
+  late final GeneratedColumn<double> checkinLat = GeneratedColumn<double>(
+    'checkin_lat',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _checkinLonMeta = const VerificationMeta(
+    'checkinLon',
+  );
+  @override
+  late final GeneratedColumn<double> checkinLon = GeneratedColumn<double>(
+    'checkin_lon',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _checkinAccuracyMMeta = const VerificationMeta(
+    'checkinAccuracyM',
+  );
+  @override
+  late final GeneratedColumn<double> checkinAccuracyM = GeneratedColumn<double>(
+    'checkin_accuracy_m',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _checkoutAtMeta = const VerificationMeta(
+    'checkoutAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> checkoutAt = GeneratedColumn<DateTime>(
+    'checkout_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _checkoutLatMeta = const VerificationMeta(
+    'checkoutLat',
+  );
+  @override
+  late final GeneratedColumn<double> checkoutLat = GeneratedColumn<double>(
+    'checkout_lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _checkoutLonMeta = const VerificationMeta(
+    'checkoutLon',
+  );
+  @override
+  late final GeneratedColumn<double> checkoutLon = GeneratedColumn<double>(
+    'checkout_lon',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _geofenceResultMeta = const VerificationMeta(
+    'geofenceResult',
+  );
+  @override
+  late final GeneratedColumn<String> geofenceResult = GeneratedColumn<String>(
+    'geofence_result',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _precheckResultMeta = const VerificationMeta(
+    'precheckResult',
+  );
+  @override
+  late final GeneratedColumn<String> precheckResult = GeneratedColumn<String>(
+    'precheck_result',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _precheckDistanceMMeta = const VerificationMeta(
+    'precheckDistanceM',
+  );
+  @override
+  late final GeneratedColumn<double> precheckDistanceM =
+      GeneratedColumn<double>(
+        'precheck_distance_m',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _precheckTargetMeta = const VerificationMeta(
+    'precheckTarget',
+  );
+  @override
+  late final GeneratedColumn<String> precheckTarget = GeneratedColumn<String>(
+    'precheck_target',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _precheckRadiusMMeta = const VerificationMeta(
+    'precheckRadiusM',
+  );
+  @override
+  late final GeneratedColumn<double> precheckRadiusM = GeneratedColumn<double>(
+    'precheck_radius_m',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _overrideNoteMeta = const VerificationMeta(
+    'overrideNote',
+  );
+  @override
+  late final GeneratedColumn<String> overrideNote = GeneratedColumn<String>(
+    'override_note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _overrideApprovedByMeta =
+      const VerificationMeta('overrideApprovedBy');
+  @override
+  late final GeneratedColumn<String> overrideApprovedBy =
+      GeneratedColumn<String>(
+        'override_approved_by',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cropStageMeta = const VerificationMeta(
+    'cropStage',
+  );
+  @override
+  late final GeneratedColumn<String> cropStage = GeneratedColumn<String>(
+    'crop_stage',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationSMeta = const VerificationMeta(
+    'durationS',
+  );
+  @override
+  late final GeneratedColumn<int> durationS = GeneratedColumn<int>(
+    'duration_s',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _scoreMeta = const VerificationMeta('score');
+  @override
+  late final GeneratedColumn<int> score = GeneratedColumn<int>(
+    'score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('open'),
+  );
+  static const VerificationMeta _confirmationChannelMeta =
+      const VerificationMeta('confirmationChannel');
+  @override
+  late final GeneratedColumn<String> confirmationChannel =
+      GeneratedColumn<String>(
+        'confirmation_channel',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('none'),
+      );
+  static const VerificationMeta _confirmedAtMeta = const VerificationMeta(
+    'confirmedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> confirmedAt = GeneratedColumn<DateTime>(
+    'confirmed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIntegrityMeta = const VerificationMeta(
+    'deviceIntegrity',
+  );
+  @override
+  late final GeneratedColumn<String> deviceIntegrity = GeneratedColumn<String>(
+    'device_integrity',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _integrityIssuesMeta = const VerificationMeta(
+    'integrityIssues',
+  );
+  @override
+  late final GeneratedColumn<String> integrityIssues = GeneratedColumn<String>(
+    'integrity_issues',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _flagsMeta = const VerificationMeta('flags');
+  @override
+  late final GeneratedColumn<String> flags = GeneratedColumn<String>(
+    'flags',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _scoreComponentsMeta = const VerificationMeta(
+    'scoreComponents',
+  );
+  @override
+  late final GeneratedColumn<String> scoreComponents = GeneratedColumn<String>(
+    'score_components',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _clientVisitIdMeta = const VerificationMeta(
+    'clientVisitId',
+  );
+  @override
+  late final GeneratedColumn<String> clientVisitId = GeneratedColumn<String>(
+    'client_visit_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _officerIdMeta = const VerificationMeta(
+    'officerId',
+  );
+  @override
+  late final GeneratedColumn<String> officerId = GeneratedColumn<String>(
+    'officer_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _failureCodeMeta = const VerificationMeta(
+    'failureCode',
+  );
+  @override
+  late final GeneratedColumn<String> failureCode = GeneratedColumn<String>(
+    'failure_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _failureDetailMeta = const VerificationMeta(
+    'failureDetail',
+  );
+  @override
+  late final GeneratedColumn<String> failureDetail = GeneratedColumn<String>(
+    'failure_detail',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _extraMeta = const VerificationMeta('extra');
+  @override
+  late final GeneratedColumn<String> extra = GeneratedColumn<String>(
+    'extra',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    version,
+    updatedAt,
+    dirty,
+    deleted,
+    farmerId,
+    farmId,
+    villageId,
+    purpose,
+    checkinAt,
+    checkinLat,
+    checkinLon,
+    checkinAccuracyM,
+    checkoutAt,
+    checkoutLat,
+    checkoutLon,
+    geofenceResult,
+    precheckResult,
+    precheckDistanceM,
+    precheckTarget,
+    precheckRadiusM,
+    overrideNote,
+    overrideApprovedBy,
+    notes,
+    cropStage,
+    durationS,
+    score,
+    status,
+    confirmationChannel,
+    confirmedAt,
+    deviceIntegrity,
+    integrityIssues,
+    flags,
+    scoreComponents,
+    clientVisitId,
+    officerId,
+    failureCode,
+    failureDetail,
+    extra,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'visits';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Visit> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('farmer_id')) {
+      context.handle(
+        _farmerIdMeta,
+        farmerId.isAcceptableOrUnknown(data['farmer_id']!, _farmerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_farmerIdMeta);
+    }
+    if (data.containsKey('farm_id')) {
+      context.handle(
+        _farmIdMeta,
+        farmId.isAcceptableOrUnknown(data['farm_id']!, _farmIdMeta),
+      );
+    }
+    if (data.containsKey('village_id')) {
+      context.handle(
+        _villageIdMeta,
+        villageId.isAcceptableOrUnknown(data['village_id']!, _villageIdMeta),
+      );
+    }
+    if (data.containsKey('purpose')) {
+      context.handle(
+        _purposeMeta,
+        purpose.isAcceptableOrUnknown(data['purpose']!, _purposeMeta),
+      );
+    }
+    if (data.containsKey('checkin_at')) {
+      context.handle(
+        _checkinAtMeta,
+        checkinAt.isAcceptableOrUnknown(data['checkin_at']!, _checkinAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_checkinAtMeta);
+    }
+    if (data.containsKey('checkin_lat')) {
+      context.handle(
+        _checkinLatMeta,
+        checkinLat.isAcceptableOrUnknown(data['checkin_lat']!, _checkinLatMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_checkinLatMeta);
+    }
+    if (data.containsKey('checkin_lon')) {
+      context.handle(
+        _checkinLonMeta,
+        checkinLon.isAcceptableOrUnknown(data['checkin_lon']!, _checkinLonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_checkinLonMeta);
+    }
+    if (data.containsKey('checkin_accuracy_m')) {
+      context.handle(
+        _checkinAccuracyMMeta,
+        checkinAccuracyM.isAcceptableOrUnknown(
+          data['checkin_accuracy_m']!,
+          _checkinAccuracyMMeta,
+        ),
+      );
+    }
+    if (data.containsKey('checkout_at')) {
+      context.handle(
+        _checkoutAtMeta,
+        checkoutAt.isAcceptableOrUnknown(data['checkout_at']!, _checkoutAtMeta),
+      );
+    }
+    if (data.containsKey('checkout_lat')) {
+      context.handle(
+        _checkoutLatMeta,
+        checkoutLat.isAcceptableOrUnknown(
+          data['checkout_lat']!,
+          _checkoutLatMeta,
+        ),
+      );
+    }
+    if (data.containsKey('checkout_lon')) {
+      context.handle(
+        _checkoutLonMeta,
+        checkoutLon.isAcceptableOrUnknown(
+          data['checkout_lon']!,
+          _checkoutLonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('geofence_result')) {
+      context.handle(
+        _geofenceResultMeta,
+        geofenceResult.isAcceptableOrUnknown(
+          data['geofence_result']!,
+          _geofenceResultMeta,
+        ),
+      );
+    }
+    if (data.containsKey('precheck_result')) {
+      context.handle(
+        _precheckResultMeta,
+        precheckResult.isAcceptableOrUnknown(
+          data['precheck_result']!,
+          _precheckResultMeta,
+        ),
+      );
+    }
+    if (data.containsKey('precheck_distance_m')) {
+      context.handle(
+        _precheckDistanceMMeta,
+        precheckDistanceM.isAcceptableOrUnknown(
+          data['precheck_distance_m']!,
+          _precheckDistanceMMeta,
+        ),
+      );
+    }
+    if (data.containsKey('precheck_target')) {
+      context.handle(
+        _precheckTargetMeta,
+        precheckTarget.isAcceptableOrUnknown(
+          data['precheck_target']!,
+          _precheckTargetMeta,
+        ),
+      );
+    }
+    if (data.containsKey('precheck_radius_m')) {
+      context.handle(
+        _precheckRadiusMMeta,
+        precheckRadiusM.isAcceptableOrUnknown(
+          data['precheck_radius_m']!,
+          _precheckRadiusMMeta,
+        ),
+      );
+    }
+    if (data.containsKey('override_note')) {
+      context.handle(
+        _overrideNoteMeta,
+        overrideNote.isAcceptableOrUnknown(
+          data['override_note']!,
+          _overrideNoteMeta,
+        ),
+      );
+    }
+    if (data.containsKey('override_approved_by')) {
+      context.handle(
+        _overrideApprovedByMeta,
+        overrideApprovedBy.isAcceptableOrUnknown(
+          data['override_approved_by']!,
+          _overrideApprovedByMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('crop_stage')) {
+      context.handle(
+        _cropStageMeta,
+        cropStage.isAcceptableOrUnknown(data['crop_stage']!, _cropStageMeta),
+      );
+    }
+    if (data.containsKey('duration_s')) {
+      context.handle(
+        _durationSMeta,
+        durationS.isAcceptableOrUnknown(data['duration_s']!, _durationSMeta),
+      );
+    }
+    if (data.containsKey('score')) {
+      context.handle(
+        _scoreMeta,
+        score.isAcceptableOrUnknown(data['score']!, _scoreMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('confirmation_channel')) {
+      context.handle(
+        _confirmationChannelMeta,
+        confirmationChannel.isAcceptableOrUnknown(
+          data['confirmation_channel']!,
+          _confirmationChannelMeta,
+        ),
+      );
+    }
+    if (data.containsKey('confirmed_at')) {
+      context.handle(
+        _confirmedAtMeta,
+        confirmedAt.isAcceptableOrUnknown(
+          data['confirmed_at']!,
+          _confirmedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('device_integrity')) {
+      context.handle(
+        _deviceIntegrityMeta,
+        deviceIntegrity.isAcceptableOrUnknown(
+          data['device_integrity']!,
+          _deviceIntegrityMeta,
+        ),
+      );
+    }
+    if (data.containsKey('integrity_issues')) {
+      context.handle(
+        _integrityIssuesMeta,
+        integrityIssues.isAcceptableOrUnknown(
+          data['integrity_issues']!,
+          _integrityIssuesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('flags')) {
+      context.handle(
+        _flagsMeta,
+        flags.isAcceptableOrUnknown(data['flags']!, _flagsMeta),
+      );
+    }
+    if (data.containsKey('score_components')) {
+      context.handle(
+        _scoreComponentsMeta,
+        scoreComponents.isAcceptableOrUnknown(
+          data['score_components']!,
+          _scoreComponentsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('client_visit_id')) {
+      context.handle(
+        _clientVisitIdMeta,
+        clientVisitId.isAcceptableOrUnknown(
+          data['client_visit_id']!,
+          _clientVisitIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('officer_id')) {
+      context.handle(
+        _officerIdMeta,
+        officerId.isAcceptableOrUnknown(data['officer_id']!, _officerIdMeta),
+      );
+    }
+    if (data.containsKey('failure_code')) {
+      context.handle(
+        _failureCodeMeta,
+        failureCode.isAcceptableOrUnknown(
+          data['failure_code']!,
+          _failureCodeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('failure_detail')) {
+      context.handle(
+        _failureDetailMeta,
+        failureDetail.isAcceptableOrUnknown(
+          data['failure_detail']!,
+          _failureDetailMeta,
+        ),
+      );
+    }
+    if (data.containsKey('extra')) {
+      context.handle(
+        _extraMeta,
+        extra.isAcceptableOrUnknown(data['extra']!, _extraMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Visit map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Visit(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      farmerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}farmer_id'],
+      )!,
+      farmId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}farm_id'],
+      ),
+      villageId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}village_id'],
+      ),
+      purpose: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}purpose'],
+      )!,
+      checkinAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}checkin_at'],
+      )!,
+      checkinLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}checkin_lat'],
+      )!,
+      checkinLon: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}checkin_lon'],
+      )!,
+      checkinAccuracyM: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}checkin_accuracy_m'],
+      ),
+      checkoutAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}checkout_at'],
+      ),
+      checkoutLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}checkout_lat'],
+      ),
+      checkoutLon: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}checkout_lon'],
+      ),
+      geofenceResult: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}geofence_result'],
+      ),
+      precheckResult: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}precheck_result'],
+      ),
+      precheckDistanceM: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}precheck_distance_m'],
+      ),
+      precheckTarget: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}precheck_target'],
+      ),
+      precheckRadiusM: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}precheck_radius_m'],
+      ),
+      overrideNote: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}override_note'],
+      ),
+      overrideApprovedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}override_approved_by'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      cropStage: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}crop_stage'],
+      ),
+      durationS: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_s'],
+      ),
+      score: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}score'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      confirmationChannel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}confirmation_channel'],
+      )!,
+      confirmedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}confirmed_at'],
+      ),
+      deviceIntegrity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_integrity'],
+      )!,
+      integrityIssues: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}integrity_issues'],
+      )!,
+      flags: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}flags'],
+      )!,
+      scoreComponents: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}score_components'],
+      ),
+      clientVisitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}client_visit_id'],
+      ),
+      officerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}officer_id'],
+      ),
+      failureCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}failure_code'],
+      ),
+      failureDetail: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}failure_detail'],
+      ),
+      extra: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}extra'],
+      )!,
+    );
+  }
+
+  @override
+  $VisitsTable createAlias(String alias) {
+    return $VisitsTable(attachedDatabase, alias);
+  }
+}
+
+class Visit extends DataClass implements Insertable<Visit> {
+  /// Client-generated uuid, also the server id.
+  final String id;
+
+  /// Server row version; 0 while the create is still queued.
+  final int version;
+
+  /// Last local write (UTC).
+  final DateTime updatedAt;
+
+  /// A queued op still references this row.
+  final bool dirty;
+
+  /// Deleted locally; removed once the server confirms.
+  final bool deleted;
+
+  /// Farmer visited.
+  final String farmerId;
+
+  /// Farm (geofence target), if any.
+  final String? farmId;
+
+  /// Meeting-point village, if any.
+  final String? villageId;
+
+  /// `advisory` | `scouting` | `demo` | `collection` | `sale` | `meeting`.
+  final String purpose;
+
+  /// Check-in time (UTC, device clock).
+  final DateTime checkinAt;
+
+  /// Check-in fix latitude.
+  final double checkinLat;
+
+  /// Check-in fix longitude.
+  final double checkinLon;
+
+  /// Check-in fix accuracy (m).
+  final double? checkinAccuracyM;
+
+  /// Check-out time (UTC); null while open.
+  final DateTime? checkoutAt;
+
+  /// Check-out fix latitude.
+  final double? checkoutLat;
+
+  /// Check-out fix longitude.
+  final double? checkoutLon;
+
+  /// Server `geofence_result` (inside | outside | meeting_point | override).
+  final String? geofenceResult;
+
+  /// Client pre-check result (inside | meeting_point | outside).
+  final String? precheckResult;
+
+  /// Client pre-check distance to the target (m).
+  final double? precheckDistanceM;
+
+  /// Client pre-check target (`farm` | `meeting_point`).
+  final String? precheckTarget;
+
+  /// Client pre-check radius (m).
+  final double? precheckRadiusM;
+
+  /// FA-014 override note (outside the geofence).
+  final String? overrideNote;
+
+  /// Cluster head who approved the override, once decided.
+  final String? overrideApprovedBy;
+
+  /// FA-015 notes.
+  final String? notes;
+
+  /// FA-015 crop stage.
+  final String? cropStage;
+
+  /// Server-computed duration (s).
+  final int? durationS;
+
+  /// Server VV-004 score; null while open.
+  final int? score;
+
+  /// Server VV-005 status (`open` until check-out).
+  final String status;
+
+  /// `sms_otp` | `app_push` | `qr` | `none`.
+  final String confirmationChannel;
+
+  /// Server-owned confirmation time.
+  final DateTime? confirmedAt;
+
+  /// JSON `{is_mock, is_rooted, clock_drift_s}` at check-in (FA-028).
+  final String deviceIntegrity;
+
+  /// JSON list of server integrity issues.
+  final String integrityIssues;
+
+  /// JSON list of server flags (`under_minimum`).
+  final String flags;
+
+  /// JSON `{geofence, confirmation, photo, duration, integrity}` from the
+  /// server; null until the server has seen the visit.
+  final String? scoreComponents;
+
+  /// The device's own id for replays (defaults to `id`).
+  final String? clientVisitId;
+
+  /// Officer (server-assigned).
+  final String? officerId;
+
+  /// Problem code of a rejected check-in (`outside_geofence`).
+  final String? failureCode;
+
+  /// JSON `{detail, distance_m, target, radius_m}` of the rejection.
+  final String? failureDetail;
+
+  /// JSON of server fields this app does not model.
+  final String extra;
+  const Visit({
+    required this.id,
+    required this.version,
+    required this.updatedAt,
+    required this.dirty,
+    required this.deleted,
+    required this.farmerId,
+    this.farmId,
+    this.villageId,
+    required this.purpose,
+    required this.checkinAt,
+    required this.checkinLat,
+    required this.checkinLon,
+    this.checkinAccuracyM,
+    this.checkoutAt,
+    this.checkoutLat,
+    this.checkoutLon,
+    this.geofenceResult,
+    this.precheckResult,
+    this.precheckDistanceM,
+    this.precheckTarget,
+    this.precheckRadiusM,
+    this.overrideNote,
+    this.overrideApprovedBy,
+    this.notes,
+    this.cropStage,
+    this.durationS,
+    this.score,
+    required this.status,
+    required this.confirmationChannel,
+    this.confirmedAt,
+    required this.deviceIntegrity,
+    required this.integrityIssues,
+    required this.flags,
+    this.scoreComponents,
+    this.clientVisitId,
+    this.officerId,
+    this.failureCode,
+    this.failureDetail,
+    required this.extra,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['version'] = Variable<int>(version);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['dirty'] = Variable<bool>(dirty);
+    map['deleted'] = Variable<bool>(deleted);
+    map['farmer_id'] = Variable<String>(farmerId);
+    if (!nullToAbsent || farmId != null) {
+      map['farm_id'] = Variable<String>(farmId);
+    }
+    if (!nullToAbsent || villageId != null) {
+      map['village_id'] = Variable<String>(villageId);
+    }
+    map['purpose'] = Variable<String>(purpose);
+    map['checkin_at'] = Variable<DateTime>(checkinAt);
+    map['checkin_lat'] = Variable<double>(checkinLat);
+    map['checkin_lon'] = Variable<double>(checkinLon);
+    if (!nullToAbsent || checkinAccuracyM != null) {
+      map['checkin_accuracy_m'] = Variable<double>(checkinAccuracyM);
+    }
+    if (!nullToAbsent || checkoutAt != null) {
+      map['checkout_at'] = Variable<DateTime>(checkoutAt);
+    }
+    if (!nullToAbsent || checkoutLat != null) {
+      map['checkout_lat'] = Variable<double>(checkoutLat);
+    }
+    if (!nullToAbsent || checkoutLon != null) {
+      map['checkout_lon'] = Variable<double>(checkoutLon);
+    }
+    if (!nullToAbsent || geofenceResult != null) {
+      map['geofence_result'] = Variable<String>(geofenceResult);
+    }
+    if (!nullToAbsent || precheckResult != null) {
+      map['precheck_result'] = Variable<String>(precheckResult);
+    }
+    if (!nullToAbsent || precheckDistanceM != null) {
+      map['precheck_distance_m'] = Variable<double>(precheckDistanceM);
+    }
+    if (!nullToAbsent || precheckTarget != null) {
+      map['precheck_target'] = Variable<String>(precheckTarget);
+    }
+    if (!nullToAbsent || precheckRadiusM != null) {
+      map['precheck_radius_m'] = Variable<double>(precheckRadiusM);
+    }
+    if (!nullToAbsent || overrideNote != null) {
+      map['override_note'] = Variable<String>(overrideNote);
+    }
+    if (!nullToAbsent || overrideApprovedBy != null) {
+      map['override_approved_by'] = Variable<String>(overrideApprovedBy);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || cropStage != null) {
+      map['crop_stage'] = Variable<String>(cropStage);
+    }
+    if (!nullToAbsent || durationS != null) {
+      map['duration_s'] = Variable<int>(durationS);
+    }
+    if (!nullToAbsent || score != null) {
+      map['score'] = Variable<int>(score);
+    }
+    map['status'] = Variable<String>(status);
+    map['confirmation_channel'] = Variable<String>(confirmationChannel);
+    if (!nullToAbsent || confirmedAt != null) {
+      map['confirmed_at'] = Variable<DateTime>(confirmedAt);
+    }
+    map['device_integrity'] = Variable<String>(deviceIntegrity);
+    map['integrity_issues'] = Variable<String>(integrityIssues);
+    map['flags'] = Variable<String>(flags);
+    if (!nullToAbsent || scoreComponents != null) {
+      map['score_components'] = Variable<String>(scoreComponents);
+    }
+    if (!nullToAbsent || clientVisitId != null) {
+      map['client_visit_id'] = Variable<String>(clientVisitId);
+    }
+    if (!nullToAbsent || officerId != null) {
+      map['officer_id'] = Variable<String>(officerId);
+    }
+    if (!nullToAbsent || failureCode != null) {
+      map['failure_code'] = Variable<String>(failureCode);
+    }
+    if (!nullToAbsent || failureDetail != null) {
+      map['failure_detail'] = Variable<String>(failureDetail);
+    }
+    map['extra'] = Variable<String>(extra);
+    return map;
+  }
+
+  VisitsCompanion toCompanion(bool nullToAbsent) {
+    return VisitsCompanion(
+      id: Value(id),
+      version: Value(version),
+      updatedAt: Value(updatedAt),
+      dirty: Value(dirty),
+      deleted: Value(deleted),
+      farmerId: Value(farmerId),
+      farmId: farmId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(farmId),
+      villageId: villageId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(villageId),
+      purpose: Value(purpose),
+      checkinAt: Value(checkinAt),
+      checkinLat: Value(checkinLat),
+      checkinLon: Value(checkinLon),
+      checkinAccuracyM: checkinAccuracyM == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkinAccuracyM),
+      checkoutAt: checkoutAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkoutAt),
+      checkoutLat: checkoutLat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkoutLat),
+      checkoutLon: checkoutLon == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkoutLon),
+      geofenceResult: geofenceResult == null && nullToAbsent
+          ? const Value.absent()
+          : Value(geofenceResult),
+      precheckResult: precheckResult == null && nullToAbsent
+          ? const Value.absent()
+          : Value(precheckResult),
+      precheckDistanceM: precheckDistanceM == null && nullToAbsent
+          ? const Value.absent()
+          : Value(precheckDistanceM),
+      precheckTarget: precheckTarget == null && nullToAbsent
+          ? const Value.absent()
+          : Value(precheckTarget),
+      precheckRadiusM: precheckRadiusM == null && nullToAbsent
+          ? const Value.absent()
+          : Value(precheckRadiusM),
+      overrideNote: overrideNote == null && nullToAbsent
+          ? const Value.absent()
+          : Value(overrideNote),
+      overrideApprovedBy: overrideApprovedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(overrideApprovedBy),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      cropStage: cropStage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cropStage),
+      durationS: durationS == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durationS),
+      score: score == null && nullToAbsent
+          ? const Value.absent()
+          : Value(score),
+      status: Value(status),
+      confirmationChannel: Value(confirmationChannel),
+      confirmedAt: confirmedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(confirmedAt),
+      deviceIntegrity: Value(deviceIntegrity),
+      integrityIssues: Value(integrityIssues),
+      flags: Value(flags),
+      scoreComponents: scoreComponents == null && nullToAbsent
+          ? const Value.absent()
+          : Value(scoreComponents),
+      clientVisitId: clientVisitId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(clientVisitId),
+      officerId: officerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(officerId),
+      failureCode: failureCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(failureCode),
+      failureDetail: failureDetail == null && nullToAbsent
+          ? const Value.absent()
+          : Value(failureDetail),
+      extra: Value(extra),
+    );
+  }
+
+  factory Visit.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Visit(
+      id: serializer.fromJson<String>(json['id']),
+      version: serializer.fromJson<int>(json['version']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      farmerId: serializer.fromJson<String>(json['farmerId']),
+      farmId: serializer.fromJson<String?>(json['farmId']),
+      villageId: serializer.fromJson<String?>(json['villageId']),
+      purpose: serializer.fromJson<String>(json['purpose']),
+      checkinAt: serializer.fromJson<DateTime>(json['checkinAt']),
+      checkinLat: serializer.fromJson<double>(json['checkinLat']),
+      checkinLon: serializer.fromJson<double>(json['checkinLon']),
+      checkinAccuracyM: serializer.fromJson<double?>(json['checkinAccuracyM']),
+      checkoutAt: serializer.fromJson<DateTime?>(json['checkoutAt']),
+      checkoutLat: serializer.fromJson<double?>(json['checkoutLat']),
+      checkoutLon: serializer.fromJson<double?>(json['checkoutLon']),
+      geofenceResult: serializer.fromJson<String?>(json['geofenceResult']),
+      precheckResult: serializer.fromJson<String?>(json['precheckResult']),
+      precheckDistanceM: serializer.fromJson<double?>(
+        json['precheckDistanceM'],
+      ),
+      precheckTarget: serializer.fromJson<String?>(json['precheckTarget']),
+      precheckRadiusM: serializer.fromJson<double?>(json['precheckRadiusM']),
+      overrideNote: serializer.fromJson<String?>(json['overrideNote']),
+      overrideApprovedBy: serializer.fromJson<String?>(
+        json['overrideApprovedBy'],
+      ),
+      notes: serializer.fromJson<String?>(json['notes']),
+      cropStage: serializer.fromJson<String?>(json['cropStage']),
+      durationS: serializer.fromJson<int?>(json['durationS']),
+      score: serializer.fromJson<int?>(json['score']),
+      status: serializer.fromJson<String>(json['status']),
+      confirmationChannel: serializer.fromJson<String>(
+        json['confirmationChannel'],
+      ),
+      confirmedAt: serializer.fromJson<DateTime?>(json['confirmedAt']),
+      deviceIntegrity: serializer.fromJson<String>(json['deviceIntegrity']),
+      integrityIssues: serializer.fromJson<String>(json['integrityIssues']),
+      flags: serializer.fromJson<String>(json['flags']),
+      scoreComponents: serializer.fromJson<String?>(json['scoreComponents']),
+      clientVisitId: serializer.fromJson<String?>(json['clientVisitId']),
+      officerId: serializer.fromJson<String?>(json['officerId']),
+      failureCode: serializer.fromJson<String?>(json['failureCode']),
+      failureDetail: serializer.fromJson<String?>(json['failureDetail']),
+      extra: serializer.fromJson<String>(json['extra']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'version': serializer.toJson<int>(version),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'deleted': serializer.toJson<bool>(deleted),
+      'farmerId': serializer.toJson<String>(farmerId),
+      'farmId': serializer.toJson<String?>(farmId),
+      'villageId': serializer.toJson<String?>(villageId),
+      'purpose': serializer.toJson<String>(purpose),
+      'checkinAt': serializer.toJson<DateTime>(checkinAt),
+      'checkinLat': serializer.toJson<double>(checkinLat),
+      'checkinLon': serializer.toJson<double>(checkinLon),
+      'checkinAccuracyM': serializer.toJson<double?>(checkinAccuracyM),
+      'checkoutAt': serializer.toJson<DateTime?>(checkoutAt),
+      'checkoutLat': serializer.toJson<double?>(checkoutLat),
+      'checkoutLon': serializer.toJson<double?>(checkoutLon),
+      'geofenceResult': serializer.toJson<String?>(geofenceResult),
+      'precheckResult': serializer.toJson<String?>(precheckResult),
+      'precheckDistanceM': serializer.toJson<double?>(precheckDistanceM),
+      'precheckTarget': serializer.toJson<String?>(precheckTarget),
+      'precheckRadiusM': serializer.toJson<double?>(precheckRadiusM),
+      'overrideNote': serializer.toJson<String?>(overrideNote),
+      'overrideApprovedBy': serializer.toJson<String?>(overrideApprovedBy),
+      'notes': serializer.toJson<String?>(notes),
+      'cropStage': serializer.toJson<String?>(cropStage),
+      'durationS': serializer.toJson<int?>(durationS),
+      'score': serializer.toJson<int?>(score),
+      'status': serializer.toJson<String>(status),
+      'confirmationChannel': serializer.toJson<String>(confirmationChannel),
+      'confirmedAt': serializer.toJson<DateTime?>(confirmedAt),
+      'deviceIntegrity': serializer.toJson<String>(deviceIntegrity),
+      'integrityIssues': serializer.toJson<String>(integrityIssues),
+      'flags': serializer.toJson<String>(flags),
+      'scoreComponents': serializer.toJson<String?>(scoreComponents),
+      'clientVisitId': serializer.toJson<String?>(clientVisitId),
+      'officerId': serializer.toJson<String?>(officerId),
+      'failureCode': serializer.toJson<String?>(failureCode),
+      'failureDetail': serializer.toJson<String?>(failureDetail),
+      'extra': serializer.toJson<String>(extra),
+    };
+  }
+
+  Visit copyWith({
+    String? id,
+    int? version,
+    DateTime? updatedAt,
+    bool? dirty,
+    bool? deleted,
+    String? farmerId,
+    Value<String?> farmId = const Value.absent(),
+    Value<String?> villageId = const Value.absent(),
+    String? purpose,
+    DateTime? checkinAt,
+    double? checkinLat,
+    double? checkinLon,
+    Value<double?> checkinAccuracyM = const Value.absent(),
+    Value<DateTime?> checkoutAt = const Value.absent(),
+    Value<double?> checkoutLat = const Value.absent(),
+    Value<double?> checkoutLon = const Value.absent(),
+    Value<String?> geofenceResult = const Value.absent(),
+    Value<String?> precheckResult = const Value.absent(),
+    Value<double?> precheckDistanceM = const Value.absent(),
+    Value<String?> precheckTarget = const Value.absent(),
+    Value<double?> precheckRadiusM = const Value.absent(),
+    Value<String?> overrideNote = const Value.absent(),
+    Value<String?> overrideApprovedBy = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    Value<String?> cropStage = const Value.absent(),
+    Value<int?> durationS = const Value.absent(),
+    Value<int?> score = const Value.absent(),
+    String? status,
+    String? confirmationChannel,
+    Value<DateTime?> confirmedAt = const Value.absent(),
+    String? deviceIntegrity,
+    String? integrityIssues,
+    String? flags,
+    Value<String?> scoreComponents = const Value.absent(),
+    Value<String?> clientVisitId = const Value.absent(),
+    Value<String?> officerId = const Value.absent(),
+    Value<String?> failureCode = const Value.absent(),
+    Value<String?> failureDetail = const Value.absent(),
+    String? extra,
+  }) => Visit(
+    id: id ?? this.id,
+    version: version ?? this.version,
+    updatedAt: updatedAt ?? this.updatedAt,
+    dirty: dirty ?? this.dirty,
+    deleted: deleted ?? this.deleted,
+    farmerId: farmerId ?? this.farmerId,
+    farmId: farmId.present ? farmId.value : this.farmId,
+    villageId: villageId.present ? villageId.value : this.villageId,
+    purpose: purpose ?? this.purpose,
+    checkinAt: checkinAt ?? this.checkinAt,
+    checkinLat: checkinLat ?? this.checkinLat,
+    checkinLon: checkinLon ?? this.checkinLon,
+    checkinAccuracyM: checkinAccuracyM.present
+        ? checkinAccuracyM.value
+        : this.checkinAccuracyM,
+    checkoutAt: checkoutAt.present ? checkoutAt.value : this.checkoutAt,
+    checkoutLat: checkoutLat.present ? checkoutLat.value : this.checkoutLat,
+    checkoutLon: checkoutLon.present ? checkoutLon.value : this.checkoutLon,
+    geofenceResult: geofenceResult.present
+        ? geofenceResult.value
+        : this.geofenceResult,
+    precheckResult: precheckResult.present
+        ? precheckResult.value
+        : this.precheckResult,
+    precheckDistanceM: precheckDistanceM.present
+        ? precheckDistanceM.value
+        : this.precheckDistanceM,
+    precheckTarget: precheckTarget.present
+        ? precheckTarget.value
+        : this.precheckTarget,
+    precheckRadiusM: precheckRadiusM.present
+        ? precheckRadiusM.value
+        : this.precheckRadiusM,
+    overrideNote: overrideNote.present ? overrideNote.value : this.overrideNote,
+    overrideApprovedBy: overrideApprovedBy.present
+        ? overrideApprovedBy.value
+        : this.overrideApprovedBy,
+    notes: notes.present ? notes.value : this.notes,
+    cropStage: cropStage.present ? cropStage.value : this.cropStage,
+    durationS: durationS.present ? durationS.value : this.durationS,
+    score: score.present ? score.value : this.score,
+    status: status ?? this.status,
+    confirmationChannel: confirmationChannel ?? this.confirmationChannel,
+    confirmedAt: confirmedAt.present ? confirmedAt.value : this.confirmedAt,
+    deviceIntegrity: deviceIntegrity ?? this.deviceIntegrity,
+    integrityIssues: integrityIssues ?? this.integrityIssues,
+    flags: flags ?? this.flags,
+    scoreComponents: scoreComponents.present
+        ? scoreComponents.value
+        : this.scoreComponents,
+    clientVisitId: clientVisitId.present
+        ? clientVisitId.value
+        : this.clientVisitId,
+    officerId: officerId.present ? officerId.value : this.officerId,
+    failureCode: failureCode.present ? failureCode.value : this.failureCode,
+    failureDetail: failureDetail.present
+        ? failureDetail.value
+        : this.failureDetail,
+    extra: extra ?? this.extra,
+  );
+  Visit copyWithCompanion(VisitsCompanion data) {
+    return Visit(
+      id: data.id.present ? data.id.value : this.id,
+      version: data.version.present ? data.version.value : this.version,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      farmerId: data.farmerId.present ? data.farmerId.value : this.farmerId,
+      farmId: data.farmId.present ? data.farmId.value : this.farmId,
+      villageId: data.villageId.present ? data.villageId.value : this.villageId,
+      purpose: data.purpose.present ? data.purpose.value : this.purpose,
+      checkinAt: data.checkinAt.present ? data.checkinAt.value : this.checkinAt,
+      checkinLat: data.checkinLat.present
+          ? data.checkinLat.value
+          : this.checkinLat,
+      checkinLon: data.checkinLon.present
+          ? data.checkinLon.value
+          : this.checkinLon,
+      checkinAccuracyM: data.checkinAccuracyM.present
+          ? data.checkinAccuracyM.value
+          : this.checkinAccuracyM,
+      checkoutAt: data.checkoutAt.present
+          ? data.checkoutAt.value
+          : this.checkoutAt,
+      checkoutLat: data.checkoutLat.present
+          ? data.checkoutLat.value
+          : this.checkoutLat,
+      checkoutLon: data.checkoutLon.present
+          ? data.checkoutLon.value
+          : this.checkoutLon,
+      geofenceResult: data.geofenceResult.present
+          ? data.geofenceResult.value
+          : this.geofenceResult,
+      precheckResult: data.precheckResult.present
+          ? data.precheckResult.value
+          : this.precheckResult,
+      precheckDistanceM: data.precheckDistanceM.present
+          ? data.precheckDistanceM.value
+          : this.precheckDistanceM,
+      precheckTarget: data.precheckTarget.present
+          ? data.precheckTarget.value
+          : this.precheckTarget,
+      precheckRadiusM: data.precheckRadiusM.present
+          ? data.precheckRadiusM.value
+          : this.precheckRadiusM,
+      overrideNote: data.overrideNote.present
+          ? data.overrideNote.value
+          : this.overrideNote,
+      overrideApprovedBy: data.overrideApprovedBy.present
+          ? data.overrideApprovedBy.value
+          : this.overrideApprovedBy,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      cropStage: data.cropStage.present ? data.cropStage.value : this.cropStage,
+      durationS: data.durationS.present ? data.durationS.value : this.durationS,
+      score: data.score.present ? data.score.value : this.score,
+      status: data.status.present ? data.status.value : this.status,
+      confirmationChannel: data.confirmationChannel.present
+          ? data.confirmationChannel.value
+          : this.confirmationChannel,
+      confirmedAt: data.confirmedAt.present
+          ? data.confirmedAt.value
+          : this.confirmedAt,
+      deviceIntegrity: data.deviceIntegrity.present
+          ? data.deviceIntegrity.value
+          : this.deviceIntegrity,
+      integrityIssues: data.integrityIssues.present
+          ? data.integrityIssues.value
+          : this.integrityIssues,
+      flags: data.flags.present ? data.flags.value : this.flags,
+      scoreComponents: data.scoreComponents.present
+          ? data.scoreComponents.value
+          : this.scoreComponents,
+      clientVisitId: data.clientVisitId.present
+          ? data.clientVisitId.value
+          : this.clientVisitId,
+      officerId: data.officerId.present ? data.officerId.value : this.officerId,
+      failureCode: data.failureCode.present
+          ? data.failureCode.value
+          : this.failureCode,
+      failureDetail: data.failureDetail.present
+          ? data.failureDetail.value
+          : this.failureDetail,
+      extra: data.extra.present ? data.extra.value : this.extra,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Visit(')
+          ..write('id: $id, ')
+          ..write('version: $version, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('deleted: $deleted, ')
+          ..write('farmerId: $farmerId, ')
+          ..write('farmId: $farmId, ')
+          ..write('villageId: $villageId, ')
+          ..write('purpose: $purpose, ')
+          ..write('checkinAt: $checkinAt, ')
+          ..write('checkinLat: $checkinLat, ')
+          ..write('checkinLon: $checkinLon, ')
+          ..write('checkinAccuracyM: $checkinAccuracyM, ')
+          ..write('checkoutAt: $checkoutAt, ')
+          ..write('checkoutLat: $checkoutLat, ')
+          ..write('checkoutLon: $checkoutLon, ')
+          ..write('geofenceResult: $geofenceResult, ')
+          ..write('precheckResult: $precheckResult, ')
+          ..write('precheckDistanceM: $precheckDistanceM, ')
+          ..write('precheckTarget: $precheckTarget, ')
+          ..write('precheckRadiusM: $precheckRadiusM, ')
+          ..write('overrideNote: $overrideNote, ')
+          ..write('overrideApprovedBy: $overrideApprovedBy, ')
+          ..write('notes: $notes, ')
+          ..write('cropStage: $cropStage, ')
+          ..write('durationS: $durationS, ')
+          ..write('score: $score, ')
+          ..write('status: $status, ')
+          ..write('confirmationChannel: $confirmationChannel, ')
+          ..write('confirmedAt: $confirmedAt, ')
+          ..write('deviceIntegrity: $deviceIntegrity, ')
+          ..write('integrityIssues: $integrityIssues, ')
+          ..write('flags: $flags, ')
+          ..write('scoreComponents: $scoreComponents, ')
+          ..write('clientVisitId: $clientVisitId, ')
+          ..write('officerId: $officerId, ')
+          ..write('failureCode: $failureCode, ')
+          ..write('failureDetail: $failureDetail, ')
+          ..write('extra: $extra')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    version,
+    updatedAt,
+    dirty,
+    deleted,
+    farmerId,
+    farmId,
+    villageId,
+    purpose,
+    checkinAt,
+    checkinLat,
+    checkinLon,
+    checkinAccuracyM,
+    checkoutAt,
+    checkoutLat,
+    checkoutLon,
+    geofenceResult,
+    precheckResult,
+    precheckDistanceM,
+    precheckTarget,
+    precheckRadiusM,
+    overrideNote,
+    overrideApprovedBy,
+    notes,
+    cropStage,
+    durationS,
+    score,
+    status,
+    confirmationChannel,
+    confirmedAt,
+    deviceIntegrity,
+    integrityIssues,
+    flags,
+    scoreComponents,
+    clientVisitId,
+    officerId,
+    failureCode,
+    failureDetail,
+    extra,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Visit &&
+          other.id == this.id &&
+          other.version == this.version &&
+          other.updatedAt == this.updatedAt &&
+          other.dirty == this.dirty &&
+          other.deleted == this.deleted &&
+          other.farmerId == this.farmerId &&
+          other.farmId == this.farmId &&
+          other.villageId == this.villageId &&
+          other.purpose == this.purpose &&
+          other.checkinAt == this.checkinAt &&
+          other.checkinLat == this.checkinLat &&
+          other.checkinLon == this.checkinLon &&
+          other.checkinAccuracyM == this.checkinAccuracyM &&
+          other.checkoutAt == this.checkoutAt &&
+          other.checkoutLat == this.checkoutLat &&
+          other.checkoutLon == this.checkoutLon &&
+          other.geofenceResult == this.geofenceResult &&
+          other.precheckResult == this.precheckResult &&
+          other.precheckDistanceM == this.precheckDistanceM &&
+          other.precheckTarget == this.precheckTarget &&
+          other.precheckRadiusM == this.precheckRadiusM &&
+          other.overrideNote == this.overrideNote &&
+          other.overrideApprovedBy == this.overrideApprovedBy &&
+          other.notes == this.notes &&
+          other.cropStage == this.cropStage &&
+          other.durationS == this.durationS &&
+          other.score == this.score &&
+          other.status == this.status &&
+          other.confirmationChannel == this.confirmationChannel &&
+          other.confirmedAt == this.confirmedAt &&
+          other.deviceIntegrity == this.deviceIntegrity &&
+          other.integrityIssues == this.integrityIssues &&
+          other.flags == this.flags &&
+          other.scoreComponents == this.scoreComponents &&
+          other.clientVisitId == this.clientVisitId &&
+          other.officerId == this.officerId &&
+          other.failureCode == this.failureCode &&
+          other.failureDetail == this.failureDetail &&
+          other.extra == this.extra);
+}
+
+class VisitsCompanion extends UpdateCompanion<Visit> {
+  final Value<String> id;
+  final Value<int> version;
+  final Value<DateTime> updatedAt;
+  final Value<bool> dirty;
+  final Value<bool> deleted;
+  final Value<String> farmerId;
+  final Value<String?> farmId;
+  final Value<String?> villageId;
+  final Value<String> purpose;
+  final Value<DateTime> checkinAt;
+  final Value<double> checkinLat;
+  final Value<double> checkinLon;
+  final Value<double?> checkinAccuracyM;
+  final Value<DateTime?> checkoutAt;
+  final Value<double?> checkoutLat;
+  final Value<double?> checkoutLon;
+  final Value<String?> geofenceResult;
+  final Value<String?> precheckResult;
+  final Value<double?> precheckDistanceM;
+  final Value<String?> precheckTarget;
+  final Value<double?> precheckRadiusM;
+  final Value<String?> overrideNote;
+  final Value<String?> overrideApprovedBy;
+  final Value<String?> notes;
+  final Value<String?> cropStage;
+  final Value<int?> durationS;
+  final Value<int?> score;
+  final Value<String> status;
+  final Value<String> confirmationChannel;
+  final Value<DateTime?> confirmedAt;
+  final Value<String> deviceIntegrity;
+  final Value<String> integrityIssues;
+  final Value<String> flags;
+  final Value<String?> scoreComponents;
+  final Value<String?> clientVisitId;
+  final Value<String?> officerId;
+  final Value<String?> failureCode;
+  final Value<String?> failureDetail;
+  final Value<String> extra;
+  final Value<int> rowid;
+  const VisitsCompanion({
+    this.id = const Value.absent(),
+    this.version = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.farmerId = const Value.absent(),
+    this.farmId = const Value.absent(),
+    this.villageId = const Value.absent(),
+    this.purpose = const Value.absent(),
+    this.checkinAt = const Value.absent(),
+    this.checkinLat = const Value.absent(),
+    this.checkinLon = const Value.absent(),
+    this.checkinAccuracyM = const Value.absent(),
+    this.checkoutAt = const Value.absent(),
+    this.checkoutLat = const Value.absent(),
+    this.checkoutLon = const Value.absent(),
+    this.geofenceResult = const Value.absent(),
+    this.precheckResult = const Value.absent(),
+    this.precheckDistanceM = const Value.absent(),
+    this.precheckTarget = const Value.absent(),
+    this.precheckRadiusM = const Value.absent(),
+    this.overrideNote = const Value.absent(),
+    this.overrideApprovedBy = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.cropStage = const Value.absent(),
+    this.durationS = const Value.absent(),
+    this.score = const Value.absent(),
+    this.status = const Value.absent(),
+    this.confirmationChannel = const Value.absent(),
+    this.confirmedAt = const Value.absent(),
+    this.deviceIntegrity = const Value.absent(),
+    this.integrityIssues = const Value.absent(),
+    this.flags = const Value.absent(),
+    this.scoreComponents = const Value.absent(),
+    this.clientVisitId = const Value.absent(),
+    this.officerId = const Value.absent(),
+    this.failureCode = const Value.absent(),
+    this.failureDetail = const Value.absent(),
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VisitsCompanion.insert({
+    required String id,
+    this.version = const Value.absent(),
+    required DateTime updatedAt,
+    this.dirty = const Value.absent(),
+    this.deleted = const Value.absent(),
+    required String farmerId,
+    this.farmId = const Value.absent(),
+    this.villageId = const Value.absent(),
+    this.purpose = const Value.absent(),
+    required DateTime checkinAt,
+    required double checkinLat,
+    required double checkinLon,
+    this.checkinAccuracyM = const Value.absent(),
+    this.checkoutAt = const Value.absent(),
+    this.checkoutLat = const Value.absent(),
+    this.checkoutLon = const Value.absent(),
+    this.geofenceResult = const Value.absent(),
+    this.precheckResult = const Value.absent(),
+    this.precheckDistanceM = const Value.absent(),
+    this.precheckTarget = const Value.absent(),
+    this.precheckRadiusM = const Value.absent(),
+    this.overrideNote = const Value.absent(),
+    this.overrideApprovedBy = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.cropStage = const Value.absent(),
+    this.durationS = const Value.absent(),
+    this.score = const Value.absent(),
+    this.status = const Value.absent(),
+    this.confirmationChannel = const Value.absent(),
+    this.confirmedAt = const Value.absent(),
+    this.deviceIntegrity = const Value.absent(),
+    this.integrityIssues = const Value.absent(),
+    this.flags = const Value.absent(),
+    this.scoreComponents = const Value.absent(),
+    this.clientVisitId = const Value.absent(),
+    this.officerId = const Value.absent(),
+    this.failureCode = const Value.absent(),
+    this.failureDetail = const Value.absent(),
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       updatedAt = Value(updatedAt),
+       farmerId = Value(farmerId),
+       checkinAt = Value(checkinAt),
+       checkinLat = Value(checkinLat),
+       checkinLon = Value(checkinLon);
+  static Insertable<Visit> custom({
+    Expression<String>? id,
+    Expression<int>? version,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? dirty,
+    Expression<bool>? deleted,
+    Expression<String>? farmerId,
+    Expression<String>? farmId,
+    Expression<String>? villageId,
+    Expression<String>? purpose,
+    Expression<DateTime>? checkinAt,
+    Expression<double>? checkinLat,
+    Expression<double>? checkinLon,
+    Expression<double>? checkinAccuracyM,
+    Expression<DateTime>? checkoutAt,
+    Expression<double>? checkoutLat,
+    Expression<double>? checkoutLon,
+    Expression<String>? geofenceResult,
+    Expression<String>? precheckResult,
+    Expression<double>? precheckDistanceM,
+    Expression<String>? precheckTarget,
+    Expression<double>? precheckRadiusM,
+    Expression<String>? overrideNote,
+    Expression<String>? overrideApprovedBy,
+    Expression<String>? notes,
+    Expression<String>? cropStage,
+    Expression<int>? durationS,
+    Expression<int>? score,
+    Expression<String>? status,
+    Expression<String>? confirmationChannel,
+    Expression<DateTime>? confirmedAt,
+    Expression<String>? deviceIntegrity,
+    Expression<String>? integrityIssues,
+    Expression<String>? flags,
+    Expression<String>? scoreComponents,
+    Expression<String>? clientVisitId,
+    Expression<String>? officerId,
+    Expression<String>? failureCode,
+    Expression<String>? failureDetail,
+    Expression<String>? extra,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (version != null) 'version': version,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (deleted != null) 'deleted': deleted,
+      if (farmerId != null) 'farmer_id': farmerId,
+      if (farmId != null) 'farm_id': farmId,
+      if (villageId != null) 'village_id': villageId,
+      if (purpose != null) 'purpose': purpose,
+      if (checkinAt != null) 'checkin_at': checkinAt,
+      if (checkinLat != null) 'checkin_lat': checkinLat,
+      if (checkinLon != null) 'checkin_lon': checkinLon,
+      if (checkinAccuracyM != null) 'checkin_accuracy_m': checkinAccuracyM,
+      if (checkoutAt != null) 'checkout_at': checkoutAt,
+      if (checkoutLat != null) 'checkout_lat': checkoutLat,
+      if (checkoutLon != null) 'checkout_lon': checkoutLon,
+      if (geofenceResult != null) 'geofence_result': geofenceResult,
+      if (precheckResult != null) 'precheck_result': precheckResult,
+      if (precheckDistanceM != null) 'precheck_distance_m': precheckDistanceM,
+      if (precheckTarget != null) 'precheck_target': precheckTarget,
+      if (precheckRadiusM != null) 'precheck_radius_m': precheckRadiusM,
+      if (overrideNote != null) 'override_note': overrideNote,
+      if (overrideApprovedBy != null)
+        'override_approved_by': overrideApprovedBy,
+      if (notes != null) 'notes': notes,
+      if (cropStage != null) 'crop_stage': cropStage,
+      if (durationS != null) 'duration_s': durationS,
+      if (score != null) 'score': score,
+      if (status != null) 'status': status,
+      if (confirmationChannel != null)
+        'confirmation_channel': confirmationChannel,
+      if (confirmedAt != null) 'confirmed_at': confirmedAt,
+      if (deviceIntegrity != null) 'device_integrity': deviceIntegrity,
+      if (integrityIssues != null) 'integrity_issues': integrityIssues,
+      if (flags != null) 'flags': flags,
+      if (scoreComponents != null) 'score_components': scoreComponents,
+      if (clientVisitId != null) 'client_visit_id': clientVisitId,
+      if (officerId != null) 'officer_id': officerId,
+      if (failureCode != null) 'failure_code': failureCode,
+      if (failureDetail != null) 'failure_detail': failureDetail,
+      if (extra != null) 'extra': extra,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VisitsCompanion copyWith({
+    Value<String>? id,
+    Value<int>? version,
+    Value<DateTime>? updatedAt,
+    Value<bool>? dirty,
+    Value<bool>? deleted,
+    Value<String>? farmerId,
+    Value<String?>? farmId,
+    Value<String?>? villageId,
+    Value<String>? purpose,
+    Value<DateTime>? checkinAt,
+    Value<double>? checkinLat,
+    Value<double>? checkinLon,
+    Value<double?>? checkinAccuracyM,
+    Value<DateTime?>? checkoutAt,
+    Value<double?>? checkoutLat,
+    Value<double?>? checkoutLon,
+    Value<String?>? geofenceResult,
+    Value<String?>? precheckResult,
+    Value<double?>? precheckDistanceM,
+    Value<String?>? precheckTarget,
+    Value<double?>? precheckRadiusM,
+    Value<String?>? overrideNote,
+    Value<String?>? overrideApprovedBy,
+    Value<String?>? notes,
+    Value<String?>? cropStage,
+    Value<int?>? durationS,
+    Value<int?>? score,
+    Value<String>? status,
+    Value<String>? confirmationChannel,
+    Value<DateTime?>? confirmedAt,
+    Value<String>? deviceIntegrity,
+    Value<String>? integrityIssues,
+    Value<String>? flags,
+    Value<String?>? scoreComponents,
+    Value<String?>? clientVisitId,
+    Value<String?>? officerId,
+    Value<String?>? failureCode,
+    Value<String?>? failureDetail,
+    Value<String>? extra,
+    Value<int>? rowid,
+  }) {
+    return VisitsCompanion(
+      id: id ?? this.id,
+      version: version ?? this.version,
+      updatedAt: updatedAt ?? this.updatedAt,
+      dirty: dirty ?? this.dirty,
+      deleted: deleted ?? this.deleted,
+      farmerId: farmerId ?? this.farmerId,
+      farmId: farmId ?? this.farmId,
+      villageId: villageId ?? this.villageId,
+      purpose: purpose ?? this.purpose,
+      checkinAt: checkinAt ?? this.checkinAt,
+      checkinLat: checkinLat ?? this.checkinLat,
+      checkinLon: checkinLon ?? this.checkinLon,
+      checkinAccuracyM: checkinAccuracyM ?? this.checkinAccuracyM,
+      checkoutAt: checkoutAt ?? this.checkoutAt,
+      checkoutLat: checkoutLat ?? this.checkoutLat,
+      checkoutLon: checkoutLon ?? this.checkoutLon,
+      geofenceResult: geofenceResult ?? this.geofenceResult,
+      precheckResult: precheckResult ?? this.precheckResult,
+      precheckDistanceM: precheckDistanceM ?? this.precheckDistanceM,
+      precheckTarget: precheckTarget ?? this.precheckTarget,
+      precheckRadiusM: precheckRadiusM ?? this.precheckRadiusM,
+      overrideNote: overrideNote ?? this.overrideNote,
+      overrideApprovedBy: overrideApprovedBy ?? this.overrideApprovedBy,
+      notes: notes ?? this.notes,
+      cropStage: cropStage ?? this.cropStage,
+      durationS: durationS ?? this.durationS,
+      score: score ?? this.score,
+      status: status ?? this.status,
+      confirmationChannel: confirmationChannel ?? this.confirmationChannel,
+      confirmedAt: confirmedAt ?? this.confirmedAt,
+      deviceIntegrity: deviceIntegrity ?? this.deviceIntegrity,
+      integrityIssues: integrityIssues ?? this.integrityIssues,
+      flags: flags ?? this.flags,
+      scoreComponents: scoreComponents ?? this.scoreComponents,
+      clientVisitId: clientVisitId ?? this.clientVisitId,
+      officerId: officerId ?? this.officerId,
+      failureCode: failureCode ?? this.failureCode,
+      failureDetail: failureDetail ?? this.failureDetail,
+      extra: extra ?? this.extra,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (farmerId.present) {
+      map['farmer_id'] = Variable<String>(farmerId.value);
+    }
+    if (farmId.present) {
+      map['farm_id'] = Variable<String>(farmId.value);
+    }
+    if (villageId.present) {
+      map['village_id'] = Variable<String>(villageId.value);
+    }
+    if (purpose.present) {
+      map['purpose'] = Variable<String>(purpose.value);
+    }
+    if (checkinAt.present) {
+      map['checkin_at'] = Variable<DateTime>(checkinAt.value);
+    }
+    if (checkinLat.present) {
+      map['checkin_lat'] = Variable<double>(checkinLat.value);
+    }
+    if (checkinLon.present) {
+      map['checkin_lon'] = Variable<double>(checkinLon.value);
+    }
+    if (checkinAccuracyM.present) {
+      map['checkin_accuracy_m'] = Variable<double>(checkinAccuracyM.value);
+    }
+    if (checkoutAt.present) {
+      map['checkout_at'] = Variable<DateTime>(checkoutAt.value);
+    }
+    if (checkoutLat.present) {
+      map['checkout_lat'] = Variable<double>(checkoutLat.value);
+    }
+    if (checkoutLon.present) {
+      map['checkout_lon'] = Variable<double>(checkoutLon.value);
+    }
+    if (geofenceResult.present) {
+      map['geofence_result'] = Variable<String>(geofenceResult.value);
+    }
+    if (precheckResult.present) {
+      map['precheck_result'] = Variable<String>(precheckResult.value);
+    }
+    if (precheckDistanceM.present) {
+      map['precheck_distance_m'] = Variable<double>(precheckDistanceM.value);
+    }
+    if (precheckTarget.present) {
+      map['precheck_target'] = Variable<String>(precheckTarget.value);
+    }
+    if (precheckRadiusM.present) {
+      map['precheck_radius_m'] = Variable<double>(precheckRadiusM.value);
+    }
+    if (overrideNote.present) {
+      map['override_note'] = Variable<String>(overrideNote.value);
+    }
+    if (overrideApprovedBy.present) {
+      map['override_approved_by'] = Variable<String>(overrideApprovedBy.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (cropStage.present) {
+      map['crop_stage'] = Variable<String>(cropStage.value);
+    }
+    if (durationS.present) {
+      map['duration_s'] = Variable<int>(durationS.value);
+    }
+    if (score.present) {
+      map['score'] = Variable<int>(score.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (confirmationChannel.present) {
+      map['confirmation_channel'] = Variable<String>(confirmationChannel.value);
+    }
+    if (confirmedAt.present) {
+      map['confirmed_at'] = Variable<DateTime>(confirmedAt.value);
+    }
+    if (deviceIntegrity.present) {
+      map['device_integrity'] = Variable<String>(deviceIntegrity.value);
+    }
+    if (integrityIssues.present) {
+      map['integrity_issues'] = Variable<String>(integrityIssues.value);
+    }
+    if (flags.present) {
+      map['flags'] = Variable<String>(flags.value);
+    }
+    if (scoreComponents.present) {
+      map['score_components'] = Variable<String>(scoreComponents.value);
+    }
+    if (clientVisitId.present) {
+      map['client_visit_id'] = Variable<String>(clientVisitId.value);
+    }
+    if (officerId.present) {
+      map['officer_id'] = Variable<String>(officerId.value);
+    }
+    if (failureCode.present) {
+      map['failure_code'] = Variable<String>(failureCode.value);
+    }
+    if (failureDetail.present) {
+      map['failure_detail'] = Variable<String>(failureDetail.value);
+    }
+    if (extra.present) {
+      map['extra'] = Variable<String>(extra.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VisitsCompanion(')
+          ..write('id: $id, ')
+          ..write('version: $version, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('deleted: $deleted, ')
+          ..write('farmerId: $farmerId, ')
+          ..write('farmId: $farmId, ')
+          ..write('villageId: $villageId, ')
+          ..write('purpose: $purpose, ')
+          ..write('checkinAt: $checkinAt, ')
+          ..write('checkinLat: $checkinLat, ')
+          ..write('checkinLon: $checkinLon, ')
+          ..write('checkinAccuracyM: $checkinAccuracyM, ')
+          ..write('checkoutAt: $checkoutAt, ')
+          ..write('checkoutLat: $checkoutLat, ')
+          ..write('checkoutLon: $checkoutLon, ')
+          ..write('geofenceResult: $geofenceResult, ')
+          ..write('precheckResult: $precheckResult, ')
+          ..write('precheckDistanceM: $precheckDistanceM, ')
+          ..write('precheckTarget: $precheckTarget, ')
+          ..write('precheckRadiusM: $precheckRadiusM, ')
+          ..write('overrideNote: $overrideNote, ')
+          ..write('overrideApprovedBy: $overrideApprovedBy, ')
+          ..write('notes: $notes, ')
+          ..write('cropStage: $cropStage, ')
+          ..write('durationS: $durationS, ')
+          ..write('score: $score, ')
+          ..write('status: $status, ')
+          ..write('confirmationChannel: $confirmationChannel, ')
+          ..write('confirmedAt: $confirmedAt, ')
+          ..write('deviceIntegrity: $deviceIntegrity, ')
+          ..write('integrityIssues: $integrityIssues, ')
+          ..write('flags: $flags, ')
+          ..write('scoreComponents: $scoreComponents, ')
+          ..write('clientVisitId: $clientVisitId, ')
+          ..write('officerId: $officerId, ')
+          ..write('failureCode: $failureCode, ')
+          ..write('failureDetail: $failureDetail, ')
+          ..write('extra: $extra, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VisitPhotosTable extends VisitPhotos
+    with TableInfo<$VisitPhotosTable, VisitPhoto> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VisitPhotosTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _visitIdMeta = const VerificationMeta(
+    'visitId',
+  );
+  @override
+  late final GeneratedColumn<String> visitId = GeneratedColumn<String>(
+    'visit_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _blobUriMeta = const VerificationMeta(
+    'blobUri',
+  );
+  @override
+  late final GeneratedColumn<String> blobUri = GeneratedColumn<String>(
+    'blob_uri',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _sha256Meta = const VerificationMeta('sha256');
+  @override
+  late final GeneratedColumn<String> sha256 = GeneratedColumn<String>(
+    'sha256',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _phashMeta = const VerificationMeta('phash');
+  @override
+  late final GeneratedColumn<String> phash = GeneratedColumn<String>(
+    'phash',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _exifTimeMeta = const VerificationMeta(
+    'exifTime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> exifTime = GeneratedColumn<DateTime>(
+    'exif_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _exifLatMeta = const VerificationMeta(
+    'exifLat',
+  );
+  @override
+  late final GeneratedColumn<double> exifLat = GeneratedColumn<double>(
+    'exif_lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _exifLonMeta = const VerificationMeta(
+    'exifLon',
+  );
+  @override
+  late final GeneratedColumn<double> exifLon = GeneratedColumn<double>(
+    'exif_lon',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _takenInAppMeta = const VerificationMeta(
+    'takenInApp',
+  );
+  @override
+  late final GeneratedColumn<bool> takenInApp = GeneratedColumn<bool>(
+    'taken_in_app',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("taken_in_app" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _deviceTimeMeta = const VerificationMeta(
+    'deviceTime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deviceTime = GeneratedColumn<DateTime>(
+    'device_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _serverTimeMeta = const VerificationMeta(
+    'serverTime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> serverTime = GeneratedColumn<DateTime>(
+    'server_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _photoFlagsMeta = const VerificationMeta(
+    'photoFlags',
+  );
+  @override
+  late final GeneratedColumn<String> photoFlags = GeneratedColumn<String>(
+    'photo_flags',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _localPathMeta = const VerificationMeta(
+    'localPath',
+  );
+  @override
+  late final GeneratedColumn<String> localPath = GeneratedColumn<String>(
+    'local_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _extraMeta = const VerificationMeta('extra');
+  @override
+  late final GeneratedColumn<String> extra = GeneratedColumn<String>(
+    'extra',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    version,
+    updatedAt,
+    dirty,
+    deleted,
+    visitId,
+    blobUri,
+    sha256,
+    phash,
+    exifTime,
+    exifLat,
+    exifLon,
+    takenInApp,
+    deviceTime,
+    serverTime,
+    photoFlags,
+    localPath,
+    extra,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'visit_photos';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VisitPhoto> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('visit_id')) {
+      context.handle(
+        _visitIdMeta,
+        visitId.isAcceptableOrUnknown(data['visit_id']!, _visitIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_visitIdMeta);
+    }
+    if (data.containsKey('blob_uri')) {
+      context.handle(
+        _blobUriMeta,
+        blobUri.isAcceptableOrUnknown(data['blob_uri']!, _blobUriMeta),
+      );
+    }
+    if (data.containsKey('sha256')) {
+      context.handle(
+        _sha256Meta,
+        sha256.isAcceptableOrUnknown(data['sha256']!, _sha256Meta),
+      );
+    }
+    if (data.containsKey('phash')) {
+      context.handle(
+        _phashMeta,
+        phash.isAcceptableOrUnknown(data['phash']!, _phashMeta),
+      );
+    }
+    if (data.containsKey('exif_time')) {
+      context.handle(
+        _exifTimeMeta,
+        exifTime.isAcceptableOrUnknown(data['exif_time']!, _exifTimeMeta),
+      );
+    }
+    if (data.containsKey('exif_lat')) {
+      context.handle(
+        _exifLatMeta,
+        exifLat.isAcceptableOrUnknown(data['exif_lat']!, _exifLatMeta),
+      );
+    }
+    if (data.containsKey('exif_lon')) {
+      context.handle(
+        _exifLonMeta,
+        exifLon.isAcceptableOrUnknown(data['exif_lon']!, _exifLonMeta),
+      );
+    }
+    if (data.containsKey('taken_in_app')) {
+      context.handle(
+        _takenInAppMeta,
+        takenInApp.isAcceptableOrUnknown(
+          data['taken_in_app']!,
+          _takenInAppMeta,
+        ),
+      );
+    }
+    if (data.containsKey('device_time')) {
+      context.handle(
+        _deviceTimeMeta,
+        deviceTime.isAcceptableOrUnknown(data['device_time']!, _deviceTimeMeta),
+      );
+    }
+    if (data.containsKey('server_time')) {
+      context.handle(
+        _serverTimeMeta,
+        serverTime.isAcceptableOrUnknown(data['server_time']!, _serverTimeMeta),
+      );
+    }
+    if (data.containsKey('photo_flags')) {
+      context.handle(
+        _photoFlagsMeta,
+        photoFlags.isAcceptableOrUnknown(data['photo_flags']!, _photoFlagsMeta),
+      );
+    }
+    if (data.containsKey('local_path')) {
+      context.handle(
+        _localPathMeta,
+        localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta),
+      );
+    }
+    if (data.containsKey('extra')) {
+      context.handle(
+        _extraMeta,
+        extra.isAcceptableOrUnknown(data['extra']!, _extraMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VisitPhoto map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VisitPhoto(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      visitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}visit_id'],
+      )!,
+      blobUri: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}blob_uri'],
+      )!,
+      sha256: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sha256'],
+      ),
+      phash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}phash'],
+      ),
+      exifTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}exif_time'],
+      ),
+      exifLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}exif_lat'],
+      ),
+      exifLon: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}exif_lon'],
+      ),
+      takenInApp: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}taken_in_app'],
+      )!,
+      deviceTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}device_time'],
+      ),
+      serverTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}server_time'],
+      ),
+      photoFlags: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}photo_flags'],
+      )!,
+      localPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_path'],
+      ),
+      extra: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}extra'],
+      )!,
+    );
+  }
+
+  @override
+  $VisitPhotosTable createAlias(String alias) {
+    return $VisitPhotosTable(attachedDatabase, alias);
+  }
+}
+
+class VisitPhoto extends DataClass implements Insertable<VisitPhoto> {
+  /// Client-generated uuid, also the server id.
+  final String id;
+
+  /// Server row version; 0 while the create is still queued.
+  final int version;
+
+  /// Last local write (UTC).
+  final DateTime updatedAt;
+
+  /// A queued op still references this row.
+  final bool dirty;
+
+  /// Deleted locally; removed once the server confirms.
+  final bool deleted;
+
+  /// Owning visit.
+  final String visitId;
+
+  /// Server blob URI, or the `upload:<id>` placeholder while queued.
+  final String blobUri;
+
+  /// Hex SHA-256 of the processed JPEG.
+  final String? sha256;
+
+  /// Server perceptual hash.
+  final String? phash;
+
+  /// EXIF capture time (UTC).
+  final DateTime? exifTime;
+
+  /// EXIF GPS latitude.
+  final double? exifLat;
+
+  /// EXIF GPS longitude.
+  final double? exifLon;
+
+  /// Always true on this device (no gallery path exists).
+  final bool takenInApp;
+
+  /// Device time at capture (UTC).
+  final DateTime? deviceTime;
+
+  /// Server receive time.
+  final DateTime? serverTime;
+
+  /// JSON list of VA-E08 flags from the server.
+  final String photoFlags;
+
+  /// Local file of the processed photo (thumbnail).
+  final String? localPath;
+
+  /// JSON of server fields this app does not model.
+  final String extra;
+  const VisitPhoto({
+    required this.id,
+    required this.version,
+    required this.updatedAt,
+    required this.dirty,
+    required this.deleted,
+    required this.visitId,
+    required this.blobUri,
+    this.sha256,
+    this.phash,
+    this.exifTime,
+    this.exifLat,
+    this.exifLon,
+    required this.takenInApp,
+    this.deviceTime,
+    this.serverTime,
+    required this.photoFlags,
+    this.localPath,
+    required this.extra,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['version'] = Variable<int>(version);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['dirty'] = Variable<bool>(dirty);
+    map['deleted'] = Variable<bool>(deleted);
+    map['visit_id'] = Variable<String>(visitId);
+    map['blob_uri'] = Variable<String>(blobUri);
+    if (!nullToAbsent || sha256 != null) {
+      map['sha256'] = Variable<String>(sha256);
+    }
+    if (!nullToAbsent || phash != null) {
+      map['phash'] = Variable<String>(phash);
+    }
+    if (!nullToAbsent || exifTime != null) {
+      map['exif_time'] = Variable<DateTime>(exifTime);
+    }
+    if (!nullToAbsent || exifLat != null) {
+      map['exif_lat'] = Variable<double>(exifLat);
+    }
+    if (!nullToAbsent || exifLon != null) {
+      map['exif_lon'] = Variable<double>(exifLon);
+    }
+    map['taken_in_app'] = Variable<bool>(takenInApp);
+    if (!nullToAbsent || deviceTime != null) {
+      map['device_time'] = Variable<DateTime>(deviceTime);
+    }
+    if (!nullToAbsent || serverTime != null) {
+      map['server_time'] = Variable<DateTime>(serverTime);
+    }
+    map['photo_flags'] = Variable<String>(photoFlags);
+    if (!nullToAbsent || localPath != null) {
+      map['local_path'] = Variable<String>(localPath);
+    }
+    map['extra'] = Variable<String>(extra);
+    return map;
+  }
+
+  VisitPhotosCompanion toCompanion(bool nullToAbsent) {
+    return VisitPhotosCompanion(
+      id: Value(id),
+      version: Value(version),
+      updatedAt: Value(updatedAt),
+      dirty: Value(dirty),
+      deleted: Value(deleted),
+      visitId: Value(visitId),
+      blobUri: Value(blobUri),
+      sha256: sha256 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sha256),
+      phash: phash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phash),
+      exifTime: exifTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exifTime),
+      exifLat: exifLat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exifLat),
+      exifLon: exifLon == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exifLon),
+      takenInApp: Value(takenInApp),
+      deviceTime: deviceTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceTime),
+      serverTime: serverTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverTime),
+      photoFlags: Value(photoFlags),
+      localPath: localPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localPath),
+      extra: Value(extra),
+    );
+  }
+
+  factory VisitPhoto.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VisitPhoto(
+      id: serializer.fromJson<String>(json['id']),
+      version: serializer.fromJson<int>(json['version']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      visitId: serializer.fromJson<String>(json['visitId']),
+      blobUri: serializer.fromJson<String>(json['blobUri']),
+      sha256: serializer.fromJson<String?>(json['sha256']),
+      phash: serializer.fromJson<String?>(json['phash']),
+      exifTime: serializer.fromJson<DateTime?>(json['exifTime']),
+      exifLat: serializer.fromJson<double?>(json['exifLat']),
+      exifLon: serializer.fromJson<double?>(json['exifLon']),
+      takenInApp: serializer.fromJson<bool>(json['takenInApp']),
+      deviceTime: serializer.fromJson<DateTime?>(json['deviceTime']),
+      serverTime: serializer.fromJson<DateTime?>(json['serverTime']),
+      photoFlags: serializer.fromJson<String>(json['photoFlags']),
+      localPath: serializer.fromJson<String?>(json['localPath']),
+      extra: serializer.fromJson<String>(json['extra']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'version': serializer.toJson<int>(version),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'deleted': serializer.toJson<bool>(deleted),
+      'visitId': serializer.toJson<String>(visitId),
+      'blobUri': serializer.toJson<String>(blobUri),
+      'sha256': serializer.toJson<String?>(sha256),
+      'phash': serializer.toJson<String?>(phash),
+      'exifTime': serializer.toJson<DateTime?>(exifTime),
+      'exifLat': serializer.toJson<double?>(exifLat),
+      'exifLon': serializer.toJson<double?>(exifLon),
+      'takenInApp': serializer.toJson<bool>(takenInApp),
+      'deviceTime': serializer.toJson<DateTime?>(deviceTime),
+      'serverTime': serializer.toJson<DateTime?>(serverTime),
+      'photoFlags': serializer.toJson<String>(photoFlags),
+      'localPath': serializer.toJson<String?>(localPath),
+      'extra': serializer.toJson<String>(extra),
+    };
+  }
+
+  VisitPhoto copyWith({
+    String? id,
+    int? version,
+    DateTime? updatedAt,
+    bool? dirty,
+    bool? deleted,
+    String? visitId,
+    String? blobUri,
+    Value<String?> sha256 = const Value.absent(),
+    Value<String?> phash = const Value.absent(),
+    Value<DateTime?> exifTime = const Value.absent(),
+    Value<double?> exifLat = const Value.absent(),
+    Value<double?> exifLon = const Value.absent(),
+    bool? takenInApp,
+    Value<DateTime?> deviceTime = const Value.absent(),
+    Value<DateTime?> serverTime = const Value.absent(),
+    String? photoFlags,
+    Value<String?> localPath = const Value.absent(),
+    String? extra,
+  }) => VisitPhoto(
+    id: id ?? this.id,
+    version: version ?? this.version,
+    updatedAt: updatedAt ?? this.updatedAt,
+    dirty: dirty ?? this.dirty,
+    deleted: deleted ?? this.deleted,
+    visitId: visitId ?? this.visitId,
+    blobUri: blobUri ?? this.blobUri,
+    sha256: sha256.present ? sha256.value : this.sha256,
+    phash: phash.present ? phash.value : this.phash,
+    exifTime: exifTime.present ? exifTime.value : this.exifTime,
+    exifLat: exifLat.present ? exifLat.value : this.exifLat,
+    exifLon: exifLon.present ? exifLon.value : this.exifLon,
+    takenInApp: takenInApp ?? this.takenInApp,
+    deviceTime: deviceTime.present ? deviceTime.value : this.deviceTime,
+    serverTime: serverTime.present ? serverTime.value : this.serverTime,
+    photoFlags: photoFlags ?? this.photoFlags,
+    localPath: localPath.present ? localPath.value : this.localPath,
+    extra: extra ?? this.extra,
+  );
+  VisitPhoto copyWithCompanion(VisitPhotosCompanion data) {
+    return VisitPhoto(
+      id: data.id.present ? data.id.value : this.id,
+      version: data.version.present ? data.version.value : this.version,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      visitId: data.visitId.present ? data.visitId.value : this.visitId,
+      blobUri: data.blobUri.present ? data.blobUri.value : this.blobUri,
+      sha256: data.sha256.present ? data.sha256.value : this.sha256,
+      phash: data.phash.present ? data.phash.value : this.phash,
+      exifTime: data.exifTime.present ? data.exifTime.value : this.exifTime,
+      exifLat: data.exifLat.present ? data.exifLat.value : this.exifLat,
+      exifLon: data.exifLon.present ? data.exifLon.value : this.exifLon,
+      takenInApp: data.takenInApp.present
+          ? data.takenInApp.value
+          : this.takenInApp,
+      deviceTime: data.deviceTime.present
+          ? data.deviceTime.value
+          : this.deviceTime,
+      serverTime: data.serverTime.present
+          ? data.serverTime.value
+          : this.serverTime,
+      photoFlags: data.photoFlags.present
+          ? data.photoFlags.value
+          : this.photoFlags,
+      localPath: data.localPath.present ? data.localPath.value : this.localPath,
+      extra: data.extra.present ? data.extra.value : this.extra,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VisitPhoto(')
+          ..write('id: $id, ')
+          ..write('version: $version, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('deleted: $deleted, ')
+          ..write('visitId: $visitId, ')
+          ..write('blobUri: $blobUri, ')
+          ..write('sha256: $sha256, ')
+          ..write('phash: $phash, ')
+          ..write('exifTime: $exifTime, ')
+          ..write('exifLat: $exifLat, ')
+          ..write('exifLon: $exifLon, ')
+          ..write('takenInApp: $takenInApp, ')
+          ..write('deviceTime: $deviceTime, ')
+          ..write('serverTime: $serverTime, ')
+          ..write('photoFlags: $photoFlags, ')
+          ..write('localPath: $localPath, ')
+          ..write('extra: $extra')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    version,
+    updatedAt,
+    dirty,
+    deleted,
+    visitId,
+    blobUri,
+    sha256,
+    phash,
+    exifTime,
+    exifLat,
+    exifLon,
+    takenInApp,
+    deviceTime,
+    serverTime,
+    photoFlags,
+    localPath,
+    extra,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VisitPhoto &&
+          other.id == this.id &&
+          other.version == this.version &&
+          other.updatedAt == this.updatedAt &&
+          other.dirty == this.dirty &&
+          other.deleted == this.deleted &&
+          other.visitId == this.visitId &&
+          other.blobUri == this.blobUri &&
+          other.sha256 == this.sha256 &&
+          other.phash == this.phash &&
+          other.exifTime == this.exifTime &&
+          other.exifLat == this.exifLat &&
+          other.exifLon == this.exifLon &&
+          other.takenInApp == this.takenInApp &&
+          other.deviceTime == this.deviceTime &&
+          other.serverTime == this.serverTime &&
+          other.photoFlags == this.photoFlags &&
+          other.localPath == this.localPath &&
+          other.extra == this.extra);
+}
+
+class VisitPhotosCompanion extends UpdateCompanion<VisitPhoto> {
+  final Value<String> id;
+  final Value<int> version;
+  final Value<DateTime> updatedAt;
+  final Value<bool> dirty;
+  final Value<bool> deleted;
+  final Value<String> visitId;
+  final Value<String> blobUri;
+  final Value<String?> sha256;
+  final Value<String?> phash;
+  final Value<DateTime?> exifTime;
+  final Value<double?> exifLat;
+  final Value<double?> exifLon;
+  final Value<bool> takenInApp;
+  final Value<DateTime?> deviceTime;
+  final Value<DateTime?> serverTime;
+  final Value<String> photoFlags;
+  final Value<String?> localPath;
+  final Value<String> extra;
+  final Value<int> rowid;
+  const VisitPhotosCompanion({
+    this.id = const Value.absent(),
+    this.version = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.visitId = const Value.absent(),
+    this.blobUri = const Value.absent(),
+    this.sha256 = const Value.absent(),
+    this.phash = const Value.absent(),
+    this.exifTime = const Value.absent(),
+    this.exifLat = const Value.absent(),
+    this.exifLon = const Value.absent(),
+    this.takenInApp = const Value.absent(),
+    this.deviceTime = const Value.absent(),
+    this.serverTime = const Value.absent(),
+    this.photoFlags = const Value.absent(),
+    this.localPath = const Value.absent(),
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VisitPhotosCompanion.insert({
+    required String id,
+    this.version = const Value.absent(),
+    required DateTime updatedAt,
+    this.dirty = const Value.absent(),
+    this.deleted = const Value.absent(),
+    required String visitId,
+    this.blobUri = const Value.absent(),
+    this.sha256 = const Value.absent(),
+    this.phash = const Value.absent(),
+    this.exifTime = const Value.absent(),
+    this.exifLat = const Value.absent(),
+    this.exifLon = const Value.absent(),
+    this.takenInApp = const Value.absent(),
+    this.deviceTime = const Value.absent(),
+    this.serverTime = const Value.absent(),
+    this.photoFlags = const Value.absent(),
+    this.localPath = const Value.absent(),
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       updatedAt = Value(updatedAt),
+       visitId = Value(visitId);
+  static Insertable<VisitPhoto> custom({
+    Expression<String>? id,
+    Expression<int>? version,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? dirty,
+    Expression<bool>? deleted,
+    Expression<String>? visitId,
+    Expression<String>? blobUri,
+    Expression<String>? sha256,
+    Expression<String>? phash,
+    Expression<DateTime>? exifTime,
+    Expression<double>? exifLat,
+    Expression<double>? exifLon,
+    Expression<bool>? takenInApp,
+    Expression<DateTime>? deviceTime,
+    Expression<DateTime>? serverTime,
+    Expression<String>? photoFlags,
+    Expression<String>? localPath,
+    Expression<String>? extra,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (version != null) 'version': version,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (deleted != null) 'deleted': deleted,
+      if (visitId != null) 'visit_id': visitId,
+      if (blobUri != null) 'blob_uri': blobUri,
+      if (sha256 != null) 'sha256': sha256,
+      if (phash != null) 'phash': phash,
+      if (exifTime != null) 'exif_time': exifTime,
+      if (exifLat != null) 'exif_lat': exifLat,
+      if (exifLon != null) 'exif_lon': exifLon,
+      if (takenInApp != null) 'taken_in_app': takenInApp,
+      if (deviceTime != null) 'device_time': deviceTime,
+      if (serverTime != null) 'server_time': serverTime,
+      if (photoFlags != null) 'photo_flags': photoFlags,
+      if (localPath != null) 'local_path': localPath,
+      if (extra != null) 'extra': extra,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VisitPhotosCompanion copyWith({
+    Value<String>? id,
+    Value<int>? version,
+    Value<DateTime>? updatedAt,
+    Value<bool>? dirty,
+    Value<bool>? deleted,
+    Value<String>? visitId,
+    Value<String>? blobUri,
+    Value<String?>? sha256,
+    Value<String?>? phash,
+    Value<DateTime?>? exifTime,
+    Value<double?>? exifLat,
+    Value<double?>? exifLon,
+    Value<bool>? takenInApp,
+    Value<DateTime?>? deviceTime,
+    Value<DateTime?>? serverTime,
+    Value<String>? photoFlags,
+    Value<String?>? localPath,
+    Value<String>? extra,
+    Value<int>? rowid,
+  }) {
+    return VisitPhotosCompanion(
+      id: id ?? this.id,
+      version: version ?? this.version,
+      updatedAt: updatedAt ?? this.updatedAt,
+      dirty: dirty ?? this.dirty,
+      deleted: deleted ?? this.deleted,
+      visitId: visitId ?? this.visitId,
+      blobUri: blobUri ?? this.blobUri,
+      sha256: sha256 ?? this.sha256,
+      phash: phash ?? this.phash,
+      exifTime: exifTime ?? this.exifTime,
+      exifLat: exifLat ?? this.exifLat,
+      exifLon: exifLon ?? this.exifLon,
+      takenInApp: takenInApp ?? this.takenInApp,
+      deviceTime: deviceTime ?? this.deviceTime,
+      serverTime: serverTime ?? this.serverTime,
+      photoFlags: photoFlags ?? this.photoFlags,
+      localPath: localPath ?? this.localPath,
+      extra: extra ?? this.extra,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (visitId.present) {
+      map['visit_id'] = Variable<String>(visitId.value);
+    }
+    if (blobUri.present) {
+      map['blob_uri'] = Variable<String>(blobUri.value);
+    }
+    if (sha256.present) {
+      map['sha256'] = Variable<String>(sha256.value);
+    }
+    if (phash.present) {
+      map['phash'] = Variable<String>(phash.value);
+    }
+    if (exifTime.present) {
+      map['exif_time'] = Variable<DateTime>(exifTime.value);
+    }
+    if (exifLat.present) {
+      map['exif_lat'] = Variable<double>(exifLat.value);
+    }
+    if (exifLon.present) {
+      map['exif_lon'] = Variable<double>(exifLon.value);
+    }
+    if (takenInApp.present) {
+      map['taken_in_app'] = Variable<bool>(takenInApp.value);
+    }
+    if (deviceTime.present) {
+      map['device_time'] = Variable<DateTime>(deviceTime.value);
+    }
+    if (serverTime.present) {
+      map['server_time'] = Variable<DateTime>(serverTime.value);
+    }
+    if (photoFlags.present) {
+      map['photo_flags'] = Variable<String>(photoFlags.value);
+    }
+    if (localPath.present) {
+      map['local_path'] = Variable<String>(localPath.value);
+    }
+    if (extra.present) {
+      map['extra'] = Variable<String>(extra.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VisitPhotosCompanion(')
+          ..write('id: $id, ')
+          ..write('version: $version, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('deleted: $deleted, ')
+          ..write('visitId: $visitId, ')
+          ..write('blobUri: $blobUri, ')
+          ..write('sha256: $sha256, ')
+          ..write('phash: $phash, ')
+          ..write('exifTime: $exifTime, ')
+          ..write('exifLat: $exifLat, ')
+          ..write('exifLon: $exifLon, ')
+          ..write('takenInApp: $takenInApp, ')
+          ..write('deviceTime: $deviceTime, ')
+          ..write('serverTime: $serverTime, ')
+          ..write('photoFlags: $photoFlags, ')
+          ..write('localPath: $localPath, ')
+          ..write('extra: $extra, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $VisitConfirmationsTable extends VisitConfirmations
+    with TableInfo<$VisitConfirmationsTable, VisitConfirmation> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VisitConfirmationsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta(
+    'deleted',
+  );
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _visitIdMeta = const VerificationMeta(
+    'visitId',
+  );
+  @override
+  late final GeneratedColumn<String> visitId = GeneratedColumn<String>(
+    'visit_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _channelMeta = const VerificationMeta(
+    'channel',
+  );
+  @override
+  late final GeneratedColumn<String> channel = GeneratedColumn<String>(
+    'channel',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _requestedAtMeta = const VerificationMeta(
+    'requestedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> requestedAt = GeneratedColumn<DateTime>(
+    'requested_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _expiresAtMeta = const VerificationMeta(
+    'expiresAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> expiresAt = GeneratedColumn<DateTime>(
+    'expires_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _confirmedAtMeta = const VerificationMeta(
+    'confirmedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> confirmedAt = GeneratedColumn<DateTime>(
+    'confirmed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _farmerPhoneLast4Meta = const VerificationMeta(
+    'farmerPhoneLast4',
+  );
+  @override
+  late final GeneratedColumn<String> farmerPhoneLast4 = GeneratedColumn<String>(
+    'farmer_phone_last4',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ratingMeta = const VerificationMeta('rating');
+  @override
+  late final GeneratedColumn<int> rating = GeneratedColumn<int>(
+    'rating',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tokenMeta = const VerificationMeta('token');
+  @override
+  late final GeneratedColumn<String> token = GeneratedColumn<String>(
+    'token',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _extraMeta = const VerificationMeta('extra');
+  @override
+  late final GeneratedColumn<String> extra = GeneratedColumn<String>(
+    'extra',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    version,
+    updatedAt,
+    dirty,
+    deleted,
+    visitId,
+    channel,
+    status,
+    requestedAt,
+    expiresAt,
+    confirmedAt,
+    farmerPhoneLast4,
+    rating,
+    token,
+    extra,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'visit_confirmations';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<VisitConfirmation> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(
+        _deletedMeta,
+        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
+      );
+    }
+    if (data.containsKey('visit_id')) {
+      context.handle(
+        _visitIdMeta,
+        visitId.isAcceptableOrUnknown(data['visit_id']!, _visitIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_visitIdMeta);
+    }
+    if (data.containsKey('channel')) {
+      context.handle(
+        _channelMeta,
+        channel.isAcceptableOrUnknown(data['channel']!, _channelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_channelMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('requested_at')) {
+      context.handle(
+        _requestedAtMeta,
+        requestedAt.isAcceptableOrUnknown(
+          data['requested_at']!,
+          _requestedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('expires_at')) {
+      context.handle(
+        _expiresAtMeta,
+        expiresAt.isAcceptableOrUnknown(data['expires_at']!, _expiresAtMeta),
+      );
+    }
+    if (data.containsKey('confirmed_at')) {
+      context.handle(
+        _confirmedAtMeta,
+        confirmedAt.isAcceptableOrUnknown(
+          data['confirmed_at']!,
+          _confirmedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('farmer_phone_last4')) {
+      context.handle(
+        _farmerPhoneLast4Meta,
+        farmerPhoneLast4.isAcceptableOrUnknown(
+          data['farmer_phone_last4']!,
+          _farmerPhoneLast4Meta,
+        ),
+      );
+    }
+    if (data.containsKey('rating')) {
+      context.handle(
+        _ratingMeta,
+        rating.isAcceptableOrUnknown(data['rating']!, _ratingMeta),
+      );
+    }
+    if (data.containsKey('token')) {
+      context.handle(
+        _tokenMeta,
+        token.isAcceptableOrUnknown(data['token']!, _tokenMeta),
+      );
+    }
+    if (data.containsKey('extra')) {
+      context.handle(
+        _extraMeta,
+        extra.isAcceptableOrUnknown(data['extra']!, _extraMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VisitConfirmation map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VisitConfirmation(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
+      deleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}deleted'],
+      )!,
+      visitId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}visit_id'],
+      )!,
+      channel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}channel'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      requestedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}requested_at'],
+      ),
+      expiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}expires_at'],
+      ),
+      confirmedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}confirmed_at'],
+      ),
+      farmerPhoneLast4: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}farmer_phone_last4'],
+      ),
+      rating: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rating'],
+      ),
+      token: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}token'],
+      ),
+      extra: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}extra'],
+      )!,
+    );
+  }
+
+  @override
+  $VisitConfirmationsTable createAlias(String alias) {
+    return $VisitConfirmationsTable(attachedDatabase, alias);
+  }
+}
+
+class VisitConfirmation extends DataClass
+    implements Insertable<VisitConfirmation> {
+  /// Client-generated uuid, also the server id.
+  final String id;
+
+  /// Server row version; 0 while the create is still queued.
+  final int version;
+
+  /// Last local write (UTC).
+  final DateTime updatedAt;
+
+  /// A queued op still references this row.
+  final bool dirty;
+
+  /// Deleted locally; removed once the server confirms.
+  final bool deleted;
+
+  /// Owning visit.
+  final String visitId;
+
+  /// `sms_otp` | `app_push` | `qr`.
+  final String channel;
+
+  /// `pending` | `confirmed` | `expired` (server) | `queued` (local:
+  /// requested offline, sent when online).
+  final String status;
+
+  /// When the request was made.
+  final DateTime? requestedAt;
+
+  /// When the code / token lapses.
+  final DateTime? expiresAt;
+
+  /// Server-owned confirmation time.
+  final DateTime? confirmedAt;
+
+  /// Last four digits of the farmer phone the OTP went to.
+  final String? farmerPhoneLast4;
+
+  /// FM-011 rating, once the farmer gave one.
+  final int? rating;
+
+  /// Signed QR token to render (local only; never sent back).
+  final String? token;
+
+  /// JSON of server fields this app does not model.
+  final String extra;
+  const VisitConfirmation({
+    required this.id,
+    required this.version,
+    required this.updatedAt,
+    required this.dirty,
+    required this.deleted,
+    required this.visitId,
+    required this.channel,
+    required this.status,
+    this.requestedAt,
+    this.expiresAt,
+    this.confirmedAt,
+    this.farmerPhoneLast4,
+    this.rating,
+    this.token,
+    required this.extra,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['version'] = Variable<int>(version);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['dirty'] = Variable<bool>(dirty);
+    map['deleted'] = Variable<bool>(deleted);
+    map['visit_id'] = Variable<String>(visitId);
+    map['channel'] = Variable<String>(channel);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || requestedAt != null) {
+      map['requested_at'] = Variable<DateTime>(requestedAt);
+    }
+    if (!nullToAbsent || expiresAt != null) {
+      map['expires_at'] = Variable<DateTime>(expiresAt);
+    }
+    if (!nullToAbsent || confirmedAt != null) {
+      map['confirmed_at'] = Variable<DateTime>(confirmedAt);
+    }
+    if (!nullToAbsent || farmerPhoneLast4 != null) {
+      map['farmer_phone_last4'] = Variable<String>(farmerPhoneLast4);
+    }
+    if (!nullToAbsent || rating != null) {
+      map['rating'] = Variable<int>(rating);
+    }
+    if (!nullToAbsent || token != null) {
+      map['token'] = Variable<String>(token);
+    }
+    map['extra'] = Variable<String>(extra);
+    return map;
+  }
+
+  VisitConfirmationsCompanion toCompanion(bool nullToAbsent) {
+    return VisitConfirmationsCompanion(
+      id: Value(id),
+      version: Value(version),
+      updatedAt: Value(updatedAt),
+      dirty: Value(dirty),
+      deleted: Value(deleted),
+      visitId: Value(visitId),
+      channel: Value(channel),
+      status: Value(status),
+      requestedAt: requestedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(requestedAt),
+      expiresAt: expiresAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expiresAt),
+      confirmedAt: confirmedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(confirmedAt),
+      farmerPhoneLast4: farmerPhoneLast4 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(farmerPhoneLast4),
+      rating: rating == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rating),
+      token: token == null && nullToAbsent
+          ? const Value.absent()
+          : Value(token),
+      extra: Value(extra),
+    );
+  }
+
+  factory VisitConfirmation.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VisitConfirmation(
+      id: serializer.fromJson<String>(json['id']),
+      version: serializer.fromJson<int>(json['version']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      visitId: serializer.fromJson<String>(json['visitId']),
+      channel: serializer.fromJson<String>(json['channel']),
+      status: serializer.fromJson<String>(json['status']),
+      requestedAt: serializer.fromJson<DateTime?>(json['requestedAt']),
+      expiresAt: serializer.fromJson<DateTime?>(json['expiresAt']),
+      confirmedAt: serializer.fromJson<DateTime?>(json['confirmedAt']),
+      farmerPhoneLast4: serializer.fromJson<String?>(json['farmerPhoneLast4']),
+      rating: serializer.fromJson<int?>(json['rating']),
+      token: serializer.fromJson<String?>(json['token']),
+      extra: serializer.fromJson<String>(json['extra']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'version': serializer.toJson<int>(version),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'deleted': serializer.toJson<bool>(deleted),
+      'visitId': serializer.toJson<String>(visitId),
+      'channel': serializer.toJson<String>(channel),
+      'status': serializer.toJson<String>(status),
+      'requestedAt': serializer.toJson<DateTime?>(requestedAt),
+      'expiresAt': serializer.toJson<DateTime?>(expiresAt),
+      'confirmedAt': serializer.toJson<DateTime?>(confirmedAt),
+      'farmerPhoneLast4': serializer.toJson<String?>(farmerPhoneLast4),
+      'rating': serializer.toJson<int?>(rating),
+      'token': serializer.toJson<String?>(token),
+      'extra': serializer.toJson<String>(extra),
+    };
+  }
+
+  VisitConfirmation copyWith({
+    String? id,
+    int? version,
+    DateTime? updatedAt,
+    bool? dirty,
+    bool? deleted,
+    String? visitId,
+    String? channel,
+    String? status,
+    Value<DateTime?> requestedAt = const Value.absent(),
+    Value<DateTime?> expiresAt = const Value.absent(),
+    Value<DateTime?> confirmedAt = const Value.absent(),
+    Value<String?> farmerPhoneLast4 = const Value.absent(),
+    Value<int?> rating = const Value.absent(),
+    Value<String?> token = const Value.absent(),
+    String? extra,
+  }) => VisitConfirmation(
+    id: id ?? this.id,
+    version: version ?? this.version,
+    updatedAt: updatedAt ?? this.updatedAt,
+    dirty: dirty ?? this.dirty,
+    deleted: deleted ?? this.deleted,
+    visitId: visitId ?? this.visitId,
+    channel: channel ?? this.channel,
+    status: status ?? this.status,
+    requestedAt: requestedAt.present ? requestedAt.value : this.requestedAt,
+    expiresAt: expiresAt.present ? expiresAt.value : this.expiresAt,
+    confirmedAt: confirmedAt.present ? confirmedAt.value : this.confirmedAt,
+    farmerPhoneLast4: farmerPhoneLast4.present
+        ? farmerPhoneLast4.value
+        : this.farmerPhoneLast4,
+    rating: rating.present ? rating.value : this.rating,
+    token: token.present ? token.value : this.token,
+    extra: extra ?? this.extra,
+  );
+  VisitConfirmation copyWithCompanion(VisitConfirmationsCompanion data) {
+    return VisitConfirmation(
+      id: data.id.present ? data.id.value : this.id,
+      version: data.version.present ? data.version.value : this.version,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      visitId: data.visitId.present ? data.visitId.value : this.visitId,
+      channel: data.channel.present ? data.channel.value : this.channel,
+      status: data.status.present ? data.status.value : this.status,
+      requestedAt: data.requestedAt.present
+          ? data.requestedAt.value
+          : this.requestedAt,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+      confirmedAt: data.confirmedAt.present
+          ? data.confirmedAt.value
+          : this.confirmedAt,
+      farmerPhoneLast4: data.farmerPhoneLast4.present
+          ? data.farmerPhoneLast4.value
+          : this.farmerPhoneLast4,
+      rating: data.rating.present ? data.rating.value : this.rating,
+      token: data.token.present ? data.token.value : this.token,
+      extra: data.extra.present ? data.extra.value : this.extra,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VisitConfirmation(')
+          ..write('id: $id, ')
+          ..write('version: $version, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('deleted: $deleted, ')
+          ..write('visitId: $visitId, ')
+          ..write('channel: $channel, ')
+          ..write('status: $status, ')
+          ..write('requestedAt: $requestedAt, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('confirmedAt: $confirmedAt, ')
+          ..write('farmerPhoneLast4: $farmerPhoneLast4, ')
+          ..write('rating: $rating, ')
+          ..write('token: $token, ')
+          ..write('extra: $extra')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    version,
+    updatedAt,
+    dirty,
+    deleted,
+    visitId,
+    channel,
+    status,
+    requestedAt,
+    expiresAt,
+    confirmedAt,
+    farmerPhoneLast4,
+    rating,
+    token,
+    extra,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VisitConfirmation &&
+          other.id == this.id &&
+          other.version == this.version &&
+          other.updatedAt == this.updatedAt &&
+          other.dirty == this.dirty &&
+          other.deleted == this.deleted &&
+          other.visitId == this.visitId &&
+          other.channel == this.channel &&
+          other.status == this.status &&
+          other.requestedAt == this.requestedAt &&
+          other.expiresAt == this.expiresAt &&
+          other.confirmedAt == this.confirmedAt &&
+          other.farmerPhoneLast4 == this.farmerPhoneLast4 &&
+          other.rating == this.rating &&
+          other.token == this.token &&
+          other.extra == this.extra);
+}
+
+class VisitConfirmationsCompanion extends UpdateCompanion<VisitConfirmation> {
+  final Value<String> id;
+  final Value<int> version;
+  final Value<DateTime> updatedAt;
+  final Value<bool> dirty;
+  final Value<bool> deleted;
+  final Value<String> visitId;
+  final Value<String> channel;
+  final Value<String> status;
+  final Value<DateTime?> requestedAt;
+  final Value<DateTime?> expiresAt;
+  final Value<DateTime?> confirmedAt;
+  final Value<String?> farmerPhoneLast4;
+  final Value<int?> rating;
+  final Value<String?> token;
+  final Value<String> extra;
+  final Value<int> rowid;
+  const VisitConfirmationsCompanion({
+    this.id = const Value.absent(),
+    this.version = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.visitId = const Value.absent(),
+    this.channel = const Value.absent(),
+    this.status = const Value.absent(),
+    this.requestedAt = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.confirmedAt = const Value.absent(),
+    this.farmerPhoneLast4 = const Value.absent(),
+    this.rating = const Value.absent(),
+    this.token = const Value.absent(),
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VisitConfirmationsCompanion.insert({
+    required String id,
+    this.version = const Value.absent(),
+    required DateTime updatedAt,
+    this.dirty = const Value.absent(),
+    this.deleted = const Value.absent(),
+    required String visitId,
+    required String channel,
+    this.status = const Value.absent(),
+    this.requestedAt = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.confirmedAt = const Value.absent(),
+    this.farmerPhoneLast4 = const Value.absent(),
+    this.rating = const Value.absent(),
+    this.token = const Value.absent(),
+    this.extra = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       updatedAt = Value(updatedAt),
+       visitId = Value(visitId),
+       channel = Value(channel);
+  static Insertable<VisitConfirmation> custom({
+    Expression<String>? id,
+    Expression<int>? version,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? dirty,
+    Expression<bool>? deleted,
+    Expression<String>? visitId,
+    Expression<String>? channel,
+    Expression<String>? status,
+    Expression<DateTime>? requestedAt,
+    Expression<DateTime>? expiresAt,
+    Expression<DateTime>? confirmedAt,
+    Expression<String>? farmerPhoneLast4,
+    Expression<int>? rating,
+    Expression<String>? token,
+    Expression<String>? extra,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (version != null) 'version': version,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (deleted != null) 'deleted': deleted,
+      if (visitId != null) 'visit_id': visitId,
+      if (channel != null) 'channel': channel,
+      if (status != null) 'status': status,
+      if (requestedAt != null) 'requested_at': requestedAt,
+      if (expiresAt != null) 'expires_at': expiresAt,
+      if (confirmedAt != null) 'confirmed_at': confirmedAt,
+      if (farmerPhoneLast4 != null) 'farmer_phone_last4': farmerPhoneLast4,
+      if (rating != null) 'rating': rating,
+      if (token != null) 'token': token,
+      if (extra != null) 'extra': extra,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VisitConfirmationsCompanion copyWith({
+    Value<String>? id,
+    Value<int>? version,
+    Value<DateTime>? updatedAt,
+    Value<bool>? dirty,
+    Value<bool>? deleted,
+    Value<String>? visitId,
+    Value<String>? channel,
+    Value<String>? status,
+    Value<DateTime?>? requestedAt,
+    Value<DateTime?>? expiresAt,
+    Value<DateTime?>? confirmedAt,
+    Value<String?>? farmerPhoneLast4,
+    Value<int?>? rating,
+    Value<String?>? token,
+    Value<String>? extra,
+    Value<int>? rowid,
+  }) {
+    return VisitConfirmationsCompanion(
+      id: id ?? this.id,
+      version: version ?? this.version,
+      updatedAt: updatedAt ?? this.updatedAt,
+      dirty: dirty ?? this.dirty,
+      deleted: deleted ?? this.deleted,
+      visitId: visitId ?? this.visitId,
+      channel: channel ?? this.channel,
+      status: status ?? this.status,
+      requestedAt: requestedAt ?? this.requestedAt,
+      expiresAt: expiresAt ?? this.expiresAt,
+      confirmedAt: confirmedAt ?? this.confirmedAt,
+      farmerPhoneLast4: farmerPhoneLast4 ?? this.farmerPhoneLast4,
+      rating: rating ?? this.rating,
+      token: token ?? this.token,
+      extra: extra ?? this.extra,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (visitId.present) {
+      map['visit_id'] = Variable<String>(visitId.value);
+    }
+    if (channel.present) {
+      map['channel'] = Variable<String>(channel.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (requestedAt.present) {
+      map['requested_at'] = Variable<DateTime>(requestedAt.value);
+    }
+    if (expiresAt.present) {
+      map['expires_at'] = Variable<DateTime>(expiresAt.value);
+    }
+    if (confirmedAt.present) {
+      map['confirmed_at'] = Variable<DateTime>(confirmedAt.value);
+    }
+    if (farmerPhoneLast4.present) {
+      map['farmer_phone_last4'] = Variable<String>(farmerPhoneLast4.value);
+    }
+    if (rating.present) {
+      map['rating'] = Variable<int>(rating.value);
+    }
+    if (token.present) {
+      map['token'] = Variable<String>(token.value);
+    }
+    if (extra.present) {
+      map['extra'] = Variable<String>(extra.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VisitConfirmationsCompanion(')
+          ..write('id: $id, ')
+          ..write('version: $version, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('deleted: $deleted, ')
+          ..write('visitId: $visitId, ')
+          ..write('channel: $channel, ')
+          ..write('status: $status, ')
+          ..write('requestedAt: $requestedAt, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('confirmedAt: $confirmedAt, ')
+          ..write('farmerPhoneLast4: $farmerPhoneLast4, ')
+          ..write('rating: $rating, ')
+          ..write('token: $token, ')
+          ..write('extra: $extra, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -8872,6 +13169,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $DutySessionsTable dutySessions = $DutySessionsTable(this);
   late final $LocationBufferTable locationBuffer = $LocationBufferTable(this);
   late final $SyncDocsTable syncDocs = $SyncDocsTable(this);
+  late final $VisitsTable visits = $VisitsTable(this);
+  late final $VisitPhotosTable visitPhotos = $VisitPhotosTable(this);
+  late final $VisitConfirmationsTable visitConfirmations =
+      $VisitConfirmationsTable(this);
   late final Index outboxStateSeq = Index(
     'outbox_state_seq',
     'CREATE INDEX outbox_state_seq ON outbox (state, seq)',
@@ -8883,6 +13184,18 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index locationBufferSession = Index(
     'location_buffer_session',
     'CREATE INDEX location_buffer_session ON location_buffer (session_id, ts)',
+  );
+  late final Index visitsCheckin = Index(
+    'visits_checkin',
+    'CREATE INDEX visits_checkin ON visits (checkin_at)',
+  );
+  late final Index visitPhotosVisit = Index(
+    'visit_photos_visit',
+    'CREATE INDEX visit_photos_visit ON visit_photos (visit_id)',
+  );
+  late final Index visitConfirmationsVisit = Index(
+    'visit_confirmations_visit',
+    'CREATE INDEX visit_confirmations_visit ON visit_confirmations (visit_id)',
   );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -8902,9 +13215,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     dutySessions,
     locationBuffer,
     syncDocs,
+    visits,
+    visitPhotos,
+    visitConfirmations,
     outboxStateSeq,
     outboxEntity,
     locationBufferSession,
+    visitsCheckin,
+    visitPhotosVisit,
+    visitConfirmationsVisit,
   ];
 }
 
@@ -11657,6 +15976,9 @@ typedef $$VillagesTableCreateCompanionBuilder = VillagesCompanion Function({
   Value<String?> storeId,
   Value<double?> latitude,
   Value<double?> longitude,
+  Value<double?> meetingPointLat,
+  Value<double?> meetingPointLon,
+  Value<double?> meetingPointRadiusM,
   Value<int> version,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -11670,6 +15992,9 @@ typedef $$VillagesTableUpdateCompanionBuilder = VillagesCompanion Function({
   Value<String?> storeId,
   Value<double?> latitude,
   Value<double?> longitude,
+  Value<double?> meetingPointLat,
+  Value<double?> meetingPointLon,
+  Value<double?> meetingPointRadiusM,
   Value<int> version,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -11721,6 +16046,21 @@ class $$VillagesTableFilterComposer
 
   ColumnFilters<double> get longitude => $composableBuilder(
     column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get meetingPointLat => $composableBuilder(
+    column: $table.meetingPointLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get meetingPointLon => $composableBuilder(
+    column: $table.meetingPointLon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get meetingPointRadiusM => $composableBuilder(
+    column: $table.meetingPointRadiusM,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11784,6 +16124,21 @@ class $$VillagesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get meetingPointLat => $composableBuilder(
+    column: $table.meetingPointLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get meetingPointLon => $composableBuilder(
+    column: $table.meetingPointLon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get meetingPointRadiusM => $composableBuilder(
+    column: $table.meetingPointRadiusM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get version => $composableBuilder(
     column: $table.version,
     builder: (column) => ColumnOrderings(column),
@@ -11828,6 +16183,21 @@ class $$VillagesTableAnnotationComposer
   GeneratedColumn<double> get longitude =>
       $composableBuilder(column: $table.longitude, builder: (column) => column);
 
+  GeneratedColumn<double> get meetingPointLat => $composableBuilder(
+    column: $table.meetingPointLat,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get meetingPointLon => $composableBuilder(
+    column: $table.meetingPointLon,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get meetingPointRadiusM => $composableBuilder(
+    column: $table.meetingPointRadiusM,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
 
@@ -11871,6 +16241,9 @@ class $$VillagesTableTableManager
                 Value<String?> storeId = const Value.absent(),
                 Value<double?> latitude = const Value.absent(),
                 Value<double?> longitude = const Value.absent(),
+                Value<double?> meetingPointLat = const Value.absent(),
+                Value<double?> meetingPointLon = const Value.absent(),
+                Value<double?> meetingPointRadiusM = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -11883,6 +16256,9 @@ class $$VillagesTableTableManager
                 storeId: storeId,
                 latitude: latitude,
                 longitude: longitude,
+                meetingPointLat: meetingPointLat,
+                meetingPointLon: meetingPointLon,
+                meetingPointRadiusM: meetingPointRadiusM,
                 version: version,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -11897,6 +16273,9 @@ class $$VillagesTableTableManager
                 Value<String?> storeId = const Value.absent(),
                 Value<double?> latitude = const Value.absent(),
                 Value<double?> longitude = const Value.absent(),
+                Value<double?> meetingPointLat = const Value.absent(),
+                Value<double?> meetingPointLon = const Value.absent(),
+                Value<double?> meetingPointRadiusM = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -11909,6 +16288,9 @@ class $$VillagesTableTableManager
                 storeId: storeId,
                 latitude: latitude,
                 longitude: longitude,
+                meetingPointLat: meetingPointLat,
+                meetingPointLon: meetingPointLon,
+                meetingPointRadiusM: meetingPointRadiusM,
                 version: version,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -13088,6 +17470,1779 @@ typedef $$SyncDocsTableProcessedTableManager =
       SyncDoc,
       PrefetchHooks Function()
     >;
+typedef $$VisitsTableCreateCompanionBuilder = VisitsCompanion Function({
+  required String id,
+  Value<int> version,
+  required DateTime updatedAt,
+  Value<bool> dirty,
+  Value<bool> deleted,
+  required String farmerId,
+  Value<String?> farmId,
+  Value<String?> villageId,
+  Value<String> purpose,
+  required DateTime checkinAt,
+  required double checkinLat,
+  required double checkinLon,
+  Value<double?> checkinAccuracyM,
+  Value<DateTime?> checkoutAt,
+  Value<double?> checkoutLat,
+  Value<double?> checkoutLon,
+  Value<String?> geofenceResult,
+  Value<String?> precheckResult,
+  Value<double?> precheckDistanceM,
+  Value<String?> precheckTarget,
+  Value<double?> precheckRadiusM,
+  Value<String?> overrideNote,
+  Value<String?> overrideApprovedBy,
+  Value<String?> notes,
+  Value<String?> cropStage,
+  Value<int?> durationS,
+  Value<int?> score,
+  Value<String> status,
+  Value<String> confirmationChannel,
+  Value<DateTime?> confirmedAt,
+  Value<String> deviceIntegrity,
+  Value<String> integrityIssues,
+  Value<String> flags,
+  Value<String?> scoreComponents,
+  Value<String?> clientVisitId,
+  Value<String?> officerId,
+  Value<String?> failureCode,
+  Value<String?> failureDetail,
+  Value<String> extra,
+  Value<int> rowid,
+});
+typedef $$VisitsTableUpdateCompanionBuilder = VisitsCompanion Function({
+  Value<String> id,
+  Value<int> version,
+  Value<DateTime> updatedAt,
+  Value<bool> dirty,
+  Value<bool> deleted,
+  Value<String> farmerId,
+  Value<String?> farmId,
+  Value<String?> villageId,
+  Value<String> purpose,
+  Value<DateTime> checkinAt,
+  Value<double> checkinLat,
+  Value<double> checkinLon,
+  Value<double?> checkinAccuracyM,
+  Value<DateTime?> checkoutAt,
+  Value<double?> checkoutLat,
+  Value<double?> checkoutLon,
+  Value<String?> geofenceResult,
+  Value<String?> precheckResult,
+  Value<double?> precheckDistanceM,
+  Value<String?> precheckTarget,
+  Value<double?> precheckRadiusM,
+  Value<String?> overrideNote,
+  Value<String?> overrideApprovedBy,
+  Value<String?> notes,
+  Value<String?> cropStage,
+  Value<int?> durationS,
+  Value<int?> score,
+  Value<String> status,
+  Value<String> confirmationChannel,
+  Value<DateTime?> confirmedAt,
+  Value<String> deviceIntegrity,
+  Value<String> integrityIssues,
+  Value<String> flags,
+  Value<String?> scoreComponents,
+  Value<String?> clientVisitId,
+  Value<String?> officerId,
+  Value<String?> failureCode,
+  Value<String?> failureDetail,
+  Value<String> extra,
+  Value<int> rowid,
+});
+
+class $$VisitsTableFilterComposer
+    extends Composer<_$AppDatabase, $VisitsTable> {
+  $$VisitsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get farmerId => $composableBuilder(
+    column: $table.farmerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get farmId => $composableBuilder(
+    column: $table.farmId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get villageId => $composableBuilder(
+    column: $table.villageId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get purpose => $composableBuilder(
+    column: $table.purpose,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get checkinAt => $composableBuilder(
+    column: $table.checkinAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get checkinLat => $composableBuilder(
+    column: $table.checkinLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get checkinLon => $composableBuilder(
+    column: $table.checkinLon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get checkinAccuracyM => $composableBuilder(
+    column: $table.checkinAccuracyM,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get checkoutAt => $composableBuilder(
+    column: $table.checkoutAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get checkoutLat => $composableBuilder(
+    column: $table.checkoutLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get checkoutLon => $composableBuilder(
+    column: $table.checkoutLon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get geofenceResult => $composableBuilder(
+    column: $table.geofenceResult,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get precheckResult => $composableBuilder(
+    column: $table.precheckResult,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get precheckDistanceM => $composableBuilder(
+    column: $table.precheckDistanceM,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get precheckTarget => $composableBuilder(
+    column: $table.precheckTarget,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get precheckRadiusM => $composableBuilder(
+    column: $table.precheckRadiusM,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get overrideNote => $composableBuilder(
+    column: $table.overrideNote,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get overrideApprovedBy => $composableBuilder(
+    column: $table.overrideApprovedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cropStage => $composableBuilder(
+    column: $table.cropStage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationS => $composableBuilder(
+    column: $table.durationS,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get score => $composableBuilder(
+    column: $table.score,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get confirmationChannel => $composableBuilder(
+    column: $table.confirmationChannel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get confirmedAt => $composableBuilder(
+    column: $table.confirmedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceIntegrity => $composableBuilder(
+    column: $table.deviceIntegrity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get integrityIssues => $composableBuilder(
+    column: $table.integrityIssues,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get flags => $composableBuilder(
+    column: $table.flags,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get scoreComponents => $composableBuilder(
+    column: $table.scoreComponents,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get clientVisitId => $composableBuilder(
+    column: $table.clientVisitId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get officerId => $composableBuilder(
+    column: $table.officerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get failureCode => $composableBuilder(
+    column: $table.failureCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get failureDetail => $composableBuilder(
+    column: $table.failureDetail,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VisitsTableOrderingComposer
+    extends Composer<_$AppDatabase, $VisitsTable> {
+  $$VisitsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get farmerId => $composableBuilder(
+    column: $table.farmerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get farmId => $composableBuilder(
+    column: $table.farmId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get villageId => $composableBuilder(
+    column: $table.villageId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get purpose => $composableBuilder(
+    column: $table.purpose,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get checkinAt => $composableBuilder(
+    column: $table.checkinAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get checkinLat => $composableBuilder(
+    column: $table.checkinLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get checkinLon => $composableBuilder(
+    column: $table.checkinLon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get checkinAccuracyM => $composableBuilder(
+    column: $table.checkinAccuracyM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get checkoutAt => $composableBuilder(
+    column: $table.checkoutAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get checkoutLat => $composableBuilder(
+    column: $table.checkoutLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get checkoutLon => $composableBuilder(
+    column: $table.checkoutLon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get geofenceResult => $composableBuilder(
+    column: $table.geofenceResult,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get precheckResult => $composableBuilder(
+    column: $table.precheckResult,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get precheckDistanceM => $composableBuilder(
+    column: $table.precheckDistanceM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get precheckTarget => $composableBuilder(
+    column: $table.precheckTarget,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get precheckRadiusM => $composableBuilder(
+    column: $table.precheckRadiusM,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get overrideNote => $composableBuilder(
+    column: $table.overrideNote,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get overrideApprovedBy => $composableBuilder(
+    column: $table.overrideApprovedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cropStage => $composableBuilder(
+    column: $table.cropStage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationS => $composableBuilder(
+    column: $table.durationS,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get score => $composableBuilder(
+    column: $table.score,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get confirmationChannel => $composableBuilder(
+    column: $table.confirmationChannel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get confirmedAt => $composableBuilder(
+    column: $table.confirmedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceIntegrity => $composableBuilder(
+    column: $table.deviceIntegrity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get integrityIssues => $composableBuilder(
+    column: $table.integrityIssues,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get flags => $composableBuilder(
+    column: $table.flags,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get scoreComponents => $composableBuilder(
+    column: $table.scoreComponents,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get clientVisitId => $composableBuilder(
+    column: $table.clientVisitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get officerId => $composableBuilder(
+    column: $table.officerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get failureCode => $composableBuilder(
+    column: $table.failureCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get failureDetail => $composableBuilder(
+    column: $table.failureDetail,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VisitsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VisitsTable> {
+  $$VisitsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get farmerId =>
+      $composableBuilder(column: $table.farmerId, builder: (column) => column);
+
+  GeneratedColumn<String> get farmId =>
+      $composableBuilder(column: $table.farmId, builder: (column) => column);
+
+  GeneratedColumn<String> get villageId =>
+      $composableBuilder(column: $table.villageId, builder: (column) => column);
+
+  GeneratedColumn<String> get purpose =>
+      $composableBuilder(column: $table.purpose, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get checkinAt =>
+      $composableBuilder(column: $table.checkinAt, builder: (column) => column);
+
+  GeneratedColumn<double> get checkinLat => $composableBuilder(
+    column: $table.checkinLat,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get checkinLon => $composableBuilder(
+    column: $table.checkinLon,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get checkinAccuracyM => $composableBuilder(
+    column: $table.checkinAccuracyM,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get checkoutAt => $composableBuilder(
+    column: $table.checkoutAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get checkoutLat => $composableBuilder(
+    column: $table.checkoutLat,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get checkoutLon => $composableBuilder(
+    column: $table.checkoutLon,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get geofenceResult => $composableBuilder(
+    column: $table.geofenceResult,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get precheckResult => $composableBuilder(
+    column: $table.precheckResult,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get precheckDistanceM => $composableBuilder(
+    column: $table.precheckDistanceM,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get precheckTarget => $composableBuilder(
+    column: $table.precheckTarget,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get precheckRadiusM => $composableBuilder(
+    column: $table.precheckRadiusM,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get overrideNote => $composableBuilder(
+    column: $table.overrideNote,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get overrideApprovedBy => $composableBuilder(
+    column: $table.overrideApprovedBy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get cropStage =>
+      $composableBuilder(column: $table.cropStage, builder: (column) => column);
+
+  GeneratedColumn<int> get durationS =>
+      $composableBuilder(column: $table.durationS, builder: (column) => column);
+
+  GeneratedColumn<int> get score =>
+      $composableBuilder(column: $table.score, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get confirmationChannel => $composableBuilder(
+    column: $table.confirmationChannel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get confirmedAt => $composableBuilder(
+    column: $table.confirmedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deviceIntegrity => $composableBuilder(
+    column: $table.deviceIntegrity,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get integrityIssues => $composableBuilder(
+    column: $table.integrityIssues,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get flags =>
+      $composableBuilder(column: $table.flags, builder: (column) => column);
+
+  GeneratedColumn<String> get scoreComponents => $composableBuilder(
+    column: $table.scoreComponents,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get clientVisitId => $composableBuilder(
+    column: $table.clientVisitId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get officerId =>
+      $composableBuilder(column: $table.officerId, builder: (column) => column);
+
+  GeneratedColumn<String> get failureCode => $composableBuilder(
+    column: $table.failureCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get failureDetail => $composableBuilder(
+    column: $table.failureDetail,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get extra =>
+      $composableBuilder(column: $table.extra, builder: (column) => column);
+}
+
+class $$VisitsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VisitsTable,
+          Visit,
+          $$VisitsTableFilterComposer,
+          $$VisitsTableOrderingComposer,
+          $$VisitsTableAnnotationComposer,
+          $$VisitsTableCreateCompanionBuilder,
+          $$VisitsTableUpdateCompanionBuilder,
+          (Visit, BaseReferences<_$AppDatabase, $VisitsTable, Visit>),
+          Visit,
+          PrefetchHooks Function()
+        > {
+  $$VisitsTableTableManager(_$AppDatabase db, $VisitsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VisitsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VisitsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VisitsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<String> farmerId = const Value.absent(),
+                Value<String?> farmId = const Value.absent(),
+                Value<String?> villageId = const Value.absent(),
+                Value<String> purpose = const Value.absent(),
+                Value<DateTime> checkinAt = const Value.absent(),
+                Value<double> checkinLat = const Value.absent(),
+                Value<double> checkinLon = const Value.absent(),
+                Value<double?> checkinAccuracyM = const Value.absent(),
+                Value<DateTime?> checkoutAt = const Value.absent(),
+                Value<double?> checkoutLat = const Value.absent(),
+                Value<double?> checkoutLon = const Value.absent(),
+                Value<String?> geofenceResult = const Value.absent(),
+                Value<String?> precheckResult = const Value.absent(),
+                Value<double?> precheckDistanceM = const Value.absent(),
+                Value<String?> precheckTarget = const Value.absent(),
+                Value<double?> precheckRadiusM = const Value.absent(),
+                Value<String?> overrideNote = const Value.absent(),
+                Value<String?> overrideApprovedBy = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> cropStage = const Value.absent(),
+                Value<int?> durationS = const Value.absent(),
+                Value<int?> score = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> confirmationChannel = const Value.absent(),
+                Value<DateTime?> confirmedAt = const Value.absent(),
+                Value<String> deviceIntegrity = const Value.absent(),
+                Value<String> integrityIssues = const Value.absent(),
+                Value<String> flags = const Value.absent(),
+                Value<String?> scoreComponents = const Value.absent(),
+                Value<String?> clientVisitId = const Value.absent(),
+                Value<String?> officerId = const Value.absent(),
+                Value<String?> failureCode = const Value.absent(),
+                Value<String?> failureDetail = const Value.absent(),
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VisitsCompanion(
+                id: id,
+                version: version,
+                updatedAt: updatedAt,
+                dirty: dirty,
+                deleted: deleted,
+                farmerId: farmerId,
+                farmId: farmId,
+                villageId: villageId,
+                purpose: purpose,
+                checkinAt: checkinAt,
+                checkinLat: checkinLat,
+                checkinLon: checkinLon,
+                checkinAccuracyM: checkinAccuracyM,
+                checkoutAt: checkoutAt,
+                checkoutLat: checkoutLat,
+                checkoutLon: checkoutLon,
+                geofenceResult: geofenceResult,
+                precheckResult: precheckResult,
+                precheckDistanceM: precheckDistanceM,
+                precheckTarget: precheckTarget,
+                precheckRadiusM: precheckRadiusM,
+                overrideNote: overrideNote,
+                overrideApprovedBy: overrideApprovedBy,
+                notes: notes,
+                cropStage: cropStage,
+                durationS: durationS,
+                score: score,
+                status: status,
+                confirmationChannel: confirmationChannel,
+                confirmedAt: confirmedAt,
+                deviceIntegrity: deviceIntegrity,
+                integrityIssues: integrityIssues,
+                flags: flags,
+                scoreComponents: scoreComponents,
+                clientVisitId: clientVisitId,
+                officerId: officerId,
+                failureCode: failureCode,
+                failureDetail: failureDetail,
+                extra: extra,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<int> version = const Value.absent(),
+                required DateTime updatedAt,
+                Value<bool> dirty = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                required String farmerId,
+                Value<String?> farmId = const Value.absent(),
+                Value<String?> villageId = const Value.absent(),
+                Value<String> purpose = const Value.absent(),
+                required DateTime checkinAt,
+                required double checkinLat,
+                required double checkinLon,
+                Value<double?> checkinAccuracyM = const Value.absent(),
+                Value<DateTime?> checkoutAt = const Value.absent(),
+                Value<double?> checkoutLat = const Value.absent(),
+                Value<double?> checkoutLon = const Value.absent(),
+                Value<String?> geofenceResult = const Value.absent(),
+                Value<String?> precheckResult = const Value.absent(),
+                Value<double?> precheckDistanceM = const Value.absent(),
+                Value<String?> precheckTarget = const Value.absent(),
+                Value<double?> precheckRadiusM = const Value.absent(),
+                Value<String?> overrideNote = const Value.absent(),
+                Value<String?> overrideApprovedBy = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String?> cropStage = const Value.absent(),
+                Value<int?> durationS = const Value.absent(),
+                Value<int?> score = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> confirmationChannel = const Value.absent(),
+                Value<DateTime?> confirmedAt = const Value.absent(),
+                Value<String> deviceIntegrity = const Value.absent(),
+                Value<String> integrityIssues = const Value.absent(),
+                Value<String> flags = const Value.absent(),
+                Value<String?> scoreComponents = const Value.absent(),
+                Value<String?> clientVisitId = const Value.absent(),
+                Value<String?> officerId = const Value.absent(),
+                Value<String?> failureCode = const Value.absent(),
+                Value<String?> failureDetail = const Value.absent(),
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VisitsCompanion.insert(
+                id: id,
+                version: version,
+                updatedAt: updatedAt,
+                dirty: dirty,
+                deleted: deleted,
+                farmerId: farmerId,
+                farmId: farmId,
+                villageId: villageId,
+                purpose: purpose,
+                checkinAt: checkinAt,
+                checkinLat: checkinLat,
+                checkinLon: checkinLon,
+                checkinAccuracyM: checkinAccuracyM,
+                checkoutAt: checkoutAt,
+                checkoutLat: checkoutLat,
+                checkoutLon: checkoutLon,
+                geofenceResult: geofenceResult,
+                precheckResult: precheckResult,
+                precheckDistanceM: precheckDistanceM,
+                precheckTarget: precheckTarget,
+                precheckRadiusM: precheckRadiusM,
+                overrideNote: overrideNote,
+                overrideApprovedBy: overrideApprovedBy,
+                notes: notes,
+                cropStage: cropStage,
+                durationS: durationS,
+                score: score,
+                status: status,
+                confirmationChannel: confirmationChannel,
+                confirmedAt: confirmedAt,
+                deviceIntegrity: deviceIntegrity,
+                integrityIssues: integrityIssues,
+                flags: flags,
+                scoreComponents: scoreComponents,
+                clientVisitId: clientVisitId,
+                officerId: officerId,
+                failureCode: failureCode,
+                failureDetail: failureDetail,
+                extra: extra,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$VisitsTable, Visit>(table),
+                  BaseReferences<_$AppDatabase, $VisitsTable, Visit>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VisitsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VisitsTable,
+      Visit,
+      $$VisitsTableFilterComposer,
+      $$VisitsTableOrderingComposer,
+      $$VisitsTableAnnotationComposer,
+      $$VisitsTableCreateCompanionBuilder,
+      $$VisitsTableUpdateCompanionBuilder,
+      (Visit, BaseReferences<_$AppDatabase, $VisitsTable, Visit>),
+      Visit,
+      PrefetchHooks Function()
+    >;
+typedef $$VisitPhotosTableCreateCompanionBuilder =
+    VisitPhotosCompanion Function({
+      required String id,
+      Value<int> version,
+      required DateTime updatedAt,
+      Value<bool> dirty,
+      Value<bool> deleted,
+      required String visitId,
+      Value<String> blobUri,
+      Value<String?> sha256,
+      Value<String?> phash,
+      Value<DateTime?> exifTime,
+      Value<double?> exifLat,
+      Value<double?> exifLon,
+      Value<bool> takenInApp,
+      Value<DateTime?> deviceTime,
+      Value<DateTime?> serverTime,
+      Value<String> photoFlags,
+      Value<String?> localPath,
+      Value<String> extra,
+      Value<int> rowid,
+    });
+typedef $$VisitPhotosTableUpdateCompanionBuilder =
+    VisitPhotosCompanion Function({
+      Value<String> id,
+      Value<int> version,
+      Value<DateTime> updatedAt,
+      Value<bool> dirty,
+      Value<bool> deleted,
+      Value<String> visitId,
+      Value<String> blobUri,
+      Value<String?> sha256,
+      Value<String?> phash,
+      Value<DateTime?> exifTime,
+      Value<double?> exifLat,
+      Value<double?> exifLon,
+      Value<bool> takenInApp,
+      Value<DateTime?> deviceTime,
+      Value<DateTime?> serverTime,
+      Value<String> photoFlags,
+      Value<String?> localPath,
+      Value<String> extra,
+      Value<int> rowid,
+    });
+
+class $$VisitPhotosTableFilterComposer
+    extends Composer<_$AppDatabase, $VisitPhotosTable> {
+  $$VisitPhotosTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get visitId => $composableBuilder(
+    column: $table.visitId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get blobUri => $composableBuilder(
+    column: $table.blobUri,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sha256 => $composableBuilder(
+    column: $table.sha256,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get phash => $composableBuilder(
+    column: $table.phash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get exifTime => $composableBuilder(
+    column: $table.exifTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get exifLat => $composableBuilder(
+    column: $table.exifLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get exifLon => $composableBuilder(
+    column: $table.exifLon,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get takenInApp => $composableBuilder(
+    column: $table.takenInApp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deviceTime => $composableBuilder(
+    column: $table.deviceTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get serverTime => $composableBuilder(
+    column: $table.serverTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get photoFlags => $composableBuilder(
+    column: $table.photoFlags,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VisitPhotosTableOrderingComposer
+    extends Composer<_$AppDatabase, $VisitPhotosTable> {
+  $$VisitPhotosTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get visitId => $composableBuilder(
+    column: $table.visitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get blobUri => $composableBuilder(
+    column: $table.blobUri,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sha256 => $composableBuilder(
+    column: $table.sha256,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get phash => $composableBuilder(
+    column: $table.phash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get exifTime => $composableBuilder(
+    column: $table.exifTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get exifLat => $composableBuilder(
+    column: $table.exifLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get exifLon => $composableBuilder(
+    column: $table.exifLon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get takenInApp => $composableBuilder(
+    column: $table.takenInApp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deviceTime => $composableBuilder(
+    column: $table.deviceTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get serverTime => $composableBuilder(
+    column: $table.serverTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get photoFlags => $composableBuilder(
+    column: $table.photoFlags,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VisitPhotosTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VisitPhotosTable> {
+  $$VisitPhotosTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get visitId =>
+      $composableBuilder(column: $table.visitId, builder: (column) => column);
+
+  GeneratedColumn<String> get blobUri =>
+      $composableBuilder(column: $table.blobUri, builder: (column) => column);
+
+  GeneratedColumn<String> get sha256 =>
+      $composableBuilder(column: $table.sha256, builder: (column) => column);
+
+  GeneratedColumn<String> get phash =>
+      $composableBuilder(column: $table.phash, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get exifTime =>
+      $composableBuilder(column: $table.exifTime, builder: (column) => column);
+
+  GeneratedColumn<double> get exifLat =>
+      $composableBuilder(column: $table.exifLat, builder: (column) => column);
+
+  GeneratedColumn<double> get exifLon =>
+      $composableBuilder(column: $table.exifLon, builder: (column) => column);
+
+  GeneratedColumn<bool> get takenInApp => $composableBuilder(
+    column: $table.takenInApp,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get deviceTime => $composableBuilder(
+    column: $table.deviceTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get serverTime => $composableBuilder(
+    column: $table.serverTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get photoFlags => $composableBuilder(
+    column: $table.photoFlags,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get localPath =>
+      $composableBuilder(column: $table.localPath, builder: (column) => column);
+
+  GeneratedColumn<String> get extra =>
+      $composableBuilder(column: $table.extra, builder: (column) => column);
+}
+
+class $$VisitPhotosTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VisitPhotosTable,
+          VisitPhoto,
+          $$VisitPhotosTableFilterComposer,
+          $$VisitPhotosTableOrderingComposer,
+          $$VisitPhotosTableAnnotationComposer,
+          $$VisitPhotosTableCreateCompanionBuilder,
+          $$VisitPhotosTableUpdateCompanionBuilder,
+          (
+            VisitPhoto,
+            BaseReferences<_$AppDatabase, $VisitPhotosTable, VisitPhoto>,
+          ),
+          VisitPhoto,
+          PrefetchHooks Function()
+        > {
+  $$VisitPhotosTableTableManager(_$AppDatabase db, $VisitPhotosTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VisitPhotosTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VisitPhotosTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VisitPhotosTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<String> visitId = const Value.absent(),
+                Value<String> blobUri = const Value.absent(),
+                Value<String?> sha256 = const Value.absent(),
+                Value<String?> phash = const Value.absent(),
+                Value<DateTime?> exifTime = const Value.absent(),
+                Value<double?> exifLat = const Value.absent(),
+                Value<double?> exifLon = const Value.absent(),
+                Value<bool> takenInApp = const Value.absent(),
+                Value<DateTime?> deviceTime = const Value.absent(),
+                Value<DateTime?> serverTime = const Value.absent(),
+                Value<String> photoFlags = const Value.absent(),
+                Value<String?> localPath = const Value.absent(),
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VisitPhotosCompanion(
+                id: id,
+                version: version,
+                updatedAt: updatedAt,
+                dirty: dirty,
+                deleted: deleted,
+                visitId: visitId,
+                blobUri: blobUri,
+                sha256: sha256,
+                phash: phash,
+                exifTime: exifTime,
+                exifLat: exifLat,
+                exifLon: exifLon,
+                takenInApp: takenInApp,
+                deviceTime: deviceTime,
+                serverTime: serverTime,
+                photoFlags: photoFlags,
+                localPath: localPath,
+                extra: extra,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<int> version = const Value.absent(),
+                required DateTime updatedAt,
+                Value<bool> dirty = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                required String visitId,
+                Value<String> blobUri = const Value.absent(),
+                Value<String?> sha256 = const Value.absent(),
+                Value<String?> phash = const Value.absent(),
+                Value<DateTime?> exifTime = const Value.absent(),
+                Value<double?> exifLat = const Value.absent(),
+                Value<double?> exifLon = const Value.absent(),
+                Value<bool> takenInApp = const Value.absent(),
+                Value<DateTime?> deviceTime = const Value.absent(),
+                Value<DateTime?> serverTime = const Value.absent(),
+                Value<String> photoFlags = const Value.absent(),
+                Value<String?> localPath = const Value.absent(),
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VisitPhotosCompanion.insert(
+                id: id,
+                version: version,
+                updatedAt: updatedAt,
+                dirty: dirty,
+                deleted: deleted,
+                visitId: visitId,
+                blobUri: blobUri,
+                sha256: sha256,
+                phash: phash,
+                exifTime: exifTime,
+                exifLat: exifLat,
+                exifLon: exifLon,
+                takenInApp: takenInApp,
+                deviceTime: deviceTime,
+                serverTime: serverTime,
+                photoFlags: photoFlags,
+                localPath: localPath,
+                extra: extra,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$VisitPhotosTable, VisitPhoto>(table),
+                  BaseReferences<_$AppDatabase, $VisitPhotosTable, VisitPhoto>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VisitPhotosTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VisitPhotosTable,
+      VisitPhoto,
+      $$VisitPhotosTableFilterComposer,
+      $$VisitPhotosTableOrderingComposer,
+      $$VisitPhotosTableAnnotationComposer,
+      $$VisitPhotosTableCreateCompanionBuilder,
+      $$VisitPhotosTableUpdateCompanionBuilder,
+      (
+        VisitPhoto,
+        BaseReferences<_$AppDatabase, $VisitPhotosTable, VisitPhoto>,
+      ),
+      VisitPhoto,
+      PrefetchHooks Function()
+    >;
+typedef $$VisitConfirmationsTableCreateCompanionBuilder =
+    VisitConfirmationsCompanion Function({
+      required String id,
+      Value<int> version,
+      required DateTime updatedAt,
+      Value<bool> dirty,
+      Value<bool> deleted,
+      required String visitId,
+      required String channel,
+      Value<String> status,
+      Value<DateTime?> requestedAt,
+      Value<DateTime?> expiresAt,
+      Value<DateTime?> confirmedAt,
+      Value<String?> farmerPhoneLast4,
+      Value<int?> rating,
+      Value<String?> token,
+      Value<String> extra,
+      Value<int> rowid,
+    });
+typedef $$VisitConfirmationsTableUpdateCompanionBuilder =
+    VisitConfirmationsCompanion Function({
+      Value<String> id,
+      Value<int> version,
+      Value<DateTime> updatedAt,
+      Value<bool> dirty,
+      Value<bool> deleted,
+      Value<String> visitId,
+      Value<String> channel,
+      Value<String> status,
+      Value<DateTime?> requestedAt,
+      Value<DateTime?> expiresAt,
+      Value<DateTime?> confirmedAt,
+      Value<String?> farmerPhoneLast4,
+      Value<int?> rating,
+      Value<String?> token,
+      Value<String> extra,
+      Value<int> rowid,
+    });
+
+class $$VisitConfirmationsTableFilterComposer
+    extends Composer<_$AppDatabase, $VisitConfirmationsTable> {
+  $$VisitConfirmationsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get visitId => $composableBuilder(
+    column: $table.visitId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get channel => $composableBuilder(
+    column: $table.channel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get requestedAt => $composableBuilder(
+    column: $table.requestedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get confirmedAt => $composableBuilder(
+    column: $table.confirmedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get farmerPhoneLast4 => $composableBuilder(
+    column: $table.farmerPhoneLast4,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rating => $composableBuilder(
+    column: $table.rating,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get token => $composableBuilder(
+    column: $table.token,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$VisitConfirmationsTableOrderingComposer
+    extends Composer<_$AppDatabase, $VisitConfirmationsTable> {
+  $$VisitConfirmationsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get deleted => $composableBuilder(
+    column: $table.deleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get visitId => $composableBuilder(
+    column: $table.visitId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get channel => $composableBuilder(
+    column: $table.channel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get requestedAt => $composableBuilder(
+    column: $table.requestedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get confirmedAt => $composableBuilder(
+    column: $table.confirmedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get farmerPhoneLast4 => $composableBuilder(
+    column: $table.farmerPhoneLast4,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get rating => $composableBuilder(
+    column: $table.rating,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get token => $composableBuilder(
+    column: $table.token,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get extra => $composableBuilder(
+    column: $table.extra,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$VisitConfirmationsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VisitConfirmationsTable> {
+  $$VisitConfirmationsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get visitId =>
+      $composableBuilder(column: $table.visitId, builder: (column) => column);
+
+  GeneratedColumn<String> get channel =>
+      $composableBuilder(column: $table.channel, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get requestedAt => $composableBuilder(
+    column: $table.requestedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get expiresAt =>
+      $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get confirmedAt => $composableBuilder(
+    column: $table.confirmedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get farmerPhoneLast4 => $composableBuilder(
+    column: $table.farmerPhoneLast4,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get rating =>
+      $composableBuilder(column: $table.rating, builder: (column) => column);
+
+  GeneratedColumn<String> get token =>
+      $composableBuilder(column: $table.token, builder: (column) => column);
+
+  GeneratedColumn<String> get extra =>
+      $composableBuilder(column: $table.extra, builder: (column) => column);
+}
+
+class $$VisitConfirmationsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $VisitConfirmationsTable,
+          VisitConfirmation,
+          $$VisitConfirmationsTableFilterComposer,
+          $$VisitConfirmationsTableOrderingComposer,
+          $$VisitConfirmationsTableAnnotationComposer,
+          $$VisitConfirmationsTableCreateCompanionBuilder,
+          $$VisitConfirmationsTableUpdateCompanionBuilder,
+          (
+            VisitConfirmation,
+            BaseReferences<
+              _$AppDatabase,
+              $VisitConfirmationsTable,
+              VisitConfirmation
+            >,
+          ),
+          VisitConfirmation,
+          PrefetchHooks Function()
+        > {
+  $$VisitConfirmationsTableTableManager(
+    _$AppDatabase db,
+    $VisitConfirmationsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VisitConfirmationsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VisitConfirmationsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VisitConfirmationsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<String> visitId = const Value.absent(),
+                Value<String> channel = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> requestedAt = const Value.absent(),
+                Value<DateTime?> expiresAt = const Value.absent(),
+                Value<DateTime?> confirmedAt = const Value.absent(),
+                Value<String?> farmerPhoneLast4 = const Value.absent(),
+                Value<int?> rating = const Value.absent(),
+                Value<String?> token = const Value.absent(),
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VisitConfirmationsCompanion(
+                id: id,
+                version: version,
+                updatedAt: updatedAt,
+                dirty: dirty,
+                deleted: deleted,
+                visitId: visitId,
+                channel: channel,
+                status: status,
+                requestedAt: requestedAt,
+                expiresAt: expiresAt,
+                confirmedAt: confirmedAt,
+                farmerPhoneLast4: farmerPhoneLast4,
+                rating: rating,
+                token: token,
+                extra: extra,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<int> version = const Value.absent(),
+                required DateTime updatedAt,
+                Value<bool> dirty = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                required String visitId,
+                required String channel,
+                Value<String> status = const Value.absent(),
+                Value<DateTime?> requestedAt = const Value.absent(),
+                Value<DateTime?> expiresAt = const Value.absent(),
+                Value<DateTime?> confirmedAt = const Value.absent(),
+                Value<String?> farmerPhoneLast4 = const Value.absent(),
+                Value<int?> rating = const Value.absent(),
+                Value<String?> token = const Value.absent(),
+                Value<String> extra = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => VisitConfirmationsCompanion.insert(
+                id: id,
+                version: version,
+                updatedAt: updatedAt,
+                dirty: dirty,
+                deleted: deleted,
+                visitId: visitId,
+                channel: channel,
+                status: status,
+                requestedAt: requestedAt,
+                expiresAt: expiresAt,
+                confirmedAt: confirmedAt,
+                farmerPhoneLast4: farmerPhoneLast4,
+                rating: rating,
+                token: token,
+                extra: extra,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$VisitConfirmationsTable, VisitConfirmation>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $VisitConfirmationsTable,
+                    VisitConfirmation
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$VisitConfirmationsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $VisitConfirmationsTable,
+      VisitConfirmation,
+      $$VisitConfirmationsTableFilterComposer,
+      $$VisitConfirmationsTableOrderingComposer,
+      $$VisitConfirmationsTableAnnotationComposer,
+      $$VisitConfirmationsTableCreateCompanionBuilder,
+      $$VisitConfirmationsTableUpdateCompanionBuilder,
+      (
+        VisitConfirmation,
+        BaseReferences<
+          _$AppDatabase,
+          $VisitConfirmationsTable,
+          VisitConfirmation
+        >,
+      ),
+      VisitConfirmation,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -13117,4 +19272,10 @@ class $AppDatabaseManager {
       $$LocationBufferTableTableManager(_db, _db.locationBuffer);
   $$SyncDocsTableTableManager get syncDocs =>
       $$SyncDocsTableTableManager(_db, _db.syncDocs);
+  $$VisitsTableTableManager get visits =>
+      $$VisitsTableTableManager(_db, _db.visits);
+  $$VisitPhotosTableTableManager get visitPhotos =>
+      $$VisitPhotosTableTableManager(_db, _db.visitPhotos);
+  $$VisitConfirmationsTableTableManager get visitConfirmations =>
+      $$VisitConfirmationsTableTableManager(_db, _db.visitConfirmations);
 }

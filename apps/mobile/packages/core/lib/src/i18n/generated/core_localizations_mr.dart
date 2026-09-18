@@ -1485,4 +1485,352 @@ class CoreLocalizationsMr extends CoreLocalizations {
 
   @override
   String get syncEntityPolicyAcceptance => 'धोरण स्वीकृती';
+
+  @override
+  String get visitsTitle => 'भेटी';
+
+  @override
+  String get visitsTabToday => 'आज';
+
+  @override
+  String get visitsTabWeek => 'या आठवड्यात';
+
+  @override
+  String get visitsFilterAll => 'सर्व';
+
+  @override
+  String get visitsEmptyTitle => 'अद्याप भेटी नाहीत';
+
+  @override
+  String get visitsEmptyHelp =>
+      'शेतकरी प्रोफाइलमधून किंवा खालील बटणाने भेट सुरू करा.';
+
+  @override
+  String get visitStatusOpen => 'सुरू आहे';
+
+  @override
+  String get visitCardPending => 'ऑनलाइन झाल्यावर सिंक होईल';
+
+  @override
+  String get visitCardFailed => 'लक्ष द्यावे लागेल';
+
+  @override
+  String get visitChooseFarmer => 'शेतकरी निवडा';
+
+  @override
+  String get visitFarmLabel => 'शेत';
+
+  @override
+  String get visitFarmNoBoundary => 'या शेताची सीमा नोंदलेली नाही';
+
+  @override
+  String get visitPurposeLabel => 'उद्देश';
+
+  @override
+  String get visitOffDutyTitle => 'आधी ड्युटीवर जा';
+
+  @override
+  String get visitOffDutyBody =>
+      'भेटी फक्त ड्युटीवर असतानाच नोंदवल्या जातात. होममधून ड्युटी सुरू करा आणि परत या.';
+
+  @override
+  String get visitGoHome => 'होमवर जा';
+
+  @override
+  String get visitLocating => 'तुमचे ठिकाण घेत आहोत…';
+
+  @override
+  String get visitNoFix =>
+      'तुमचे ठिकाण मिळाले नाही. मोकळ्या आकाशाखाली जाऊन पुन्हा प्रयत्न करा.';
+
+  @override
+  String get visitRefreshLocation => 'ठिकाण पुन्हा तपासा';
+
+  @override
+  String visitAccuracy(int metres) {
+    return 'अचूकता ±$metres मी';
+  }
+
+  @override
+  String get visitInsideGeofence => 'तुम्ही शेताच्या जिओफेन्सच्या आत आहात';
+
+  @override
+  String get visitAtMeetingPoint => 'तुम्ही गावाच्या बैठक स्थळी आहात';
+
+  @override
+  String visitOutsideFarm(int distance, int radius) {
+    return 'शेताच्या सीमेपासून $distance मी दूर; जिओफेन्स $radius मी आहे.';
+  }
+
+  @override
+  String visitOutsideMeeting(int distance, int radius) {
+    return 'बैठक स्थळापासून $distance मी दूर; परवानगी असलेली त्रिज्या $radius मी आहे.';
+  }
+
+  @override
+  String get visitNoTarget =>
+      'या शेताची सीमा नाही आणि गावाचे बैठक स्थळ नाही. ओव्हरराइड नोटसह चेक इन करा.';
+
+  @override
+  String get visitRequestOverride => 'ओव्हरराइड मागा';
+
+  @override
+  String get visitOverrideNoteLabel => 'तुम्ही इथून का चेक इन करत आहात?';
+
+  @override
+  String get visitOverrideNoteHint => 'उदा. शेतकऱ्याला बाजारात भेटलो';
+
+  @override
+  String get visitOverrideNoteRequired => 'ओव्हरराइड मागण्यासाठी नोट लिहा';
+
+  @override
+  String get visitOverrideHelp =>
+      'तुमचा क्लस्टर हेड ओव्हरराइडचे पुनरावलोकन करेल. मंजूर झाल्यासच भेटीला जिओफेन्स क्रेडिट मिळेल.';
+
+  @override
+  String get visitCheckIn => 'चेक इन';
+
+  @override
+  String get visitCheckInOverride => 'ओव्हरराइडसह चेक इन';
+
+  @override
+  String get visitInProgress => 'भेट सुरू आहे';
+
+  @override
+  String get visitTimerLabel => 'भेटीचा वेळ';
+
+  @override
+  String visitMinDuration(int minutes) {
+    return 'किमान $minutes मिनिटे';
+  }
+
+  @override
+  String visitDurationNeeds(int minutes, int minimum) {
+    return '$minimum मिनिटांपैकी $minutes मिनिटे';
+  }
+
+  @override
+  String visitUnderMinimum(int minutes) {
+    return 'किमान $minutes मिनिटांपेक्षा कमी. भेट फ्लॅग होईल, नाकारली जाणार नाही.';
+  }
+
+  @override
+  String get visitPhotos => 'फोटो';
+
+  @override
+  String get visitTakePhoto => 'फोटो काढा';
+
+  @override
+  String visitPhotoCount(int count) {
+    return '$count फोटो';
+  }
+
+  @override
+  String get visitPhotosHelp => 'फक्त अ‍ॅप कॅमेरा. शेतावर किमान एक फोटो काढा.';
+
+  @override
+  String get visitNotesLabel => 'नोंदी';
+
+  @override
+  String get visitNotesHint => 'तुम्ही काय पाहिले किंवा कोणता सल्ला दिला?';
+
+  @override
+  String get visitVoiceInputSoon => 'व्हॉइस इनपुट पुढील अपडेटमध्ये येईल';
+
+  @override
+  String get visitCropStageLabel => 'पीक अवस्था';
+
+  @override
+  String get cropStageSown => 'पेरणी';
+
+  @override
+  String get cropStageMaturity => 'परिपक्वता';
+
+  @override
+  String get cropStageHarvested => 'कापणी झाली';
+
+  @override
+  String get visitProofTitle => 'भेटीचा पुरावा';
+
+  @override
+  String get visitExpectedScore => 'अपेक्षित गुण';
+
+  @override
+  String get visitServerScore => 'सर्व्हरकडून गुण';
+
+  @override
+  String get visitConfirmFarmer => 'शेतकऱ्याची पुष्टी';
+
+  @override
+  String get visitCheckOut => 'चेक आउट';
+
+  @override
+  String get visitCheckInPending => 'ऑनलाइन झाल्यावर चेक इन सिंक होईल';
+
+  @override
+  String get visitCheckInSynced => 'चेक इन सिंक झाले';
+
+  @override
+  String get visitRejectedTitle => 'चेक इन नाकारले';
+
+  @override
+  String visitRejectedOutside(int distance) {
+    return 'सर्व्हरने तुम्हाला जिओफेन्सच्या $distance मी बाहेर ठरवले.';
+  }
+
+  @override
+  String get visitRejectedNoTarget =>
+      'तुमचे ठिकाण तपासण्यासाठी सर्व्हरला काहीही सापडले नाही.';
+
+  @override
+  String get visitRetryFromFarm => 'शेतातून पुन्हा प्रयत्न करा';
+
+  @override
+  String visitRetryStillOutside(int distance) {
+    return 'अजूनही $distance मी बाहेर आहात. जवळ जा किंवा ओव्हरराइड मागा.';
+  }
+
+  @override
+  String get visitRetryQueued =>
+      'तुमच्या सध्याच्या ठिकाणासह चेक इन पुन्हा रांगेत आहे.';
+
+  @override
+  String get proofGeofenceOverride => 'ओव्हरराइड मागितले; क्लस्टर हेडची वाट';
+
+  @override
+  String get proofGeofenceOutside => 'जिओफेन्सच्या बाहेर';
+
+  @override
+  String get proofPhotoDone => 'ठिकाणासह फोटो घेतला';
+
+  @override
+  String get proofDurationDone => 'किमान कालावधी पूर्ण झाला';
+
+  @override
+  String get proofIntegrityIssue => 'डिव्हाइस तपासणीत समस्या; या भागाचे गुण 0';
+
+  @override
+  String get visitConfirmTitle => 'शेतकऱ्याची पुष्टी';
+
+  @override
+  String get visitConfirmIntro =>
+      'शेतकऱ्याला यापैकी एका मार्गाने या भेटीची पुष्टी करण्यास सांगा.';
+
+  @override
+  String get visitConfirmOtp => 'SMS द्वारे OTP';
+
+  @override
+  String get visitConfirmOtpHelp =>
+      'शेतकऱ्याच्या फोनवर कोड जाईल; तो इथे टाइप करा.';
+
+  @override
+  String get visitConfirmPush => 'किसान अ‍ॅपमध्ये विचारा';
+
+  @override
+  String get visitConfirmPushHelp =>
+      'शेतकरी त्यांच्या अ‍ॅपमध्ये पुष्टी करा दाबतो.';
+
+  @override
+  String get visitConfirmQr => 'QR दाखवा';
+
+  @override
+  String get visitConfirmQrHelp => 'शेतकरी हे किसान अ‍ॅपने स्कॅन करतो.';
+
+  @override
+  String get visitConfirmNeedsNetwork =>
+      'यासाठी नेटवर्क लागते. ऑनलाइन झाल्यावर पुन्हा प्रयत्न करा.';
+
+  @override
+  String get visitConfirmQrNeedsSync =>
+      'QR साठी आधी एकदा सिंक लागते. एकदा कनेक्ट करा आणि परत या.';
+
+  @override
+  String get visitConfirmNotSynced =>
+      'चेक इन अजून सर्व्हरवर पोहोचले नाही. सिंक करून पुन्हा प्रयत्न करा.';
+
+  @override
+  String get visitConfirmQueued =>
+      'विनंती जतन झाली. ऑनलाइन होताच शेतकऱ्याच्या अ‍ॅपवर जाईल.';
+
+  @override
+  String get visitConfirmWaiting => 'शेतकऱ्याची वाट पाहत आहोत…';
+
+  @override
+  String get visitConfirmWaitingPush =>
+      'आम्ही किसान अ‍ॅपमध्ये शेतकऱ्याला विचारले आहे. पुष्टी होताच ही स्क्रीन अपडेट होईल.';
+
+  @override
+  String get visitConfirmQrWaiting => 'शेतकरी स्कॅन करेपर्यंत वाट पाहत आहोत…';
+
+  @override
+  String get visitConfirmed => 'शेतकऱ्याने पुष्टी केली';
+
+  @override
+  String visitConfirmedVia(String channel) {
+    return '$channel द्वारे पुष्टी झाली';
+  }
+
+  @override
+  String visitConfirmOtpSent(String phone) {
+    return '$phone वर कोड पाठवला';
+  }
+
+  @override
+  String get visitConfirmAlready => 'या भेटीची पुष्टी आधीच झाली आहे.';
+
+  @override
+  String get visitConfirmRefused =>
+      'सध्या शेतकऱ्याला अशा प्रकारे विचारता येत नाही. दुसरा मार्ग वापरा.';
+
+  @override
+  String get visitConfirmContinue => 'चेक आउटकडे जा';
+
+  @override
+  String get visitConfirmLater => 'नंतर पुष्टी करा';
+
+  @override
+  String visitConfirmExpires(int minutes) {
+    return '$minutes मिनिटांत संपेल';
+  }
+
+  @override
+  String get visitConfirmChooseAnother => 'दुसरा मार्ग निवडा';
+
+  @override
+  String get visitSummaryTitle => 'चेक आउट सारांश';
+
+  @override
+  String get visitSummaryDuration => 'कालावधी';
+
+  @override
+  String get visitSummaryMissing => 'काय कमी होते';
+
+  @override
+  String get visitSummaryComplete => 'सर्व काही व्यवस्थित आहे';
+
+  @override
+  String get visitSummaryPending =>
+      'पुढील सिंकनंतर सर्व्हर गुणांची पुष्टी करेल';
+
+  @override
+  String get visitSummaryServer => 'सर्व्हरने गुणांची पुष्टी केली';
+
+  @override
+  String get visitSummaryNotCheckedOut => 'ही भेट अजून सुरू आहे.';
+
+  @override
+  String get visitSummaryOverridePending =>
+      'ओव्हरराइड पुनरावलोकनाच्या प्रतीक्षेत';
+
+  @override
+  String get visitDone => 'झाले';
+
+  @override
+  String get syncEntityVisit => 'भेट';
+
+  @override
+  String get syncEntityVisitPhoto => 'भेटीचा फोटो';
+
+  @override
+  String get syncEntityVisitConfirmation => 'शेतकऱ्याची पुष्टी';
 }

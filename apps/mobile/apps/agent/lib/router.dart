@@ -16,6 +16,11 @@ import 'screens/otp_screen.dart';
 import 'screens/phone_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/visits/confirm_screen.dart';
+import 'screens/visits/start_visit_screen.dart';
+import 'screens/visits/summary_screen.dart';
+import 'screens/visits/visit_screen.dart';
+import 'screens/visits/visits_list_screen.dart';
 
 /// Route paths (SPEC 13.2).
 abstract final class AppRoutes {
@@ -64,6 +69,9 @@ abstract final class AppRoutes {
   /// A23 Edit a farm.
   static String editFarmPath(String farmerId, String farmId) =>
       '/farmers/$farmerId/farms/$farmId';
+
+  /// A34 Visits list (A30–A33 paths in `VisitRoutes`).
+  static const String visits = '/visits';
 
   /// A63 Profile and settings.
   static const String settings = '/settings';
@@ -150,6 +158,36 @@ GoRouter buildRouter({String initialLocation = AppRoutes.splash}) {
                   farmerId: state.pathParameters['farmerId']!,
                   farmId: state.pathParameters['farmId'],
                 ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: AppRoutes.visits,
+        builder: (context, state) => const VisitsListScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: 'new',
+            builder: (context, state) => StartVisitScreen(
+              farmerId: state.uri.queryParameters['farmerId'],
+              farmId: state.uri.queryParameters['farmId'],
+            ),
+          ),
+          GoRoute(
+            path: ':visitId',
+            builder: (context, state) =>
+                VisitScreen(visitId: state.pathParameters['visitId']!),
+            routes: <RouteBase>[
+              GoRoute(
+                path: 'confirm',
+                builder: (context, state) =>
+                    ConfirmScreen(visitId: state.pathParameters['visitId']!),
+              ),
+              GoRoute(
+                path: 'summary',
+                builder: (context, state) =>
+                    SummaryScreen(visitId: state.pathParameters['visitId']!),
               ),
             ],
           ),

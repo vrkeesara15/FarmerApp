@@ -53,12 +53,12 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Cotton'), findsWidgets);
-    for (final label in <String>[
-      'Start visit',
-      'Scout',
-      'New order',
-      'Collect',
-    ]) {
+    // FA-014: Start visit is live; the other actions arrive later.
+    final start = tester.widget<AppButton>(
+      find.byKey(const Key('profile-start-visit')),
+    );
+    expect(start.onPressed, isNotNull);
+    for (final label in <String>['Scout', 'New order', 'Collect']) {
       final button = tester.widget<AppButton>(
         find.ancestor(of: find.text(label), matching: find.byType(AppButton)),
       );
@@ -69,8 +69,8 @@ void main() {
 
     await tester.tap(find.text('Visits'));
     await tester.pumpAndSettle();
+    expect(find.byKey(const Key('profile-visits-empty')), findsOneWidget);
     expect(find.text('No visits yet'), findsOneWidget);
-    expect(find.text('Coming in a later update'), findsOneWidget);
   });
 
   testWidgets(

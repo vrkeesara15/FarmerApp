@@ -53,6 +53,9 @@ class LocalRow {
 /// | duty_session   | merge_fields      |
 /// | location_batch | server_wins       |
 /// | policy_acceptance | server_wins    |
+/// | visit          | server_wins (score fields; notes last writer) |
+/// | visit_photo    | server_wins       |
+/// | visit_confirmation | server_wins   |
 /// | khata, payment | server_wins (M3)  |
 class LocalEntities {
   /// Creates the accessor over [db].
@@ -70,6 +73,9 @@ class LocalEntities {
     SyncEntities.dutySession: 'merge_fields',
     SyncEntities.locationBatch: 'server_wins',
     SyncEntities.policyAcceptance: 'server_wins',
+    SyncEntities.visit: 'server_wins',
+    SyncEntities.visitPhoto: 'server_wins',
+    SyncEntities.visitConfirmation: 'server_wins',
     'khata_entry': 'server_wins',
     'payment': 'server_wins',
   };
@@ -149,6 +155,48 @@ class LocalEntities {
                 dirty: row.dirty,
                 deleted: row.deleted,
                 data: dutySessionToData(row),
+              );
+      case SyncEntities.visit:
+        final row = await (db.select(
+          db.visits,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
+        return row == null
+            ? null
+            : LocalRow(
+                entity: entity,
+                id: id,
+                version: row.version,
+                dirty: row.dirty,
+                deleted: row.deleted,
+                data: visitToData(row),
+              );
+      case SyncEntities.visitPhoto:
+        final row = await (db.select(
+          db.visitPhotos,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
+        return row == null
+            ? null
+            : LocalRow(
+                entity: entity,
+                id: id,
+                version: row.version,
+                dirty: row.dirty,
+                deleted: row.deleted,
+                data: visitPhotoToData(row),
+              );
+      case SyncEntities.visitConfirmation:
+        final row = await (db.select(
+          db.visitConfirmations,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
+        return row == null
+            ? null
+            : LocalRow(
+                entity: entity,
+                id: id,
+                version: row.version,
+                dirty: row.dirty,
+                deleted: row.deleted,
+                data: visitConfirmationToData(row),
               );
       default:
         if (!isKnown(entity)) {
@@ -247,6 +295,45 @@ class LocalEntities {
                 now: now,
               ),
             );
+      case SyncEntities.visit:
+        await db
+            .into(db.visits)
+            .insertOnConflictUpdate(
+              visitFromData(
+                id,
+                await _keepLocal(entity, id, data),
+                version: version,
+                dirty: dirty,
+                deleted: deleted,
+                now: now,
+              ),
+            );
+      case SyncEntities.visitPhoto:
+        await db
+            .into(db.visitPhotos)
+            .insertOnConflictUpdate(
+              visitPhotoFromData(
+                id,
+                await _keepLocal(entity, id, data),
+                version: version,
+                dirty: dirty,
+                deleted: deleted,
+                now: now,
+              ),
+            );
+      case SyncEntities.visitConfirmation:
+        await db
+            .into(db.visitConfirmations)
+            .insertOnConflictUpdate(
+              visitConfirmationFromData(
+                id,
+                await _keepLocal(entity, id, data),
+                version: version,
+                dirty: dirty,
+                deleted: deleted,
+                now: now,
+              ),
+            );
       default:
         if (!isKnown(entity)) {
           throw ArgumentError.value(entity, 'entity', 'no local table');
@@ -281,6 +368,58 @@ class LocalEntities {
       out.remove('points');
     }
     return out;
+  }
+
+  /// Key under which the visit tables keep their device-only fields
+  /// (pre-check, rejection, local photo path, QR token) in the wire-shaped
+  /// data, so a server row written over the local one keeps them.
+  static const String localKey = '_local';
+
+  /// Server rows (applied / conflict echo, pull) carry no [localKey]; keep
+  /// the existing row's device-only fields in that case.
+  Future<Map<String, Object?>> _keepLocal(
+    String entity,
+    String id,
+    Map<String, Object?> data,
+  ) async {
+    if (data.containsKey(localKey)) return data;
+    final existing = await read(entity, id);
+    final local = existing?.data[localKey];
+    if (local == null) return data;
+    return <String, Object?>{...data, localKey: local};
+  }
+
+  /// Records a server rejection on the row (visits keep the code and the
+  /// problem fields so A31 / A34 can explain, e.g. `outside_geofence` with
+  /// the distance); other entities are untouched (the outbox row has it).
+  Future<void> markRejected(
+    String entity,
+    String id,
+    SyncError error, {
+    required DateTime now,
+  }) async {
+    if (entity != SyncEntities.visit) return;
+    final existing = await read(entity, id);
+    if (existing == null) return;
+    final local = Map<String, Object?>.from(
+      (existing.data[localKey] as Map?) ?? const <String, Object?>{},
+    );
+    local['failure'] = <String, Object?>{
+      'code': error.code,
+      'detail': error.detail,
+      'distance_m': error.distanceM,
+      'target': error.target,
+      'radius_m': error.radiusM,
+    };
+    await write(
+      entity,
+      id,
+      <String, Object?>{...existing.data, localKey: local},
+      version: existing.version,
+      dirty: existing.dirty,
+      deleted: existing.deleted,
+      now: now,
+    );
   }
 
   /// Merges [patch] into the existing row (or inserts it).
@@ -354,6 +493,14 @@ class LocalEntities {
         )..where((t) => t.id.equals(id))).go();
       case SyncEntities.dutySession:
         await (db.delete(db.dutySessions)..where((t) => t.id.equals(id))).go();
+      case SyncEntities.visit:
+        await (db.delete(db.visits)..where((t) => t.id.equals(id))).go();
+      case SyncEntities.visitPhoto:
+        await (db.delete(db.visitPhotos)..where((t) => t.id.equals(id))).go();
+      case SyncEntities.visitConfirmation:
+        await (db.delete(
+          db.visitConfirmations,
+        )..where((t) => t.id.equals(id))).go();
       default:
         if (!isKnown(entity)) {
           throw ArgumentError.value(entity, 'entity', 'no local table');
@@ -442,6 +589,7 @@ class LocalEntities {
   }) {
     final location = d['location'];
     final loc = location is Map ? Map<String, Object?>.from(location) : null;
+    final meeting = _pointOf(d['meeting_point']);
     return Village(
       id: id,
       name: (d['name'] as String?) ?? '',
@@ -451,6 +599,9 @@ class LocalEntities {
       storeId: d['store_id'] as String?,
       latitude: _num(d['lat'] ?? d['latitude'] ?? loc?['lat']),
       longitude: _num(d['lon'] ?? d['longitude'] ?? loc?['lon']),
+      meetingPointLat: _num(d['meeting_point_lat'] ?? meeting?['lat']),
+      meetingPointLon: _num(d['meeting_point_lon'] ?? meeting?['lon']),
+      meetingPointRadiusM: _num(d['meeting_point_radius_m']),
       version: version,
       updatedAt: now,
     );
@@ -466,6 +617,10 @@ class LocalEntities {
     'store_id': r.storeId,
     'lat': r.latitude,
     'lon': r.longitude,
+    'meeting_point': r.meetingPointLat == null
+        ? null
+        : <String, Object?>{'lat': r.meetingPointLat, 'lon': r.meetingPointLon},
+    'meeting_point_radius_m': r.meetingPointRadiusM,
     'version': r.version,
   };
 
@@ -714,5 +869,303 @@ class LocalEntities {
         'distance_m': r.distanceM,
         'auto_ended': r.autoEnded,
         'version': r.version,
+      };
+
+  static List<Object?> _list(Object? v) =>
+      v is List ? List<Object?>.from(v) : const <Object?>[];
+
+  static Map<String, Object?> _map(Object? v) =>
+      v is Map ? Map<String, Object?>.from(v) : const <String, Object?>{};
+
+  /// Keys of the visit wire shape with typed columns; the rest goes to
+  /// `extra` (photos / confirmations embedded in a detail echo are dropped:
+  /// they have their own tables and feed rows).
+  static const Set<String> _visitKeys = <String>{
+    'id',
+    'farmer_id',
+    'farm_id',
+    'village_id',
+    'purpose',
+    'checkin_at',
+    'checkin_point',
+    'checkin_accuracy_m',
+    'checkout_at',
+    'checkout_point',
+    'geofence_result',
+    'override_note',
+    'override_approved_by',
+    'notes',
+    'crop_stage',
+    'duration_s',
+    'score',
+    'status',
+    'confirmation_channel',
+    'confirmed_at',
+    'device_integrity',
+    'integrity_issues',
+    'flags',
+    'score_components',
+    'client_visit_id',
+    'officer_id',
+    'version',
+    'photos',
+    'confirmations',
+    'override_request',
+    localKey,
+  };
+
+  /// Visit row from wire data (create payload, detail echo or feed row).
+  static Visit visitFromData(
+    String id,
+    Map<String, Object?> d, {
+    required int version,
+    required bool dirty,
+    required bool deleted,
+    required DateTime now,
+  }) {
+    final checkin = _pointOf(d['checkin_point']);
+    final checkout = _pointOf(d['checkout_point']);
+    final local = _map(d[localKey]);
+    final precheck = _map(local['precheck']);
+    final failure = local['failure'];
+    final extra = <String, Object?>{
+      for (final e in d.entries)
+        if (!_visitKeys.contains(e.key)) e.key: e.value,
+    };
+    final components = d['score_components'];
+    return Visit(
+      id: id,
+      farmerId: (d['farmer_id'] as String?) ?? '',
+      farmId: d['farm_id'] as String?,
+      villageId: d['village_id'] as String?,
+      purpose: (d['purpose'] as String?) ?? 'advisory',
+      checkinAt: _time(d['checkin_at']) ?? now,
+      checkinLat: _num(checkin?['lat']) ?? 0,
+      checkinLon: _num(checkin?['lon']) ?? 0,
+      checkinAccuracyM: _num(d['checkin_accuracy_m'] ?? checkin?['accuracy_m']),
+      checkoutAt: _time(d['checkout_at']),
+      checkoutLat: _num(checkout?['lat']),
+      checkoutLon: _num(checkout?['lon']),
+      geofenceResult: d['geofence_result'] as String?,
+      precheckResult: precheck['result'] as String?,
+      precheckDistanceM: _num(precheck['distance_m']),
+      precheckTarget: precheck['target'] as String?,
+      precheckRadiusM: _num(precheck['radius_m']),
+      overrideNote: d['override_note'] as String?,
+      overrideApprovedBy: d['override_approved_by'] as String?,
+      notes: d['notes'] as String?,
+      cropStage: d['crop_stage'] as String?,
+      durationS: (d['duration_s'] as num?)?.toInt(),
+      score: (d['score'] as num?)?.toInt(),
+      status: (d['status'] as String?) ?? 'open',
+      confirmationChannel: (d['confirmation_channel'] as String?) ?? 'none',
+      confirmedAt: _time(d['confirmed_at']),
+      deviceIntegrity: jsonEncode(_map(d['device_integrity'])),
+      integrityIssues: jsonEncode(_list(d['integrity_issues'])),
+      flags: jsonEncode(_list(d['flags'])),
+      scoreComponents: components is Map ? jsonEncode(components) : null,
+      clientVisitId: d['client_visit_id'] as String?,
+      officerId: d['officer_id'] as String?,
+      failureCode: failure is Map ? failure['code'] as String? : null,
+      failureDetail: failure is Map ? jsonEncode(failure) : null,
+      extra: jsonEncode(extra),
+      version: version,
+      updatedAt: now,
+      dirty: dirty,
+      deleted: deleted,
+    );
+  }
+
+  /// Wire data from a visit row (device-only fields under [localKey]).
+  static Map<String, Object?> visitToData(Visit r) => <String, Object?>{
+    ...Map<String, Object?>.from(jsonDecode(r.extra) as Map),
+    'id': r.id,
+    'farmer_id': r.farmerId,
+    'farm_id': r.farmId,
+    'village_id': r.villageId,
+    'purpose': r.purpose,
+    'checkin_at': r.checkinAt.toUtc().toIso8601String(),
+    'checkin_point': <String, Object?>{
+      'lat': r.checkinLat,
+      'lon': r.checkinLon,
+      'accuracy_m': r.checkinAccuracyM,
+    },
+    'checkin_accuracy_m': r.checkinAccuracyM,
+    'checkout_at': r.checkoutAt?.toUtc().toIso8601String(),
+    'checkout_point': r.checkoutLat == null
+        ? null
+        : <String, Object?>{'lat': r.checkoutLat, 'lon': r.checkoutLon},
+    'geofence_result': r.geofenceResult,
+    'override_note': r.overrideNote,
+    'override_approved_by': r.overrideApprovedBy,
+    'notes': r.notes,
+    'crop_stage': r.cropStage,
+    'duration_s': r.durationS,
+    'score': r.score,
+    'status': r.status,
+    'confirmation_channel': r.confirmationChannel,
+    'confirmed_at': r.confirmedAt?.toUtc().toIso8601String(),
+    'device_integrity': jsonDecode(r.deviceIntegrity),
+    'integrity_issues': jsonDecode(r.integrityIssues),
+    'flags': jsonDecode(r.flags),
+    'score_components': r.scoreComponents == null
+        ? null
+        : jsonDecode(r.scoreComponents!),
+    'client_visit_id': r.clientVisitId,
+    'officer_id': r.officerId,
+    'version': r.version,
+    localKey: <String, Object?>{
+      'precheck': r.precheckResult == null
+          ? null
+          : <String, Object?>{
+              'result': r.precheckResult,
+              'distance_m': r.precheckDistanceM,
+              'target': r.precheckTarget,
+              'radius_m': r.precheckRadiusM,
+            },
+      'failure': r.failureDetail == null ? null : jsonDecode(r.failureDetail!),
+    },
+  };
+
+  static const Set<String> _visitPhotoKeys = <String>{
+    'id',
+    'visit_id',
+    'blob_uri',
+    'sha256',
+    'phash',
+    'exif_time',
+    'exif_point',
+    'taken_in_app',
+    'device_time',
+    'server_time',
+    'photo_flags',
+    'version',
+    'signed_url',
+    'signed_url_expires_at',
+    localKey,
+  };
+
+  /// Visit photo row from wire data.
+  static VisitPhoto visitPhotoFromData(
+    String id,
+    Map<String, Object?> d, {
+    required int version,
+    required bool dirty,
+    required bool deleted,
+    required DateTime now,
+  }) {
+    final exif = _pointOf(d['exif_point']);
+    final local = _map(d[localKey]);
+    final extra = <String, Object?>{
+      for (final e in d.entries)
+        if (!_visitPhotoKeys.contains(e.key)) e.key: e.value,
+    };
+    return VisitPhoto(
+      id: id,
+      visitId: (d['visit_id'] as String?) ?? '',
+      blobUri: (d['blob_uri'] as String?) ?? '',
+      sha256: d['sha256'] as String?,
+      phash: d['phash'] as String?,
+      exifTime: _time(d['exif_time']),
+      exifLat: _num(exif?['lat']),
+      exifLon: _num(exif?['lon']),
+      takenInApp: d['taken_in_app'] != false,
+      deviceTime: _time(d['device_time']),
+      serverTime: _time(d['server_time']),
+      photoFlags: jsonEncode(_list(d['photo_flags'])),
+      localPath: local['path'] as String?,
+      extra: jsonEncode(extra),
+      version: version,
+      updatedAt: now,
+      dirty: dirty,
+      deleted: deleted,
+    );
+  }
+
+  /// Wire data from a visit photo row.
+  static Map<String, Object?> visitPhotoToData(VisitPhoto r) =>
+      <String, Object?>{
+        ...Map<String, Object?>.from(jsonDecode(r.extra) as Map),
+        'id': r.id,
+        'visit_id': r.visitId,
+        'blob_uri': r.blobUri,
+        'sha256': r.sha256,
+        'phash': r.phash,
+        'exif_time': r.exifTime?.toUtc().toIso8601String(),
+        'exif_point': r.exifLat == null
+            ? null
+            : <String, Object?>{'lat': r.exifLat, 'lon': r.exifLon},
+        'taken_in_app': r.takenInApp,
+        'device_time': r.deviceTime?.toUtc().toIso8601String(),
+        'server_time': r.serverTime?.toUtc().toIso8601String(),
+        'photo_flags': jsonDecode(r.photoFlags),
+        'version': r.version,
+        localKey: <String, Object?>{'path': r.localPath},
+      };
+
+  static const Set<String> _visitConfirmationKeys = <String>{
+    'id',
+    'visit_id',
+    'channel',
+    'status',
+    'requested_at',
+    'expires_at',
+    'confirmed_at',
+    'farmer_phone_last4',
+    'rating',
+    'version',
+    'code',
+    'token',
+    localKey,
+  };
+
+  /// Visit confirmation row from wire data.
+  static VisitConfirmation visitConfirmationFromData(
+    String id,
+    Map<String, Object?> d, {
+    required int version,
+    required bool dirty,
+    required bool deleted,
+    required DateTime now,
+  }) {
+    final local = _map(d[localKey]);
+    final extra = <String, Object?>{
+      for (final e in d.entries)
+        if (!_visitConfirmationKeys.contains(e.key)) e.key: e.value,
+    };
+    return VisitConfirmation(
+      id: id,
+      visitId: (d['visit_id'] as String?) ?? '',
+      channel: (d['channel'] as String?) ?? 'sms_otp',
+      status: (d['status'] as String?) ?? 'pending',
+      requestedAt: _time(d['requested_at']),
+      expiresAt: _time(d['expires_at']),
+      confirmedAt: _time(d['confirmed_at']),
+      farmerPhoneLast4: d['farmer_phone_last4'] as String?,
+      rating: (d['rating'] as num?)?.toInt(),
+      token: local['token'] as String?,
+      extra: jsonEncode(extra),
+      version: version,
+      updatedAt: now,
+      dirty: dirty,
+      deleted: deleted,
+    );
+  }
+
+  /// Wire data from a visit confirmation row (the QR token stays local).
+  static Map<String, Object?> visitConfirmationToData(VisitConfirmation r) =>
+      <String, Object?>{
+        ...Map<String, Object?>.from(jsonDecode(r.extra) as Map),
+        'id': r.id,
+        'visit_id': r.visitId,
+        'channel': r.channel,
+        'status': r.status,
+        'requested_at': r.requestedAt?.toUtc().toIso8601String(),
+        'expires_at': r.expiresAt?.toUtc().toIso8601String(),
+        'confirmed_at': r.confirmedAt?.toUtc().toIso8601String(),
+        'farmer_phone_last4': r.farmerPhoneLast4,
+        'rating': r.rating,
+        'version': r.version,
+        localKey: <String, Object?>{'token': r.token},
       };
 }

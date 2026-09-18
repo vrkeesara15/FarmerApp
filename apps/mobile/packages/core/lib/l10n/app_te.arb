@@ -530,5 +530,200 @@
   "myDayEndReasonRejected": "నమోదు కాలేదు",
   "syncEntityDutySession": "డ్యూటీ సెషన్",
   "syncEntityLocationBatch": "లొకేషన్ పాయింట్లు",
-  "syncEntityPolicyAcceptance": "విధాన అంగీకారం"
+  "syncEntityPolicyAcceptance": "విధాన అంగీకారం",
+  "visitsTitle": "సందర్శనలు",
+  "visitsTabToday": "ఈరోజు",
+  "visitsTabWeek": "ఈ వారం",
+  "visitsFilterAll": "అన్నీ",
+  "visitsEmptyTitle": "ఇంకా సందర్శనలు లేవు",
+  "visitsEmptyHelp": "రైతు ప్రొఫైల్ నుండి లేదా కింది బటన్‌తో సందర్శన ప్రారంభించండి.",
+  "visitStatusOpen": "కొనసాగుతోంది",
+  "visitCardPending": "ఆన్‌లైన్ అయినప్పుడు సింక్ అవుతుంది",
+  "visitCardFailed": "శ్రద్ధ అవసరం",
+  "visitChooseFarmer": "రైతును ఎంచుకోండి",
+  "visitFarmLabel": "పొలం",
+  "visitFarmNoBoundary": "ఈ పొలానికి సరిహద్దు నమోదు కాలేదు",
+  "visitPurposeLabel": "ఉద్దేశ్యం",
+  "visitOffDutyTitle": "ముందుగా డ్యూటీలోకి వెళ్లండి",
+  "visitOffDutyBody": "సందర్శనలు మీరు డ్యూటీలో ఉన్నప్పుడు మాత్రమే నమోదవుతాయి. హోమ్ నుండి డ్యూటీ ఆన్ చేసి తిరిగి రండి.",
+  "visitGoHome": "హోమ్‌కు వెళ్లండి",
+  "visitLocating": "మీ స్థానం తెలుసుకుంటున్నాం…",
+  "visitNoFix": "మీ స్థానం దొరకలేదు. ఆరుబయటకు వెళ్లి మళ్లీ ప్రయత్నించండి.",
+  "visitRefreshLocation": "స్థానం మళ్లీ తనిఖీ చేయండి",
+  "visitAccuracy": "ఖచ్చితత్వం ±{metres} మీ",
+  "@visitAccuracy": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "visitInsideGeofence": "మీరు పొలం జియోఫెన్స్ లోపల ఉన్నారు",
+  "visitAtMeetingPoint": "మీరు గ్రామ సమావేశ స్థలంలో ఉన్నారు",
+  "visitOutsideFarm": "పొలం సరిహద్దు నుండి {distance} మీ దూరంలో; జియోఫెన్స్ {radius} మీ.",
+  "@visitOutsideFarm": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      },
+      "radius": {
+        "type": "int"
+      }
+    }
+  },
+  "visitOutsideMeeting": "సమావేశ స్థలం నుండి {distance} మీ దూరంలో; అనుమతించిన పరిధి {radius} మీ.",
+  "@visitOutsideMeeting": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      },
+      "radius": {
+        "type": "int"
+      }
+    }
+  },
+  "visitNoTarget": "ఈ పొలానికి సరిహద్దు లేదు, గ్రామానికి సమావేశ స్థలం లేదు. ఓవర్‌రైడ్ నోట్‌తో చెక్ ఇన్ చేయండి.",
+  "visitRequestOverride": "ఓవర్‌రైడ్ కోరండి",
+  "visitOverrideNoteLabel": "మీరు ఇక్కడి నుండి ఎందుకు చెక్ ఇన్ చేస్తున్నారు?",
+  "visitOverrideNoteHint": "ఉదా. రైతును మార్కెట్‌లో కలిశాను",
+  "visitOverrideNoteRequired": "ఓవర్‌రైడ్ కోరడానికి నోట్ రాయండి",
+  "visitOverrideHelp": "మీ క్లస్టర్ హెడ్ ఓవర్‌రైడ్‌ను సమీక్షిస్తారు. ఆమోదిస్తేనే సందర్శనకు జియోఫెన్స్ క్రెడిట్ వస్తుంది.",
+  "visitCheckIn": "చెక్ ఇన్",
+  "visitCheckInOverride": "ఓవర్‌రైడ్‌తో చెక్ ఇన్",
+  "visitInProgress": "సందర్శన కొనసాగుతోంది",
+  "visitTimerLabel": "సందర్శన సమయం",
+  "visitMinDuration": "కనీసం {minutes} నిమి",
+  "@visitMinDuration": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitDurationNeeds": "{minimum} నిమిలో {minutes} నిమి",
+  "@visitDurationNeeds": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "minimum": {
+        "type": "int"
+      }
+    }
+  },
+  "visitUnderMinimum": "కనీసం {minutes} నిమి కంటే తక్కువ. సందర్శన ఫ్లాగ్ చేయబడుతుంది, తిరస్కరించబడదు.",
+  "@visitUnderMinimum": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitPhotos": "ఫోటోలు",
+  "visitTakePhoto": "ఫోటో తీయండి",
+  "visitPhotoCount": "{count} ఫోటోలు",
+  "@visitPhotoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "visitPhotosHelp": "యాప్ కెమెరా మాత్రమే. పొలంలో కనీసం ఒక ఫోటో తీయండి.",
+  "visitNotesLabel": "నోట్స్",
+  "visitNotesHint": "మీరు ఏమి గమనించారు లేదా సలహా ఇచ్చారు?",
+  "visitVoiceInputSoon": "వాయిస్ ఇన్‌పుట్ తర్వాతి అప్‌డేట్‌లో వస్తుంది",
+  "visitCropStageLabel": "పంట దశ",
+  "cropStageSown": "విత్తినది",
+  "cropStageMaturity": "పక్వత",
+  "cropStageHarvested": "కోత పూర్తి",
+  "visitProofTitle": "సందర్శన రుజువు",
+  "visitExpectedScore": "అంచనా స్కోరు",
+  "visitServerScore": "సర్వర్ నుండి స్కోరు",
+  "visitConfirmFarmer": "రైతు ధృవీకరణ",
+  "visitCheckOut": "చెక్ అవుట్",
+  "visitCheckInPending": "ఆన్‌లైన్ అయినప్పుడు చెక్ ఇన్ సింక్ అవుతుంది",
+  "visitCheckInSynced": "చెక్ ఇన్ సింక్ అయింది",
+  "visitRejectedTitle": "చెక్ ఇన్ తిరస్కరించబడింది",
+  "visitRejectedOutside": "సర్వర్ మిమ్మల్ని జియోఫెన్స్ బయట {distance} మీ దూరంలో గుర్తించింది.",
+  "@visitRejectedOutside": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      }
+    }
+  },
+  "visitRejectedNoTarget": "మీ స్థానాన్ని పోల్చడానికి సర్వర్‌కు ఏమీ దొరకలేదు.",
+  "visitRetryFromFarm": "పొలం నుండి మళ్లీ ప్రయత్నించండి",
+  "visitRetryStillOutside": "ఇంకా {distance} మీ బయట ఉన్నారు. దగ్గరకు వెళ్లండి లేదా ఓవర్‌రైడ్ కోరండి.",
+  "@visitRetryStillOutside": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      }
+    }
+  },
+  "visitRetryQueued": "మీ ప్రస్తుత స్థానంతో చెక్ ఇన్ మళ్లీ క్యూలో పెట్టబడింది.",
+  "proofGeofenceOverride": "ఓవర్‌రైడ్ కోరబడింది; క్లస్టర్ హెడ్ కోసం వేచి ఉంది",
+  "proofGeofenceOutside": "జియోఫెన్స్ బయట",
+  "proofPhotoDone": "స్థానంతో ఫోటో తీయబడింది",
+  "proofDurationDone": "కనీస వ్యవధి పూర్తయింది",
+  "proofIntegrityIssue": "డివైస్ తనిఖీలలో సమస్యలు; ఈ భాగానికి 0 స్కోరు",
+  "visitConfirmTitle": "రైతు ధృవీకరణ",
+  "visitConfirmIntro": "ఈ సందర్శనను ధృవీకరించమని రైతును ఈ మార్గాలలో ఒకదాని ద్వారా అడగండి.",
+  "visitConfirmOtp": "SMS ద్వారా OTP",
+  "visitConfirmOtpHelp": "రైతు ఫోన్‌కు కోడ్ వెళుతుంది; దాన్ని ఇక్కడ టైప్ చేయండి.",
+  "visitConfirmPush": "కిసాన్ యాప్‌లో అడగండి",
+  "visitConfirmPushHelp": "రైతు తమ యాప్‌లో ధృవీకరించు నొక్కుతారు.",
+  "visitConfirmQr": "QR చూపించండి",
+  "visitConfirmQrHelp": "రైతు దీన్ని కిసాన్ యాప్‌తో స్కాన్ చేస్తారు.",
+  "visitConfirmNeedsNetwork": "దీనికి నెట్‌వర్క్ కావాలి. ఆన్‌లైన్ అయినప్పుడు మళ్లీ ప్రయత్నించండి.",
+  "visitConfirmQrNeedsSync": "QR కోసం ముందుగా ఒకసారి సింక్ కావాలి. ఒకసారి కనెక్ట్ చేసి తిరిగి రండి.",
+  "visitConfirmNotSynced": "చెక్ ఇన్ ఇంకా సర్వర్‌కు చేరలేదు. సింక్ చేసి మళ్లీ ప్రయత్నించండి.",
+  "visitConfirmQueued": "అభ్యర్థన సేవ్ అయింది. మీరు ఆన్‌లైన్ అయిన వెంటనే రైతు యాప్‌కు వెళుతుంది.",
+  "visitConfirmWaiting": "రైతు కోసం వేచి ఉన్నాం…",
+  "visitConfirmWaitingPush": "కిసాన్ యాప్‌లో రైతును అడిగాం. వారు ధృవీకరించగానే ఈ స్క్రీన్ అప్‌డేట్ అవుతుంది.",
+  "visitConfirmQrWaiting": "రైతు స్కాన్ చేసే వరకు వేచి ఉన్నాం…",
+  "visitConfirmed": "రైతు ధృవీకరించారు",
+  "visitConfirmedVia": "{channel} ద్వారా ధృవీకరించబడింది",
+  "@visitConfirmedVia": {
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      }
+    }
+  },
+  "visitConfirmOtpSent": "{phone}కు కోడ్ పంపబడింది",
+  "@visitConfirmOtpSent": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "visitConfirmAlready": "ఈ సందర్శన ఇప్పటికే ధృవీకరించబడింది.",
+  "visitConfirmRefused": "ఇప్పుడు రైతును ఈ విధంగా అడగలేము. మరో మార్గం ప్రయత్నించండి.",
+  "visitConfirmContinue": "చెక్ అవుట్‌కు కొనసాగండి",
+  "visitConfirmLater": "తర్వాత ధృవీకరించండి",
+  "visitConfirmExpires": "{minutes} నిమిలో గడువు ముగుస్తుంది",
+  "@visitConfirmExpires": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitConfirmChooseAnother": "మరో మార్గం ఎంచుకోండి",
+  "visitSummaryTitle": "చెక్ అవుట్ సారాంశం",
+  "visitSummaryDuration": "వ్యవధి",
+  "visitSummaryMissing": "ఏమి తక్కువైంది",
+  "visitSummaryComplete": "అన్నీ సరిగ్గా ఉన్నాయి",
+  "visitSummaryPending": "తర్వాతి సింక్ తర్వాత సర్వర్ స్కోరును ధృవీకరిస్తుంది",
+  "visitSummaryServer": "సర్వర్ స్కోరును ధృవీకరించింది",
+  "visitSummaryNotCheckedOut": "ఈ సందర్శన ఇంకా కొనసాగుతోంది.",
+  "visitSummaryOverridePending": "ఓవర్‌రైడ్ సమీక్ష కోసం వేచి ఉంది",
+  "visitDone": "పూర్తయింది",
+  "syncEntityVisit": "సందర్శన",
+  "syncEntityVisitPhoto": "సందర్శన ఫోటో",
+  "syncEntityVisitConfirmation": "రైతు ధృవీకరణ"
 }

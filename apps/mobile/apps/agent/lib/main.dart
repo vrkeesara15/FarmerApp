@@ -107,6 +107,14 @@ Future<void> main() async {
       ),
       cameraSourceProvider.overrideWithValue(ImagePickerCameraSource()),
       photoStoreProvider.overrideWithValue(const DocumentsPhotoStore()),
+      // FA-016: confirmation request / officer-side OTP (online only).
+      visitConfirmApiProvider.overrideWithValue(
+        HttpVisitConfirmApi(
+          store: store,
+          refreshSession: auth.refresh,
+          onServerDate: drift.record,
+        ),
+      ),
     ],
   );
   // Periodic background sync + immediate sync on reconnect (NF-002/NF-003).

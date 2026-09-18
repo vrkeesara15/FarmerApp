@@ -2785,6 +2785,618 @@ abstract class CoreLocalizations {
   /// In en, this message translates to:
   /// **'Policy acceptance'**
   String get syncEntityPolicyAcceptance;
+
+  /// No description provided for @visitsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Visits'**
+  String get visitsTitle;
+
+  /// No description provided for @visitsTabToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get visitsTabToday;
+
+  /// No description provided for @visitsTabWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get visitsTabWeek;
+
+  /// No description provided for @visitsFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get visitsFilterAll;
+
+  /// No description provided for @visitsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No visits yet'**
+  String get visitsEmptyTitle;
+
+  /// No description provided for @visitsEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a visit from a farmer profile or with the button below.'**
+  String get visitsEmptyHelp;
+
+  /// No description provided for @visitStatusOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get visitStatusOpen;
+
+  /// No description provided for @visitCardPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Will sync when online'**
+  String get visitCardPending;
+
+  /// No description provided for @visitCardFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get visitCardFailed;
+
+  /// No description provided for @visitChooseFarmer.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a farmer'**
+  String get visitChooseFarmer;
+
+  /// No description provided for @visitFarmLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Farm'**
+  String get visitFarmLabel;
+
+  /// No description provided for @visitFarmNoBoundary.
+  ///
+  /// In en, this message translates to:
+  /// **'No boundary recorded for this farm'**
+  String get visitFarmNoBoundary;
+
+  /// No description provided for @visitPurposeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Purpose'**
+  String get visitPurposeLabel;
+
+  /// No description provided for @visitOffDutyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Go on duty first'**
+  String get visitOffDutyTitle;
+
+  /// No description provided for @visitOffDutyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Visits are recorded only while you are on duty. Switch duty on from Home and come back.'**
+  String get visitOffDutyBody;
+
+  /// No description provided for @visitGoHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Home'**
+  String get visitGoHome;
+
+  /// No description provided for @visitLocating.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting your location…'**
+  String get visitLocating;
+
+  /// No description provided for @visitNoFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not get your location. Move under open sky and try again.'**
+  String get visitNoFix;
+
+  /// No description provided for @visitRefreshLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Check location again'**
+  String get visitRefreshLocation;
+
+  /// No description provided for @visitAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy ±{metres} m'**
+  String visitAccuracy(int metres);
+
+  /// No description provided for @visitInsideGeofence.
+  ///
+  /// In en, this message translates to:
+  /// **'You are inside the farm geofence'**
+  String get visitInsideGeofence;
+
+  /// No description provided for @visitAtMeetingPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'You are at the village meeting point'**
+  String get visitAtMeetingPoint;
+
+  /// No description provided for @visitOutsideFarm.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} m from the farm boundary; the geofence is {radius} m.'**
+  String visitOutsideFarm(int distance, int radius);
+
+  /// No description provided for @visitOutsideMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} m from the meeting point; the allowed radius is {radius} m.'**
+  String visitOutsideMeeting(int distance, int radius);
+
+  /// No description provided for @visitNoTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'This farm has no boundary and the village has no meeting point. Check in with an override note.'**
+  String get visitNoTarget;
+
+  /// No description provided for @visitRequestOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Request override'**
+  String get visitRequestOverride;
+
+  /// No description provided for @visitOverrideNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Why are you checking in from here?'**
+  String get visitOverrideNoteLabel;
+
+  /// No description provided for @visitOverrideNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Met the farmer at the market'**
+  String get visitOverrideNoteHint;
+
+  /// No description provided for @visitOverrideNoteRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note to request an override'**
+  String get visitOverrideNoteRequired;
+
+  /// No description provided for @visitOverrideHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cluster head reviews the override. The visit earns geofence credit only if it is approved.'**
+  String get visitOverrideHelp;
+
+  /// No description provided for @visitCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Check in'**
+  String get visitCheckIn;
+
+  /// No description provided for @visitCheckInOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Check in with override'**
+  String get visitCheckInOverride;
+
+  /// No description provided for @visitInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit in progress'**
+  String get visitInProgress;
+
+  /// No description provided for @visitTimerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Time on visit'**
+  String get visitTimerLabel;
+
+  /// No description provided for @visitMinDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum {minutes} min'**
+  String visitMinDuration(int minutes);
+
+  /// No description provided for @visitDurationNeeds.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min of {minimum} min'**
+  String visitDurationNeeds(int minutes, int minimum);
+
+  /// No description provided for @visitUnderMinimum.
+  ///
+  /// In en, this message translates to:
+  /// **'Under the minimum of {minutes} min. The visit is flagged, not rejected.'**
+  String visitUnderMinimum(int minutes);
+
+  /// No description provided for @visitPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get visitPhotos;
+
+  /// No description provided for @visitTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get visitTakePhoto;
+
+  /// No description provided for @visitPhotoCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} photos'**
+  String visitPhotoCount(int count);
+
+  /// No description provided for @visitPhotosHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'In-app camera only. Take at least one photo at the farm.'**
+  String get visitPhotosHelp;
+
+  /// No description provided for @visitNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get visitNotesLabel;
+
+  /// No description provided for @visitNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What did you observe or advise?'**
+  String get visitNotesHint;
+
+  /// No description provided for @visitVoiceInputSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input arrives in a later update'**
+  String get visitVoiceInputSoon;
+
+  /// No description provided for @visitCropStageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop stage'**
+  String get visitCropStageLabel;
+
+  /// No description provided for @cropStageSown.
+  ///
+  /// In en, this message translates to:
+  /// **'Sown'**
+  String get cropStageSown;
+
+  /// No description provided for @cropStageMaturity.
+  ///
+  /// In en, this message translates to:
+  /// **'Maturity'**
+  String get cropStageMaturity;
+
+  /// No description provided for @cropStageHarvested.
+  ///
+  /// In en, this message translates to:
+  /// **'Harvested'**
+  String get cropStageHarvested;
+
+  /// No description provided for @visitProofTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Proof of visit'**
+  String get visitProofTitle;
+
+  /// No description provided for @visitExpectedScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected score'**
+  String get visitExpectedScore;
+
+  /// No description provided for @visitServerScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Score from the server'**
+  String get visitServerScore;
+
+  /// No description provided for @visitConfirmFarmer.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer confirmation'**
+  String get visitConfirmFarmer;
+
+  /// No description provided for @visitCheckOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Check out'**
+  String get visitCheckOut;
+
+  /// No description provided for @visitCheckInPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in will sync when online'**
+  String get visitCheckInPending;
+
+  /// No description provided for @visitCheckInSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in synced'**
+  String get visitCheckInSynced;
+
+  /// No description provided for @visitRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in refused'**
+  String get visitRejectedTitle;
+
+  /// No description provided for @visitRejectedOutside.
+  ///
+  /// In en, this message translates to:
+  /// **'The server placed you {distance} m outside the geofence.'**
+  String visitRejectedOutside(int distance);
+
+  /// No description provided for @visitRejectedNoTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'The server found nothing to check your location against.'**
+  String get visitRejectedNoTarget;
+
+  /// No description provided for @visitRetryFromFarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry from the farm'**
+  String get visitRetryFromFarm;
+
+  /// No description provided for @visitRetryStillOutside.
+  ///
+  /// In en, this message translates to:
+  /// **'Still {distance} m outside. Move closer or request an override.'**
+  String visitRetryStillOutside(int distance);
+
+  /// No description provided for @visitRetryQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in queued again with your current location.'**
+  String get visitRetryQueued;
+
+  /// No description provided for @proofGeofenceOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Override requested; waiting for the cluster head'**
+  String get proofGeofenceOverride;
+
+  /// No description provided for @proofGeofenceOutside.
+  ///
+  /// In en, this message translates to:
+  /// **'Outside the geofence'**
+  String get proofGeofenceOutside;
+
+  /// No description provided for @proofPhotoDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo with location taken'**
+  String get proofPhotoDone;
+
+  /// No description provided for @proofDurationDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum duration reached'**
+  String get proofDurationDone;
+
+  /// No description provided for @proofIntegrityIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Device checks reported issues; this part scores 0'**
+  String get proofIntegrityIssue;
+
+  /// No description provided for @visitConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer confirmation'**
+  String get visitConfirmTitle;
+
+  /// No description provided for @visitConfirmIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the farmer to confirm this visit in one of these ways.'**
+  String get visitConfirmIntro;
+
+  /// No description provided for @visitConfirmOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP by SMS'**
+  String get visitConfirmOtp;
+
+  /// No description provided for @visitConfirmOtpHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A code goes to the farmer’s phone; type it here.'**
+  String get visitConfirmOtpHelp;
+
+  /// No description provided for @visitConfirmPush.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask in Kisan app'**
+  String get visitConfirmPush;
+
+  /// No description provided for @visitConfirmPushHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The farmer taps Confirm in their app.'**
+  String get visitConfirmPushHelp;
+
+  /// No description provided for @visitConfirmQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Show QR'**
+  String get visitConfirmQr;
+
+  /// No description provided for @visitConfirmQrHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The farmer scans this with the Kisan app.'**
+  String get visitConfirmQrHelp;
+
+  /// No description provided for @visitConfirmNeedsNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'This needs network. Try again when you are online.'**
+  String get visitConfirmNeedsNetwork;
+
+  /// No description provided for @visitConfirmQrNeedsSync.
+  ///
+  /// In en, this message translates to:
+  /// **'The QR needs one sync first. Connect once and come back.'**
+  String get visitConfirmQrNeedsSync;
+
+  /// No description provided for @visitConfirmNotSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'The check-in has not reached the server yet. Sync and try again.'**
+  String get visitConfirmNotSynced;
+
+  /// No description provided for @visitConfirmQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Request saved. It goes to the farmer’s app as soon as you are online.'**
+  String get visitConfirmQueued;
+
+  /// No description provided for @visitConfirmWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the farmer…'**
+  String get visitConfirmWaiting;
+
+  /// No description provided for @visitConfirmWaitingPush.
+  ///
+  /// In en, this message translates to:
+  /// **'We asked the farmer in the Kisan app. This screen updates when they confirm.'**
+  String get visitConfirmWaitingPush;
+
+  /// No description provided for @visitConfirmQrWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the farmer to scan…'**
+  String get visitConfirmQrWaiting;
+
+  /// No description provided for @visitConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer confirmed'**
+  String get visitConfirmed;
+
+  /// No description provided for @visitConfirmedVia.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed via {channel}'**
+  String visitConfirmedVia(String channel);
+
+  /// No description provided for @visitConfirmOtpSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Code sent to {phone}'**
+  String visitConfirmOtpSent(String phone);
+
+  /// No description provided for @visitConfirmAlready.
+  ///
+  /// In en, this message translates to:
+  /// **'This visit is already confirmed.'**
+  String get visitConfirmAlready;
+
+  /// No description provided for @visitConfirmRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'The farmer cannot be asked this way right now. Try another option.'**
+  String get visitConfirmRefused;
+
+  /// No description provided for @visitConfirmContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to check-out'**
+  String get visitConfirmContinue;
+
+  /// No description provided for @visitConfirmLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm later'**
+  String get visitConfirmLater;
+
+  /// No description provided for @visitConfirmExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires in {minutes} min'**
+  String visitConfirmExpires(int minutes);
+
+  /// No description provided for @visitConfirmChooseAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another way'**
+  String get visitConfirmChooseAnother;
+
+  /// No description provided for @visitSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-out summary'**
+  String get visitSummaryTitle;
+
+  /// No description provided for @visitSummaryDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get visitSummaryDuration;
+
+  /// No description provided for @visitSummaryMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'What was missing'**
+  String get visitSummaryMissing;
+
+  /// No description provided for @visitSummaryComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything is in place'**
+  String get visitSummaryComplete;
+
+  /// No description provided for @visitSummaryPending.
+  ///
+  /// In en, this message translates to:
+  /// **'The server confirms the score after the next sync'**
+  String get visitSummaryPending;
+
+  /// No description provided for @visitSummaryServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Score confirmed by the server'**
+  String get visitSummaryServer;
+
+  /// No description provided for @visitSummaryNotCheckedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'This visit is still open.'**
+  String get visitSummaryNotCheckedOut;
+
+  /// No description provided for @visitSummaryOverridePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Override waiting for review'**
+  String get visitSummaryOverridePending;
+
+  /// No description provided for @visitDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get visitDone;
+
+  /// No description provided for @syncEntityVisit.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit'**
+  String get syncEntityVisit;
+
+  /// No description provided for @syncEntityVisitPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit photo'**
+  String get syncEntityVisitPhoto;
+
+  /// No description provided for @syncEntityVisitConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer confirmation'**
+  String get syncEntityVisitConfirmation;
 }
 
 class _CoreLocalizationsDelegate

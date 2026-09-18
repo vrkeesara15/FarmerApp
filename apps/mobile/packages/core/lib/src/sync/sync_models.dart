@@ -31,6 +31,15 @@ abstract final class SyncEntities {
   /// FA-011 location policy acceptance (`sync_docs`, append-only).
   static const String policyAcceptance = 'policy_acceptance';
 
+  /// FA-014 / FA-017 visit (typed `visits` table).
+  static const String visit = 'visit';
+
+  /// FA-015 in-app visit photo (typed `visit_photos` table).
+  static const String visitPhoto = 'visit_photo';
+
+  /// FA-016 farmer confirmation (typed `visit_confirmations` table).
+  static const String visitConfirmation = 'visit_confirmation';
+
   /// Entities with a local table and outbox support.
   static const Set<String> writable = <String>{
     farmer,
@@ -40,6 +49,9 @@ abstract final class SyncEntities {
     dutySession,
     locationBatch,
     policyAcceptance,
+    visit,
+    visitPhoto,
+    visitConfirmation,
   };
 }
 
@@ -120,18 +132,60 @@ enum UploadState {
   static UploadState parse(String value) => UploadState.values.byName(value);
 }
 
-/// A server-side error `{code, detail}`.
+/// A server-side error `{code, detail}` plus any extra problem fields
+/// (`outside_geofence` carries `distance_m`, `target`, `radius_m`).
 @immutable
 class SyncError {
   /// Creates the error.
-  const SyncError(this.code, [this.detail = '']);
+  const SyncError(
+    this.code, [
+    this.detail = '',
+    this.extra = const <String, Object?>{},
+  ]);
 
-  /// Parses the wire shape; `null` input gives `null`.
+  /// Keys of the problem envelope that are not extra data.
+  static const Set<String> _envelopeKeys = <String>{
+    'code',
+    'detail',
+    'status',
+    'title',
+    'type',
+    'instance',
+    'trace_id',
+    'errors',
+  };
+
+  /// Parses the wire shape; `null` input gives `null`. Extra fields come
+  /// from the top level of the problem and from any `errors[]` entry that
+  /// carries them.
   static SyncError? fromJson(Object? json) {
     if (json is! Map<String, Object?>) return null;
+    final extra = <String, Object?>{
+      for (final e in json.entries)
+        if (!_envelopeKeys.contains(e.key)) e.key: e.value,
+    };
+    final errors = json['errors'];
+    if (errors is List) {
+      for (final item in errors) {
+        if (item is Map) {
+          for (final e in item.entries) {
+            if (e.key is String && !_envelopeKeys.contains(e.key)) {
+              extra.putIfAbsent(e.key as String, () => e.value);
+            }
+          }
+        }
+      }
+    }
+    final raw = json['extra'];
+    if (raw is Map) {
+      extra
+        ..remove('extra')
+        ..addAll(Map<String, Object?>.from(raw));
+    }
     return SyncError(
       (json['code'] as String?) ?? 'error',
       (json['detail'] as String?) ?? '',
+      extra,
     );
   }
 
@@ -141,10 +195,31 @@ class SyncError {
   /// Human-readable detail.
   final String detail;
 
+  /// Extra problem fields (e.g. `distance_m`).
+  final Map<String, Object?> extra;
+
+  static final RegExp _metresInDetail = RegExp(r'(\d+(?:\.\d+)?)\s*m\b');
+
+  /// `distance_m` of an `outside_geofence` rejection, from the extra fields
+  /// or, failing that, the first `<n> m` in the detail text.
+  double? get distanceM {
+    final v = extra['distance_m'];
+    if (v is num) return v.toDouble();
+    final m = _metresInDetail.firstMatch(detail);
+    return m == null ? null : double.tryParse(m.group(1)!);
+  }
+
+  /// `target` of an `outside_geofence` rejection (`farm` / `meeting_point`).
+  String? get target => extra['target'] as String?;
+
+  /// `radius_m` of an `outside_geofence` rejection.
+  double? get radiusM => (extra['radius_m'] as num?)?.toDouble();
+
   /// Wire shape.
   Map<String, Object?> toJson() => <String, Object?>{
     'code': code,
     'detail': detail,
+    if (extra.isNotEmpty) ...extra,
   };
 
   @override

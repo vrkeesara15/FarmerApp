@@ -218,3 +218,67 @@ bool areaDiffersBeyondTolerance(
   final ratio = (declaredAcres - computedAcres).abs() / computedAcres;
   return ratio > tolerance + 1e-9;
 }
+
+// --- geofence geometry (VV-003 on the device) ------------------------------
+
+/// Ray-casting point-in-polygon on the outer [ring] (closed or open, any
+/// winding). Points on an edge count as inside. Fewer than three points is
+/// never inside.
+bool pointInPolygon(GeoPoint p, List<GeoPoint> ring) {
+  final pts = _open(ring);
+  final n = pts.length;
+  if (n < 3) return false;
+  var inside = false;
+  for (var i = 0, j = n - 1; i < n; j = i++) {
+    final a = pts[i];
+    final b = pts[j];
+    if (_orientation(a, b, p) == 0 && _onSegment(a, b, p)) return true;
+    final crosses =
+        (a.latitude > p.latitude) != (b.latitude > p.latitude) &&
+        p.longitude <
+            (b.longitude - a.longitude) *
+                    (p.latitude - a.latitude) /
+                    (b.latitude - a.latitude) +
+                a.longitude;
+    if (crosses) inside = !inside;
+  }
+  return inside;
+}
+
+/// Distance in metres from [p] to the segment [a]-[b], computed in a local
+/// equirectangular plane centred on [p] (accurate to well under a percent
+/// at field scale).
+double distanceToSegmentMetres(GeoPoint p, GeoPoint a, GeoPoint b) {
+  final k = metresPerDegreeLatitude * math.cos(_rad(p.latitude));
+  double x(GeoPoint q) => (q.longitude - p.longitude) * k;
+  double y(GeoPoint q) => (q.latitude - p.latitude) * metresPerDegreeLatitude;
+  final ax = x(a);
+  final ay = y(a);
+  final bx = x(b);
+  final by = y(b);
+  final dx = bx - ax;
+  final dy = by - ay;
+  final len2 = dx * dx + dy * dy;
+  double t = 0;
+  if (len2 > 0) {
+    t = ((-ax) * dx + (-ay) * dy) / len2;
+    t = t.clamp(0.0, 1.0);
+  }
+  final cx = ax + t * dx;
+  final cy = ay + t * dy;
+  return math.sqrt(cx * cx + cy * cy);
+}
+
+/// Distance in metres from [p] to the polygon [ring]: 0 inside, otherwise
+/// the distance to the nearest edge. `NaN` for fewer than three points.
+double distanceToPolygonMetres(GeoPoint p, List<GeoPoint> ring) {
+  final pts = _open(ring);
+  if (pts.length < 3) return double.nan;
+  if (pointInPolygon(p, pts)) return 0;
+  var best = double.infinity;
+  for (var i = 0; i < pts.length; i++) {
+    final d = distanceToSegmentMetres(p, pts[i], pts[(i + 1) % pts.length]);
+    if (d < best) best = d;
+  }
+  return best;
+}

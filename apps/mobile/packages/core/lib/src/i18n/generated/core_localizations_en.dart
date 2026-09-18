@@ -1488,4 +1488,353 @@ class CoreLocalizationsEn extends CoreLocalizations {
 
   @override
   String get syncEntityPolicyAcceptance => 'Policy acceptance';
+
+  @override
+  String get visitsTitle => 'Visits';
+
+  @override
+  String get visitsTabToday => 'Today';
+
+  @override
+  String get visitsTabWeek => 'This week';
+
+  @override
+  String get visitsFilterAll => 'All';
+
+  @override
+  String get visitsEmptyTitle => 'No visits yet';
+
+  @override
+  String get visitsEmptyHelp =>
+      'Start a visit from a farmer profile or with the button below.';
+
+  @override
+  String get visitStatusOpen => 'In progress';
+
+  @override
+  String get visitCardPending => 'Will sync when online';
+
+  @override
+  String get visitCardFailed => 'Needs attention';
+
+  @override
+  String get visitChooseFarmer => 'Choose a farmer';
+
+  @override
+  String get visitFarmLabel => 'Farm';
+
+  @override
+  String get visitFarmNoBoundary => 'No boundary recorded for this farm';
+
+  @override
+  String get visitPurposeLabel => 'Purpose';
+
+  @override
+  String get visitOffDutyTitle => 'Go on duty first';
+
+  @override
+  String get visitOffDutyBody =>
+      'Visits are recorded only while you are on duty. Switch duty on from Home and come back.';
+
+  @override
+  String get visitGoHome => 'Go to Home';
+
+  @override
+  String get visitLocating => 'Getting your location…';
+
+  @override
+  String get visitNoFix =>
+      'Could not get your location. Move under open sky and try again.';
+
+  @override
+  String get visitRefreshLocation => 'Check location again';
+
+  @override
+  String visitAccuracy(int metres) {
+    return 'Accuracy ±$metres m';
+  }
+
+  @override
+  String get visitInsideGeofence => 'You are inside the farm geofence';
+
+  @override
+  String get visitAtMeetingPoint => 'You are at the village meeting point';
+
+  @override
+  String visitOutsideFarm(int distance, int radius) {
+    return '$distance m from the farm boundary; the geofence is $radius m.';
+  }
+
+  @override
+  String visitOutsideMeeting(int distance, int radius) {
+    return '$distance m from the meeting point; the allowed radius is $radius m.';
+  }
+
+  @override
+  String get visitNoTarget =>
+      'This farm has no boundary and the village has no meeting point. Check in with an override note.';
+
+  @override
+  String get visitRequestOverride => 'Request override';
+
+  @override
+  String get visitOverrideNoteLabel => 'Why are you checking in from here?';
+
+  @override
+  String get visitOverrideNoteHint => 'e.g. Met the farmer at the market';
+
+  @override
+  String get visitOverrideNoteRequired => 'Add a note to request an override';
+
+  @override
+  String get visitOverrideHelp =>
+      'Your cluster head reviews the override. The visit earns geofence credit only if it is approved.';
+
+  @override
+  String get visitCheckIn => 'Check in';
+
+  @override
+  String get visitCheckInOverride => 'Check in with override';
+
+  @override
+  String get visitInProgress => 'Visit in progress';
+
+  @override
+  String get visitTimerLabel => 'Time on visit';
+
+  @override
+  String visitMinDuration(int minutes) {
+    return 'Minimum $minutes min';
+  }
+
+  @override
+  String visitDurationNeeds(int minutes, int minimum) {
+    return '$minutes min of $minimum min';
+  }
+
+  @override
+  String visitUnderMinimum(int minutes) {
+    return 'Under the minimum of $minutes min. The visit is flagged, not rejected.';
+  }
+
+  @override
+  String get visitPhotos => 'Photos';
+
+  @override
+  String get visitTakePhoto => 'Take photo';
+
+  @override
+  String visitPhotoCount(int count) {
+    return '$count photos';
+  }
+
+  @override
+  String get visitPhotosHelp =>
+      'In-app camera only. Take at least one photo at the farm.';
+
+  @override
+  String get visitNotesLabel => 'Notes';
+
+  @override
+  String get visitNotesHint => 'What did you observe or advise?';
+
+  @override
+  String get visitVoiceInputSoon => 'Voice input arrives in a later update';
+
+  @override
+  String get visitCropStageLabel => 'Crop stage';
+
+  @override
+  String get cropStageSown => 'Sown';
+
+  @override
+  String get cropStageMaturity => 'Maturity';
+
+  @override
+  String get cropStageHarvested => 'Harvested';
+
+  @override
+  String get visitProofTitle => 'Proof of visit';
+
+  @override
+  String get visitExpectedScore => 'Expected score';
+
+  @override
+  String get visitServerScore => 'Score from the server';
+
+  @override
+  String get visitConfirmFarmer => 'Farmer confirmation';
+
+  @override
+  String get visitCheckOut => 'Check out';
+
+  @override
+  String get visitCheckInPending => 'Check-in will sync when online';
+
+  @override
+  String get visitCheckInSynced => 'Check-in synced';
+
+  @override
+  String get visitRejectedTitle => 'Check-in refused';
+
+  @override
+  String visitRejectedOutside(int distance) {
+    return 'The server placed you $distance m outside the geofence.';
+  }
+
+  @override
+  String get visitRejectedNoTarget =>
+      'The server found nothing to check your location against.';
+
+  @override
+  String get visitRetryFromFarm => 'Retry from the farm';
+
+  @override
+  String visitRetryStillOutside(int distance) {
+    return 'Still $distance m outside. Move closer or request an override.';
+  }
+
+  @override
+  String get visitRetryQueued =>
+      'Check-in queued again with your current location.';
+
+  @override
+  String get proofGeofenceOverride =>
+      'Override requested; waiting for the cluster head';
+
+  @override
+  String get proofGeofenceOutside => 'Outside the geofence';
+
+  @override
+  String get proofPhotoDone => 'Photo with location taken';
+
+  @override
+  String get proofDurationDone => 'Minimum duration reached';
+
+  @override
+  String get proofIntegrityIssue =>
+      'Device checks reported issues; this part scores 0';
+
+  @override
+  String get visitConfirmTitle => 'Farmer confirmation';
+
+  @override
+  String get visitConfirmIntro =>
+      'Ask the farmer to confirm this visit in one of these ways.';
+
+  @override
+  String get visitConfirmOtp => 'OTP by SMS';
+
+  @override
+  String get visitConfirmOtpHelp =>
+      'A code goes to the farmer’s phone; type it here.';
+
+  @override
+  String get visitConfirmPush => 'Ask in Kisan app';
+
+  @override
+  String get visitConfirmPushHelp => 'The farmer taps Confirm in their app.';
+
+  @override
+  String get visitConfirmQr => 'Show QR';
+
+  @override
+  String get visitConfirmQrHelp => 'The farmer scans this with the Kisan app.';
+
+  @override
+  String get visitConfirmNeedsNetwork =>
+      'This needs network. Try again when you are online.';
+
+  @override
+  String get visitConfirmQrNeedsSync =>
+      'The QR needs one sync first. Connect once and come back.';
+
+  @override
+  String get visitConfirmNotSynced =>
+      'The check-in has not reached the server yet. Sync and try again.';
+
+  @override
+  String get visitConfirmQueued =>
+      'Request saved. It goes to the farmer’s app as soon as you are online.';
+
+  @override
+  String get visitConfirmWaiting => 'Waiting for the farmer…';
+
+  @override
+  String get visitConfirmWaitingPush =>
+      'We asked the farmer in the Kisan app. This screen updates when they confirm.';
+
+  @override
+  String get visitConfirmQrWaiting => 'Waiting for the farmer to scan…';
+
+  @override
+  String get visitConfirmed => 'Farmer confirmed';
+
+  @override
+  String visitConfirmedVia(String channel) {
+    return 'Confirmed via $channel';
+  }
+
+  @override
+  String visitConfirmOtpSent(String phone) {
+    return 'Code sent to $phone';
+  }
+
+  @override
+  String get visitConfirmAlready => 'This visit is already confirmed.';
+
+  @override
+  String get visitConfirmRefused =>
+      'The farmer cannot be asked this way right now. Try another option.';
+
+  @override
+  String get visitConfirmContinue => 'Continue to check-out';
+
+  @override
+  String get visitConfirmLater => 'Confirm later';
+
+  @override
+  String visitConfirmExpires(int minutes) {
+    return 'Expires in $minutes min';
+  }
+
+  @override
+  String get visitConfirmChooseAnother => 'Choose another way';
+
+  @override
+  String get visitSummaryTitle => 'Check-out summary';
+
+  @override
+  String get visitSummaryDuration => 'Duration';
+
+  @override
+  String get visitSummaryMissing => 'What was missing';
+
+  @override
+  String get visitSummaryComplete => 'Everything is in place';
+
+  @override
+  String get visitSummaryPending =>
+      'The server confirms the score after the next sync';
+
+  @override
+  String get visitSummaryServer => 'Score confirmed by the server';
+
+  @override
+  String get visitSummaryNotCheckedOut => 'This visit is still open.';
+
+  @override
+  String get visitSummaryOverridePending => 'Override waiting for review';
+
+  @override
+  String get visitDone => 'Done';
+
+  @override
+  String get syncEntityVisit => 'Visit';
+
+  @override
+  String get syncEntityVisitPhoto => 'Visit photo';
+
+  @override
+  String get syncEntityVisitConfirmation => 'Farmer confirmation';
 }

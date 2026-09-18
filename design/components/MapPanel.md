@@ -18,6 +18,9 @@ Source: `apps/mobile/packages/core/lib/src/widgets/map_panel.dart` (exported fro
 | `showCorners` | `bool` | numbered markers |
 | `tileProvider` | `TileProvider?` | `BlankTileProvider` in tests and goldens (no network) |
 | `mapController` | `MapController?` | optional |
+| `geofence` | `GeofenceHighlight` | A30: `inside` draws the polygon border / meeting ring in success colour (+2 dp), `outside` in danger; `none` = primary |
+| `meetingPoint` | `GeoPoint?` | village meeting point (VV-003) |
+| `meetingRadiusM` | `double?` | radius of the meeting point ring (m) |
 
 The camera follows new points (single point → zoom 17; two or more → fit bounds with 32 dp padding, max zoom 18).
 

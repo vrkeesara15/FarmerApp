@@ -324,6 +324,15 @@ class Villages extends Table {
   /// Village centre longitude.
   RealColumn get longitude => real().nullable()();
 
+  /// Meeting point latitude (VV-003), if registered.
+  RealColumn get meetingPointLat => real().nullable()();
+
+  /// Meeting point longitude.
+  RealColumn get meetingPointLon => real().nullable()();
+
+  /// Meeting point radius (m); null = tenant default.
+  RealColumn get meetingPointRadiusM => real().nullable()();
+
   /// Server row version.
   IntColumn get version => integer().withDefault(const Constant(0))();
 
@@ -466,6 +475,198 @@ class SyncDocs extends Table {
   Set<Column<Object>> get primaryKey => <Column<Object>>{entity, docId};
 }
 
+/// FA-014 .. FA-017 visit as captured on this device (sync entity `visit`).
+///
+/// `geofence_result`, `score`, `score_components`, `status`, `duration_s`,
+/// `confirmed_at`, `flags` and `integrity_issues` are server-owned: the
+/// applied / conflict echo and the pull overwrite them. The `precheck*`
+/// columns hold the client-side VV-003 decision taken before the op was
+/// queued, `failure*` the server's rejection (e.g. `outside_geofence`).
+@TableIndex(name: 'visits_checkin', columns: <Symbol>{#checkinAt})
+class Visits extends Table with SyncedRow {
+  /// Farmer visited.
+  TextColumn get farmerId => text()();
+
+  /// Farm (geofence target), if any.
+  TextColumn get farmId => text().nullable()();
+
+  /// Meeting-point village, if any.
+  TextColumn get villageId => text().nullable()();
+
+  /// `advisory` | `scouting` | `demo` | `collection` | `sale` | `meeting`.
+  TextColumn get purpose => text().withDefault(const Constant('advisory'))();
+
+  /// Check-in time (UTC, device clock).
+  DateTimeColumn get checkinAt => dateTime()();
+
+  /// Check-in fix latitude.
+  RealColumn get checkinLat => real()();
+
+  /// Check-in fix longitude.
+  RealColumn get checkinLon => real()();
+
+  /// Check-in fix accuracy (m).
+  RealColumn get checkinAccuracyM => real().nullable()();
+
+  /// Check-out time (UTC); null while open.
+  DateTimeColumn get checkoutAt => dateTime().nullable()();
+
+  /// Check-out fix latitude.
+  RealColumn get checkoutLat => real().nullable()();
+
+  /// Check-out fix longitude.
+  RealColumn get checkoutLon => real().nullable()();
+
+  /// Server `geofence_result` (inside | outside | meeting_point | override).
+  TextColumn get geofenceResult => text().nullable()();
+
+  /// Client pre-check result (inside | meeting_point | outside).
+  TextColumn get precheckResult => text().nullable()();
+
+  /// Client pre-check distance to the target (m).
+  RealColumn get precheckDistanceM => real().nullable()();
+
+  /// Client pre-check target (`farm` | `meeting_point`).
+  TextColumn get precheckTarget => text().nullable()();
+
+  /// Client pre-check radius (m).
+  RealColumn get precheckRadiusM => real().nullable()();
+
+  /// FA-014 override note (outside the geofence).
+  TextColumn get overrideNote => text().nullable()();
+
+  /// Cluster head who approved the override, once decided.
+  TextColumn get overrideApprovedBy => text().nullable()();
+
+  /// FA-015 notes.
+  TextColumn get notes => text().nullable()();
+
+  /// FA-015 crop stage.
+  TextColumn get cropStage => text().nullable()();
+
+  /// Server-computed duration (s).
+  IntColumn get durationS => integer().nullable()();
+
+  /// Server VV-004 score; null while open.
+  IntColumn get score => integer().nullable()();
+
+  /// Server VV-005 status (`open` until check-out).
+  TextColumn get status => text().withDefault(const Constant('open'))();
+
+  /// `sms_otp` | `app_push` | `qr` | `none`.
+  TextColumn get confirmationChannel =>
+      text().withDefault(const Constant('none'))();
+
+  /// Server-owned confirmation time.
+  DateTimeColumn get confirmedAt => dateTime().nullable()();
+
+  /// JSON `{is_mock, is_rooted, clock_drift_s}` at check-in (FA-028).
+  TextColumn get deviceIntegrity => text().withDefault(const Constant('{}'))();
+
+  /// JSON list of server integrity issues.
+  TextColumn get integrityIssues => text().withDefault(const Constant('[]'))();
+
+  /// JSON list of server flags (`under_minimum`).
+  TextColumn get flags => text().withDefault(const Constant('[]'))();
+
+  /// JSON `{geofence, confirmation, photo, duration, integrity}` from the
+  /// server; null until the server has seen the visit.
+  TextColumn get scoreComponents => text().nullable()();
+
+  /// The device's own id for replays (defaults to `id`).
+  TextColumn get clientVisitId => text().nullable()();
+
+  /// Officer (server-assigned).
+  TextColumn get officerId => text().nullable()();
+
+  /// Problem code of a rejected check-in (`outside_geofence`).
+  TextColumn get failureCode => text().nullable()();
+
+  /// JSON `{detail, distance_m, target, radius_m}` of the rejection.
+  TextColumn get failureDetail => text().nullable()();
+
+  /// JSON of server fields this app does not model.
+  TextColumn get extra => text().withDefault(const Constant('{}'))();
+}
+
+/// FA-015 in-app photo of a visit (sync entity `visit_photo`).
+@TableIndex(name: 'visit_photos_visit', columns: <Symbol>{#visitId})
+class VisitPhotos extends Table with SyncedRow {
+  /// Owning visit.
+  TextColumn get visitId => text()();
+
+  /// Server blob URI, or the `upload:<id>` placeholder while queued.
+  TextColumn get blobUri => text().withDefault(const Constant(''))();
+
+  /// Hex SHA-256 of the processed JPEG.
+  TextColumn get sha256 => text().nullable()();
+
+  /// Server perceptual hash.
+  TextColumn get phash => text().nullable()();
+
+  /// EXIF capture time (UTC).
+  DateTimeColumn get exifTime => dateTime().nullable()();
+
+  /// EXIF GPS latitude.
+  RealColumn get exifLat => real().nullable()();
+
+  /// EXIF GPS longitude.
+  RealColumn get exifLon => real().nullable()();
+
+  /// Always true on this device (no gallery path exists).
+  BoolColumn get takenInApp => boolean().withDefault(const Constant(true))();
+
+  /// Device time at capture (UTC).
+  DateTimeColumn get deviceTime => dateTime().nullable()();
+
+  /// Server receive time.
+  DateTimeColumn get serverTime => dateTime().nullable()();
+
+  /// JSON list of VA-E08 flags from the server.
+  TextColumn get photoFlags => text().withDefault(const Constant('[]'))();
+
+  /// Local file of the processed photo (thumbnail).
+  TextColumn get localPath => text().nullable()();
+
+  /// JSON of server fields this app does not model.
+  TextColumn get extra => text().withDefault(const Constant('{}'))();
+}
+
+/// FA-016 confirmation request / result (sync entity `visit_confirmation`).
+@TableIndex(name: 'visit_confirmations_visit', columns: <Symbol>{#visitId})
+class VisitConfirmations extends Table with SyncedRow {
+  /// Owning visit.
+  TextColumn get visitId => text()();
+
+  /// `sms_otp` | `app_push` | `qr`.
+  TextColumn get channel => text()();
+
+  /// `pending` | `confirmed` | `expired` (server) | `queued` (local:
+  /// requested offline, sent when online).
+  TextColumn get status => text().withDefault(const Constant('pending'))();
+
+  /// When the request was made.
+  DateTimeColumn get requestedAt => dateTime().nullable()();
+
+  /// When the code / token lapses.
+  DateTimeColumn get expiresAt => dateTime().nullable()();
+
+  /// Server-owned confirmation time.
+  DateTimeColumn get confirmedAt => dateTime().nullable()();
+
+  /// Last four digits of the farmer phone the OTP went to.
+  TextColumn get farmerPhoneLast4 => text().nullable()();
+
+  /// FM-011 rating, once the farmer gave one.
+  IntColumn get rating => integer().nullable()();
+
+  /// Signed QR token to render (local only; never sent back).
+  TextColumn get token => text().nullable()();
+
+  /// JSON of server fields this app does not model.
+  TextColumn get extra => text().withDefault(const Constant('{}'))();
+}
+
 /// The on-device SQLite database shared by both apps.
 ///
 /// Schema history:
@@ -474,6 +675,8 @@ class SyncDocs extends Table {
 ///   uploads, sync_states, synced_refs.
 /// * v3 (FA-012): villages.
 /// * v4 (FA-010 / VV-001): duty_sessions, location_buffer, sync_docs.
+/// * v5 (FA-014 .. FA-017): visits, visit_photos, visit_confirmations;
+///   villages gain the meeting point columns (VV-003).
 @DriftDatabase(
   tables: <Type>[
     Kv,
@@ -489,6 +692,9 @@ class SyncDocs extends Table {
     DutySessions,
     LocationBuffer,
     SyncDocs,
+    Visits,
+    VisitPhotos,
+    VisitConfirmations,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -496,7 +702,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   /// Tables added in schema v2, in creation order.
   List<TableInfo<Table, Object?>> get _v2Tables => <TableInfo<Table, Object?>>[
@@ -529,6 +735,21 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(locationBuffer);
         await m.createIndex(locationBufferSession);
         await m.createTable(syncDocs);
+      }
+      if (from < 5) {
+        await m.createTable(visits);
+        await m.createIndex(visitsCheckin);
+        await m.createTable(visitPhotos);
+        await m.createIndex(visitPhotosVisit);
+        await m.createTable(visitConfirmations);
+        await m.createIndex(visitConfirmationsVisit);
+        if (from >= 3) {
+          // Older `villages` tables (v3 / v4) gain the meeting point; a
+          // table created above by the v3 step already has the columns.
+          await m.addColumn(villages, villages.meetingPointLat);
+          await m.addColumn(villages, villages.meetingPointLon);
+          await m.addColumn(villages, villages.meetingPointRadiusM);
+        }
       }
     },
   );

@@ -10,9 +10,11 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 /// rows and adding the sync tables and indexes; FA-012: v2 upgrades to v3
 /// adding the typed `villages` table without touching queued outbox rows;
 /// FA-010 / VV-001: v3 upgrades to v4 adding `duty_sessions`,
-/// `location_buffer` and `sync_docs`.
+/// `location_buffer` and `sync_docs`; FA-014 .. FA-017: v4 upgrades to v5
+/// adding `visits`, `visit_photos`, `visit_confirmations` and the village
+/// meeting point columns.
 void main() {
-  const currentVersion = 4;
+  const currentVersion = 5;
   const v2Tables = <String>{
     'kv',
     'farmers',
@@ -26,6 +28,13 @@ void main() {
   };
 
   const v4Tables = <String>{'duty_sessions', 'location_buffer', 'sync_docs'};
+
+  const v5Tables = <String>{'visits', 'visit_photos', 'visit_confirmations'};
+
+  Future<Set<String>> columns(AppDatabase db, String table) async {
+    final rows = await db.customSelect('PRAGMA table_info($table)').get();
+    return rows.map((r) => r.read<String>('name')).toSet();
+  }
 
   late Directory dir;
 
@@ -76,6 +85,7 @@ void main() {
       expect(await tables(db), containsAll(v2Tables));
       expect(await tables(db), contains('villages'));
       expect(await tables(db), containsAll(v4Tables));
+      expect(await tables(db), containsAll(v5Tables));
 
       final indexes = await db
           .customSelect("SELECT name FROM sqlite_master WHERE type = 'index'")
@@ -140,6 +150,9 @@ void main() {
         ..execute('DROP TABLE duty_sessions')
         ..execute('DROP TABLE location_buffer')
         ..execute('DROP TABLE sync_docs')
+        ..execute('DROP TABLE visits')
+        ..execute('DROP TABLE visit_photos')
+        ..execute('DROP TABLE visit_confirmations')
         ..execute('PRAGMA user_version = 2')
         ..close();
 
@@ -198,6 +211,12 @@ void main() {
       ..execute('DROP TABLE duty_sessions')
       ..execute('DROP TABLE location_buffer')
       ..execute('DROP TABLE sync_docs')
+      ..execute('DROP TABLE visits')
+      ..execute('DROP TABLE visit_photos')
+      ..execute('DROP TABLE visit_confirmations')
+      ..execute('ALTER TABLE villages DROP COLUMN meeting_point_lat')
+      ..execute('ALTER TABLE villages DROP COLUMN meeting_point_lon')
+      ..execute('ALTER TABLE villages DROP COLUMN meeting_point_radius_m')
       ..execute('PRAGMA user_version = 3')
       ..close();
 
@@ -242,6 +261,125 @@ void main() {
     expect((await db.select(db.locationBuffer).getSingle()).sessionId, 'ds-1');
   });
 
+  test('a v4 database migrates to v5: visit tables and the village meeting '
+      'point columns added, duty and outbox rows kept', () async {
+    final file = File('${dir.path}/v4.db');
+    final seed = AppDatabase(NativeDatabase(file));
+    await seed.setValue('settings.locale', 'hi');
+    await seed
+        .into(seed.villages)
+        .insert(
+          VillagesCompanion.insert(
+            id: 'v-1',
+            name: 'Kondapur',
+            updatedAt: DateTime.utc(2026, 9, 20),
+          ),
+        );
+    await seed
+        .into(seed.dutySessions)
+        .insert(
+          DutySessionsCompanion.insert(
+            id: 'ds-1',
+            startAt: DateTime.utc(2026, 9, 21, 3, 30),
+            updatedAt: DateTime.utc(2026, 9, 21, 3, 30),
+          ),
+        );
+    await seed
+        .into(seed.outboxTable)
+        .insert(
+          OutboxTableCompanion.insert(
+            opId: 'op-1',
+            seq: 1,
+            entity: 'duty_session',
+            action: 'create',
+            entityId: 'ds-1',
+            payload: '{}',
+            clientTs: '2026-09-21T03:30:00.000Z',
+          ),
+        );
+    await seed.close();
+    final raw = sqlite.sqlite3.open(file.path);
+    raw
+      ..execute('DROP TABLE visits')
+      ..execute('DROP TABLE visit_photos')
+      ..execute('DROP TABLE visit_confirmations')
+      ..execute('ALTER TABLE villages DROP COLUMN meeting_point_lat')
+      ..execute('ALTER TABLE villages DROP COLUMN meeting_point_lon')
+      ..execute('ALTER TABLE villages DROP COLUMN meeting_point_radius_m')
+      ..execute('PRAGMA user_version = 4')
+      ..close();
+
+    final db = AppDatabase(NativeDatabase(file));
+    addTearDown(db.close);
+    expect(await userVersion(db), currentVersion);
+    expect(await tables(db), containsAll(v5Tables));
+    expect(
+      await columns(db, 'villages'),
+      containsAll(<String>[
+        'meeting_point_lat',
+        'meeting_point_lon',
+        'meeting_point_radius_m',
+      ]),
+    );
+    expect(await db.getValue('settings.locale'), 'hi');
+    final village = await db.select(db.villages).getSingle();
+    expect(village.name, 'Kondapur');
+    expect(village.meetingPointLat, isNull);
+    expect((await db.select(db.dutySessions).getSingle()).id, 'ds-1');
+    expect((await db.select(db.outboxTable).getSingle()).opId, 'op-1');
+    final indexes = await db
+        .customSelect("SELECT name FROM sqlite_master WHERE type = 'index'")
+        .get();
+    expect(
+      indexes.map((r) => r.read<String>('name')),
+      containsAll(<String>[
+        'visits_checkin',
+        'visit_photos_visit',
+        'visit_confirmations_visit',
+      ]),
+    );
+    expect(await db.select(db.visits).get(), isEmpty);
+
+    // The new tables are usable right away.
+    await db
+        .into(db.visits)
+        .insert(
+          VisitsCompanion.insert(
+            id: 'visit-1',
+            farmerId: 'f-1',
+            checkinAt: DateTime.utc(2026, 9, 21, 4),
+            checkinLat: 17.4,
+            checkinLon: 78.4,
+            updatedAt: DateTime.utc(2026, 9, 21, 4),
+          ),
+        );
+    await db
+        .into(db.visitPhotos)
+        .insert(
+          VisitPhotosCompanion.insert(
+            id: 'photo-1',
+            visitId: 'visit-1',
+            updatedAt: DateTime.utc(2026, 9, 21, 4, 1),
+          ),
+        );
+    await db
+        .into(db.visitConfirmations)
+        .insert(
+          VisitConfirmationsCompanion.insert(
+            id: 'conf-1',
+            visitId: 'visit-1',
+            channel: 'sms_otp',
+            updatedAt: DateTime.utc(2026, 9, 21, 4, 2),
+          ),
+        );
+    expect((await db.select(db.visits).getSingle()).status, 'open');
+    expect((await db.select(db.visitPhotos).getSingle()).takenInApp, isTrue);
+    expect(
+      (await db.select(db.visitConfirmations).getSingle()).status,
+      'pending',
+    );
+  });
+
   test(
     'a fresh database is created at the current version with every table',
     () async {
@@ -250,7 +388,12 @@ void main() {
       expect(await userVersion(db), currentVersion);
       expect(
         await tables(db),
-        containsAll(<String>{...v2Tables, 'villages', ...v4Tables}),
+        containsAll(<String>{
+          ...v2Tables,
+          'villages',
+          ...v4Tables,
+          ...v5Tables,
+        }),
       );
     },
   );
@@ -258,7 +401,7 @@ void main() {
   test(
     're-opening a current database does not run the upgrade again',
     () async {
-      final file = File('${dir.path}/v4.db');
+      final file = File('${dir.path}/v5.db');
       final first = AppDatabase(NativeDatabase(file));
       await first.setValue('k', 'v');
       await first.close();

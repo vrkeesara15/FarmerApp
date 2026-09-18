@@ -530,5 +530,200 @@
   "myDayEndReasonRejected": "ದಾಖಲಾಗಿಲ್ಲ",
   "syncEntityDutySession": "ಕರ್ತವ್ಯ ಅವಧಿ",
   "syncEntityLocationBatch": "ಲೊಕೇಶನ್ ಪಾಯಿಂಟ್‌ಗಳು",
-  "syncEntityPolicyAcceptance": "ನೀತಿ ಸ್ವೀಕಾರ"
+  "syncEntityPolicyAcceptance": "ನೀತಿ ಸ್ವೀಕಾರ",
+  "visitsTitle": "ಭೇಟಿಗಳು",
+  "visitsTabToday": "ಇಂದು",
+  "visitsTabWeek": "ಈ ವಾರ",
+  "visitsFilterAll": "ಎಲ್ಲಾ",
+  "visitsEmptyTitle": "ಇನ್ನೂ ಭೇಟಿಗಳಿಲ್ಲ",
+  "visitsEmptyHelp": "ರೈತರ ಪ್ರೊಫೈಲ್‌ನಿಂದ ಅಥವಾ ಕೆಳಗಿನ ಬಟನ್‌ನಿಂದ ಭೇಟಿ ಪ್ರಾರಂಭಿಸಿ.",
+  "visitStatusOpen": "ಪ್ರಗತಿಯಲ್ಲಿದೆ",
+  "visitCardPending": "ಆನ್‌ಲೈನ್ ಆದಾಗ ಸಿಂಕ್ ಆಗುತ್ತದೆ",
+  "visitCardFailed": "ಗಮನ ಅಗತ್ಯ",
+  "visitChooseFarmer": "ರೈತರನ್ನು ಆರಿಸಿ",
+  "visitFarmLabel": "ಹೊಲ",
+  "visitFarmNoBoundary": "ಈ ಹೊಲಕ್ಕೆ ಗಡಿ ದಾಖಲಾಗಿಲ್ಲ",
+  "visitPurposeLabel": "ಉದ್ದೇಶ",
+  "visitOffDutyTitle": "ಮೊದಲು ಕರ್ತವ್ಯಕ್ಕೆ ಹೋಗಿ",
+  "visitOffDutyBody": "ನೀವು ಕರ್ತವ್ಯದಲ್ಲಿರುವಾಗ ಮಾತ್ರ ಭೇಟಿಗಳು ದಾಖಲಾಗುತ್ತವೆ. ಹೋಮ್‌ನಿಂದ ಕರ್ತವ್ಯ ಆನ್ ಮಾಡಿ ಹಿಂತಿರುಗಿ.",
+  "visitGoHome": "ಹೋಮ್‌ಗೆ ಹೋಗಿ",
+  "visitLocating": "ನಿಮ್ಮ ಸ್ಥಳ ಪಡೆಯಲಾಗುತ್ತಿದೆ…",
+  "visitNoFix": "ನಿಮ್ಮ ಸ್ಥಳ ಸಿಗಲಿಲ್ಲ. ತೆರೆದ ಆಕಾಶದ ಕೆಳಗೆ ಹೋಗಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  "visitRefreshLocation": "ಸ್ಥಳ ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ",
+  "visitAccuracy": "ನಿಖರತೆ ±{metres} ಮೀ",
+  "@visitAccuracy": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "visitInsideGeofence": "ನೀವು ಹೊಲದ ಜಿಯೋಫೆನ್ಸ್ ಒಳಗಿದ್ದೀರಿ",
+  "visitAtMeetingPoint": "ನೀವು ಗ್ರಾಮದ ಸಭಾ ಸ್ಥಳದಲ್ಲಿದ್ದೀರಿ",
+  "visitOutsideFarm": "ಹೊಲದ ಗಡಿಯಿಂದ {distance} ಮೀ ದೂರ; ಜಿಯೋಫೆನ್ಸ್ {radius} ಮೀ.",
+  "@visitOutsideFarm": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      },
+      "radius": {
+        "type": "int"
+      }
+    }
+  },
+  "visitOutsideMeeting": "ಸಭಾ ಸ್ಥಳದಿಂದ {distance} ಮೀ ದೂರ; ಅನುಮತಿಸಿದ ವ್ಯಾಪ್ತಿ {radius} ಮೀ.",
+  "@visitOutsideMeeting": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      },
+      "radius": {
+        "type": "int"
+      }
+    }
+  },
+  "visitNoTarget": "ಈ ಹೊಲಕ್ಕೆ ಗಡಿ ಇಲ್ಲ ಮತ್ತು ಗ್ರಾಮಕ್ಕೆ ಸಭಾ ಸ್ಥಳ ಇಲ್ಲ. ಓವರ್‌ರೈಡ್ ಟಿಪ್ಪಣಿಯೊಂದಿಗೆ ಚೆಕ್ ಇನ್ ಮಾಡಿ.",
+  "visitRequestOverride": "ಓವರ್‌ರೈಡ್ ಕೋರಿ",
+  "visitOverrideNoteLabel": "ನೀವು ಇಲ್ಲಿಂದ ಏಕೆ ಚೆಕ್ ಇನ್ ಮಾಡುತ್ತಿದ್ದೀರಿ?",
+  "visitOverrideNoteHint": "ಉದಾ. ರೈತರನ್ನು ಮಾರುಕಟ್ಟೆಯಲ್ಲಿ ಭೇಟಿಯಾದೆ",
+  "visitOverrideNoteRequired": "ಓವರ್‌ರೈಡ್ ಕೋರಲು ಟಿಪ್ಪಣಿ ಸೇರಿಸಿ",
+  "visitOverrideHelp": "ನಿಮ್ಮ ಕ್ಲಸ್ಟರ್ ಹೆಡ್ ಓವರ್‌ರೈಡ್ ಪರಿಶೀಲಿಸುತ್ತಾರೆ. ಅನುಮೋದಿಸಿದರೆ ಮಾತ್ರ ಭೇಟಿಗೆ ಜಿಯೋಫೆನ್ಸ್ ಕ್ರೆಡಿಟ್ ಸಿಗುತ್ತದೆ.",
+  "visitCheckIn": "ಚೆಕ್ ಇನ್",
+  "visitCheckInOverride": "ಓವರ್‌ರೈಡ್‌ನೊಂದಿಗೆ ಚೆಕ್ ಇನ್",
+  "visitInProgress": "ಭೇಟಿ ಪ್ರಗತಿಯಲ್ಲಿದೆ",
+  "visitTimerLabel": "ಭೇಟಿಯ ಸಮಯ",
+  "visitMinDuration": "ಕನಿಷ್ಠ {minutes} ನಿಮಿ",
+  "@visitMinDuration": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitDurationNeeds": "{minimum} ನಿಮಿಯಲ್ಲಿ {minutes} ನಿಮಿ",
+  "@visitDurationNeeds": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "minimum": {
+        "type": "int"
+      }
+    }
+  },
+  "visitUnderMinimum": "ಕನಿಷ್ಠ {minutes} ನಿಮಿಗಿಂತ ಕಡಿಮೆ. ಭೇಟಿ ಫ್ಲ್ಯಾಗ್ ಆಗುತ್ತದೆ, ತಿರಸ್ಕೃತವಾಗುವುದಿಲ್ಲ.",
+  "@visitUnderMinimum": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitPhotos": "ಫೋಟೋಗಳು",
+  "visitTakePhoto": "ಫೋಟೋ ತೆಗೆಯಿರಿ",
+  "visitPhotoCount": "{count} ಫೋಟೋಗಳು",
+  "@visitPhotoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "visitPhotosHelp": "ಆ್ಯಪ್ ಕ್ಯಾಮೆರಾ ಮಾತ್ರ. ಹೊಲದಲ್ಲಿ ಕನಿಷ್ಠ ಒಂದು ಫೋಟೋ ತೆಗೆಯಿರಿ.",
+  "visitNotesLabel": "ಟಿಪ್ಪಣಿಗಳು",
+  "visitNotesHint": "ನೀವು ಏನು ಗಮನಿಸಿದಿರಿ ಅಥವಾ ಸಲಹೆ ನೀಡಿದಿರಿ?",
+  "visitVoiceInputSoon": "ಧ್ವನಿ ಇನ್‌ಪುಟ್ ಮುಂದಿನ ಅಪ್‌ಡೇಟ್‌ನಲ್ಲಿ ಬರುತ್ತದೆ",
+  "visitCropStageLabel": "ಬೆಳೆ ಹಂತ",
+  "cropStageSown": "ಬಿತ್ತಿದೆ",
+  "cropStageMaturity": "ಪಕ್ವತೆ",
+  "cropStageHarvested": "ಕಟಾವು ಆಗಿದೆ",
+  "visitProofTitle": "ಭೇಟಿಯ ಪುರಾವೆ",
+  "visitExpectedScore": "ನಿರೀಕ್ಷಿತ ಸ್ಕೋರ್",
+  "visitServerScore": "ಸರ್ವರ್‌ನಿಂದ ಸ್ಕೋರ್",
+  "visitConfirmFarmer": "ರೈತರ ದೃಢೀಕರಣ",
+  "visitCheckOut": "ಚೆಕ್ ಔಟ್",
+  "visitCheckInPending": "ಆನ್‌ಲೈನ್ ಆದಾಗ ಚೆಕ್ ಇನ್ ಸಿಂಕ್ ಆಗುತ್ತದೆ",
+  "visitCheckInSynced": "ಚೆಕ್ ಇನ್ ಸಿಂಕ್ ಆಗಿದೆ",
+  "visitRejectedTitle": "ಚೆಕ್ ಇನ್ ನಿರಾಕರಿಸಲಾಗಿದೆ",
+  "visitRejectedOutside": "ಸರ್ವರ್ ನಿಮ್ಮನ್ನು ಜಿಯೋಫೆನ್ಸ್‌ನಿಂದ {distance} ಮೀ ಹೊರಗೆ ಗುರುತಿಸಿದೆ.",
+  "@visitRejectedOutside": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      }
+    }
+  },
+  "visitRejectedNoTarget": "ನಿಮ್ಮ ಸ್ಥಳವನ್ನು ಹೋಲಿಸಲು ಸರ್ವರ್‌ಗೆ ಏನೂ ಸಿಗಲಿಲ್ಲ.",
+  "visitRetryFromFarm": "ಹೊಲದಿಂದ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
+  "visitRetryStillOutside": "ಇನ್ನೂ {distance} ಮೀ ಹೊರಗಿದ್ದೀರಿ. ಹತ್ತಿರ ಹೋಗಿ ಅಥವಾ ಓವರ್‌ರೈಡ್ ಕೋರಿ.",
+  "@visitRetryStillOutside": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      }
+    }
+  },
+  "visitRetryQueued": "ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಸ್ಥಳದೊಂದಿಗೆ ಚೆಕ್ ಇನ್ ಮತ್ತೆ ಕ್ಯೂನಲ್ಲಿದೆ.",
+  "proofGeofenceOverride": "ಓವರ್‌ರೈಡ್ ಕೋರಲಾಗಿದೆ; ಕ್ಲಸ್ಟರ್ ಹೆಡ್‌ಗಾಗಿ ಕಾಯುತ್ತಿದೆ",
+  "proofGeofenceOutside": "ಜಿಯೋಫೆನ್ಸ್ ಹೊರಗೆ",
+  "proofPhotoDone": "ಸ್ಥಳದೊಂದಿಗೆ ಫೋಟೋ ತೆಗೆಯಲಾಗಿದೆ",
+  "proofDurationDone": "ಕನಿಷ್ಠ ಅವಧಿ ತಲುಪಿದೆ",
+  "proofIntegrityIssue": "ಸಾಧನ ಪರಿಶೀಲನೆಗಳಲ್ಲಿ ಸಮಸ್ಯೆ; ಈ ಭಾಗಕ್ಕೆ 0 ಸ್ಕೋರ್",
+  "visitConfirmTitle": "ರೈತರ ದೃಢೀಕರಣ",
+  "visitConfirmIntro": "ಈ ಭೇಟಿಯನ್ನು ದೃಢೀಕರಿಸಲು ರೈತರನ್ನು ಈ ವಿಧಾನಗಳಲ್ಲಿ ಒಂದರ ಮೂಲಕ ಕೇಳಿ.",
+  "visitConfirmOtp": "SMS ಮೂಲಕ OTP",
+  "visitConfirmOtpHelp": "ರೈತರ ಫೋನ್‌ಗೆ ಕೋಡ್ ಹೋಗುತ್ತದೆ; ಅದನ್ನು ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ.",
+  "visitConfirmPush": "ಕಿಸಾನ್ ಆ್ಯಪ್‌ನಲ್ಲಿ ಕೇಳಿ",
+  "visitConfirmPushHelp": "ರೈತರು ತಮ್ಮ ಆ್ಯಪ್‌ನಲ್ಲಿ ದೃಢೀಕರಿಸು ಒತ್ತುತ್ತಾರೆ.",
+  "visitConfirmQr": "QR ತೋರಿಸಿ",
+  "visitConfirmQrHelp": "ರೈತರು ಇದನ್ನು ಕಿಸಾನ್ ಆ್ಯಪ್‌ನಿಂದ ಸ್ಕ್ಯಾನ್ ಮಾಡುತ್ತಾರೆ.",
+  "visitConfirmNeedsNetwork": "ಇದಕ್ಕೆ ನೆಟ್‌ವರ್ಕ್ ಬೇಕು. ಆನ್‌ಲೈನ್ ಆದಾಗ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  "visitConfirmQrNeedsSync": "QR ಗೆ ಮೊದಲು ಒಂದು ಸಿಂಕ್ ಬೇಕು. ಒಮ್ಮೆ ಸಂಪರ್ಕಿಸಿ ಹಿಂತಿರುಗಿ.",
+  "visitConfirmNotSynced": "ಚೆಕ್ ಇನ್ ಇನ್ನೂ ಸರ್ವರ್ ತಲುಪಿಲ್ಲ. ಸಿಂಕ್ ಮಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  "visitConfirmQueued": "ವಿನಂತಿ ಉಳಿಸಲಾಗಿದೆ. ನೀವು ಆನ್‌ಲೈನ್ ಆದ ಕೂಡಲೇ ರೈತರ ಆ್ಯಪ್‌ಗೆ ಹೋಗುತ್ತದೆ.",
+  "visitConfirmWaiting": "ರೈತರಿಗಾಗಿ ಕಾಯುತ್ತಿದ್ದೇವೆ…",
+  "visitConfirmWaitingPush": "ಕಿಸಾನ್ ಆ್ಯಪ್‌ನಲ್ಲಿ ರೈತರನ್ನು ಕೇಳಿದ್ದೇವೆ. ಅವರು ದೃಢೀಕರಿಸಿದಾಗ ಈ ಪರದೆ ಅಪ್‌ಡೇಟ್ ಆಗುತ್ತದೆ.",
+  "visitConfirmQrWaiting": "ರೈತರು ಸ್ಕ್ಯಾನ್ ಮಾಡುವವರೆಗೆ ಕಾಯುತ್ತಿದ್ದೇವೆ…",
+  "visitConfirmed": "ರೈತರು ದೃಢೀಕರಿಸಿದ್ದಾರೆ",
+  "visitConfirmedVia": "{channel} ಮೂಲಕ ದೃಢೀಕರಿಸಲಾಗಿದೆ",
+  "@visitConfirmedVia": {
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      }
+    }
+  },
+  "visitConfirmOtpSent": "{phone} ಗೆ ಕೋಡ್ ಕಳುಹಿಸಲಾಗಿದೆ",
+  "@visitConfirmOtpSent": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "visitConfirmAlready": "ಈ ಭೇಟಿ ಈಗಾಗಲೇ ದೃಢೀಕರಿಸಲಾಗಿದೆ.",
+  "visitConfirmRefused": "ಈಗ ರೈತರನ್ನು ಈ ರೀತಿ ಕೇಳಲಾಗದು. ಬೇರೆ ವಿಧಾನ ಪ್ರಯತ್ನಿಸಿ.",
+  "visitConfirmContinue": "ಚೆಕ್ ಔಟ್‌ಗೆ ಮುಂದುವರಿಯಿರಿ",
+  "visitConfirmLater": "ನಂತರ ದೃಢೀಕರಿಸಿ",
+  "visitConfirmExpires": "{minutes} ನಿಮಿಯಲ್ಲಿ ಅವಧಿ ಮುಗಿಯುತ್ತದೆ",
+  "@visitConfirmExpires": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitConfirmChooseAnother": "ಬೇರೆ ವಿಧಾನ ಆರಿಸಿ",
+  "visitSummaryTitle": "ಚೆಕ್ ಔಟ್ ಸಾರಾಂಶ",
+  "visitSummaryDuration": "ಅವಧಿ",
+  "visitSummaryMissing": "ಏನು ಕೊರತೆಯಿತ್ತು",
+  "visitSummaryComplete": "ಎಲ್ಲವೂ ಸರಿಯಾಗಿದೆ",
+  "visitSummaryPending": "ಮುಂದಿನ ಸಿಂಕ್ ನಂತರ ಸರ್ವರ್ ಸ್ಕೋರ್ ದೃಢೀಕರಿಸುತ್ತದೆ",
+  "visitSummaryServer": "ಸರ್ವರ್ ಸ್ಕೋರ್ ದೃಢೀಕರಿಸಿದೆ",
+  "visitSummaryNotCheckedOut": "ಈ ಭೇಟಿ ಇನ್ನೂ ತೆರೆದಿದೆ.",
+  "visitSummaryOverridePending": "ಓವರ್‌ರೈಡ್ ಪರಿಶೀಲನೆಗಾಗಿ ಕಾಯುತ್ತಿದೆ",
+  "visitDone": "ಮುಗಿದಿದೆ",
+  "syncEntityVisit": "ಭೇಟಿ",
+  "syncEntityVisitPhoto": "ಭೇಟಿ ಫೋಟೋ",
+  "syncEntityVisitConfirmation": "ರೈತರ ದೃಢೀಕರಣ"
 }

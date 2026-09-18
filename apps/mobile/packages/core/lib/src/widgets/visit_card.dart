@@ -51,7 +51,9 @@ extension VisitPurposeUi on VisitPurpose {
 }
 
 /// Visit list item with farmer, purpose, time, duration and score badge
-/// (SPEC 13.1 `VisitCard`).
+/// (SPEC 13.1 `VisitCard`). An open visit (no [score] yet) shows an
+/// "In progress" pill instead of the badge; [footnote] carries the sync
+/// state ("Will sync", "Needs attention") under the meta row.
 class VisitCard extends StatelessWidget {
   /// Creates the card.
   const VisitCard({
@@ -61,6 +63,8 @@ class VisitCard extends StatelessWidget {
     required this.duration,
     required this.score,
     this.onTap,
+    this.footnote,
+    this.footnoteColor,
     super.key,
   });
 
@@ -76,11 +80,17 @@ class VisitCard extends StatelessWidget {
   /// How long the visit lasted.
   final Duration duration;
 
-  /// Visit score 0-100.
-  final int score;
+  /// Visit score 0-100; null while the visit is open (not checked out).
+  final int? score;
 
   /// Tap handler.
   final VoidCallback? onTap;
+
+  /// Sync / attention line under the meta row.
+  final String? footnote;
+
+  /// Colour of [footnote] (secondary text when null).
+  final Color? footnoteColor;
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +124,10 @@ class VisitCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: Tokens.space2),
-                    VisitScoreBadge(score: score),
+                    if (score != null)
+                      VisitScoreBadge(score: score!)
+                    else
+                      _OpenPill(label: l10n.visitStatusOpen),
                   ],
                 ),
                 const SizedBox(height: Tokens.space2),
@@ -141,6 +154,15 @@ class VisitCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (footnote != null) ...<Widget>[
+                  const SizedBox(height: Tokens.space1),
+                  Text(
+                    footnote!,
+                    style: app.text.caption.copyWith(
+                      color: footnoteColor ?? p.textSecondary,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -167,6 +189,37 @@ class _Meta extends StatelessWidget {
         const SizedBox(width: Tokens.space1),
         Text(text, style: app.text.caption.copyWith(color: p.textSecondary)),
       ],
+    );
+  }
+}
+
+class _OpenPill extends StatelessWidget {
+  const _OpenPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.app;
+    final p = app.palette;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Tokens.space3,
+        vertical: Tokens.space1,
+      ),
+      decoration: BoxDecoration(
+        color: app.tint(p.statusInfoContainer),
+        borderRadius: BorderRadius.circular(Tokens.radiusPill),
+        border: Border.all(color: p.statusInfo, width: app.borderWidth),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(Icons.timelapse, size: Tokens.space4, color: p.statusInfo),
+          const SizedBox(width: Tokens.space1),
+          Text(label, style: app.text.caption.copyWith(color: p.statusInfo)),
+        ],
+      ),
     );
   }
 }

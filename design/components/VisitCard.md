@@ -12,8 +12,10 @@ Source: `apps/mobile/packages/core/lib/src/widgets/visit_card.dart` (exported fr
 | `purpose` | `VisitPurpose` | advisory | scouting | demo | collection | sale | meeting |
 | `startedAtUtc` | `DateTime` | rendered in IST |
 | `duration` | `Duration` |  |
-| `score` | `int` | 0-100 |
+| `score` | `int?` | 0-100; null while the visit is open (not checked out) → "In progress" info pill (`visitStatusOpen`) instead of the badge |
 | `onTap` | `VoidCallback?` |  |
+| `footnote` | `String?` | sync line under the meta row (`visitCardPending`, `visitCardFailed`) |
+| `footnoteColor` | `Color?` | danger for a rejected visit; secondary text otherwise |
 
 ## Variants
 
@@ -22,6 +24,8 @@ Source: `apps/mobile/packages/core/lib/src/widgets/visit_card.dart` (exported fr
 ## States
 
 - verified / partial / unverified (via badge)
+- open (info pill `visitStatusOpen`)
+- pending sync / needs attention (footnote)
 
 ## Accessibility
 
@@ -43,5 +47,5 @@ Source: `apps/mobile/packages/core/lib/src/widgets/visit_card.dart` (exported fr
 
 ## Tests
 
-Golden: visit_card_{light,sunlight}.png
+Golden: visit_card_{light,sunlight}.png; in context on `a34_visits_list_*`. Used by A34 and the A22 Visits tab through `VisitSummaryCard` (`apps/agent/lib/screens/visits/visits_list_screen.dart`).
 

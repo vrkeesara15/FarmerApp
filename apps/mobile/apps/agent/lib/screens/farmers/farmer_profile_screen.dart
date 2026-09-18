@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../router.dart';
+import '../visits/visit_copy.dart';
+import '../visits/visits_list_screen.dart';
 import 'wizard_copy.dart';
 
 /// A22 Farmer profile: Overview (key facts, crop chips, farms with a mini
@@ -95,8 +97,20 @@ class _Profile extends ConsumerWidget {
               crossAxisSpacing: Tokens.space2,
               childAspectRatio: 3.2,
               children: <Widget>[
+                AppButton(
+                  key: const Key('profile-start-visit'),
+                  label: l10n.profileStartVisit,
+                  variant: AppButtonVariant.secondary,
+                  size: AppButtonSize.medium,
+                  icon: Icons.play_circle_outline,
+                  onPressed: () => context.push(
+                    VisitRoutes.start(
+                      farmerId: f.id,
+                      farmId: detail.farms.firstOrNull?.farm.id,
+                    ),
+                  ),
+                ),
                 for (final (label, icon) in <(String, IconData)>[
-                  (l10n.profileStartVisit, Icons.play_circle_outline),
                   (l10n.profileScout, Icons.search),
                   (l10n.profileNewOrder, Icons.add_shopping_cart),
                   (l10n.profileCollect, Icons.currency_rupee),
@@ -185,10 +199,7 @@ class _Profile extends ConsumerWidget {
                 child: TabBarView(
                   children: <Widget>[
                     _Overview(detail: detail),
-                    _Placeholder(
-                      icon: Icons.event_outlined,
-                      title: l10n.profileVisitsEmpty,
-                    ),
+                    _Visits(farmerId: f.id),
                     _Placeholder(
                       icon: Icons.biotech_outlined,
                       title: l10n.profileDiagnosesEmpty,
@@ -468,6 +479,37 @@ class _Placeholder extends StatelessWidget {
     final l10n = CoreLocalizations.of(context);
     return Center(
       child: EmptyState(icon: icon, title: title, help: l10n.profileComingSoon),
+    );
+  }
+}
+
+class _Visits extends ConsumerWidget {
+  const _Visits({required this.farmerId});
+
+  final String farmerId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = CoreLocalizations.of(context);
+    final rows =
+        ref.watch(farmerVisitsProvider(farmerId)).value ??
+        const <VisitSummary>[];
+    if (rows.isEmpty) {
+      return Center(
+        child: EmptyState(
+          key: const Key('profile-visits-empty'),
+          icon: Icons.event_outlined,
+          title: l10n.profileVisitsEmpty,
+          help: l10n.visitsEmptyHelp,
+        ),
+      );
+    }
+    return ListView.separated(
+      key: const Key('profile-visits'),
+      padding: const EdgeInsets.all(Tokens.spaceScreenPadding),
+      itemCount: rows.length,
+      separatorBuilder: (_, _) => const SizedBox(height: Tokens.space2),
+      itemBuilder: (context, i) => VisitSummaryCard(summary: rows[i]),
     );
   }
 }

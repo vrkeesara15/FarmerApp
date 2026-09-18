@@ -530,5 +530,200 @@
   "myDayEndReasonRejected": "दर्ज नहीं हुई",
   "syncEntityDutySession": "ड्यूटी सत्र",
   "syncEntityLocationBatch": "लोकेशन पॉइंट",
-  "syncEntityPolicyAcceptance": "नीति स्वीकृति"
+  "syncEntityPolicyAcceptance": "नीति स्वीकृति",
+  "visitsTitle": "भेंटें",
+  "visitsTabToday": "आज",
+  "visitsTabWeek": "इस सप्ताह",
+  "visitsFilterAll": "सभी",
+  "visitsEmptyTitle": "अभी तक कोई भेंट नहीं",
+  "visitsEmptyHelp": "किसान प्रोफ़ाइल से या नीचे दिए बटन से भेंट शुरू करें।",
+  "visitStatusOpen": "जारी है",
+  "visitCardPending": "ऑनलाइन होने पर सिंक होगा",
+  "visitCardFailed": "ध्यान देना ज़रूरी",
+  "visitChooseFarmer": "किसान चुनें",
+  "visitFarmLabel": "खेत",
+  "visitFarmNoBoundary": "इस खेत की सीमा दर्ज नहीं है",
+  "visitPurposeLabel": "उद्देश्य",
+  "visitOffDutyTitle": "पहले ड्यूटी पर जाएँ",
+  "visitOffDutyBody": "भेंटें केवल ड्यूटी पर होने पर दर्ज होती हैं। होम से ड्यूटी चालू करें और वापस आएँ।",
+  "visitGoHome": "होम पर जाएँ",
+  "visitLocating": "आपकी लोकेशन ली जा रही है…",
+  "visitNoFix": "आपकी लोकेशन नहीं मिली। खुले आसमान के नीचे जाकर फिर कोशिश करें।",
+  "visitRefreshLocation": "लोकेशन फिर जाँचें",
+  "visitAccuracy": "सटीकता ±{metres} मी",
+  "@visitAccuracy": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "visitInsideGeofence": "आप खेत की जियोफ़ेंस के अंदर हैं",
+  "visitAtMeetingPoint": "आप गाँव के मीटिंग पॉइंट पर हैं",
+  "visitOutsideFarm": "खेत की सीमा से {distance} मी दूर; जियोफ़ेंस {radius} मी है।",
+  "@visitOutsideFarm": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      },
+      "radius": {
+        "type": "int"
+      }
+    }
+  },
+  "visitOutsideMeeting": "मीटिंग पॉइंट से {distance} मी दूर; अनुमत दायरा {radius} मी है।",
+  "@visitOutsideMeeting": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      },
+      "radius": {
+        "type": "int"
+      }
+    }
+  },
+  "visitNoTarget": "इस खेत की सीमा नहीं है और गाँव का मीटिंग पॉइंट नहीं है। ओवरराइड नोट के साथ चेक इन करें।",
+  "visitRequestOverride": "ओवरराइड माँगें",
+  "visitOverrideNoteLabel": "आप यहाँ से क्यों चेक इन कर रहे हैं?",
+  "visitOverrideNoteHint": "जैसे: किसान से बाज़ार में मिला",
+  "visitOverrideNoteRequired": "ओवरराइड माँगने के लिए नोट लिखें",
+  "visitOverrideHelp": "आपका क्लस्टर हेड ओवरराइड की समीक्षा करेगा। मंज़ूरी मिलने पर ही भेंट को जियोफ़ेंस क्रेडिट मिलेगा।",
+  "visitCheckIn": "चेक इन",
+  "visitCheckInOverride": "ओवरराइड के साथ चेक इन",
+  "visitInProgress": "भेंट जारी है",
+  "visitTimerLabel": "भेंट का समय",
+  "visitMinDuration": "न्यूनतम {minutes} मिनट",
+  "@visitMinDuration": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitDurationNeeds": "{minimum} मिनट में से {minutes} मिनट",
+  "@visitDurationNeeds": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "minimum": {
+        "type": "int"
+      }
+    }
+  },
+  "visitUnderMinimum": "न्यूनतम {minutes} मिनट से कम। भेंट फ़्लैग होगी, अस्वीकार नहीं।",
+  "@visitUnderMinimum": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitPhotos": "फ़ोटो",
+  "visitTakePhoto": "फ़ोटो लें",
+  "visitPhotoCount": "{count} फ़ोटो",
+  "@visitPhotoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "visitPhotosHelp": "केवल ऐप कैमरा। खेत पर कम से कम एक फ़ोटो लें।",
+  "visitNotesLabel": "नोट्स",
+  "visitNotesHint": "आपने क्या देखा या क्या सलाह दी?",
+  "visitVoiceInputSoon": "वॉइस इनपुट अगले अपडेट में आएगा",
+  "visitCropStageLabel": "फ़सल की अवस्था",
+  "cropStageSown": "बुवाई",
+  "cropStageMaturity": "पकाव",
+  "cropStageHarvested": "कटाई हो गई",
+  "visitProofTitle": "भेंट का प्रमाण",
+  "visitExpectedScore": "अनुमानित स्कोर",
+  "visitServerScore": "सर्वर से स्कोर",
+  "visitConfirmFarmer": "किसान की पुष्टि",
+  "visitCheckOut": "चेक आउट",
+  "visitCheckInPending": "ऑनलाइन होने पर चेक इन सिंक होगा",
+  "visitCheckInSynced": "चेक इन सिंक हो गया",
+  "visitRejectedTitle": "चेक इन अस्वीकृत",
+  "visitRejectedOutside": "सर्वर ने आपको जियोफ़ेंस से {distance} मी बाहर पाया।",
+  "@visitRejectedOutside": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      }
+    }
+  },
+  "visitRejectedNoTarget": "सर्वर को आपकी लोकेशन जाँचने के लिए कुछ नहीं मिला।",
+  "visitRetryFromFarm": "खेत से फिर कोशिश करें",
+  "visitRetryStillOutside": "अभी भी {distance} मी बाहर हैं। पास जाएँ या ओवरराइड माँगें।",
+  "@visitRetryStillOutside": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      }
+    }
+  },
+  "visitRetryQueued": "आपकी मौजूदा लोकेशन के साथ चेक इन फिर कतार में है।",
+  "proofGeofenceOverride": "ओवरराइड माँगा गया; क्लस्टर हेड की प्रतीक्षा",
+  "proofGeofenceOutside": "जियोफ़ेंस के बाहर",
+  "proofPhotoDone": "लोकेशन के साथ फ़ोटो ली गई",
+  "proofDurationDone": "न्यूनतम अवधि पूरी हुई",
+  "proofIntegrityIssue": "डिवाइस जाँच में समस्या; इस हिस्से का स्कोर 0",
+  "visitConfirmTitle": "किसान की पुष्टि",
+  "visitConfirmIntro": "किसान से इनमें से किसी एक तरीके से भेंट की पुष्टि कराएँ।",
+  "visitConfirmOtp": "SMS से OTP",
+  "visitConfirmOtpHelp": "किसान के फ़ोन पर कोड जाएगा; उसे यहाँ टाइप करें।",
+  "visitConfirmPush": "किसान ऐप में पूछें",
+  "visitConfirmPushHelp": "किसान अपने ऐप में पुष्टि करें दबाता है।",
+  "visitConfirmQr": "QR दिखाएँ",
+  "visitConfirmQrHelp": "किसान इसे किसान ऐप से स्कैन करता है।",
+  "visitConfirmNeedsNetwork": "इसके लिए नेटवर्क चाहिए। ऑनलाइन होने पर फिर कोशिश करें।",
+  "visitConfirmQrNeedsSync": "QR के लिए पहले एक बार सिंक ज़रूरी है। एक बार कनेक्ट करें और वापस आएँ।",
+  "visitConfirmNotSynced": "चेक इन अभी सर्वर तक नहीं पहुँचा। सिंक करके फिर कोशिश करें।",
+  "visitConfirmQueued": "अनुरोध सहेजा गया। ऑनलाइन होते ही किसान के ऐप में जाएगा।",
+  "visitConfirmWaiting": "किसान की प्रतीक्षा…",
+  "visitConfirmWaitingPush": "हमने किसान ऐप में किसान से पूछा है। पुष्टि होते ही यह स्क्रीन अपडेट होगी।",
+  "visitConfirmQrWaiting": "किसान के स्कैन करने की प्रतीक्षा…",
+  "visitConfirmed": "किसान ने पुष्टि की",
+  "visitConfirmedVia": "{channel} से पुष्टि हुई",
+  "@visitConfirmedVia": {
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      }
+    }
+  },
+  "visitConfirmOtpSent": "{phone} पर कोड भेजा गया",
+  "@visitConfirmOtpSent": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "visitConfirmAlready": "इस भेंट की पुष्टि पहले ही हो चुकी है।",
+  "visitConfirmRefused": "अभी किसान से इस तरह नहीं पूछा जा सकता। दूसरा तरीका आज़माएँ।",
+  "visitConfirmContinue": "चेक आउट पर जाएँ",
+  "visitConfirmLater": "बाद में पुष्टि करें",
+  "visitConfirmExpires": "{minutes} मिनट में समाप्त",
+  "@visitConfirmExpires": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitConfirmChooseAnother": "दूसरा तरीका चुनें",
+  "visitSummaryTitle": "चेक आउट सारांश",
+  "visitSummaryDuration": "अवधि",
+  "visitSummaryMissing": "क्या कमी रही",
+  "visitSummaryComplete": "सब कुछ सही है",
+  "visitSummaryPending": "अगले सिंक के बाद सर्वर स्कोर की पुष्टि करेगा",
+  "visitSummaryServer": "सर्वर ने स्कोर की पुष्टि की",
+  "visitSummaryNotCheckedOut": "यह भेंट अभी भी खुली है।",
+  "visitSummaryOverridePending": "ओवरराइड समीक्षा की प्रतीक्षा में",
+  "visitDone": "हो गया",
+  "syncEntityVisit": "भेंट",
+  "syncEntityVisitPhoto": "भेंट का फ़ोटो",
+  "syncEntityVisitConfirmation": "किसान की पुष्टि"
 }

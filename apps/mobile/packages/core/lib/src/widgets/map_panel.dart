@@ -36,6 +36,19 @@ const String osmTileUrlTemplate =
 
 LatLng _ll(GeoPoint p) => LatLng(p.latitude, p.longitude);
 
+/// How the geofence is drawn on A30 (FA-014): the polygon border (and the
+/// meeting point ring) in success or danger colour.
+enum GeofenceHighlight {
+  /// No decision yet (primary colour, as on A21 / A22).
+  none,
+
+  /// Inside: green ring.
+  inside,
+
+  /// Outside: danger ring.
+  outside,
+}
+
 /// Farm boundary map (SPEC 13.1 `MapPanel`, mobile version) over
 /// `flutter_map` with OSM tiles.
 ///
@@ -58,6 +71,9 @@ class MapPanel extends StatefulWidget {
     this.tileProvider,
     this.userAgentPackageName = 'in.farmerapp.mitra',
     this.mapController,
+    this.geofence = GeofenceHighlight.none,
+    this.meetingPoint,
+    this.meetingRadiusM,
     super.key,
   });
 
@@ -96,6 +112,16 @@ class MapPanel extends StatefulWidget {
   /// Optional controller (the panel creates one otherwise).
   final MapController? mapController;
 
+  /// A30 geofence decision: colours the polygon border and the meeting
+  /// point ring (success / danger).
+  final GeofenceHighlight geofence;
+
+  /// Village meeting point (VV-003), drawn as a ring of [meetingRadiusM].
+  final GeoPoint? meetingPoint;
+
+  /// Radius of the meeting point ring in metres.
+  final double? meetingRadiusM;
+
   /// Fallback centre (India).
   static const GeoPoint defaultCenter = GeoPoint(17.4, 78.5);
 
@@ -117,6 +143,7 @@ class _MapPanelState extends State<MapPanel> {
       ? (polygonCentroid(widget.boundary) ?? widget.boundary.last)
       : widget.currentPosition?.point ??
             widget.center ??
+            widget.meetingPoint ??
             MapPanel.defaultCenter;
 
   @override
@@ -165,6 +192,15 @@ class _MapPanelState extends State<MapPanel> {
     final l10n = CoreLocalizations.of(context);
     final ring = widget.boundary.map(_ll).toList(growable: false);
     final fix = widget.currentPosition;
+    final ringColor = switch (widget.geofence) {
+      GeofenceHighlight.none => p.primary,
+      GeofenceHighlight.inside => p.statusSuccess,
+      GeofenceHighlight.outside => p.statusDanger,
+    };
+    final ringWidth = widget.geofence == GeofenceHighlight.none
+        ? app.borderWidth + 1
+        : app.borderWidth + 3;
+    final meeting = widget.meetingPoint;
     final acres = polygonAreaAcres(widget.boundary);
     final semantics = widget.boundary.isEmpty
         ? l10n.mapNoBoundary
@@ -218,9 +254,9 @@ class _MapPanelState extends State<MapPanel> {
                     polygons: <Polygon<Object>>[
                       Polygon<Object>(
                         points: ring,
-                        color: p.primary.withValues(alpha: 0.25),
-                        borderColor: p.primary,
-                        borderStrokeWidth: app.borderWidth + 1,
+                        color: ringColor.withValues(alpha: 0.25),
+                        borderColor: ringColor,
+                        borderStrokeWidth: ringWidth,
                       ),
                     ],
                   )
@@ -231,6 +267,19 @@ class _MapPanelState extends State<MapPanel> {
                         points: ring,
                         color: p.primary,
                         strokeWidth: app.borderWidth + 1,
+                      ),
+                    ],
+                  ),
+                if (meeting != null && widget.meetingRadiusM != null)
+                  CircleLayer(
+                    circles: <CircleMarker<Object>>[
+                      CircleMarker<Object>(
+                        point: _ll(meeting),
+                        radius: widget.meetingRadiusM!,
+                        useRadiusInMeter: true,
+                        color: ringColor.withValues(alpha: 0.15),
+                        borderColor: ringColor,
+                        borderStrokeWidth: ringWidth,
                       ),
                     ],
                   ),

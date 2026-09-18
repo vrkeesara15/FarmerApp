@@ -530,5 +530,200 @@
   "myDayEndReasonRejected": "नोंद झाली नाही",
   "syncEntityDutySession": "ड्युटी सत्र",
   "syncEntityLocationBatch": "लोकेशन पॉइंट",
-  "syncEntityPolicyAcceptance": "धोरण स्वीकृती"
+  "syncEntityPolicyAcceptance": "धोरण स्वीकृती",
+  "visitsTitle": "भेटी",
+  "visitsTabToday": "आज",
+  "visitsTabWeek": "या आठवड्यात",
+  "visitsFilterAll": "सर्व",
+  "visitsEmptyTitle": "अद्याप भेटी नाहीत",
+  "visitsEmptyHelp": "शेतकरी प्रोफाइलमधून किंवा खालील बटणाने भेट सुरू करा.",
+  "visitStatusOpen": "सुरू आहे",
+  "visitCardPending": "ऑनलाइन झाल्यावर सिंक होईल",
+  "visitCardFailed": "लक्ष द्यावे लागेल",
+  "visitChooseFarmer": "शेतकरी निवडा",
+  "visitFarmLabel": "शेत",
+  "visitFarmNoBoundary": "या शेताची सीमा नोंदलेली नाही",
+  "visitPurposeLabel": "उद्देश",
+  "visitOffDutyTitle": "आधी ड्युटीवर जा",
+  "visitOffDutyBody": "भेटी फक्त ड्युटीवर असतानाच नोंदवल्या जातात. होममधून ड्युटी सुरू करा आणि परत या.",
+  "visitGoHome": "होमवर जा",
+  "visitLocating": "तुमचे ठिकाण घेत आहोत…",
+  "visitNoFix": "तुमचे ठिकाण मिळाले नाही. मोकळ्या आकाशाखाली जाऊन पुन्हा प्रयत्न करा.",
+  "visitRefreshLocation": "ठिकाण पुन्हा तपासा",
+  "visitAccuracy": "अचूकता ±{metres} मी",
+  "@visitAccuracy": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "visitInsideGeofence": "तुम्ही शेताच्या जिओफेन्सच्या आत आहात",
+  "visitAtMeetingPoint": "तुम्ही गावाच्या बैठक स्थळी आहात",
+  "visitOutsideFarm": "शेताच्या सीमेपासून {distance} मी दूर; जिओफेन्स {radius} मी आहे.",
+  "@visitOutsideFarm": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      },
+      "radius": {
+        "type": "int"
+      }
+    }
+  },
+  "visitOutsideMeeting": "बैठक स्थळापासून {distance} मी दूर; परवानगी असलेली त्रिज्या {radius} मी आहे.",
+  "@visitOutsideMeeting": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      },
+      "radius": {
+        "type": "int"
+      }
+    }
+  },
+  "visitNoTarget": "या शेताची सीमा नाही आणि गावाचे बैठक स्थळ नाही. ओव्हरराइड नोटसह चेक इन करा.",
+  "visitRequestOverride": "ओव्हरराइड मागा",
+  "visitOverrideNoteLabel": "तुम्ही इथून का चेक इन करत आहात?",
+  "visitOverrideNoteHint": "उदा. शेतकऱ्याला बाजारात भेटलो",
+  "visitOverrideNoteRequired": "ओव्हरराइड मागण्यासाठी नोट लिहा",
+  "visitOverrideHelp": "तुमचा क्लस्टर हेड ओव्हरराइडचे पुनरावलोकन करेल. मंजूर झाल्यासच भेटीला जिओफेन्स क्रेडिट मिळेल.",
+  "visitCheckIn": "चेक इन",
+  "visitCheckInOverride": "ओव्हरराइडसह चेक इन",
+  "visitInProgress": "भेट सुरू आहे",
+  "visitTimerLabel": "भेटीचा वेळ",
+  "visitMinDuration": "किमान {minutes} मिनिटे",
+  "@visitMinDuration": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitDurationNeeds": "{minimum} मिनिटांपैकी {minutes} मिनिटे",
+  "@visitDurationNeeds": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "minimum": {
+        "type": "int"
+      }
+    }
+  },
+  "visitUnderMinimum": "किमान {minutes} मिनिटांपेक्षा कमी. भेट फ्लॅग होईल, नाकारली जाणार नाही.",
+  "@visitUnderMinimum": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitPhotos": "फोटो",
+  "visitTakePhoto": "फोटो काढा",
+  "visitPhotoCount": "{count} फोटो",
+  "@visitPhotoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "visitPhotosHelp": "फक्त अ‍ॅप कॅमेरा. शेतावर किमान एक फोटो काढा.",
+  "visitNotesLabel": "नोंदी",
+  "visitNotesHint": "तुम्ही काय पाहिले किंवा कोणता सल्ला दिला?",
+  "visitVoiceInputSoon": "व्हॉइस इनपुट पुढील अपडेटमध्ये येईल",
+  "visitCropStageLabel": "पीक अवस्था",
+  "cropStageSown": "पेरणी",
+  "cropStageMaturity": "परिपक्वता",
+  "cropStageHarvested": "कापणी झाली",
+  "visitProofTitle": "भेटीचा पुरावा",
+  "visitExpectedScore": "अपेक्षित गुण",
+  "visitServerScore": "सर्व्हरकडून गुण",
+  "visitConfirmFarmer": "शेतकऱ्याची पुष्टी",
+  "visitCheckOut": "चेक आउट",
+  "visitCheckInPending": "ऑनलाइन झाल्यावर चेक इन सिंक होईल",
+  "visitCheckInSynced": "चेक इन सिंक झाले",
+  "visitRejectedTitle": "चेक इन नाकारले",
+  "visitRejectedOutside": "सर्व्हरने तुम्हाला जिओफेन्सच्या {distance} मी बाहेर ठरवले.",
+  "@visitRejectedOutside": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      }
+    }
+  },
+  "visitRejectedNoTarget": "तुमचे ठिकाण तपासण्यासाठी सर्व्हरला काहीही सापडले नाही.",
+  "visitRetryFromFarm": "शेतातून पुन्हा प्रयत्न करा",
+  "visitRetryStillOutside": "अजूनही {distance} मी बाहेर आहात. जवळ जा किंवा ओव्हरराइड मागा.",
+  "@visitRetryStillOutside": {
+    "placeholders": {
+      "distance": {
+        "type": "int"
+      }
+    }
+  },
+  "visitRetryQueued": "तुमच्या सध्याच्या ठिकाणासह चेक इन पुन्हा रांगेत आहे.",
+  "proofGeofenceOverride": "ओव्हरराइड मागितले; क्लस्टर हेडची वाट",
+  "proofGeofenceOutside": "जिओफेन्सच्या बाहेर",
+  "proofPhotoDone": "ठिकाणासह फोटो घेतला",
+  "proofDurationDone": "किमान कालावधी पूर्ण झाला",
+  "proofIntegrityIssue": "डिव्हाइस तपासणीत समस्या; या भागाचे गुण 0",
+  "visitConfirmTitle": "शेतकऱ्याची पुष्टी",
+  "visitConfirmIntro": "शेतकऱ्याला यापैकी एका मार्गाने या भेटीची पुष्टी करण्यास सांगा.",
+  "visitConfirmOtp": "SMS द्वारे OTP",
+  "visitConfirmOtpHelp": "शेतकऱ्याच्या फोनवर कोड जाईल; तो इथे टाइप करा.",
+  "visitConfirmPush": "किसान अ‍ॅपमध्ये विचारा",
+  "visitConfirmPushHelp": "शेतकरी त्यांच्या अ‍ॅपमध्ये पुष्टी करा दाबतो.",
+  "visitConfirmQr": "QR दाखवा",
+  "visitConfirmQrHelp": "शेतकरी हे किसान अ‍ॅपने स्कॅन करतो.",
+  "visitConfirmNeedsNetwork": "यासाठी नेटवर्क लागते. ऑनलाइन झाल्यावर पुन्हा प्रयत्न करा.",
+  "visitConfirmQrNeedsSync": "QR साठी आधी एकदा सिंक लागते. एकदा कनेक्ट करा आणि परत या.",
+  "visitConfirmNotSynced": "चेक इन अजून सर्व्हरवर पोहोचले नाही. सिंक करून पुन्हा प्रयत्न करा.",
+  "visitConfirmQueued": "विनंती जतन झाली. ऑनलाइन होताच शेतकऱ्याच्या अ‍ॅपवर जाईल.",
+  "visitConfirmWaiting": "शेतकऱ्याची वाट पाहत आहोत…",
+  "visitConfirmWaitingPush": "आम्ही किसान अ‍ॅपमध्ये शेतकऱ्याला विचारले आहे. पुष्टी होताच ही स्क्रीन अपडेट होईल.",
+  "visitConfirmQrWaiting": "शेतकरी स्कॅन करेपर्यंत वाट पाहत आहोत…",
+  "visitConfirmed": "शेतकऱ्याने पुष्टी केली",
+  "visitConfirmedVia": "{channel} द्वारे पुष्टी झाली",
+  "@visitConfirmedVia": {
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      }
+    }
+  },
+  "visitConfirmOtpSent": "{phone} वर कोड पाठवला",
+  "@visitConfirmOtpSent": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "visitConfirmAlready": "या भेटीची पुष्टी आधीच झाली आहे.",
+  "visitConfirmRefused": "सध्या शेतकऱ्याला अशा प्रकारे विचारता येत नाही. दुसरा मार्ग वापरा.",
+  "visitConfirmContinue": "चेक आउटकडे जा",
+  "visitConfirmLater": "नंतर पुष्टी करा",
+  "visitConfirmExpires": "{minutes} मिनिटांत संपेल",
+  "@visitConfirmExpires": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "visitConfirmChooseAnother": "दुसरा मार्ग निवडा",
+  "visitSummaryTitle": "चेक आउट सारांश",
+  "visitSummaryDuration": "कालावधी",
+  "visitSummaryMissing": "काय कमी होते",
+  "visitSummaryComplete": "सर्व काही व्यवस्थित आहे",
+  "visitSummaryPending": "पुढील सिंकनंतर सर्व्हर गुणांची पुष्टी करेल",
+  "visitSummaryServer": "सर्व्हरने गुणांची पुष्टी केली",
+  "visitSummaryNotCheckedOut": "ही भेट अजून सुरू आहे.",
+  "visitSummaryOverridePending": "ओव्हरराइड पुनरावलोकनाच्या प्रतीक्षेत",
+  "visitDone": "झाले",
+  "syncEntityVisit": "भेट",
+  "syncEntityVisitPhoto": "भेटीचा फोटो",
+  "syncEntityVisitConfirmation": "शेतकऱ्याची पुष्टी"
 }

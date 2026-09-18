@@ -36,7 +36,13 @@ Source: `apps/mobile/packages/core/lib/src/widgets/proof_checklist.dart` (export
 - `text.mobile.body`
 - `text.mobile.caption`
 
+## Usage (FA-015 / FA-017)
+
+- A31 shows it live: the rows come from `evaluateVisitProof` (`packages/core/lib/src/visits/visit_proof.dart`), the device twin of the server's VV-004 rule, recomputed every second (duration ticks) and on every photo / confirmation. Explanations: geofence `proofGeofenceOverride` / `proofGeofenceOutside`; photo `proofPhotoDone`; duration `visitDurationNeeds(min, minimum)` then `proofDurationDone`.
+- A33 shows the same rows at check-out and switches to the server's `score_components` once the pull stores them (server wins). The fifth component (integrity, 10 points) is not a row: a `proofIntegrityIssue` caption appears under the list when it scores 0.
+- Row builder shared by both screens: `proofItems()` in `apps/agent/lib/screens/visits/visit_copy.dart`.
+
 ## Tests
 
-Golden: proof_checklist_{light,sunlight}.png
+Golden: proof_checklist_{light,sunlight}.png; in context on `a31_visit_in_progress_*` and `a33_summary_*`.
 

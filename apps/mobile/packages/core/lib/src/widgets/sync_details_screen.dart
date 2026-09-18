@@ -23,6 +23,9 @@ String syncEntityLabel(CoreLocalizations l10n, String entity) =>
       SyncEntities.dutySession => l10n.syncEntityDutySession,
       SyncEntities.locationBatch => l10n.syncEntityLocationBatch,
       SyncEntities.policyAcceptance => l10n.syncEntityPolicyAcceptance,
+      SyncEntities.visit => l10n.syncEntityVisit,
+      SyncEntities.visitPhoto => l10n.syncEntityVisitPhoto,
+      SyncEntities.visitConfirmation => l10n.syncEntityVisitConfirmation,
       _ => l10n.syncEntityOther,
     };
 
