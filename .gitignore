@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+# Node
+node_modules/
+.next/
+out/
+dist/
+coverage/
+playwright-report/
+test-results/
+# Flutter/Dart
+.dart_tool/
+build/
+*.g.dart.bak
+.flutter-plugins
+.flutter-plugins-dependencies
+**/android/.gradle/
+**/android/local.properties
+**/ios/Pods/
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+# Env / secrets
+.env
+.env.*
+!.env.example
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
