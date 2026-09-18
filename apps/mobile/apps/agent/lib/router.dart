@@ -1,3 +1,4 @@
+import 'package:farmerapp_core/farmerapp_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -23,6 +24,9 @@ abstract final class AppRoutes {
 
   /// A63 Profile and settings.
   static const String settings = '/settings';
+
+  /// A64 Sync details (under Me / settings).
+  static const String syncDetails = '/settings/sync';
 }
 
 /// The app router.
@@ -54,6 +58,12 @@ GoRouter buildRouter({String initialLocation = AppRoutes.splash}) {
       GoRoute(
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: 'sync',
+            builder: (context, state) => const SyncDetailsScreen(),
+          ),
+        ],
       ),
     ],
   );

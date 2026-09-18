@@ -239,6 +239,101 @@ class CoreLocalizationsMr extends CoreLocalizations {
       'तुम्ही ऑफलाइन आहात. तुमचे काम सेव्ह आहे आणि नंतर सिंक होईल.';
 
   @override
+  String get syncSyncing => 'सिंक होत आहे…';
+
+  @override
+  String get syncDetailsTitle => 'सिंक तपशील';
+
+  @override
+  String get syncNow => 'आता सिंक करा';
+
+  @override
+  String syncLastSync(String time) {
+    return 'शेवटचे सिंक $time';
+  }
+
+  @override
+  String get syncNeverSynced => 'अजून सिंक झाले नाही';
+
+  @override
+  String get syncAllDone => 'सर्व काही सिंक झाले';
+
+  @override
+  String get syncAllDoneHelp =>
+      'ऑफलाइन जतन केलेले नवीन शेतकरी, शेते आणि फोटो सर्व्हरवर पोहोचेपर्यंत येथे दिसतील.';
+
+  @override
+  String syncPendingSection(int count) {
+    return 'सिंकची वाट पाहत आहेत ($count)';
+  }
+
+  @override
+  String syncFailedSection(int count) {
+    return 'लक्ष देणे आवश्यक ($count)';
+  }
+
+  @override
+  String get syncWaitingForPhoto => 'फोटो अपलोडची वाट पाहत आहे';
+
+  @override
+  String syncPhotoUploads(int count) {
+    return 'अपलोड होत असलेले फोटो: $count';
+  }
+
+  @override
+  String get syncTransportError =>
+      'सर्व्हरशी संपर्क होऊ शकला नाही. ते आपोआप पुन्हा प्रयत्न करेल.';
+
+  @override
+  String syncNextAttempt(String time) {
+    return 'पुढील प्रयत्न $time';
+  }
+
+  @override
+  String syncItemTitle(String action, String entity) {
+    return '$action $entity';
+  }
+
+  @override
+  String get syncActionCreate => 'नवीन';
+
+  @override
+  String get syncActionUpdate => 'संपादित';
+
+  @override
+  String get syncActionDelete => 'हटवलेले';
+
+  @override
+  String get syncEntityFarmer => 'शेतकरी';
+
+  @override
+  String get syncEntityFarm => 'शेत';
+
+  @override
+  String get syncEntityCropPlot => 'पीक प्लॉट';
+
+  @override
+  String get syncEntityConsent => 'संमती';
+
+  @override
+  String get syncEntityOther => 'आयटम';
+
+  @override
+  String syncSavedAt(String time) {
+    return 'जतन केले $time';
+  }
+
+  @override
+  String get syncRejectedDefault =>
+      'सर्व्हरने हा आयटम स्वीकारला नाही. तो संपादित करून पुन्हा प्रयत्न करा.';
+
+  @override
+  String get syncRetryAll => 'सर्व पुन्हा प्रयत्न करा';
+
+  @override
+  String get syncDiscard => 'टाकून द्या';
+
+  @override
   String get visitVerified => 'पडताळलेली';
 
   @override

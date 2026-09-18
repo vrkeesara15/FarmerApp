@@ -113,10 +113,13 @@ void main() {
     final store = InMemorySettingsStore(
       const AppSettings(locale: Locale('en')),
     );
+    final db = openInMemoryDatabase();
+    addTearDown(db.close);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           ...await settingsOverrides(store),
+          appDatabaseProvider.overrideWithValue(db),
           routerProvider.overrideWithValue(
             buildRouter(initialLocation: AppRoutes.settings),
           ),

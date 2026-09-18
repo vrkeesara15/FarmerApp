@@ -14,6 +14,9 @@ enum SyncState {
 
   /// The last attempt failed.
   failed,
+
+  /// A sync is running right now.
+  syncing,
 }
 
 /// Small pill showing synced / pending n / failed
@@ -64,6 +67,12 @@ class SyncStatusPill extends StatelessWidget {
         app.tint(p.statusDangerContainer),
         Icons.cloud_off_outlined,
         l10n.syncFailed,
+      ),
+      SyncState.syncing => (
+        p.statusInfo,
+        app.tint(p.statusInfoContainer),
+        Icons.cloud_sync_outlined,
+        l10n.syncSyncing,
       ),
     };
     return Semantics(

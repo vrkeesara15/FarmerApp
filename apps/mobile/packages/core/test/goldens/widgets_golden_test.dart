@@ -443,6 +443,7 @@ final List<_Case> _cases = <_Case>[
         SyncStatusPill(state: SyncState.synced),
         SyncStatusPill(state: SyncState.pending, pendingCount: 4),
         SyncStatusPill(state: SyncState.failed),
+        SyncStatusPill(state: SyncState.syncing, pendingCount: 4),
       ],
     ),
   ),

@@ -29,6 +29,14 @@ void main() {
     expect(find.byIcon(Icons.cloud_off_outlined), findsOneWidget);
   });
 
+  testWidgets('syncing state', (tester) async {
+    await tester.pumpWidget(
+      harness(const SyncStatusPill(state: SyncState.syncing, pendingCount: 4)),
+    );
+    expect(find.text('Syncing…'), findsOneWidget);
+    expect(find.byIcon(Icons.cloud_sync_outlined), findsOneWidget);
+  });
+
   testWidgets('tap opens details', (tester) async {
     var taps = 0;
     await tester.pumpWidget(

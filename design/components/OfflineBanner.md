@@ -2,7 +2,7 @@
 
 Full-width warning strip shown while offline.
 
-Source: `apps/mobile/packages/core/lib/src/widgets/offline_banner.dart` (exported from `package:farmerapp_core/farmerapp_core.dart`).
+Source: `apps/mobile/packages/core/lib/src/widgets/offline_banner.dart` (exported from `package:farmerapp_core/farmerapp_core.dart`). Live wrapper: `lib/src/widgets/sync_live.dart` `OfflineBannerLive` renders the banner only while `offlineProvider` is true (connectivity via `connectivity_plus`, FA-025 / NF-002) and nothing otherwise; place it at the top of the app shell above the screen body.
 
 ## Props
 

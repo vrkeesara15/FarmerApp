@@ -243,6 +243,101 @@ class CoreLocalizationsKn extends CoreLocalizations {
       'ನೀವು ಆಫ್‌ಲೈನ್ ಇದ್ದೀರಿ. ನಿಮ್ಮ ಕೆಲಸ ಉಳಿಸಲಾಗಿದೆ, ನಂತರ ಸಿಂಕ್ ಆಗುತ್ತದೆ.';
 
   @override
+  String get syncSyncing => 'ಸಿಂಕ್ ಆಗುತ್ತಿದೆ…';
+
+  @override
+  String get syncDetailsTitle => 'ಸಿಂಕ್ ವಿವರಗಳು';
+
+  @override
+  String get syncNow => 'ಈಗಲೇ ಸಿಂಕ್ ಮಾಡಿ';
+
+  @override
+  String syncLastSync(String time) {
+    return 'ಕೊನೆಯ ಸಿಂಕ್ $time';
+  }
+
+  @override
+  String get syncNeverSynced => 'ಇನ್ನೂ ಸಿಂಕ್ ಆಗಿಲ್ಲ';
+
+  @override
+  String get syncAllDone => 'ಎಲ್ಲವೂ ಸಿಂಕ್ ಆಗಿದೆ';
+
+  @override
+  String get syncAllDoneHelp =>
+      'ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ಉಳಿಸಿದ ಹೊಸ ರೈತರು, ಹೊಲಗಳು ಮತ್ತು ಫೋಟೋಗಳು ಸರ್ವರ್ ತಲುಪುವವರೆಗೆ ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ.';
+
+  @override
+  String syncPendingSection(int count) {
+    return 'ಸಿಂಕ್‌ಗೆ ಕಾಯುತ್ತಿರುವವು ($count)';
+  }
+
+  @override
+  String syncFailedSection(int count) {
+    return 'ಗಮನ ಬೇಕು ($count)';
+  }
+
+  @override
+  String get syncWaitingForPhoto => 'ಫೋಟೋ ಅಪ್‌ಲೋಡ್‌ಗೆ ಕಾಯುತ್ತಿದೆ';
+
+  @override
+  String syncPhotoUploads(int count) {
+    return 'ಅಪ್‌ಲೋಡ್ ಆಗುತ್ತಿರುವ ಫೋಟೋಗಳು: $count';
+  }
+
+  @override
+  String get syncTransportError =>
+      'ಸರ್ವರ್ ತಲುಪಲು ಆಗಲಿಲ್ಲ. ಅದು ತಾನಾಗಿಯೇ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸುತ್ತದೆ.';
+
+  @override
+  String syncNextAttempt(String time) {
+    return 'ಮುಂದಿನ ಪ್ರಯತ್ನ $time';
+  }
+
+  @override
+  String syncItemTitle(String action, String entity) {
+    return '$action $entity';
+  }
+
+  @override
+  String get syncActionCreate => 'ಹೊಸ';
+
+  @override
+  String get syncActionUpdate => 'ತಿದ್ದಿದ';
+
+  @override
+  String get syncActionDelete => 'ಅಳಿಸಿದ';
+
+  @override
+  String get syncEntityFarmer => 'ರೈತ';
+
+  @override
+  String get syncEntityFarm => 'ಹೊಲ';
+
+  @override
+  String get syncEntityCropPlot => 'ಬೆಳೆ ಪ್ಲಾಟ್';
+
+  @override
+  String get syncEntityConsent => 'ಒಪ್ಪಿಗೆ';
+
+  @override
+  String get syncEntityOther => 'ಐಟಂ';
+
+  @override
+  String syncSavedAt(String time) {
+    return 'ಉಳಿಸಿದ್ದು $time';
+  }
+
+  @override
+  String get syncRejectedDefault =>
+      'ಸರ್ವರ್ ಈ ಐಟಂ ಅನ್ನು ಸ್ವೀಕರಿಸಲಿಲ್ಲ. ತಿದ್ದಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.';
+
+  @override
+  String get syncRetryAll => 'ಎಲ್ಲವನ್ನೂ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ';
+
+  @override
+  String get syncDiscard => 'ಬಿಟ್ಟುಬಿಡಿ';
+
+  @override
   String get visitVerified => 'ಪರಿಶೀಲಿತ';
 
   @override

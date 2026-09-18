@@ -1,0 +1,74 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../db/open_database.dart';
+import '../state/auth_flow.dart';
+import 'sync_api.dart';
+import 'sync_engine.dart';
+import 'sync_scheduler.dart';
+
+/// The sync transport; apps override it with [HttpSyncApi].
+final Provider<SyncApi> syncApiProvider = Provider<SyncApi>(
+  (ref) => FakeSyncApi(),
+);
+
+/// Network state; apps override it with [PlusConnectivityMonitor].
+final Provider<ConnectivityMonitor> connectivityMonitorProvider =
+    Provider<ConnectivityMonitor>((ref) => FakeConnectivityMonitor());
+
+/// OS background work; apps override it with [WorkmanagerSyncScheduler].
+final Provider<BackgroundWorkScheduler> backgroundWorkSchedulerProvider =
+    Provider<BackgroundWorkScheduler>((ref) => FakeBackgroundWorkScheduler());
+
+/// The engine over [appDatabaseProvider], [syncApiProvider] and the device
+/// id from [tokenStoreProvider].
+final Provider<SyncEngine> syncEngineProvider = Provider<SyncEngine>((ref) {
+  final store = ref.watch(tokenStoreProvider);
+  final engine = SyncEngine(
+    db: ref.watch(appDatabaseProvider),
+    api: ref.watch(syncApiProvider),
+    deviceId: store.deviceId,
+  );
+  ref.onDispose(engine.dispose);
+  return engine;
+});
+
+/// Connectivity + WorkManager wiring; the app calls `start()` once.
+final Provider<SyncScheduler> syncSchedulerProvider = Provider<SyncScheduler>((
+  ref,
+) {
+  final scheduler = SyncScheduler(
+    engine: ref.watch(syncEngineProvider),
+    connectivity: ref.watch(connectivityMonitorProvider),
+    background: ref.watch(backgroundWorkSchedulerProvider),
+  );
+  ref.onDispose(scheduler.dispose);
+  return scheduler;
+});
+
+/// `synced | pending(n) | failed(n) | syncing`, live.
+final StreamProvider<SyncStatus> syncStatusProvider =
+    StreamProvider<SyncStatus>(
+      (ref) => ref.watch(syncEngineProvider).watchStatus(),
+    );
+
+/// Everything A64 shows, live.
+final StreamProvider<SyncDetails> syncDetailsProvider =
+    StreamProvider<SyncDetails>(
+      (ref) => ref.watch(syncEngineProvider).watchDetails(),
+    );
+
+/// Offline flag as a stream (true = no network).
+final StreamProvider<bool> offlineStreamProvider = StreamProvider<bool>((
+  ref,
+) async* {
+  final monitor = ref.watch(connectivityMonitorProvider);
+  yield !(await monitor.isOnline());
+  await for (final online in monitor.onlineChanges) {
+    yield !online;
+  }
+});
+
+/// Drives [OfflineBanner]: true while the device is offline.
+final Provider<bool> offlineProvider = Provider<bool>(
+  (ref) => ref.watch(offlineStreamProvider).value ?? false,
+);

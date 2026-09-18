@@ -518,6 +518,162 @@ abstract class CoreLocalizations {
   /// **'You are offline. Your work is saved and will sync later.'**
   String get offlineBanner;
 
+  /// No description provided for @syncSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing…'**
+  String get syncSyncing;
+
+  /// No description provided for @syncDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync details'**
+  String get syncDetailsTitle;
+
+  /// No description provided for @syncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get syncNow;
+
+  /// No description provided for @syncLastSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Last synced {time}'**
+  String syncLastSync(String time);
+
+  /// No description provided for @syncNeverSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Not synced yet'**
+  String get syncNeverSynced;
+
+  /// No description provided for @syncAllDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything is synced'**
+  String get syncAllDone;
+
+  /// No description provided for @syncAllDoneHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'New farmers, farms and photos saved offline appear here until they reach the server.'**
+  String get syncAllDoneHelp;
+
+  /// No description provided for @syncPendingSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to sync ({count})'**
+  String syncPendingSection(int count);
+
+  /// No description provided for @syncFailedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention ({count})'**
+  String syncFailedSection(int count);
+
+  /// No description provided for @syncWaitingForPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the photo to upload'**
+  String get syncWaitingForPhoto;
+
+  /// No description provided for @syncPhotoUploads.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos uploading: {count}'**
+  String syncPhotoUploads(int count);
+
+  /// No description provided for @syncTransportError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server. It will try again on its own.'**
+  String get syncTransportError;
+
+  /// No description provided for @syncNextAttempt.
+  ///
+  /// In en, this message translates to:
+  /// **'Next attempt {time}'**
+  String syncNextAttempt(String time);
+
+  /// No description provided for @syncItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{action} {entity}'**
+  String syncItemTitle(String action, String entity);
+
+  /// No description provided for @syncActionCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get syncActionCreate;
+
+  /// No description provided for @syncActionUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited'**
+  String get syncActionUpdate;
+
+  /// No description provided for @syncActionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get syncActionDelete;
+
+  /// No description provided for @syncEntityFarmer.
+  ///
+  /// In en, this message translates to:
+  /// **'farmer'**
+  String get syncEntityFarmer;
+
+  /// No description provided for @syncEntityFarm.
+  ///
+  /// In en, this message translates to:
+  /// **'farm'**
+  String get syncEntityFarm;
+
+  /// No description provided for @syncEntityCropPlot.
+  ///
+  /// In en, this message translates to:
+  /// **'crop plot'**
+  String get syncEntityCropPlot;
+
+  /// No description provided for @syncEntityConsent.
+  ///
+  /// In en, this message translates to:
+  /// **'consent'**
+  String get syncEntityConsent;
+
+  /// No description provided for @syncEntityOther.
+  ///
+  /// In en, this message translates to:
+  /// **'item'**
+  String get syncEntityOther;
+
+  /// No description provided for @syncSavedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {time}'**
+  String syncSavedAt(String time);
+
+  /// No description provided for @syncRejectedDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not accept this item. Edit it and retry.'**
+  String get syncRejectedDefault;
+
+  /// No description provided for @syncRetryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry all'**
+  String get syncRetryAll;
+
+  /// No description provided for @syncDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get syncDiscard;
+
   /// No description provided for @visitVerified.
   ///
   /// In en, this message translates to:

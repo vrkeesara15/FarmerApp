@@ -240,6 +240,101 @@ class CoreLocalizationsEn extends CoreLocalizations {
       'You are offline. Your work is saved and will sync later.';
 
   @override
+  String get syncSyncing => 'Syncing…';
+
+  @override
+  String get syncDetailsTitle => 'Sync details';
+
+  @override
+  String get syncNow => 'Sync now';
+
+  @override
+  String syncLastSync(String time) {
+    return 'Last synced $time';
+  }
+
+  @override
+  String get syncNeverSynced => 'Not synced yet';
+
+  @override
+  String get syncAllDone => 'Everything is synced';
+
+  @override
+  String get syncAllDoneHelp =>
+      'New farmers, farms and photos saved offline appear here until they reach the server.';
+
+  @override
+  String syncPendingSection(int count) {
+    return 'Waiting to sync ($count)';
+  }
+
+  @override
+  String syncFailedSection(int count) {
+    return 'Needs attention ($count)';
+  }
+
+  @override
+  String get syncWaitingForPhoto => 'Waiting for the photo to upload';
+
+  @override
+  String syncPhotoUploads(int count) {
+    return 'Photos uploading: $count';
+  }
+
+  @override
+  String get syncTransportError =>
+      'Could not reach the server. It will try again on its own.';
+
+  @override
+  String syncNextAttempt(String time) {
+    return 'Next attempt $time';
+  }
+
+  @override
+  String syncItemTitle(String action, String entity) {
+    return '$action $entity';
+  }
+
+  @override
+  String get syncActionCreate => 'New';
+
+  @override
+  String get syncActionUpdate => 'Edited';
+
+  @override
+  String get syncActionDelete => 'Deleted';
+
+  @override
+  String get syncEntityFarmer => 'farmer';
+
+  @override
+  String get syncEntityFarm => 'farm';
+
+  @override
+  String get syncEntityCropPlot => 'crop plot';
+
+  @override
+  String get syncEntityConsent => 'consent';
+
+  @override
+  String get syncEntityOther => 'item';
+
+  @override
+  String syncSavedAt(String time) {
+    return 'Saved $time';
+  }
+
+  @override
+  String get syncRejectedDefault =>
+      'The server did not accept this item. Edit it and retry.';
+
+  @override
+  String get syncRetryAll => 'Retry all';
+
+  @override
+  String get syncDiscard => 'Discard';
+
+  @override
   String get visitVerified => 'Verified';
 
   @override

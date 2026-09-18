@@ -243,6 +243,101 @@ class CoreLocalizationsTe extends CoreLocalizations {
       'మీరు ఆఫ్‌లైన్‌లో ఉన్నారు. మీ పని సేవ్ అయింది, తర్వాత సింక్ అవుతుంది.';
 
   @override
+  String get syncSyncing => 'సింక్ అవుతోంది…';
+
+  @override
+  String get syncDetailsTitle => 'సింక్ వివరాలు';
+
+  @override
+  String get syncNow => 'ఇప్పుడే సింక్ చేయండి';
+
+  @override
+  String syncLastSync(String time) {
+    return 'చివరి సింక్ $time';
+  }
+
+  @override
+  String get syncNeverSynced => 'ఇంకా సింక్ కాలేదు';
+
+  @override
+  String get syncAllDone => 'అన్నీ సింక్ అయ్యాయి';
+
+  @override
+  String get syncAllDoneHelp =>
+      'ఆఫ్‌లైన్‌లో సేవ్ చేసిన కొత్త రైతులు, పొలాలు, ఫోటోలు సర్వర్‌కు చేరే వరకు ఇక్కడ కనిపిస్తాయి.';
+
+  @override
+  String syncPendingSection(int count) {
+    return 'సింక్ కోసం వేచి ఉన్నవి ($count)';
+  }
+
+  @override
+  String syncFailedSection(int count) {
+    return 'శ్రద్ధ అవసరం ($count)';
+  }
+
+  @override
+  String get syncWaitingForPhoto => 'ఫోటో అప్‌లోడ్ కోసం వేచి ఉంది';
+
+  @override
+  String syncPhotoUploads(int count) {
+    return 'అప్‌లోడ్ అవుతున్న ఫోటోలు: $count';
+  }
+
+  @override
+  String get syncTransportError =>
+      'సర్వర్‌ను చేరుకోలేకపోయాం. అదే మళ్లీ ప్రయత్నిస్తుంది.';
+
+  @override
+  String syncNextAttempt(String time) {
+    return 'తదుపరి ప్రయత్నం $time';
+  }
+
+  @override
+  String syncItemTitle(String action, String entity) {
+    return '$action $entity';
+  }
+
+  @override
+  String get syncActionCreate => 'కొత్త';
+
+  @override
+  String get syncActionUpdate => 'సవరించిన';
+
+  @override
+  String get syncActionDelete => 'తొలగించిన';
+
+  @override
+  String get syncEntityFarmer => 'రైతు';
+
+  @override
+  String get syncEntityFarm => 'పొలం';
+
+  @override
+  String get syncEntityCropPlot => 'పంట ప్లాట్';
+
+  @override
+  String get syncEntityConsent => 'సమ్మతి';
+
+  @override
+  String get syncEntityOther => 'అంశం';
+
+  @override
+  String syncSavedAt(String time) {
+    return 'సేవ్ చేసినది $time';
+  }
+
+  @override
+  String get syncRejectedDefault =>
+      'సర్వర్ ఈ అంశాన్ని అంగీకరించలేదు. సవరించి మళ్లీ ప్రయత్నించండి.';
+
+  @override
+  String get syncRetryAll => 'అన్నీ మళ్లీ ప్రయత్నించండి';
+
+  @override
+  String get syncDiscard => 'వదిలేయండి';
+
+  @override
   String get visitVerified => 'ధృవీకరించబడింది';
 
   @override
