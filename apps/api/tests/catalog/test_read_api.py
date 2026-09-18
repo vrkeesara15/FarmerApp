@@ -135,7 +135,7 @@ async def _add_draft_claim(db_session: AsyncSession, world: World) -> LabelClaim
         return draft
 
 
-async def test_sku_detail_hides_draft_claims_except_for_agronomist_and_owner(
+async def test_sku_detail_hides_draft_claims_except_for_claim_maintainers(
     client: AsyncClient, world: World, bearer: Bearer, db_session: AsyncSession
 ) -> None:
     draft = await _add_draft_claim(db_session, world)
@@ -147,7 +147,7 @@ async def test_sku_detail_hides_draft_claims_except_for_agronomist_and_owner(
         claims = body["label_claims"]
         ids = {c["id"] for c in claims}
         assert claims and all(c["source_ref"] == SEED_SOURCE_REF for c in claims)
-        if role in ("agronomist", "owner"):
+        if role in ("agronomist", "owner", "tenant_admin"):
             assert str(draft.id) in ids, role
         else:
             assert str(draft.id) not in ids, role

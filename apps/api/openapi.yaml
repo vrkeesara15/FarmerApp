@@ -2800,6 +2800,50 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+    post:
+      tags:
+      - catalog
+      summary: Create a product (own-brand flag, category, HSN, GST slab)
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: '`product_exists`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
   /v1/catalog/skus/{id}:
     get:
       tags:
@@ -2859,6 +2903,58 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+    patch:
+      tags:
+      - catalog
+      summary: Change a SKU (pack, barcode, MRP, active)
+      operationId: updateSku
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkuUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkuOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`barcode_exists`, `version_conflict`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
   /v1/catalog/label-claims:
     get:
       tags:
@@ -2899,10 +2995,12 @@ paths:
         in: query
         required: false
         schema:
-          $ref: '#/components/schemas/ClaimStatus'
-          description: Only the agronomist / owner may ask for draft or retired claims.
+          $ref: '#/components/schemas/ClaimStatusFilter'
+          description: Only the agronomist / owner / tenant admin may ask for draft, retired or all claims;
+            everyone else always gets approved ones.
           default: approved
-        description: Only the agronomist / owner may ask for draft or retired claims.
+        description: Only the agronomist / owner / tenant admin may ask for draft, retired or all claims;
+          everyone else always gets approved ones.
       - name: cursor
         in: query
         required: false
@@ -2959,6 +3057,822 @@ paths:
       - field_officer
       - owner
       - store_manager
+      - tenant_admin
+    post:
+      tags:
+      - catalog
+      summary: Create a label claim (SKU x crop x pest x dose x PHI) as a draft
+      operationId: createLabelClaim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabelClaimCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelClaimOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`claim_duplicate`, `version_conflict`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`claim_category_invalid`, `pest_not_for_crop`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - owner
+      - tenant_admin
+  /v1/catalog/crops:
+    get:
+      tags:
+      - catalog
+      summary: The tenant's crops (label claims, filters)
+      operationId: listCrops
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CropList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/catalog/pests:
+    get:
+      tags:
+      - catalog
+      summary: Pests / diseases; with crop_id those of that crop plus polyphagous ones
+      operationId: listPests
+      parameters:
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PestList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/catalog/stores:
+    get:
+      tags:
+      - catalog
+      summary: 'Stores for price-list selection (store manager / accountant: own store)'
+      operationId: listCatalogStores
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreBriefList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/catalog/products/{id}:
+    patch:
+      tags:
+      - catalog
+      summary: Change a product
+      operationId: updateProduct
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`product_exists`, `version_conflict`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/catalog/skus:
+    post:
+      tags:
+      - catalog
+      summary: Add a pack size (SKU) with barcode and MRP to a product
+      operationId: createSku
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkuCreate'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkuOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`barcode_exists`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/catalog/barcode/{code}:
+    get:
+      tags:
+      - catalog
+      summary: SKU and product by barcode (POS scan), priced for the store
+      operationId: lookupBarcode
+      parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Code
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Defaults to the caller's own store.
+          title: Store Id
+        description: Defaults to the caller's own store.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BarcodeLookupOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/catalog/label-claims/{id}:
+    patch:
+      tags:
+      - catalog
+      summary: Edit a draft in place; editing an approved claim returns a new draft version
+      operationId: updateLabelClaim
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabelClaimUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelClaimOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`claim_retired`, `version_conflict`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - owner
+      - tenant_admin
+  /v1/catalog/label-claims/{id}/approve:
+    post:
+      tags:
+      - catalog
+      summary: Approve a draft claim (agronomist only; SPEC 14.6 human gate)
+      operationId: approveLabelClaim
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelClaimOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`claim_not_draft`, `claim_duplicate`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`claim_category_invalid`, `pest_not_for_crop`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+  /v1/catalog/label-claims/{id}/retire:
+    post:
+      tags:
+      - catalog
+      summary: 'Retire a claim: its SKU is no longer recommendable for that crop and pest'
+      operationId: retireLabelClaim
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelClaimOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`claim_retired`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - owner
+      - tenant_admin
+  /v1/catalog/label-claims/{id}/history:
+    get:
+      tags:
+      - catalog
+      summary: Every version of a claim (supersedes chain), newest first
+      operationId: labelClaimHistory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelClaimList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - owner
+      - tenant_admin
+  /v1/catalog/recommendable:
+    get:
+      tags:
+      - catalog
+      summary: SKUs with an approved label claim for exactly this crop and pest (DX-007)
+      operationId: listRecommendableSkus
+      parameters:
+      - name: crop_id
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Crop Id
+      - name: pest_id
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: pest_or_disease id.
+          title: Pest Id
+        description: pest_or_disease id.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendableList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/catalog/price-lists:
+    get:
+      tags:
+      - catalog
+      summary: Price-list rows of a store (or the tenant default); `at` = in force that day
+      operationId: listPriceLists
+      parameters:
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Omit for the tenant default rows.
+          title: Store Id
+        description: Omit for the tenant default rows.
+      - name: at
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: At
+      - name: sku_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Sku Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceListList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+    put:
+      tags:
+      - catalog
+      summary: Bulk upsert price-list rows for a store or the tenant default (all or nothing)
+      operationId: upsertPriceLists
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PriceListPut'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceListList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`price_overlap`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`price_above_mrp`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/catalog/import/products:
+    post:
+      tags:
+      - catalog
+      summary: Import products + SKUs from CSV (dry run by default; all or nothing)
+      operationId: importProducts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportReport'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/catalog/import/label-claims:
+    post:
+      tags:
+      - catalog
+      summary: Import label claims from CSV as drafts (dry run by default; never approves)
+      operationId: importLabelClaims
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportReport'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - owner
+      - tenant_admin
+  /v1/catalog/export:
+    get:
+      tags:
+      - catalog
+      summary: CSV export of products + SKUs or label claims
+      operationId: exportCatalog
+      parameters:
+      - name: kind
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/CatalogKind'
+          default: products
+      responses:
+        '200':
+          description: CSV file.
+          content:
+            text/csv: {}
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - director
+      - owner
       - tenant_admin
   /v1/stores/{id}/stock:
     get:
@@ -3518,6 +4432,84 @@ components:
       - trace_id
       - created_at
       title: AuditLogOut
+    BarcodeLookupOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        product_id:
+          type: string
+          format: uuid
+          title: Product Id
+        pack_size_value:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Pack Size Value
+        pack_size_unit:
+          type: string
+          title: Pack Size Unit
+        pack_label:
+          type: string
+          title: Pack Label
+        barcode:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Barcode
+        mrp_paise:
+          type: integer
+          title: Mrp Paise
+        active:
+          type: boolean
+          title: Active
+        price_paise:
+          type: integer
+          title: Price Paise
+          description: Selling price resolved for the requested store (or the tenant default), falling
+            back to the MRP.
+        stock_qty:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Stock Qty
+          description: On hand at `store_id` (sum of the movement ledger); null when no store was given.
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+        product:
+          $ref: '#/components/schemas/ProductOut'
+      type: object
+      required:
+      - id
+      - product_id
+      - pack_size_value
+      - pack_size_unit
+      - pack_label
+      - barcode
+      - mrp_paise
+      - active
+      - price_paise
+      - created_at
+      - updated_at
+      - version
+      - product
+      title: BarcodeLookupOut
+    CatalogKind:
+      type: string
+      enum:
+      - products
+      - label_claims
+      title: CatalogKind
     CheckinPoint:
       properties:
         lat:
@@ -3560,13 +4552,14 @@ components:
       - received_chunks
       - missing_chunks
       title: ChunkAck
-    ClaimStatus:
+    ClaimStatusFilter:
       type: string
       enum:
       - draft
       - approved
       - retired
-      title: ClaimStatus
+      - all
+      title: ClaimStatusFilter
     ConfirmationRequest:
       properties:
         channel:
@@ -3801,6 +4794,44 @@ components:
       - updated_at
       - version
       title: CreditLimitOut
+    CropList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/CropOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: CropList
+    CropOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        code:
+          type: string
+          title: Code
+        name:
+          type: string
+          title: Name
+        names:
+          additionalProperties: true
+          type: object
+          title: Names
+        active:
+          type: boolean
+          title: Active
+      type: object
+      required:
+      - id
+      - code
+      - name
+      - names
+      - active
+      title: CropOut
     CropPlotCreate:
       properties:
         id:
@@ -4004,6 +5035,14 @@ components:
       - is_rooted
       - clock_drift_s
       title: DeviceIntegrityOut
+    DoseUnit:
+      type: string
+      enum:
+      - ml
+      - g
+      - l
+      - kg
+      title: DoseUnit
     DutyEndIn:
       properties:
         end_at:
@@ -4873,6 +5912,85 @@ components:
       - version
       - env
       title: HealthResponse
+    ImportReport:
+      properties:
+        kind:
+          $ref: '#/components/schemas/CatalogKind'
+        dry_run:
+          type: boolean
+          title: Dry Run
+        applied:
+          type: boolean
+          title: Applied
+          description: True only when rows were written (no dry run, no errors).
+        rows_total:
+          type: integer
+          title: Rows Total
+        rows_ok:
+          type: integer
+          title: Rows Ok
+        created:
+          type: integer
+          title: Created
+        updated:
+          type: integer
+          title: Updated
+        errors:
+          items:
+            $ref: '#/components/schemas/ImportRowError'
+          type: array
+          title: Errors
+      type: object
+      required:
+      - kind
+      - dry_run
+      - applied
+      - rows_total
+      - rows_ok
+      - created
+      - updated
+      - errors
+      title: ImportReport
+    ImportRequest:
+      properties:
+        csv:
+          type: string
+          maxLength: 5000000
+          minLength: 1
+          title: Csv
+        dry_run:
+          type: boolean
+          title: Dry Run
+          default: true
+      additionalProperties: false
+      type: object
+      required:
+      - csv
+      title: ImportRequest
+    ImportRowError:
+      properties:
+        row:
+          type: integer
+          title: Row
+          description: CSV line number (the header is line 1).
+        column:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Column
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - row
+      - column
+      - code
+      - message
+      title: ImportRowError
     IrrigationType:
       type: string
       enum:
@@ -5026,6 +6144,94 @@ components:
       - credit_limits
       - entries
       title: KhataOut
+    LabelClaimCreate:
+      properties:
+        dose_per_acre:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Dose Per Acre
+          description: As on the label.
+        dose_value:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,7}|(?=[\d.]{1,11}0*$)\d{0,7}\.\d{0,3}0*$)
+          title: Dose Value
+          description: Per acre.
+        dose_unit:
+          $ref: '#/components/schemas/DoseUnit'
+        dose_per_tank_15l:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Dose Per Tank 15L
+        phi_days:
+          type: integer
+          maximum: 365.0
+          minimum: 0.0
+          title: Phi Days
+          description: Pre-harvest interval in days.
+        ppe_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ppe Text
+        safety_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Safety Text
+        source_ref:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Source Ref
+          description: CIB&RC reference.
+        efficacy_tier:
+          anyOf:
+          - type: integer
+            maximum: 3.0
+            minimum: 1.0
+          - type: 'null'
+          title: Efficacy Tier
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        pest_or_disease_id:
+          type: string
+          format: uuid
+          title: Pest Or Disease Id
+      additionalProperties: false
+      type: object
+      required:
+      - dose_per_acre
+      - dose_value
+      - dose_unit
+      - phi_days
+      - source_ref
+      - sku_id
+      - crop_id
+      - pest_or_disease_id
+      title: LabelClaimCreate
+    LabelClaimList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/LabelClaimOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: LabelClaimList
     LabelClaimOut:
       properties:
         id:
@@ -5101,6 +6307,25 @@ components:
             format: date-time
           - type: 'null'
           title: Approved At
+        retired_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Retired By
+        retired_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Retired At
+        supersedes_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Supersedes Id
+          description: The approved claim this version replaces once approved.
         created_at:
           type: string
           format: date-time
@@ -5154,6 +6379,73 @@ components:
       required:
       - items
       title: LabelClaimPage
+    LabelClaimUpdate:
+      properties:
+        dose_per_acre:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 1
+          - type: 'null'
+          title: Dose Per Acre
+        dose_value:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,7}|(?=[\d.]{1,11}0*$)\d{0,7}\.\d{0,3}0*$)
+          - type: 'null'
+          title: Dose Value
+        dose_unit:
+          anyOf:
+          - $ref: '#/components/schemas/DoseUnit'
+          - type: 'null'
+        dose_per_tank_15l:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Dose Per Tank 15L
+        phi_days:
+          anyOf:
+          - type: integer
+            maximum: 365.0
+            minimum: 0.0
+          - type: 'null'
+          title: Phi Days
+        ppe_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ppe Text
+        safety_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Safety Text
+        source_ref:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Source Ref
+        efficacy_tier:
+          anyOf:
+          - type: integer
+            maximum: 3.0
+            minimum: 1.0
+          - type: 'null'
+          title: Efficacy Tier
+        version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Version
+      additionalProperties: false
+      type: object
+      title: LabelClaimUpdate
+      description: Any claim field; the (sku, crop, pest) triple is fixed (a new claim otherwise).
     LandOwnership:
       type: string
       enum:
@@ -5897,6 +7189,15 @@ components:
       - created_at
       - version
       title: OverrideRequestOut
+    PackUnit:
+      type: string
+      enum:
+      - ml
+      - l
+      - g
+      - kg
+      - pcs
+      title: PackUnit
     PageOut_AuditLogOut_:
       properties:
         items:
@@ -6128,6 +7429,17 @@ components:
       - refunded
       - reconciled
       title: PaymentStatus
+    PestList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PestOrDiseaseOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: PestList
     PestOrDiseaseOut:
       properties:
         id:
@@ -6376,6 +7688,111 @@ components:
       - text_hash
       - created_at
       title: PolicyAcceptanceOut
+    PriceItemIn:
+      properties:
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        price_paise:
+          type: integer
+          minimum: 0.0
+          title: Price Paise
+        effective_from:
+          type: string
+          format: date
+          title: Effective From
+        effective_to:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Effective To
+      additionalProperties: false
+      type: object
+      required:
+      - sku_id
+      - price_paise
+      - effective_from
+      title: PriceItemIn
+    PriceListList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PriceListOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: PriceListList
+    PriceListOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        price_paise:
+          type: integer
+          title: Price Paise
+        effective_from:
+          type: string
+          format: date
+          title: Effective From
+        effective_to:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Effective To
+        mrp_paise:
+          type: integer
+          title: Mrp Paise
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - sku_id
+      - store_id
+      - price_paise
+      - effective_from
+      - effective_to
+      - mrp_paise
+      - version
+      title: PriceListOut
+    PriceListPut:
+      properties:
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+          description: null = tenant default.
+        items:
+          items:
+            $ref: '#/components/schemas/PriceItemIn'
+          type: array
+          maxItems: 1000
+          minItems: 1
+          title: Items
+      additionalProperties: false
+      type: object
+      required:
+      - items
+      title: PriceListPut
     ProductCategory:
       type: string
       enum:
@@ -6388,6 +7805,75 @@ components:
       - tool
       - other
       title: ProductCategory
+    ProductCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+        brand:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Brand
+        own_brand:
+          type: boolean
+          title: Own Brand
+          default: false
+        category:
+          $ref: '#/components/schemas/ProductCategory'
+        hsn:
+          anyOf:
+          - type: string
+            maxLength: 8
+          - type: 'null'
+          title: Hsn
+          description: 4, 6 or 8 digits.
+        gst_rate_bp:
+          type: integer
+          title: Gst Rate Bp
+          description: 'Basis points: one of 0, 500, 1200, 1800, 2800.'
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        active_ingredient:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Active Ingredient
+        formulation:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Formulation
+        names:
+          additionalProperties:
+            type: string
+          type: object
+          title: Names
+        image_uri:
+          anyOf:
+          - type: string
+            maxLength: 512
+          - type: 'null'
+          title: Image Uri
+        active:
+          type: boolean
+          title: Active
+          default: true
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - brand
+      - category
+      - gst_rate_bp
+      title: ProductCreate
     ProductOut:
       properties:
         id:
@@ -6492,6 +7978,86 @@ components:
       required:
       - items
       title: ProductPage
+    ProductUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Name
+        brand:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 1
+          - type: 'null'
+          title: Brand
+        own_brand:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Own Brand
+        category:
+          anyOf:
+          - $ref: '#/components/schemas/ProductCategory'
+          - type: 'null'
+        hsn:
+          anyOf:
+          - type: string
+            maxLength: 8
+          - type: 'null'
+          title: Hsn
+        gst_rate_bp:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Gst Rate Bp
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        active_ingredient:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Active Ingredient
+        formulation:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Formulation
+        names:
+          anyOf:
+          - additionalProperties:
+              type: string
+            type: object
+          - type: 'null'
+          title: Names
+        image_uri:
+          anyOf:
+          - type: string
+            maxLength: 512
+          - type: 'null'
+          title: Image Uri
+        active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Active
+        version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Version
+          description: Optimistic lock (409 when stale).
+      additionalProperties: false
+      type: object
+      title: ProductUpdate
     ProductWithSkusOut:
       properties:
         id:
@@ -6586,6 +8152,104 @@ components:
       - version
       - skus
       title: ProductWithSkusOut
+    RecommendableList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/RecommendableSkuOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: RecommendableList
+    RecommendableSkuOut:
+      properties:
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        product_id:
+          type: string
+          format: uuid
+          title: Product Id
+        product_name:
+          type: string
+          title: Product Name
+        brand:
+          type: string
+          title: Brand
+        own_brand:
+          type: boolean
+          title: Own Brand
+        pack_label:
+          type: string
+          title: Pack Label
+        mrp_paise:
+          type: integer
+          title: Mrp Paise
+        label_claim_id:
+          type: string
+          format: uuid
+          title: Label Claim Id
+        dose_per_acre:
+          type: string
+          title: Dose Per Acre
+        dose_value:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Dose Value
+        dose_unit:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Dose Unit
+        dose_per_tank_15l:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Dose Per Tank 15L
+        phi_days:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Phi Days
+        ppe_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ppe Text
+        safety_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Safety Text
+        efficacy_tier:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Efficacy Tier
+      type: object
+      required:
+      - sku_id
+      - product_id
+      - product_name
+      - brand
+      - own_brand
+      - pack_label
+      - mrp_paise
+      - label_claim_id
+      - dose_per_acre
+      - dose_value
+      - dose_unit
+      - dose_per_tank_15l
+      - phi_days
+      - ppe_text
+      - safety_text
+      - efficacy_tier
+      title: RecommendableSkuOut
     RefreshRequest:
       properties:
         refresh_token:
@@ -6651,6 +8315,44 @@ components:
       - expires_at
       - note
       title: SignedUrlOut
+    SkuCreate:
+      properties:
+        product_id:
+          type: string
+          format: uuid
+          title: Product Id
+        pack_size_value:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,7}|(?=[\d.]{1,11}0*$)\d{0,7}\.\d{0,3}0*$)
+          title: Pack Size Value
+        pack_size_unit:
+          $ref: '#/components/schemas/PackUnit'
+        barcode:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Barcode
+        mrp_paise:
+          type: integer
+          minimum: 0.0
+          title: Mrp Paise
+          description: Integer paise.
+        active:
+          type: boolean
+          title: Active
+          default: true
+      additionalProperties: false
+      type: object
+      required:
+      - product_id
+      - pack_size_value
+      - pack_size_unit
+      - mrp_paise
+      title: SkuCreate
     SkuDetailOut:
       properties:
         id:
@@ -6799,6 +8501,45 @@ components:
       - updated_at
       - version
       title: SkuOut
+    SkuUpdate:
+      properties:
+        pack_size_value:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,7}|(?=[\d.]{1,11}0*$)\d{0,7}\.\d{0,3}0*$)
+          - type: 'null'
+          title: Pack Size Value
+        pack_size_unit:
+          anyOf:
+          - $ref: '#/components/schemas/PackUnit'
+          - type: 'null'
+        barcode:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Barcode
+        mrp_paise:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Mrp Paise
+        active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Active
+        version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Version
+      additionalProperties: false
+      type: object
+      title: SkuUpdate
     SoilType:
       type: string
       enum:
@@ -6917,6 +8658,35 @@ components:
       - store_id
       - balance_paise
       title: StoreBalanceOut
+    StoreBriefList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/StoreBriefOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: StoreBriefList
+    StoreBriefOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        code:
+          type: string
+          title: Code
+        name:
+          type: string
+          title: Name
+      type: object
+      required:
+      - id
+      - code
+      - name
+      title: StoreBriefOut
     SyncChangeOut:
       properties:
         entity:

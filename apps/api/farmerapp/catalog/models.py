@@ -22,7 +22,10 @@
   reference; seed rows carry ``SEED_SOURCE_REF`` until the agronomist replaces them — SPEC
   14.6 human gate). ``status`` is ``draft`` until an agronomist approves it (``approved_by``
   / ``approved_at``); **only approved claims may ever back a recommendation** (DX-007, SPEC
-  3.4). ``efficacy_tier`` (1 = best) is the agronomist's ranking input for DX-008.
+  3.4). ``efficacy_tier`` (1 = best) is the agronomist's ranking input for DX-008. Approved
+  claims are immutable: an edit is a new draft with ``supersedes_id``; approving it retires
+  the superseded version (``retired_by`` / ``retired_at``). ``farmerapp.catalog.recommendable``
+  is the single read path for recommendations.
 
 Enumerations are CHECK constraints on short strings (expand-only), like every other table.
 """
@@ -224,7 +227,18 @@ class PestOrDisease(Base, BaseColumns):
 class LabelClaim(Base, BaseColumns):
     __tablename__ = "label_claim"
     __table_args__ = (
-        UniqueConstraint("tenant_id", "sku_id", "crop_id", "pest_or_disease_id"),
+        # At most one *approved* version per (sku, crop, pest); drafts / retired versions of
+        # the same claim coexist (0014: edits of an approved claim are new draft versions).
+        Index(
+            "uq_label_claim_approved",
+            "tenant_id",
+            "sku_id",
+            "crop_id",
+            "pest_or_disease_id",
+            unique=True,
+            postgresql_where=text("status = 'approved' AND deleted_at IS NULL"),
+        ),
+        Index("ix_label_claim_supersedes_id", "supersedes_id"),
         CheckConstraint(f"status IN ({sql_in(ClaimStatus)})", name="status"),
         CheckConstraint(
             f"dose_unit IS NULL OR dose_unit IN ({sql_in(DoseUnit)})", name="dose_unit"
@@ -265,6 +279,14 @@ class LabelClaim(Base, BaseColumns):
         ForeignKey("user.id", ondelete="SET NULL"), nullable=True
     )
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    retired_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("user.id", ondelete="SET NULL"), nullable=True
+    )
+    retired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    #: The approved claim this draft is a new version of (approved claims are immutable).
+    supersedes_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("label_claim.id", ondelete="SET NULL"), nullable=True
+    )
 
     @property
     def approved(self) -> bool:

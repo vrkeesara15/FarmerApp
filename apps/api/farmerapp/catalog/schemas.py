@@ -1,4 +1,6 @@
-"""Read models for the catalogue endpoints (WC-005, FA-020, DX-007)."""
+"""Read models for the catalogue endpoints (WC-005, FA-020, DX-007).
+
+Write models live in ``farmerapp.catalog.write_schemas``."""
 
 from __future__ import annotations
 
@@ -119,6 +121,11 @@ class LabelClaimOut(BaseModel):
     status: str
     approved_by: uuid.UUID | None
     approved_at: datetime | None
+    retired_by: uuid.UUID | None = None
+    retired_at: datetime | None = None
+    supersedes_id: uuid.UUID | None = Field(
+        default=None, description="The approved claim this version replaces once approved."
+    )
     created_at: datetime
     updated_at: datetime
     version: int

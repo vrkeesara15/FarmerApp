@@ -41,6 +41,8 @@ from farmerapp.catalog.schemas import (
     SkuDetailOut,
     SkuOut,
 )
+from farmerapp.catalog.write_router import router as write_router
+from farmerapp.catalog.write_schemas import ClaimStatusFilter
 from farmerapp.stock.ledger import stock_on_hand_by_sku
 from farmerapp.tenants.models import Store
 
@@ -48,7 +50,7 @@ router = APIRouter(prefix="/catalog", tags=["catalog"])
 
 CATALOG_ROLES = tuple(Role)
 #: Roles that maintain label claims (WC-005) and therefore see drafts and retired ones.
-CLAIM_DRAFT_ROLES = frozenset({UserRole.AGRONOMIST, UserRole.OWNER})
+CLAIM_DRAFT_ROLES = frozenset({UserRole.AGRONOMIST, UserRole.OWNER, UserRole.TENANT_ADMIN})
 
 
 def _sees_drafts(actor: User) -> bool:
@@ -212,20 +214,21 @@ async def list_label_claims(
     pest_id: Annotated[uuid.UUID | None, Query(description="pest_or_disease id.")] = None,
     sku_id: Annotated[uuid.UUID | None, Query()] = None,
     status: Annotated[
-        ClaimStatus,
-        Query(description="Only the agronomist / owner may ask for draft or retired claims."),
-    ] = ClaimStatus.APPROVED,
+        ClaimStatusFilter,
+        Query(
+            description="Only the agronomist / owner / tenant admin may ask for draft, retired "
+            "or all claims; everyone else always gets approved ones."
+        ),
+    ] = ClaimStatusFilter.APPROVED,
 ) -> LabelClaimPage:
-    wanted = status if _sees_drafts(actor) else ClaimStatus.APPROVED
+    wanted = status if _sees_drafts(actor) else ClaimStatusFilter.APPROVED
     stmt = (
         select(LabelClaim, PestOrDisease)
         .join(PestOrDisease, PestOrDisease.id == LabelClaim.pest_or_disease_id)
-        .where(
-            LabelClaim.tenant_id == actor.tenant_id,
-            LabelClaim.deleted_at.is_(None),
-            LabelClaim.status == wanted.value,
-        )
+        .where(LabelClaim.tenant_id == actor.tenant_id, LabelClaim.deleted_at.is_(None))
     )
+    if wanted is not ClaimStatusFilter.ALL:
+        stmt = stmt.where(LabelClaim.status == wanted.value)
     if crop_id is not None:
         stmt = stmt.where(LabelClaim.crop_id == crop_id)
     if pest_id is not None:
@@ -244,5 +247,8 @@ async def list_label_claims(
         items=[LabelClaimOut.from_row(c, pests[c.id]) for c in items], next_cursor=next_cursor
     )
 
+
+# Writes, maintenance reads and the DX-007 guardrail endpoint (same /catalog prefix).
+router.include_router(write_router)
 
 __all__ = ["CATALOG_ROLES", "CLAIM_DRAFT_ROLES", "router"]

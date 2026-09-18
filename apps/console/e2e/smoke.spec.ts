@@ -33,7 +33,6 @@ test.describe("console smoke (mock API)", () => {
       "/field-team",
       "/farmers",
       "/stores",
-      "/products",
       "/agronomist",
       "/flags",
       "/settings",
@@ -41,6 +40,10 @@ test.describe("console smoke (mock API)", () => {
       await page.goto(path);
       await expect(page.getByTestId("empty-state")).toBeVisible();
     }
+    // C50 is a real data screen (WC-005): without a session it asks to sign in again.
+    await page.goto("/products");
+    await expect(page.getByRole("heading", { level: 1, name: "Products" })).toBeVisible();
+    await expect(page.getByTestId("session-signed-out")).toBeVisible();
     await page.goto("/home");
     const html = page.locator("html");
     await expect(html).toHaveAttribute("data-theme", /light|dark/);

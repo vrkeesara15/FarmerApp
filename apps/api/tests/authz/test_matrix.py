@@ -267,6 +267,75 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
     ),
     "GET /v1/orders/{id}": RouteFixture(path_params=lambda ctx: {"id": str(ctx.target.order_id)}),
     "GET /v1/farmers/{id}/khata": RouteFixture(path_params=_target_farmer_id),
+    # WC-005 catalogue writes: valid bodies; business outcomes (409 / 422, drafts, approval,
+    # overlaps) are tested in tests/catalog/test_writes.py, test_price_lists.py, test_import.py.
+    "POST /v1/catalog/products": RouteFixture(
+        body=lambda _ctx: {
+            "name": "Matrix Product",
+            "brand": "Matrix",
+            "category": "pesticide",
+            "hsn": "3808",
+            "gst_rate_bp": 1800,
+        }
+    ),
+    "PATCH /v1/catalog/products/{id}": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.product_id)},
+        body=lambda _ctx: {"description": "Matrix"},
+    ),
+    "POST /v1/catalog/skus": RouteFixture(
+        body=lambda ctx: {
+            "product_id": str(ctx.target.product_id),
+            "pack_size_value": "3",
+            "pack_size_unit": "l",
+            "mrp_paise": 100000,
+        }
+    ),
+    "PATCH /v1/catalog/skus/{id}": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.sku_id)},
+        body=lambda _ctx: {"active": True},
+    ),
+    "GET /v1/catalog/barcode/{code}": RouteFixture(
+        path_params=lambda ctx: {"code": str(ctx.target.sku_barcode)}
+    ),
+    "POST /v1/catalog/label-claims": RouteFixture(
+        body=lambda ctx: {
+            "sku_id": str(ctx.target.sku_id),
+            "crop_id": str(ctx.target.crop_id),
+            "pest_or_disease_id": str(ctx.target.pest_id),
+            "dose_per_acre": "100 ml",
+            "dose_value": "100",
+            "dose_unit": "ml",
+            "phi_days": 7,
+            "source_ref": "matrix",
+        }
+    ),
+    "PATCH /v1/catalog/label-claims/{id}": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.claim_id)},
+        body=lambda _ctx: {"ppe_text": "Gloves and mask"},
+    ),
+    "POST /v1/catalog/label-claims/{id}/approve": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.claim_id)}
+    ),
+    "POST /v1/catalog/label-claims/{id}/retire": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.claim_id)}
+    ),
+    "GET /v1/catalog/label-claims/{id}/history": RouteFixture(
+        path_params=lambda ctx: {"id": str(ctx.target.claim_id)}
+    ),
+    "PUT /v1/catalog/price-lists": RouteFixture(
+        body=lambda ctx: {
+            "store_id": None,
+            "items": [
+                {"sku_id": str(ctx.target.sku_id), "price_paise": 1, "effective_from": "2031-01-01"}
+            ],
+        }
+    ),
+    "POST /v1/catalog/import/products": RouteFixture(
+        body=lambda _ctx: {"csv": "brand,product_name\n", "dry_run": True}
+    ),
+    "POST /v1/catalog/import/label-claims": RouteFixture(
+        body=lambda _ctx: {"csv": "sku_barcode,crop_code\n", "dry_run": True}
+    ),
     "POST /v1/policies/location/accept": RouteFixture(
         body=lambda _ctx: {
             "version": "2026-09-v1",
@@ -414,6 +483,10 @@ async def test_collections_never_contain_other_tenants(
     resp = await call(client, op, Ctx(actor=actor, target=world.a), bearer(actor))
     _assert_not_rejected(resp)
     _no_tenant_leak(resp, world.b)
+    if not resp.headers.get("content-type", "").startswith(
+        ("application/json", PROBLEM_MEDIA_TYPE)
+    ):
+        return  # file downloads (CSV export): the leak check above covers them
     body = resp.json()
     for item in body.get("items", []):
         assert item.get("tenant_id", str(world.a.tenant.id)) == str(world.a.tenant.id)

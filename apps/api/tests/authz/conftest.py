@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from farmerapp.auth.deps import AuthServices
 from farmerapp.auth.models import User, UserRole
 from farmerapp.catalog.crops import Crop
-from farmerapp.catalog.models import LabelClaim
+from farmerapp.catalog.models import LabelClaim, Sku
 from farmerapp.db.models import Tenant
 from farmerapp.db.session import set_tenant, tenant_scope
 from farmerapp.farmers.models import CropPlot, Farm, Farmer
@@ -46,6 +46,10 @@ class SeededTenant:
     store_id: uuid.UUID | None = None  # the store of the role store manager (M3 routes)
     sku_id: uuid.UUID | None = None  # a SKU with an approved label claim (M3 routes)
     order_id: uuid.UUID | None = None  # an order placed by the role officer (M3 routes)
+    product_id: uuid.UUID | None = None  # the product of ``sku_id`` (WC-005 writes)
+    sku_barcode: str | None = None  # the barcode of ``sku_id`` (POS lookup)
+    claim_id: uuid.UUID | None = None  # an approved label claim of ``sku_id`` (WC-005)
+    pest_id: uuid.UUID | None = None  # the problem of ``claim_id``
 
     def user(self, role: str | UserRole) -> User:
         return self.users[UserRole(role)]
@@ -123,9 +127,11 @@ async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
             .scalars()
             .first()
         )
-        sku = await session.scalar(
-            select(LabelClaim.sku_id).order_by(LabelClaim.created_at, LabelClaim.id).limit(1)
+        claim = await session.scalar(
+            select(LabelClaim).order_by(LabelClaim.created_at, LabelClaim.id).limit(1)
         )
+        sku = claim.sku_id if claim is not None else None
+        sku_row = await session.get(Sku, sku) if sku is not None else None
         order = await session.scalar(
             select(Order.id)
             .where(Order.channel == OrderChannel.OFFICER.value)
@@ -152,6 +158,10 @@ async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
         store_id=by_role[UserRole.STORE_MANAGER].store_id,
         sku_id=sku,
         order_id=order,
+        product_id=sku_row.product_id if sku_row is not None else None,
+        sku_barcode=sku_row.barcode if sku_row is not None else None,
+        claim_id=claim.id if claim is not None else None,
+        pest_id=claim.pest_or_disease_id if claim is not None else None,
     )
 
 

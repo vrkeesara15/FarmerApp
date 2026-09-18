@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { t } from "@/lib/i18n";
-import { PlaceholderPage } from "../PlaceholderPage";
+import { ProductsView } from "./ProductsView";
 
 export const metadata: Metadata = { title: t("products.title") };
 
-/** C50 */
+/** C50 Product master (WC-005). */
 export default function Page() {
-  return <PlaceholderPage screenId="C50" titleKey="products.title" emptyKey="products.empty" />;
+  return <ProductsView />;
 }

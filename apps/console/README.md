@@ -42,3 +42,16 @@ All UI strings live in `messages/en.json` (source of truth and the type). `te/kn
 `lib/api.ts` wraps `fetch`, base URL `NEXT_PUBLIC_API_URL` (default `/api/mock`), JSON in/out, RFC 9457 `problem+json` → `ApiError { status, problem }` with the stable `problem.code` (`otp_locked`, `otp_rate_limited`, ...). Paths carry the API version (`v1/auth/otp/send`).
 
 Auth (FA-001): `auth.sendOtp` / `auth.verifyOtp` call the real `/v1/auth/*` endpoints; the access token (15 min) is kept in memory only and the refresh token goes to an httpOnly, SameSite=Strict cookie via the Next route handlers `app/api/session` (POST store / DELETE revoke+clear) and `app/api/session/refresh` (rotate against `/v1/auth/refresh`; server-side base URL `API_URL` or `NEXT_PUBLIC_API_URL`). The mock (`app/api/mock/[...path]/route.ts`) mirrors the same shapes: any `+91` mobile, OTP `123456`, lockout after 5 wrong codes, 3 resends per 15 min, `+919999999999` = unknown number.
+
+## Session and data layer (WC-005)
+
+- `lib/session-context.tsx` — `SessionProvider` (mounted by `ConsoleShell`) restores the in-memory access token after a page load via `session.refresh()` (the httpOnly cookie route; concurrent refreshes share one request so a rotated token is never replayed) and exposes `useSession()` → `{ status, user, role }`. The TopBar shows the signed-in name and role; sign-out revokes and returns to `/login`.
+- `authedFetch` (`lib/api.ts`) — bearer token from the session; a 401 triggers one refresh + retry.
+- `lib/catalog.ts` (typed `/v1/catalog/*` calls and role lists), `lib/hooks/catalog.ts` (TanStack Query hooks; queries wait for `status === "authenticated"`; every write invalidates the catalogue cache), `lib/catalog-schemas.ts` (zod schemas for react-hook-form, mirroring the API rules), `lib/problem-messages.ts` (problem `code` → `problems.*` message key).
+- Screens: C50 `/products`, C51 `/products/label-claims` (Approve only for the agronomist — SPEC 14.6 human gate; "Preview recommendation" calls `GET /v1/catalog/recommendable`), C52 `/products/prices`. Specs in `design/screens/C50.md`–`C52.md`.
+
+## Mock API roles and catalogue
+
+Any `+91` mobile signs in to the mock as the **owner** (code `123456`). Other roles use fixed numbers (`MOCK_ROLE_BY_PHONE` in `app/api/mock/[...path]/route.ts`): `9000000002` director, `…03` cluster head, `…04` store manager, `…05` auditor, `…06` accountant, `…07` field officer, **`9000000008` agronomist**, `…09` tenant admin. The role travels in the mock tokens (`mock-access-<role>-<ts>`), so a refresh keeps it.
+
+`/v1/catalog/*` is served by `lib/mock/catalog.ts`: an in-memory catalogue (4 products incl. one own brand and one inactive, 5 SKUs with barcodes, the 6 pilot crops, 6 pests / diseases incl. polyphagous aphids, 3 stores, one claim per status, default + store prices) with the API's roles, validation and problem codes. It lives as long as the `next start` process; `resetMockState()` (tests) restores the seed. Vitest routes `fetch` to the same handler through `test/mock-fetch.ts`.

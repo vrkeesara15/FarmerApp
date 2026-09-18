@@ -1,5 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiError, apiFetch, auth, getAuthToken, session, setAuthToken } from "./api";
+import {
+  ApiError,
+  apiFetch,
+  auth,
+  authedFetch,
+  getAuthToken,
+  getCurrentUser,
+  session,
+  setAuthToken,
+} from "./api";
 
 const jsonResponse = (body: unknown, init: ResponseInit & { type?: string } = {}) =>
   new Response(JSON.stringify(body), {
@@ -157,5 +166,74 @@ describe("session", () => {
     await session.end();
     expect(getAuthToken()).toBeNull();
     expect((spy.mock.calls[0]![1] as RequestInit).method).toBe("DELETE");
+  });
+});
+
+describe("authedFetch (data layer session handling)", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    setAuthToken(null);
+  });
+
+  const refreshed = (token: string) =>
+    jsonResponse({ access_token: token, expires_in: 900, user: tokenResponse.user });
+
+  it("restores the token from the refresh cookie when none is in memory", async () => {
+    const spy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(refreshed("fresh"))
+      .mockResolvedValueOnce(jsonResponse({ items: [] }));
+    await expect(authedFetch("v1/catalog/crops")).resolves.toEqual({ items: [] });
+    expect(spy.mock.calls[0]![0]).toBe("/api/session/refresh");
+    const headers = new Headers((spy.mock.calls[1]![1] as RequestInit).headers);
+    expect(headers.get("Authorization")).toBe("Bearer fresh");
+    expect(getCurrentUser()?.role).toBe("owner");
+  });
+
+  it("on 401 refreshes once and retries; a second 401 surfaces", async () => {
+    setAuthToken("stale");
+    const unauth = () =>
+      jsonResponse(
+        { title: "Unauthorized", status: 401, code: "token_expired" },
+        { status: 401, type: "application/problem+json" },
+      );
+    const spy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(unauth())
+      .mockResolvedValueOnce(refreshed("new"))
+      .mockResolvedValueOnce(jsonResponse({ ok: 1 }));
+    await expect(authedFetch("v1/catalog/stores")).resolves.toEqual({ ok: 1 });
+    expect(spy).toHaveBeenCalledTimes(3);
+
+    spy.mockReset();
+    spy
+      .mockResolvedValueOnce(unauth())
+      .mockResolvedValueOnce(refreshed("newer"))
+      .mockResolvedValueOnce(unauth());
+    await expect(authedFetch("v1/catalog/stores")).rejects.toMatchObject({ status: 401 });
+  });
+
+  it("does not retry other errors and shares one in-flight refresh", async () => {
+    setAuthToken("tok");
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      jsonResponse(
+        { title: "Forbidden", status: 403, code: "forbidden" },
+        { status: 403, type: "application/problem+json" },
+      ),
+    );
+    await expect(
+      authedFetch("v1/catalog/products", { method: "POST", body: {} }),
+    ).rejects.toMatchObject({
+      status: 403,
+    });
+
+    setAuthToken(null);
+    const spy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async (url) =>
+        String(url) === "/api/session/refresh" ? refreshed("shared") : jsonResponse({ ok: true }),
+      );
+    await Promise.all([session.refresh(), session.refresh(), session.refresh()]);
+    expect(spy.mock.calls.filter(([u]) => u === "/api/session/refresh")).toHaveLength(1);
   });
 });

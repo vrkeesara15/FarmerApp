@@ -1,9 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { handleCatalog, resetMockCatalog, type MockActor } from "@/lib/mock/catalog";
 
 /**
  * In-app mock of the FarmerApp API, used when NEXT_PUBLIC_API_URL is unset (dev + Playwright).
  * Mirrors apps/api/openapi.yaml shapes for the auth endpoints (FA-001): problem+json errors
  * with stable codes, 5-wrong-attempt lockout, 3 resends per 15 min. Holds no real data.
+ *
+ * Roles: any +91 mobile signs in as the owner except the numbers in MOCK_ROLE_BY_PHONE
+ * (e.g. +919000000008 = agronomist). The role is carried in the mock tokens
+ * (`mock-access-<role>-<ts>`, `mock-refresh-<role>-<ts>-<rand>`) so a refresh keeps it.
+ * `/v1/catalog/*` (WC-005) is served by lib/mock/catalog.ts.
  */
 export const MOCK_OTP = "123456";
 export const MOCK_UNKNOWN_PHONE = "+919999999999";
@@ -19,9 +25,41 @@ interface PhoneState {
 }
 const state = new Map<string, PhoneState>();
 
-/** Test hook: forget all lockouts and resend windows. */
+/** Test hook: forget all lockouts and resend windows and restore the seeded catalogue. */
 export function resetMockState() {
   state.clear();
+  resetMockCatalog();
+}
+
+/** Mock numbers that sign in with a role other than owner (docs: apps/console/README.md). */
+export const MOCK_ROLE_BY_PHONE: Readonly<Record<string, string>> = {
+  "+919000000002": "director",
+  "+919000000003": "cluster_head",
+  "+919000000004": "store_manager",
+  "+919000000005": "auditor",
+  "+919000000006": "accountant",
+  "+919000000007": "field_officer",
+  "+919000000008": "agronomist",
+  "+919000000009": "tenant_admin",
+};
+
+const roleForPhone = (phone: string): string => MOCK_ROLE_BY_PHONE[phone] ?? "owner";
+const phoneForRole = (role: string): string =>
+  Object.entries(MOCK_ROLE_BY_PHONE).find(([, r]) => r === role)?.[0] ?? mockUser.phone;
+
+/** `mock-access-<role>-<ts>` / `mock-refresh-<role>-...` -> role (legacy tokens = owner). */
+export function roleFromToken(token: string, kind: "access" | "refresh"): string | null {
+  const prefix = `mock-${kind}-`;
+  if (!token.startsWith(prefix)) return null;
+  const m = /^([a-z_]+)-/.exec(token.slice(prefix.length));
+  return m?.[1] ?? "owner";
+}
+
+function actorFrom(req: NextRequest): MockActor | null {
+  const authz = req.headers.get("authorization") ?? "";
+  if (!authz.startsWith("Bearer ")) return null;
+  const role = roleFromToken(authz.slice(7), "access");
+  return role ? { id: `u-${role}`, role } : null;
 }
 
 function phoneState(phone: string): PhoneState {
@@ -52,14 +90,14 @@ function problem(status: number, code: string, detail?: string, extra?: Record<s
   );
 }
 
-function tokens(phone: string) {
+function tokens(phone: string, role: string = roleForPhone(phone)) {
   const now = Date.now();
   return {
-    access_token: `mock-access-${now}`,
-    refresh_token: `mock-refresh-${now}-${Math.random().toString(36).slice(2)}`,
+    access_token: `mock-access-${role}-${now}`,
+    refresh_token: `mock-refresh-${role}-${now}-${Math.random().toString(36).slice(2)}`,
     token_type: "Bearer",
     expires_in: 900,
-    user: { ...mockUser, phone },
+    user: { ...mockUser, id: `u-${role}`, phone, role },
   };
 }
 
@@ -67,8 +105,24 @@ async function handle(req: NextRequest, rawPath: string[]): Promise<NextResponse
   const path = rawPath[0] === "v1" ? rawPath.slice(1) : rawPath;
   const route = `${req.method} /${path.join("/")}`;
   const body =
-    req.method === "POST" ? ((await req.json().catch(() => ({}))) as Record<string, unknown>) : {};
+    req.method === "POST" || req.method === "PUT" || req.method === "PATCH"
+      ? ((await req.json().catch(() => ({}))) as Record<string, unknown>)
+      : {};
   const now = Date.now();
+
+  const catalogResult = handleCatalog(
+    req.method,
+    path,
+    req.nextUrl.searchParams,
+    body,
+    actorFrom(req),
+  );
+  if (catalogResult) {
+    const headers = catalogResult.headers ?? {};
+    if (catalogResult.text !== undefined)
+      return new NextResponse(catalogResult.text, { status: catalogResult.status, headers });
+    return NextResponse.json(catalogResult.json, { status: catalogResult.status, headers });
+  }
 
   switch (route) {
     case "GET /health":
@@ -133,19 +187,23 @@ async function handle(req: NextRequest, rawPath: string[]): Promise<NextResponse
 
     case "POST /auth/refresh": {
       const token = typeof body.refresh_token === "string" ? body.refresh_token : "";
-      if (!token.startsWith("mock-refresh-"))
-        return problem(401, "refresh_invalid", "Unknown refresh token.");
-      return NextResponse.json(tokens(mockUser.phone));
+      const role = roleFromToken(token, "refresh");
+      if (!role) return problem(401, "refresh_invalid", "Unknown refresh token.");
+      return NextResponse.json(tokens(phoneForRole(role), role));
     }
 
     case "POST /auth/logout":
       return new NextResponse(null, { status: 204 });
 
     case "GET /me": {
-      const authz = req.headers.get("authorization") ?? "";
-      if (!authz.startsWith("Bearer mock-access-"))
-        return problem(401, "unauthenticated", "Bearer token required.");
-      return NextResponse.json(mockUser);
+      const actor = actorFrom(req);
+      if (!actor) return problem(401, "unauthenticated", "Bearer token required.");
+      return NextResponse.json({
+        ...mockUser,
+        id: actor.id,
+        role: actor.role,
+        phone: phoneForRole(actor.role),
+      });
     }
 
     default:
@@ -159,5 +217,11 @@ export async function GET(req: NextRequest, ctx: Ctx) {
   return handle(req, (await ctx.params).path);
 }
 export async function POST(req: NextRequest, ctx: Ctx) {
+  return handle(req, (await ctx.params).path);
+}
+export async function PUT(req: NextRequest, ctx: Ctx) {
+  return handle(req, (await ctx.params).path);
+}
+export async function PATCH(req: NextRequest, ctx: Ctx) {
   return handle(req, (await ctx.params).path);
 }

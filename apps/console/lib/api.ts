@@ -50,9 +50,20 @@ export interface RequestOptions extends Omit<RequestInit, "body"> {
 }
 
 let authToken: string | null = null;
+let currentUser: AuthUser | null = null;
 
 export function setAuthToken(token: string | null): void {
   authToken = token;
+  if (token === null) currentUser = null;
+}
+
+/** The signed-in profile (set by `session.start` / `session.refresh`); null when signed out. */
+export function getCurrentUser(): AuthUser | null {
+  return currentUser;
+}
+
+export function setCurrentUser(user: AuthUser | null): void {
+  currentUser = user;
 }
 
 export function getAuthToken(): string | null {
@@ -170,6 +181,8 @@ export const auth = {
   me: () => apiFetch<AuthUser>("v1/me"),
 };
 
+let refreshInFlight: Promise<SessionResponse | null> | null = null;
+
 const SESSION_HEADERS = { "Content-Type": "application/json" };
 
 /** Browser-side session: access token in memory, refresh token in the httpOnly cookie. */
@@ -177,6 +190,7 @@ export const session = {
   /** After verifyOtp: remember the access token and hand the refresh token to the cookie route. */
   start: async (tokens: TokenResponse): Promise<void> => {
     setAuthToken(tokens.access_token);
+    setCurrentUser(tokens.user);
     const res = await fetch("/api/session", {
       method: "POST",
       headers: SESSION_HEADERS,
@@ -185,15 +199,28 @@ export const session = {
     if (!res.ok) throw new ApiError(await parseProblem(res));
   },
   /** Rotate via the cookie route; returns null (and clears the token) when signed out. */
-  refresh: async (): Promise<SessionResponse | null> => {
-    const res = await fetch("/api/session/refresh", { method: "POST" });
-    if (!res.ok) {
-      setAuthToken(null);
-      return null;
-    }
-    const data = (await res.json()) as SessionResponse;
-    setAuthToken(data.access_token);
-    return data;
+  refresh: (): Promise<SessionResponse | null> => {
+    // One rotation at a time: concurrent callers share the in-flight request, so a rotated
+    // refresh token is never presented twice (reuse detection would revoke the family).
+    refreshInFlight ??= (async () => {
+      try {
+        const res = await fetch("/api/session/refresh", { method: "POST" });
+        if (!res.ok) {
+          setAuthToken(null);
+          return null;
+        }
+        const data = (await res.json()) as SessionResponse;
+        setAuthToken(data.access_token);
+        setCurrentUser(data.user);
+        return data;
+      } catch {
+        setAuthToken(null);
+        return null;
+      } finally {
+        refreshInFlight = null;
+      }
+    })();
+    return refreshInFlight;
   },
   /** Revoke the refresh family server-side and forget the access token. */
   end: async (): Promise<void> => {
@@ -201,3 +228,44 @@ export const session = {
     await fetch("/api/session", { method: "DELETE" }).catch(() => undefined);
   },
 };
+
+const AUTH_RETRY_CODES = new Set(["unauthenticated", "token_expired", "token_invalid"]);
+
+function isAuthFailure(err: unknown): boolean {
+  return (
+    err instanceof ApiError &&
+    err.status === 401 &&
+    (err.problem.code === undefined || AUTH_RETRY_CODES.has(err.problem.code))
+  );
+}
+
+/**
+ * Authenticated call for the data layer: restores the access token from the refresh cookie
+ * when the page was reloaded (token only lives in memory), and on a 401 rotates once and
+ * retries. A second 401 surfaces as ApiError (the session is gone).
+ */
+export async function authedFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  if (!getAuthToken()) await session.refresh();
+  try {
+    return await apiFetch<T>(path, options);
+  } catch (err) {
+    if (!isAuthFailure(err)) throw err;
+    const renewed = await session.refresh();
+    if (!renewed) throw err;
+    return apiFetch<T>(path, options);
+  }
+}
+
+/** Like authedFetch but returns the raw body as text (CSV exports). */
+export async function authedFetchText(path: string): Promise<string> {
+  const once = async (): Promise<Response> => {
+    const token = getAuthToken();
+    const url = `${API_BASE_URL}/${path.replace(/^\/+/, "")}`;
+    return fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  };
+  if (!getAuthToken()) await session.refresh();
+  let res = await once();
+  if (res.status === 401 && (await session.refresh())) res = await once();
+  if (!res.ok) throw new ApiError(await parseProblem(res));
+  return res.text();
+}

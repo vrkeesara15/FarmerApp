@@ -40,6 +40,12 @@ export function SideNav({
   const t = useT();
   const pathname = usePathname();
   const current = activePath ?? pathname ?? "";
+  // The most specific item wins (/products/prices marks "Prices", not also "Products").
+  const activeHref = items
+    .filter((i) => current === i.href || current.startsWith(`${i.href}/`))
+    .reduce<
+      string | undefined
+    >((best, i) => (best === undefined || i.href.length > best.length ? i.href : best), undefined);
   return (
     <nav
       aria-label={t("nav.primary")}
@@ -63,7 +69,7 @@ export function SideNav({
       ) : null}
       <ul className="flex flex-1 flex-col gap-1 p-2">
         {items.map((item) => {
-          const active = current === item.href || current.startsWith(`${item.href}/`);
+          const active = item.href === activeHref;
           return (
             <li key={item.href}>
               <Link

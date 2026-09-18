@@ -331,7 +331,7 @@ balance = await khata_balance(session, farmer_id, store_id)
 ```
 
 - **DX-007**: `label_claim.status` is `draft | approved | retired`; only approved claims are
-  returned to anyone but the agronomist / owner, and only approved claims may back a
+  returned to anyone but the agronomist / owner / tenant admin, and only approved claims may back a
   recommendation. Seed claims carry `source_ref = SEED_SOURCE_REF` until the agronomist
   replaces them with CIB&RC data (human gate).
 - Reads: `GET /v1/catalog/products` (`q`, `category`, `own_brand`, `store_id` adds price +
@@ -343,6 +343,48 @@ balance = await khata_balance(session, farmer_id, store_id)
   device writes return `unsupported_action` until FA-020 / FA-021 / FA-022 land.
 - Seed: `jobs/seed_catalog.py` (static products, packs, problems, claims) and
   `jobs/seed_m3.py` (`M3_FULL` / `M3_SMALL` via `SeedProfile.m3`).
+
+## Product master, label claims, price lists (WC-005)
+
+Alembic `0014_catalog_writes` (branch `catalog`); design notes in `docs/prs/WC-005.md`.
+
+- Writes: `POST/PATCH /v1/catalog/products`, `POST/PATCH /v1/catalog/skus` (owner, director,
+  tenant admin). GST is one of 0 / 5 / 12 / 18 / 28 % (`gst_rate_bp` 0 / 500 / 1200 / 1800 /
+  2800), HSN 4, 6 or 8 digits (422 `validation_error` naming the field), barcode unique per
+  tenant (409 `barcode_exists`), brand + name unique (409 `product_exists`).
+  `GET /v1/catalog/barcode/{code}` for POS scans; `GET /v1/catalog/crops|pests|stores`.
+- Label claims: `POST /v1/catalog/label-claims` creates a `draft` (owner, tenant admin,
+  agronomist); `POST .../{id}/approve` is **agronomist only** (SPEC 14.6 human gate:
+  `approved_by` / `approved_at`); `POST .../{id}/retire`; `PATCH` edits a draft in place and
+  turns an edit of an approved claim into a new draft with `supersedes_id` (approving it
+  retires the old version); `GET .../{id}/history`. Validation: pest / disease claims only on
+  pesticide, fungicide, herbicide or growth products (422 `claim_category_invalid`), the
+  pest's crop must be the claim's crop (422 `pest_not_for_crop`), dose value > 0 with a unit,
+  PHI >= 0, one approved claim per SKU x crop x pest (409 `claim_duplicate`; partial unique
+  index `uq_label_claim_approved`).
+- Price lists: `PUT /v1/catalog/price-lists` (bulk upsert for a store or the tenant default,
+  keyed by SKU + `effective_from`, all or nothing): price <= MRP (422 `price_above_mrp`), no
+  overlapping ranges per SKU + store (409 `price_overlap`; exclusion constraint
+  `ex_price_list_no_overlap` as backstop); both carry `rows: [{index, sku_id, code}]`.
+  `GET /v1/catalog/price-lists?store_id=&at=&sku_id=`.
+- CSV: `POST /v1/catalog/import/products` and `/import/label-claims` (`{"csv": ..., "dry_run":
+  true}` by default; row-level report; nothing written on any error; claims import as drafts
+  only) and `GET /v1/catalog/export?kind=products|label_claims` (audited as `catalog.export`).
+
+**The recommendation guardrail (DX-007).** Every recommendation draws from one function:
+
+```python
+from farmerapp.catalog.recommendable import assert_sku_recommendable, recommendable_skus
+
+skus = await recommendable_skus(
+    session, tenant_id=t, crop_id=crop, pest_or_disease_id=pest
+)  # approved, live claims for exactly this crop x pest, with dose / tank / PHI / PPE / safety
+await assert_sku_recommendable(
+    session, tenant_id=t, sku_id=sku, label_claim_id=claim
+)  # before attaching a label_claim_id to an order line: 422 sku_not_recommendable otherwise
+```
+
+`GET /v1/catalog/recommendable?crop_id=&pest_id=` wraps it (console C51 preview).
 
 ## Farmer registration writes (FA-012 / FA-013)
 

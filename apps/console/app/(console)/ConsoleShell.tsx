@@ -1,7 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
+  BadgeIndianRupee,
+  ClipboardCheck,
   Flag,
   Home,
   Leaf,
@@ -17,6 +20,23 @@ import { TopBar } from "@/components/ds/TopBar";
 import type { DateRange } from "@/components/ds/DateRangePicker";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useT } from "@/lib/i18n-client";
+import { SessionProvider, useSession } from "@/lib/session-context";
+
+const ROLE_KEYS = [
+  "owner",
+  "director",
+  "cluster_head",
+  "auditor",
+  "store_manager",
+  "accountant",
+  "field_officer",
+  "agronomist",
+  "tenant_admin",
+  "farmer",
+] as const;
+type RoleKey = (typeof ROLE_KEYS)[number];
+const roleKey = (role: string): RoleKey =>
+  (ROLE_KEYS as readonly string[]).includes(role) ? (role as RoleKey) : "owner";
 
 const NAV_STORAGE_KEY = "farmerapp.console.nav.collapsed";
 
@@ -27,7 +47,17 @@ function isoDaysAgo(days: number): string {
 }
 
 export function ConsoleShell({ children }: { children: React.ReactNode }) {
+  return (
+    <SessionProvider>
+      <Shell>{children}</Shell>
+    </SessionProvider>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
   const t = useT();
+  const session = useSession();
+  const router = useRouter();
   const [collapsed, setCollapsed] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const [dateRange, setDateRange] = React.useState<DateRange>({
@@ -58,6 +88,8 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
     { href: "/farmers", label: t("nav.farmers"), icon: <Users /> },
     { href: "/stores", label: t("nav.stores"), icon: <Store /> },
     { href: "/products", label: t("nav.products"), icon: <Package /> },
+    { href: "/products/label-claims", label: t("nav.labelClaims"), icon: <ClipboardCheck /> },
+    { href: "/products/prices", label: t("nav.prices"), icon: <BadgeIndianRupee /> },
     { href: "/agronomist", label: t("nav.agronomist"), icon: <Leaf /> },
     { href: "/flags", label: t("nav.flags"), icon: <Flag /> },
     { href: "/settings", label: t("nav.settings"), icon: <Settings /> },
@@ -85,7 +117,18 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
           unreadNotifications={0}
-          user={{ name: "Owner", role: "owner" }}
+          user={
+            session.user
+              ? { name: session.user.name, role: t(`roles.${roleKey(session.user.role)}`) }
+              : { name: t("session.guest") }
+          }
+          onSignOut={
+            session.user
+              ? () => {
+                  void session.signOut().then(() => router.push("/login"));
+                }
+              : undefined
+          }
           actions={<ThemeToggle />}
         />
         <main id="main" className="flex-1 overflow-y-auto p-6">
