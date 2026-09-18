@@ -33,8 +33,11 @@ async def on_diagnosis_requested(message: PubSubMessage) -> None:
 
 
 async def on_payment_webhook(message: PubSubMessage) -> None:
-    """M3: idempotent Razorpay webhook processing keyed on provider event id."""
-    await _todo(Topic.PAYMENT_WEBHOOK)
+    """M3 (SEC-023, FA-021): apply a stored, verified provider webhook (idempotent by event
+    id). Imported lazily so the worker app does not load the payments stack at import."""
+    from farmerapp.payments.worker import handle_payment_webhook
+
+    await handle_payment_webhook(message)
 
 
 async def on_order_created(message: PubSubMessage) -> None:

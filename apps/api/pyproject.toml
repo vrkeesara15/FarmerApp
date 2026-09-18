@@ -21,6 +21,7 @@ dependencies = [
   "pyjwt>=2.14.0",
   "pillow>=12.3.0",
   "imagehash>=4.3.2",
+  "fpdf2>=2.8",
 ]
 
 [dependency-groups]
@@ -33,6 +34,7 @@ dev = [
   "bandit>=1.7",
   "pip-audit>=2.7",
   "types-pyyaml>=6.0",
+  "pypdf>=5.0",
 ]
 
 [build-system]

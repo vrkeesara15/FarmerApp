@@ -180,5 +180,42 @@ def officer_sync_silence(
         )
 
 
+@cli.command("reconcile-payments")
+def reconcile_payments(
+    tenant_id: list[uuid.UUID] = typer.Option(  # noqa: B008
+        ..., "--tenant-id", help="Tenant(s) to reconcile (repeatable)."
+    ),
+    day: str | None = typer.Option(
+        None, "--date", help="Business date (YYYY-MM-DD, IST); default yesterday."
+    ),
+) -> None:
+    """OPS-008: compare the provider's settlements of a day with our paid UPI / link payments
+    and report mismatches (dry run: nothing changes; accountants are notified). Daily."""
+    from datetime import UTC, date, datetime, timedelta
+
+    from farmerapp.payments.config import IST
+    from farmerapp.payments.reconcile import run_reconcile
+    from farmerapp.payments.service import build_provider
+
+    _setup()
+    when = (
+        date.fromisoformat(day)
+        if day
+        else (datetime.now(UTC).astimezone(IST) - timedelta(days=1)).date()
+    )
+    reports = asyncio.run(run_reconcile(tenant_id, when, build_provider(get_settings())))
+    for r in reports:
+        typer.echo(
+            f"reconcile-payments (dry-run): tenant={r.tenant_id} date={r.day} "
+            f"settlements={r.settlements} paid={r.paid_payments} matched={r.matched} "
+            f"mismatches={len(r.mismatches)} notified={r.notified}"
+        )
+        for m in r.mismatches:
+            typer.echo(
+                f"  {m.kind} ref={m.provider_ref} payment={m.payment_id} "
+                f"ours={m.ours_paise} theirs={m.theirs_paise}"
+            )
+
+
 def main() -> None:
     cli(prog_name="python -m farmerapp.jobs")

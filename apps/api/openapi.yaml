@@ -2537,7 +2537,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SignedUrlOut'
+                $ref: '#/components/schemas/farmerapp__uploads__schemas__SignedUrlOut'
         default:
           description: Error (RFC 9457 problem+json)
           content:
@@ -3349,6 +3349,115 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+    post:
+      tags:
+      - payments
+      summary: Collect a payment for an order or khata dues (UPI QR, link, cash, card, credit)
+      operationId: createPayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentCreated'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`already_paid`, `nothing_due`, `order_cancelled`, `credit_limit_exceeded`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`amount_mismatch`, `receipt_required`, `reference_required`, `invalid_blob`, `invalid_mode`,
+            `phone_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`mode_not_allowed`, `forbidden`'
+          content:
+            application/problem+json: {}
+        '502':
+          description: '`provider_error`'
+          content:
+            application/problem+json: {}
+        '503':
+          description: '`credit_unavailable`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - cluster_head
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+  /v1/payments/{id}:
+    get:
+      tags:
+      - payments
+      summary: 'One payment''s status (A53 polls it: waiting / paid / failed)'
+      operationId: getPayment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatusOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
   /v1/farmers/{id}/khata:
     get:
       tags:
@@ -3434,6 +3543,428 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+  /v1/webhooks/razorpay:
+    post:
+      tags:
+      - webhooks
+      summary: Razorpay webhook (HMAC-signed; idempotent by event id)
+      operationId: receiveRazorpayWebhook
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookAck'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`webhook_stale`, `webhook_malformed`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`webhook_signature_invalid`'
+          content:
+            application/problem+json: {}
+        '503':
+          description: '`webhook_unavailable`'
+          content:
+            application/problem+json: {}
+      x-public: true
+  /v1/stores/{id}/pos/sales:
+    post:
+      tags:
+      - pos
+      summary: Counter sale with GST invoice and payment (ST-001)
+      operationId: createPosSale
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PosSaleIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PosSaleOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`, `farmer_not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`insufficient_stock`, `credit_limit_exceeded`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`unknown_sku`, `receipt_required`, `reference_required`, `invalid_blob`, `invalid_mode`'
+          content:
+            application/problem+json: {}
+        '502':
+          description: '`provider_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - store_manager
+  /v1/invoices/{id}:
+    get:
+      tags:
+      - invoices
+      summary: A GST invoice (lines with HSN and tax split)
+      operationId: getInvoice
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/invoices/{id}/pdf:
+    get:
+      tags:
+      - invoices
+      summary: Signed URL to the invoice PDF
+      operationId: getInvoicePdf
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/farmerapp__invoices__schemas__SignedUrlOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/invoices/{id}/share:
+    post:
+      tags:
+      - invoices
+      summary: Send the invoice PDF link by WhatsApp or SMS
+      operationId: shareInvoice
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceShareIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceShareOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`phone_required`'
+          content:
+            application/problem+json: {}
+        '502':
+          description: '`provider_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - cluster_head
+      - owner
+      - store_manager
+  /v1/stores/{id}/day-summary:
+    get:
+      tags:
+      - day-close
+      summary: Day-end totals by payment mode, refunds and expected cash (ST-002)
+      operationId: getStoreDaySummary
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: date
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Date
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DaySummaryOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/stores/{id}/day-close:
+    post:
+      tags:
+      - day-close
+      summary: 'Close the store''s day: cash count, variance, deposit slip (ST-006)'
+      operationId: closeStoreDay
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DayCloseIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DayCloseOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`day_already_closed`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`future_business_date`, `deposit_slip_required`, `invalid_blob`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - cluster_head
+      - owner
+      - store_manager
+  /v1/stores/{id}/day-close/{close_id}/reopen:
+    post:
+      tags:
+      - day-close
+      summary: Reopen a closed day (cluster head, owner or director)
+      operationId: reopenStoreDay
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: close_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Close Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DayCloseReopenIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DayCloseOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`day_close_not_closed`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
 components:
   schemas:
     AuditLogOut:
@@ -3751,6 +4282,19 @@ components:
       - recorded_by
       - created_at
       title: ConsentRecordOut
+    CountAmount:
+      properties:
+        count:
+          type: integer
+          title: Count
+        amount_paise:
+          type: integer
+          title: Amount Paise
+      type: object
+      required:
+      - count
+      - amount_paise
+      title: CountAmount
     CreditLimitOut:
       properties:
         id:
@@ -3987,6 +4531,188 @@ components:
       - maturity
       - harvested
       title: CropStage
+    DayCloseIn:
+      properties:
+        business_date:
+          type: string
+          format: date
+          title: Business Date
+        cash_counted_paise:
+          type: integer
+          minimum: 0.0
+          title: Cash Counted Paise
+        deposit_slip_uri:
+          anyOf:
+          - type: string
+            maxLength: 512
+          - type: 'null'
+          title: Deposit Slip Uri
+        notes:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Notes
+      additionalProperties: false
+      type: object
+      required:
+      - business_date
+      - cash_counted_paise
+      title: DayCloseIn
+    DayCloseOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        business_date:
+          type: string
+          format: date
+          title: Business Date
+        status:
+          type: string
+          title: Status
+        cash_expected_paise:
+          type: integer
+          title: Cash Expected Paise
+        cash_counted_paise:
+          type: integer
+          title: Cash Counted Paise
+        variance_paise:
+          type: integer
+          title: Variance Paise
+        variance_flagged:
+          type: boolean
+          title: Variance Flagged
+        deposit_slip_uri:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Deposit Slip Uri
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+        closed_by:
+          type: string
+          format: uuid
+          title: Closed By
+        closed_at:
+          type: string
+          format: date-time
+          title: Closed At
+        reopened_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Reopened By
+        reopened_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Reopened At
+        reopen_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reopen Reason
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - store_id
+      - business_date
+      - status
+      - cash_expected_paise
+      - cash_counted_paise
+      - variance_paise
+      - variance_flagged
+      - deposit_slip_uri
+      - notes
+      - closed_by
+      - closed_at
+      - reopened_by
+      - reopened_at
+      - reopen_reason
+      - version
+      title: DayCloseOut
+    DayCloseReopenIn:
+      properties:
+        reason:
+          type: string
+          maxLength: 2000
+          minLength: 3
+          title: Reason
+      additionalProperties: false
+      type: object
+      required:
+      - reason
+      title: DayCloseReopenIn
+    DaySummaryOut:
+      properties:
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        business_date:
+          type: string
+          format: date
+          title: Business Date
+        timezone:
+          type: string
+          title: Timezone
+        by_mode:
+          items:
+            $ref: '#/components/schemas/ModeTotal'
+          type: array
+          title: By Mode
+          description: Money received (all five modes, zero-filled).
+        total_received_paise:
+          type: integer
+          title: Total Received Paise
+          description: Money received (credit sales excluded).
+        waiting:
+          $ref: '#/components/schemas/CountAmount'
+          description: UPI QR / links created but not paid yet.
+        failed:
+          $ref: '#/components/schemas/CountAmount'
+        refunds:
+          $ref: '#/components/schemas/CountAmount'
+        expected_cash_paise:
+          type: integer
+          title: Expected Cash Paise
+          description: Cash the drawer should hold (ST-006).
+        cash_pending_reconciliation_paise:
+          type: integer
+          title: Cash Pending Reconciliation Paise
+        day_close:
+          anyOf:
+          - $ref: '#/components/schemas/DayCloseOut'
+          - type: 'null'
+      type: object
+      required:
+      - store_id
+      - business_date
+      - timezone
+      - by_mode
+      - total_received_paise
+      - waiting
+      - failed
+      - refunds
+      - expected_cash_paise
+      - cash_pending_reconciliation_paise
+      - day_close
+      title: DaySummaryOut
+      description: ST-002 "day-end totals by mode" for one store and business date (IST).
     DeviceIntegrityOut:
       properties:
         is_mock:
@@ -4873,6 +5599,246 @@ components:
       - version
       - env
       title: HealthResponse
+    InvoiceLineOut:
+      properties:
+        sl:
+          type: integer
+          title: Sl
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        description:
+          type: string
+          title: Description
+        hsn:
+          type: string
+          title: Hsn
+        qty:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Qty
+        unit:
+          type: string
+          title: Unit
+        unit_price_paise:
+          type: integer
+          title: Unit Price Paise
+        taxable_paise:
+          type: integer
+          title: Taxable Paise
+        gst_rate_bp:
+          type: integer
+          title: Gst Rate Bp
+        cgst_rate_bp:
+          type: integer
+          title: Cgst Rate Bp
+        cgst_paise:
+          type: integer
+          title: Cgst Paise
+        sgst_rate_bp:
+          type: integer
+          title: Sgst Rate Bp
+        sgst_paise:
+          type: integer
+          title: Sgst Paise
+        igst_rate_bp:
+          type: integer
+          title: Igst Rate Bp
+        igst_paise:
+          type: integer
+          title: Igst Paise
+        total_paise:
+          type: integer
+          title: Total Paise
+      type: object
+      required:
+      - sl
+      - sku_id
+      - description
+      - hsn
+      - qty
+      - unit
+      - unit_price_paise
+      - taxable_paise
+      - gst_rate_bp
+      - cgst_rate_bp
+      - cgst_paise
+      - sgst_rate_bp
+      - sgst_paise
+      - igst_rate_bp
+      - igst_paise
+      - total_paise
+      title: InvoiceLineOut
+    InvoiceOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        order_id:
+          type: string
+          format: uuid
+          title: Order Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+        invoice_no:
+          type: string
+          title: Invoice No
+        financial_year:
+          type: string
+          title: Financial Year
+        issued_at:
+          type: string
+          format: date-time
+          title: Issued At
+        seller_name:
+          type: string
+          title: Seller Name
+        seller_gstin:
+          type: string
+          title: Seller Gstin
+        seller_address:
+          type: string
+          title: Seller Address
+        seller_state:
+          type: string
+          title: Seller State
+        seller_state_code:
+          type: string
+          title: Seller State Code
+        buyer_name:
+          type: string
+          title: Buyer Name
+        buyer_gstin:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Buyer Gstin
+        buyer_state:
+          type: string
+          title: Buyer State
+        place_of_supply:
+          type: string
+          title: Place Of Supply
+        supply_type:
+          type: string
+          enum:
+          - intra
+          - inter
+          title: Supply Type
+        taxable_paise:
+          type: integer
+          title: Taxable Paise
+        cgst_paise:
+          type: integer
+          title: Cgst Paise
+        sgst_paise:
+          type: integer
+          title: Sgst Paise
+        igst_paise:
+          type: integer
+          title: Igst Paise
+        round_off_paise:
+          type: integer
+          title: Round Off Paise
+        total_paise:
+          type: integer
+          title: Total Paise
+        amount_in_words:
+          type: string
+          title: Amount In Words
+        lines:
+          items:
+            $ref: '#/components/schemas/InvoiceLineOut'
+          type: array
+          title: Lines
+        has_pdf:
+          type: boolean
+          title: Has Pdf
+      type: object
+      required:
+      - id
+      - tenant_id
+      - order_id
+      - store_id
+      - farmer_id
+      - invoice_no
+      - financial_year
+      - issued_at
+      - seller_name
+      - seller_gstin
+      - seller_address
+      - seller_state
+      - seller_state_code
+      - buyer_name
+      - buyer_gstin
+      - buyer_state
+      - place_of_supply
+      - supply_type
+      - taxable_paise
+      - cgst_paise
+      - sgst_paise
+      - igst_paise
+      - round_off_paise
+      - total_paise
+      - amount_in_words
+      - lines
+      - has_pdf
+      title: InvoiceOut
+    InvoiceShareIn:
+      properties:
+        channel:
+          type: string
+          enum:
+          - whatsapp
+          - sms
+          title: Channel
+        phone:
+          anyOf:
+          - type: string
+            pattern: ^\+91[6-9]\d{9}$
+          - type: 'null'
+          title: Phone
+      additionalProperties: false
+      type: object
+      required:
+      - channel
+      title: InvoiceShareIn
+    InvoiceShareOut:
+      properties:
+        channel:
+          type: string
+          enum:
+          - whatsapp
+          - sms
+          title: Channel
+        to:
+          type: string
+          title: To
+          description: Masked recipient phone.
+        url_expires_at:
+          type: string
+          format: date-time
+          title: Url Expires At
+      type: object
+      required:
+      - channel
+      - to
+      - url_expires_at
+      title: InvoiceShareOut
     IrrigationType:
       type: string
       enum:
@@ -5405,6 +6371,22 @@ components:
       required:
       - refresh_token
       title: LogoutRequest
+    ModeTotal:
+      properties:
+        mode:
+          $ref: '#/components/schemas/PaymentMode'
+        count:
+          type: integer
+          title: Count
+        amount_paise:
+          type: integer
+          title: Amount Paise
+      type: object
+      required:
+      - mode
+      - count
+      - amount_paise
+      title: ModeTotal
     OrderChannel:
       type: string
       enum:
@@ -5977,6 +6959,148 @@ components:
       required:
       - items
       title: PageOut[VisitOut]
+    PaymentCreate:
+      properties:
+        order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Order Id
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        mode:
+          $ref: '#/components/schemas/PaymentMode'
+        amount_paise:
+          anyOf:
+          - type: integer
+            exclusiveMinimum: 0.0
+          - type: 'null'
+          title: Amount Paise
+        receipt_uri:
+          anyOf:
+          - type: string
+            maxLength: 512
+          - type: 'null'
+          title: Receipt Uri
+          description: 'Cash: the receipt photo (completed upload).'
+        reference_note:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Reference Note
+          description: Card terminal reference.
+        channel:
+          type: string
+          enum:
+          - sms
+          - whatsapp
+          title: Channel
+          description: Payment link delivery channel.
+          default: sms
+        phone:
+          anyOf:
+          - type: string
+            pattern: ^\+91[6-9]\d{9}$
+          - type: 'null'
+          title: Phone
+          description: Payment link recipient; defaults to the farmer's phone.
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      title: PaymentCreate
+      description: '``POST /v1/payments``: an order (``order_id``) or khata dues (``farmer_id`` +
+
+        ``store_id``). ``amount_paise`` is optional and only ever *checked*: the server computes
+
+        the amount (order total still due, or the outstanding khata balance; a partial dues
+
+        payment up to the balance is allowed).'
+    PaymentCreated:
+      properties:
+        payment_id:
+          type: string
+          format: uuid
+          title: Payment Id
+        mode:
+          $ref: '#/components/schemas/PaymentMode'
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        amount_paise:
+          type: integer
+          title: Amount Paise
+        order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Order Id
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        qr_payload:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Qr Payload
+        short_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Short Url
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+        sent_via:
+          anyOf:
+          - type: string
+            enum:
+            - sms
+            - whatsapp
+          - type: 'null'
+          title: Sent Via
+        khata_entry_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Khata Entry Id
+      type: object
+      required:
+      - payment_id
+      - mode
+      - status
+      - amount_paise
+      - order_id
+      - farmer_id
+      - store_id
+      title: PaymentCreated
+      description: 'What the collecting screen needs: the QR to show (``upi_qr``), the link that was sent
+
+        (``payment_link``), or the final status (cash / card / credit).'
     PaymentMode:
       type: string
       enum:
@@ -6062,6 +7186,33 @@ components:
             format: date-time
           - type: 'null'
           title: Paid At
+        provider_order_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider Order Id
+        short_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Short Url
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+        day_close_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Day Close Id
+        failure_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Failure Reason
         created_at:
           type: string
           format: date-time
@@ -6123,11 +7274,92 @@ components:
       enum:
       - created
       - pending
+      - pending_reconciliation
       - paid
       - failed
       - refunded
       - reconciled
       title: PaymentStatus
+    PaymentStatusOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        state:
+          type: string
+          enum:
+          - waiting
+          - paid
+          - failed
+          title: State
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        mode:
+          $ref: '#/components/schemas/PaymentMode'
+        amount_paise:
+          type: integer
+          title: Amount Paise
+        order_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Order Id
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        qr_payload:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Qr Payload
+        short_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Short Url
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+        paid_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Paid At
+        failure_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Failure Reason
+      type: object
+      required:
+      - id
+      - state
+      - status
+      - mode
+      - amount_paise
+      - order_id
+      - farmer_id
+      - store_id
+      - qr_payload
+      - short_url
+      - expires_at
+      - paid_at
+      - failure_reason
+      title: PaymentStatusOut
+      description: '``GET /v1/payments/{id}`` — polled by the A53 "waiting for payment" screen.'
     PestOrDiseaseOut:
       properties:
         id:
@@ -6376,6 +7608,128 @@ components:
       - text_hash
       - created_at
       title: PolicyAcceptanceOut
+    PosLineIn:
+      properties:
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        qty:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,9}|(?=[\d.]{1,13}0*$)\d{0,9}\.\d{0,3}0*$)
+          title: Qty
+      additionalProperties: false
+      type: object
+      required:
+      - sku_id
+      - qty
+      title: PosLineIn
+    PosPaymentIn:
+      properties:
+        mode:
+          $ref: '#/components/schemas/PaymentMode'
+        receipt_uri:
+          anyOf:
+          - type: string
+            maxLength: 512
+          - type: 'null'
+          title: Receipt Uri
+        reference_note:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Reference Note
+        channel:
+          type: string
+          enum:
+          - sms
+          - whatsapp
+          title: Channel
+          default: sms
+        phone:
+          anyOf:
+          - type: string
+            pattern: ^\+91[6-9]\d{9}$
+          - type: 'null'
+          title: Phone
+      additionalProperties: false
+      type: object
+      required:
+      - mode
+      title: PosPaymentIn
+    PosSaleIn:
+      properties:
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+        farmer_phone:
+          anyOf:
+          - type: string
+            pattern: ^\+91[6-9]\d{9}$
+          - type: 'null'
+          title: Farmer Phone
+          description: Farmer lookup by phone.
+        buyer_name:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Buyer Name
+        buyer_state:
+          anyOf:
+          - type: string
+            maxLength: 80
+            minLength: 2
+          - type: 'null'
+          title: Buyer State
+          description: Defaults to the farmer's state.
+        buyer_gstin:
+          anyOf:
+          - type: string
+            pattern: ^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$
+          - type: 'null'
+          title: Buyer Gstin
+        lines:
+          items:
+            $ref: '#/components/schemas/PosLineIn'
+          type: array
+          maxItems: 100
+          minItems: 1
+          title: Lines
+        payment:
+          $ref: '#/components/schemas/PosPaymentIn'
+      additionalProperties: false
+      type: object
+      required:
+      - lines
+      - payment
+      title: PosSaleIn
+      description: A counter sale. Prices, GST and totals are computed server-side (SEC-023).
+    PosSaleOut:
+      properties:
+        order_id:
+          type: string
+          format: uuid
+          title: Order Id
+        invoice:
+          $ref: '#/components/schemas/InvoiceOut'
+        payment:
+          $ref: '#/components/schemas/PaymentCreated'
+      type: object
+      required:
+      - order_id
+      - invoice
+      - payment
+      title: PosSaleOut
     ProductCategory:
       type: string
       enum:
@@ -6628,29 +7982,6 @@ components:
       - rabi
       - zaid
       title: Season
-    SignedUrlOut:
-      properties:
-        uri:
-          type: string
-          title: Uri
-        url:
-          type: string
-          title: Url
-        expires_at:
-          type: string
-          format: date-time
-          title: Expires At
-        note:
-          type: string
-          title: Note
-          description: Adapter note (fake GCS / local URLs are not signed).
-      type: object
-      required:
-      - uri
-      - url
-      - expires_at
-      - note
-      title: SignedUrlOut
     SkuDetailOut:
       properties:
         id:
@@ -8126,6 +9457,25 @@ components:
       - unverified
       - open
       title: VisitStatus
+    WebhookAck:
+      properties:
+        status:
+          type: string
+          enum:
+          - accepted
+          - processed
+          - duplicate
+          - ignored
+          title: Status
+        event_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Id
+      type: object
+      required:
+      - status
+      title: WebhookAck
     farmerapp__duty__schemas__DeviceIntegrityIn:
       properties:
         is_mock:
@@ -8143,6 +9493,43 @@ components:
       type: object
       title: DeviceIntegrityIn
       description: FA-028 flags the app reports at duty start (never blocking, flagged to VA-E01).
+    farmerapp__invoices__schemas__SignedUrlOut:
+      properties:
+        url:
+          type: string
+          title: Url
+        expires_at:
+          type: string
+          format: date-time
+          title: Expires At
+      type: object
+      required:
+      - url
+      - expires_at
+      title: SignedUrlOut
+    farmerapp__uploads__schemas__SignedUrlOut:
+      properties:
+        uri:
+          type: string
+          title: Uri
+        url:
+          type: string
+          title: Url
+        expires_at:
+          type: string
+          format: date-time
+          title: Expires At
+        note:
+          type: string
+          title: Note
+          description: Adapter note (fake GCS / local URLs are not signed).
+      type: object
+      required:
+      - uri
+      - url
+      - expires_at
+      - note
+      title: SignedUrlOut
     farmerapp__visits__schemas__DeviceIntegrityIn:
       properties:
         is_mock:

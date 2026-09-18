@@ -25,6 +25,9 @@ _REPO_ROOT_ENV = (_PARENTS[3] if len(_PARENTS) > 3 else _PARENTS[-1]) / ".env"
 # Development-only placeholders (not secrets). ``_prd_guard_rails`` rejects them in prd.
 DEV_JWT_SIGNING_KEY = "dev-only-jwt-signing-key-not-a-secret"
 DEV_OTP_PEPPER = "dev-only-otp-pepper-not-a-secret"
+DEV_RAZORPAY_API_KEY_PLACEHOLDER = "dev-only-razorpay-key-secret-not-a-secret"
+#: The mockserver's default signing secret (docker/mockserver, ``MOCK_RAZORPAY_WEBHOOK_SECRET``).
+DEV_RAZORPAY_WEBHOOK_HMAC_KEY = "test_webhook_secret"
 
 
 class Settings(BaseSettings):
@@ -96,6 +99,27 @@ class Settings(BaseSettings):
     whatsapp_provider_url: str = Field(default="http://localhost:8090/whatsapp")
     razorpay_base_url: str = Field(default="http://localhost:8090/razorpay")
     razorpay_key_id: str = Field(default="rzp_test_mock", description="Public key id (not secret).")
+    # --- Payments (FA-021, SEC-023) ------------------------------------------------
+    razorpay_key_secret: str = Field(
+        default=DEV_RAZORPAY_API_KEY_PLACEHOLDER,
+        description="Razorpay API key secret (basic auth). Secret Manager in stg / prd.",
+    )
+    razorpay_webhook_secret: str = Field(
+        default=DEV_RAZORPAY_WEBHOOK_HMAC_KEY,
+        description="HMAC-SHA256 secret of the Razorpay webhook (SEC-023). Secret Manager in "
+        "stg / prd; the default is the mockserver's test secret.",
+    )
+    payment_provider: Literal["razorpay", "fake"] = Field(
+        default="razorpay",
+        description="'razorpay' talks HTTP to RAZORPAY_BASE_URL (the mockserver locally); "
+        "'fake' is in-process (tests).",
+    )
+    payment_webhook_delivery: Literal["inline", "pubsub"] = Field(
+        default="inline",
+        description="'inline' applies a verified webhook in the request transaction (local / "
+        "dev without the emulator); 'pubsub' publishes it to payment.webhook for the worker.",
+    )
+    payment_qr_ttl_seconds: int = Field(default=900, description="UPI QR / link validity.")
 
     # --- Auth: OTP (FA-001, SEC-021) --------------------------------------------
     otp_provider: Literal["mockserver", "fake"] = Field(
@@ -160,6 +184,12 @@ class Settings(BaseSettings):
             problems.append("OTP_PEPPER must be a strong secret (>= 32 chars) in prd")
         if self.otp_provider == "fake":
             problems.append("OTP_PROVIDER=fake is not allowed in prd")
+        if self.payment_provider == "fake":
+            problems.append("PAYMENT_PROVIDER=fake is not allowed in prd")
+        if self.razorpay_webhook_secret in ("", DEV_RAZORPAY_WEBHOOK_HMAC_KEY):
+            problems.append("RAZORPAY_WEBHOOK_SECRET must be set from Secret Manager in prd")
+        if self.razorpay_key_secret in ("", DEV_RAZORPAY_API_KEY_PLACEHOLDER):
+            problems.append("RAZORPAY_KEY_SECRET must be set from Secret Manager in prd")
         if self.migration_database_url == self.database_url:
             problems.append("MIGRATION_DATABASE_URL must use a different role than DATABASE_URL")
         if problems:

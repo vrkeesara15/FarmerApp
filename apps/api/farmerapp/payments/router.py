@@ -11,17 +11,33 @@ import uuid
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import select
 
 from farmerapp.api.errors import problem_responses
 from farmerapp.api.pagination import Page
-from farmerapp.auth.deps import DbSession
+from farmerapp.auth.deps import DbSession, Services
 from farmerapp.auth.models import User
 from farmerapp.auth.policy import Role, require_roles
 from farmerapp.auth.scope import payment_filters
 from farmerapp.payments.models import Payment, PaymentMode, PaymentStatus
-from farmerapp.payments.schemas import PaymentOut, PaymentPage
+from farmerapp.payments.schemas import (
+    PaymentCreate,
+    PaymentCreated,
+    PaymentOut,
+    PaymentPage,
+    PaymentStatusOut,
+)
+from farmerapp.payments.service import (
+    Messaging,
+    PaymentServices,
+    create_payment,
+    get_payment_services,
+    status_out,
+    visible_payment,
+)
+from farmerapp.uploads.blobstore import BlobStore
+from farmerapp.uploads.router import get_blob_store
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
@@ -81,4 +97,72 @@ async def list_payments(
     return PaymentPage(items=[PaymentOut.model_validate(p) for p in items], next_cursor=next_cursor)
 
 
-__all__ = ["PAYMENT_ROLES", "router"]
+#: FA-021 / FM-010: who may start a collection. Farmers pay their own dues / orders by UPI.
+COLLECT_ROLES = (
+    Role.OWNER,
+    Role.ACCOUNTANT,
+    Role.CLUSTER_HEAD,
+    Role.STORE_MANAGER,
+    Role.FIELD_OFFICER,
+    Role.FARMER,
+)
+
+
+@router.post(
+    "",
+    operation_id="createPayment",
+    summary="Collect a payment for an order or khata dues (UPI QR, link, cash, card, credit)",
+    status_code=status.HTTP_201_CREATED,
+    response_model=PaymentCreated,
+    responses=problem_responses(
+        (404, "not_found"),
+        (409, "already_paid"),
+        (409, "nothing_due"),
+        (409, "order_cancelled"),
+        (409, "credit_limit_exceeded"),
+        (422, "amount_mismatch"),
+        (422, "receipt_required"),
+        (422, "reference_required"),
+        (422, "invalid_blob"),
+        (422, "invalid_mode"),
+        (422, "phone_required"),
+        (403, "mode_not_allowed"),
+        (502, "provider_error"),
+        (503, "credit_unavailable"),
+    ),
+)
+async def post_payment(
+    body: PaymentCreate,
+    actor: Annotated[User, require_roles(*COLLECT_ROLES)],
+    session: DbSession,
+    auth: Services,
+    services: Annotated[PaymentServices, Depends(get_payment_services)],
+    blobs: Annotated[BlobStore, Depends(get_blob_store)],
+) -> PaymentCreated:
+    return await create_payment(
+        session,
+        actor,
+        body,
+        services=services,
+        messaging=Messaging(sms=auth.sms, whatsapp=auth.whatsapp),
+        blobs=blobs,
+        now=auth.clock.now(),
+    )
+
+
+@router.get(
+    "/{id}",
+    operation_id="getPayment",
+    summary="One payment's status (A53 polls it: waiting / paid / failed)",
+    response_model=PaymentStatusOut,
+    responses=problem_responses((404, "not_found")),
+)
+async def get_payment(
+    id: uuid.UUID,
+    actor: Annotated[User, require_roles(*PAYMENT_ROLES)],
+    session: DbSession,
+) -> PaymentStatusOut:
+    return status_out(await visible_payment(session, actor, id))
+
+
+__all__ = ["COLLECT_ROLES", "PAYMENT_ROLES", "router"]

@@ -86,6 +86,8 @@ def _env() -> Iterator[None]:
     os.environ["APP_ENV"] = "test"
     os.environ["LOG_JSON"] = "false"
     os.environ["OTP_PROVIDER"] = "fake"
+    os.environ["PAYMENT_PROVIDER"] = "fake"  # FA-021: never call a payment provider from tests
+    os.environ["PAYMENT_WEBHOOK_DELIVERY"] = "inline"
     os.environ["OTP_DEV_CODE"] = ""  # never accept the dev code in tests unless a test opts in
     os.environ["BLOB_STORE"] = "local"  # NF-003: uploads land in a temp directory
     os.environ["BLOB_LOCAL_DIR"] = tempfile.mkdtemp(prefix="farmerapp-blobs-")

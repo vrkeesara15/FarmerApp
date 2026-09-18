@@ -232,11 +232,71 @@ def simulate_payment(order_id: str, method: str = "upi") -> dict[str, Any]:
         "order_id": order_id,
         "method": method,
         "captured": True,
+        "notes": order.get("notes", {}),
         "created_at": _now(),
     }
     order.update(status="paid", amount_paid=order["amount"], amount_due=0)
     STATE["payments"][payment["id"]] = payment
     return payment
+
+
+@app.post("/razorpay/v1/payments/qr_codes/{qr_id}/pay")
+def simulate_qr_payment(qr_id: str) -> dict[str, Any]:
+    """Test helper (not a real Razorpay endpoint): a UPI payment scanned from a QR code."""
+    qr = STATE["qrs"].get(qr_id)
+    if qr is None:
+        raise HTTPException(404, {"error": {"code": "BAD_REQUEST_ERROR", "description": "not found"}})
+    payment = {
+        "id": _id("pay"),
+        "entity": "payment",
+        "amount": qr["payment_amount"],
+        "currency": "INR",
+        "status": "captured",
+        "method": "upi",
+        "captured": True,
+        "notes": qr.get("notes", {}),
+        "created_at": _now(),
+    }
+    qr["status"] = "closed"
+    STATE["payments"][payment["id"]] = payment
+    return {"payment": payment, "qr_code": qr}
+
+
+def _settled_items(day: str) -> list[dict[str, Any]]:
+    """Captured payments whose capture date (UTC) is ``day`` (YYYY-MM-DD), recon-shaped."""
+    items = []
+    for p in STATE["payments"].values():
+        captured_on = time.strftime("%Y-%m-%d", time.gmtime(p["created_at"]))
+        if p.get("status") == "captured" and captured_on == day:
+            items.append(
+                {
+                    "entity_id": p["id"],
+                    "type": "payment",
+                    "amount": p["amount"],
+                    "fee": 0,
+                    "tax": 0,
+                    "settled": True,
+                    "settlement_id": f"setl_{day.replace('-', '')}",
+                    "settled_at": p["created_at"],
+                    "order_id": p.get("order_id"),
+                    "method": p.get("method"),
+                    "notes": p.get("notes", {}),
+                }
+            )
+    return items
+
+
+@app.get("/razorpay/settlements")
+def settlements(date: str) -> dict[str, Any]:
+    """OPS-008 test helper: the day's settled payments (``?date=YYYY-MM-DD``)."""
+    items = _settled_items(date)
+    return {"entity": "collection", "count": len(items), "items": items}
+
+
+@app.get("/razorpay/v1/settlements/recon/combined")
+def settlements_recon(year: int, month: int, day: int) -> dict[str, Any]:
+    """Razorpay's settlement recon shape (what the API's RazorpayProvider calls)."""
+    return settlements(f"{year:04d}-{month:02d}-{day:02d}")
 
 
 class WebhookSimulate(BaseModel):
