@@ -24,6 +24,6 @@ output "psa_connection" {
 }
 
 output "datastream_subnet_cidr" {
-  description = "Reserved /29 for the Datastream private connection."
+  description = "Reserved /28 for the Datastream PSC-interface subnet (modules/analytics)."
   value       = var.datastream_subnet_cidr
 }

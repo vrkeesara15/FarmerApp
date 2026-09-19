@@ -1,0 +1,7 @@
+id,tenant_id,name,phone,phone_last4,village_id,language,consent_marketing,registered_by,user_id,source,land_ownership,phone_verified,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+f1,t1,Fixture Farmer One,+910000000001,0001,v1,te,true,u-fo1,u-far1,officer,own,true,2026-08-20 04:00:00,2026-08-20 04:00:00,,ds-farmer-1,1787198400000
+f2,t1,Fixture Farmer Two,+910000000002,0002,v1,te,false,u-fo1,,officer,leased,true,2026-03-01 04:00:00,2026-03-01 04:00:00,,ds-farmer-2,1772337600000
+f3,t1,Fixture Farmer Three,+910000000003,0003,v2,te,true,u-fo2,,officer,own,false,2026-01-10 04:00:00,2026-01-10 04:00:00,,ds-farmer-3,1768017600000
+f4,t1,Fixture Farmer Four,+910000000004,0004,v2,en,false,u-fo2,,import,,false,2025-06-01 04:00:00,2025-06-01 04:00:00,,ds-farmer-4,1748750400000
+f5,t1,Fixture Farmer Five,+910000000005,0005,v1,te,false,u-fo1,,officer,own,true,2026-05-01 04:00:00,2026-06-01 04:00:00,2026-06-01 04:00:00,ds-farmer-5,1780286400000
+f6,t2,Fixture Farmer Six,+910000000006,0006,v3,te,true,u2-fo,,officer,own,true,2026-02-01 04:00:00,2026-02-01 04:00:00,,ds-farmer-6,1769918400000

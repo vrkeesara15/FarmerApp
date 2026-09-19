@@ -1,0 +1,4 @@
+id,tenant_id,brand,own_brand,category,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+p1,t1,FCC,true,pesticide,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-product-1,1767225600000
+p2,t1,Coromandel,false,fertiliser,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-product-2,1767225600000
+p3,t2,GFL,true,seed,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-product-3,1767225600000

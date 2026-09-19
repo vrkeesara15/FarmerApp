@@ -1,0 +1,73 @@
+version: 2
+
+# AN-013 authorised views (farmerapp_views). The console's reader service account can read
+# ONLY this dataset; the dataset is authorised on farmerapp_marts (infra/modules/analytics).
+# Every query must filter `viewer_user_id = @viewer_user_id` (the signed-in FarmerApp user):
+# see dbt/README.md "Row-level security (AN-013)". Row scopes are proven by
+# tests/an013_row_scopes_hold.sql (every target) and tests/fixture_an013_viewer_mapping.sql.
+
+models:
+  - name: v_owner_kpi_30d
+    columns: [&viewer {name: viewer_user_id, data_tests: [not_null, relationships: {arguments: {to: ref('dim_viewer_scope'), field: viewer_user_id}}]}, &tenant_roles {name: viewer_role, data_tests: [accepted_values: {arguments: {values: [owner, director, tenant_admin, auditor]}}]}]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, tenant_id]}}
+  - name: v_active_farmers_daily
+    columns: [*viewer, *tenant_roles]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, tenant_day_key]}}
+  - name: v_store_daily
+    columns: [*viewer, &store_roles {name: viewer_role, data_tests: [accepted_values: {arguments: {values: [owner, director, tenant_admin, auditor, cluster_head, store_manager]}}]}]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, store_day_key]}}
+  - name: v_officer_scorecard_30d
+    columns: [*viewer, &cluster_roles {name: viewer_role, data_tests: [accepted_values: {arguments: {values: [owner, director, tenant_admin, auditor, cluster_head]}}]}]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, officer_id]}}
+  - name: v_officer_daily
+    columns: [*viewer, *cluster_roles]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, officer_day_key]}}
+  - name: v_farmer_360
+    columns: [*viewer, *cluster_roles]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, farmer_id]}}
+  - name: v_farmer_segments
+    columns: [*viewer, *cluster_roles]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, segment_key]}}
+  - name: v_store_snapshot
+    columns: [*viewer, *store_roles]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, store_id]}}
+  - name: v_store_category_monthly
+    columns: [*viewer, *store_roles]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, store_category_month_key]}}
+  - name: v_credit_accounts
+    columns: [*viewer, *store_roles]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, credit_account_key]}}
+  - name: v_crop_health_weekly
+    columns: [*viewer, &agronomy_roles {name: viewer_role, data_tests: [accepted_values: {arguments: {values: [owner, director, tenant_admin, auditor, agronomist]}}]}]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, crop_health_key]}}
+  - name: v_diagnosis_quality_weekly
+    columns: [*viewer, *agronomy_roles]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, tenant_week_key]}}
+  - name: v_diagnosis_unknowns
+    columns: [*viewer, *agronomy_roles]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, unknown_key]}}
+  - name: v_campaign_roi
+    columns: [*viewer, *tenant_roles]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, campaign_week_key]}}
+  - name: v_flags_weekly
+    columns: [*viewer, *tenant_roles]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, flag_week_key]}}
+  - name: v_flag_repeat_offenders
+    columns: [*viewer, *cluster_roles]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [viewer_user_id, officer_id]}}

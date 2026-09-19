@@ -178,6 +178,24 @@ Not app settings: the console (`API_URL`, `NEXT_PUBLIC_API_URL`, `ENV`) and `emb
 | `razorpay-webhook-secret` | api, worker | webhook HMAC secret |
 | `anthropic-api-key` | worker | Anthropic API key |
 | `otp-provider` | api (not mounted) | reserved for the DLT SMS / WhatsApp adapter config |
+| `datastream-db-password` | Datastream service agent (when `datastream_enabled`) | password of the Postgres `datastream` replication login; add it only when setting up CDC ([datastream-cdc-setup](../runbooks/datastream-cdc-setup.md)), no service mounts it |
+
+## Analytics (M7: Datastream -> BigQuery -> dbt, `modules/analytics`)
+
+| tfvar | dev | stg | prd | Meaning |
+|---|---|---|---|---|
+| `datastream_enabled` | true | true | true | PSC-interface private connection, BigQuery profile, datasets' Datastream grant |
+| `datastream_stream_enabled` | false | false | false | source profile + CDC stream; **human gate** after the runbook's one-time SQL |
+| `datastream_password_secret_version` | "" | "" | "" | "" = `datastream-db-password/versions/latest` |
+| `dbt_workload_identity_members` / `dbt_impersonators` | [] | [] | [] | who may act as `farmerapp-dbt` (ci-dbt.yml via WIF; data owner locally) |
+
+Datasets `farmerapp_raw` (Datastream) -> `farmerapp_staging` -> `farmerapp_marts` ->
+`farmerapp_views` (dbt). `farmerapp-dbt` reads raw and writes the other three;
+`farmerapp-bi-reader` reads only `farmerapp_views`, which is authorised on `farmerapp_marts`; the
+console service account may impersonate the reader (AN-013, `dbt/README.md`). The P0 console
+still reads the API (Postgres replica, SPEC 5.3); wiring dashboards to the views is a later M7
+task. Datastream's backfill tasks (`max_concurrent_backfill_tasks = 2`) come out of the
+connection budget's `reserve`.
 
 ## First deploy of an environment (human; stg / prd apply is human-only)
 

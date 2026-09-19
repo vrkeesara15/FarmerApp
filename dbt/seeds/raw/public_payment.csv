@@ -1,0 +1,7 @@
+id,tenant_id,farmer_id,store_id,mode,amount_paise,status,collected_by,paid_at,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+pay1,t1,f1,s1,cash,5000,pending_reconciliation,u-fo1,,2026-09-10 06:00:00,2026-09-10 06:00:00,,ds-pay-1,1789020000000
+pay2,t1,f2,s1,upi_qr,3000,failed,u-fo1,,2026-09-11 06:00:00,2026-09-11 06:10:00,,ds-pay-2,1789107000000
+pay3,t1,f3,s3,upi_qr,7000,paid,u-fo2,2026-09-06 06:00:00,2026-09-06 05:55:00,2026-09-06 06:00:00,,ds-pay-3,1788674400000
+pay4,t1,f1,s1,cash,2000,paid,u-fo1,2026-09-12 06:00:00,2026-09-12 06:00:00,2026-09-12 07:00:00,2026-09-12 07:00:00,ds-pay-4,1789196400000
+pay5,t1,f3,s3,cash,1000,paid,u-fo2,2026-07-01 06:00:00,2026-07-01 06:00:00,2026-07-01 06:00:00,,ds-pay-5,1782885600000
+pay6,t2,f6,s4,cash,6300,paid,u2-fo,2026-09-10 05:10:00,2026-09-10 05:10:00,2026-09-10 05:10:00,,ds-pay-6,1789017000000

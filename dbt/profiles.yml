@@ -1,28 +1,47 @@
-# Profile used by ci-dbt.yml (DBT_PROFILES_DIR=dbt). Local runs use OAuth ADC;
-# CI authenticates through Workload Identity Federation — no key files.
+# dbt profiles (DBT_PROFILES_DIR=dbt). No key files anywhere:
+#   ci   DuckDB file over the fixture seeds: no cloud, no credentials (make dbt, ci-dbt.yml).
+#   dev  BigQuery farmerapp-dev as your ADC identity (gcloud auth application-default login)
+#        or, in ci-dbt.yml, the dbt service account through Workload Identity Federation.
+#        DBT_IMPERSONATE_SA=farmerapp-dbt@<project>.iam.gserviceaccount.com runs as the dbt SA.
+#   stg / prd  same shape; run by the scheduled dbt job, never from a laptop (human gate).
+# Datasets are created by Terraform (infra/modules/analytics); dbt only writes tables and
+# views into farmerapp_staging / farmerapp_marts / farmerapp_views (macros/schema.sql).
 farmerapp:
-  target: "{{ env_var('DBT_TARGET', 'dev') }}"
+  target: "{{ env_var('DBT_TARGET', 'ci') }}"
   outputs:
+    ci:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'target/ci.duckdb') }}"
+      schema: main
+      threads: 4
     dev:
       type: bigquery
       method: oauth
       project: "{{ env_var('DBT_PROJECT_ID', 'farmerapp-dev') }}"
-      dataset: farmerapp_marts
+      dataset: farmerapp_staging
       location: asia-south1
       threads: 4
       job_execution_timeout_seconds: 600
+      maximum_bytes_billed: 10000000000 # 10 GB per query: a runaway model fails, not the bill
       priority: interactive
+      impersonate_service_account: "{{ env_var('DBT_IMPERSONATE_SA', '') }}"
     stg:
       type: bigquery
       method: oauth
       project: farmerapp-stg
-      dataset: farmerapp_marts
+      dataset: farmerapp_staging
       location: asia-south1
       threads: 4
+      job_execution_timeout_seconds: 900
+      maximum_bytes_billed: 50000000000
+      impersonate_service_account: "{{ env_var('DBT_IMPERSONATE_SA', '') }}"
     prd:
       type: bigquery
       method: oauth
       project: farmerapp-prd
-      dataset: farmerapp_marts
+      dataset: farmerapp_staging
       location: asia-south1
       threads: 8
+      job_execution_timeout_seconds: 900
+      maximum_bytes_billed: 200000000000
+      impersonate_service_account: "{{ env_var('DBT_IMPERSONATE_SA', '') }}"

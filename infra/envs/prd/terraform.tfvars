@@ -11,10 +11,12 @@ min_instances       = { api = 1, console = 1, worker = 0, embed = 0 } # NF-006 /
 cloud_armor_enabled = true
 cloud_armor_mode    = "enforce" # SEC-014
 datastream_enabled  = true
-deletion_protection = true
-lock_audit_bucket   = true # SEC-017: irreversible bucket lock, prd only
-notification_email  = ""
-availability_goal   = 0.995 # NF-006 pilot; 0.999 at SaaS launch
+# HUMAN GATE (with the human-only prd apply): true after docs/runbooks/datastream-cdc-setup.md.
+datastream_stream_enabled = false
+deletion_protection       = true
+lock_audit_bucket         = true # SEC-017: irreversible bucket lock, prd only
+notification_email        = ""
+availability_goal         = 0.995 # NF-006 pilot; 0.999 at SaaS launch
 # Human: set the pilot tenants' ids before the first prd apply; create the page / ticket /
 # digest channels by hand and list their ids here.
 job_tenant_ids       = []

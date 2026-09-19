@@ -1,0 +1,10 @@
+id,tenant_id,subject,farmer_id,crop_id,district,season,status,source,confidence,final_problem_id,out_of_scope_reason,llm_used,expert_requested_at,answered_at,reviewed_at,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+d1,t1,farmer,f1,cr-paddy,Warangal,kharif,answered,corpus,high,cpr-blast,,false,,2026-09-08 04:01:00,,2026-09-08 04:00:00,2026-09-08 04:01:00,,ds-diag-1,1788840060000
+d2,t1,officer,f2,cr-cotton,Warangal,kharif,confirmed,llm,medium,cpr-boll,,true,2026-09-09 05:00:00,2026-09-09 04:56:00,2026-09-09 20:00:00,2026-09-09 04:55:00,2026-09-09 20:00:00,,ds-diag-2,1788984000000
+d3,t1,farmer,f3,cr-paddy,,kharif,corrected,llm,low,cpr-blast,,true,2026-09-10 00:00:00,2026-09-10 00:01:00,2026-09-11 06:00:00,2026-09-10 00:00:00,2026-09-11 06:00:00,,ds-diag-3,1789106400000
+d4,t1,farmer,f1,,Warangal,kharif,out_of_scope,,,,not_a_plant,false,,2026-09-11 04:00:30,,2026-09-11 04:00:00,2026-09-11 04:00:30,,ds-diag-4,1789099230000
+d5,t1,farmer,f1,cr-paddy,Warangal,kharif,answered,corpus,high,cpr-blast,,false,,2026-09-09 06:00:30,,2026-09-09 06:00:00,2026-09-09 06:00:30,,ds-diag-5,1788933630000
+d6,t1,farmer,f2,cr-cotton,Warangal,kharif,queued,,,,,false,2026-09-14 05:00:00,,,2026-09-14 04:59:00,2026-09-14 05:00:00,,ds-diag-6,1789362000000
+d7,t1,farmer,f2,cr-cotton,Warangal,kharif,answered,corpus,high,cpr-boll,,false,,2026-09-09 07:00:30,,2026-09-09 07:00:00,2026-09-09 08:00:00,2026-09-09 08:00:00,ds-diag-7,1788940800000
+d8,t1,farmer,f2,cr-paddy,Warangal,kharif,answered,corpus,high,cpr-blast,,false,,2026-09-10 08:00:30,,2026-09-10 08:00:00,2026-09-10 08:00:30,,ds-diag-8,1789065630000
+d9,t2,farmer,f6,cr2-chilli,Guntur,rabi,out_of_scope,,,,unsupported_crop,false,,2026-09-10 04:00:30,,2026-09-10 04:00:00,2026-09-10 04:00:30,,ds-diag-9,1789012830000

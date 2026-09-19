@@ -27,9 +27,9 @@ variable "psa_prefix_length" {
 }
 
 variable "datastream_subnet_cidr" {
-  description = "/29 reserved for the Datastream private connection peering (must not overlap the VPC)."
+  description = "/28 for the Datastream PSC-interface subnet (created by modules/analytics); must not overlap the other VPC or PSA ranges."
   type        = string
-  default     = "10.20.0.0/29"
+  default     = "10.20.0.0/28"
 }
 
 variable "flow_logs" {

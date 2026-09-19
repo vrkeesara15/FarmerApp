@@ -1,0 +1,86 @@
+version: 2
+
+# Datastream CDC replica of Cloud SQL (infra/modules/analytics). Single target dataset:
+# Postgres public.<t> lands as farmerapp_raw.public_<t>, merge mode (latest row per primary key,
+# hard deletes applied), plus datastream_metadata {uuid, source_timestamp (epoch ms)}.
+#
+# The columns listed here are EXACTLY the column allowlist Datastream replicates
+# (infra/modules/analytics/replicated_columns.json; scripts/check_replication.py keeps the two
+# identical). Everything else — names, phones, landmarks, points, notes, token hashes, images —
+# never leaves Postgres (AN-014).
+#
+# AN-010: freshness on the tables that change every working hour. Warn at 15 min (the SLO),
+# error at 30 min (OPS-011 pages at the same lag). Run on BigQuery only:
+#   dbt source freshness --target dev   (scheduled with the dbt job in stg / prd)
+# The ci target has no raw source (fixture seeds); tests/an010_source_freshness_contract.sql
+# asserts the thresholds instead.
+
+sources:
+  - name: farmerapp_raw
+    description: Datastream CDC replica (merge mode) of the FarmerApp Postgres database.
+    schema: farmerapp_raw
+    config:
+      loaded_at_field: "timestamp_millis(datastream_metadata.source_timestamp)"
+    tables:
+      - name: public_tenant
+        columns: [{name: id}, {name: tenant_id}, {name: name}, {name: settings}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_cluster
+        columns: [{name: id}, {name: tenant_id}, {name: name}, {name: district}, {name: state}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_store
+        columns: [{name: id}, {name: tenant_id}, {name: code}, {name: name}, {name: cluster_id}, {name: district}, {name: state}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_village
+        columns: [{name: id}, {name: tenant_id}, {name: name}, {name: district}, {name: mandal}, {name: state}, {name: store_id}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_user
+        description: Employees and farmer logins. name / phone / phone_enc / phone_hash / home_point are NOT replicated.
+        columns: [{name: id}, {name: tenant_id}, {name: role}, {name: store_id}, {name: cluster_id}, {name: status}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_farmer
+        description: name / phone / phone_enc / phone_hash / landmark are NOT replicated; phone_last4 is (masked in staging).
+        columns: [{name: id}, {name: tenant_id}, {name: phone_last4}, {name: village_id}, {name: language}, {name: consent_marketing}, {name: registered_by}, {name: user_id}, {name: source}, {name: land_ownership}, {name: phone_verified}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_farm
+        columns: [{name: id}, {name: tenant_id}, {name: farmer_id}, {name: area_acres}, {name: soil}, {name: irrigation}, {name: ownership}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_crop
+        columns: [{name: id}, {name: tenant_id}, {name: code}, {name: name}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_crop_plot
+        columns: [{name: id}, {name: tenant_id}, {name: farm_id}, {name: crop_id}, {name: season}, {name: sowing_date}, {name: stage}, {name: expected_harvest}, {name: area_acres}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_product
+        columns: [{name: id}, {name: tenant_id}, {name: brand}, {name: own_brand}, {name: category}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_sku
+        columns: [{name: id}, {name: tenant_id}, {name: product_id}, {name: mrp_paise}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_order
+        config:
+          freshness: &hot
+            warn_after: {count: 15, period: minute}
+            error_after: {count: 30, period: minute}
+        columns: [{name: id}, {name: tenant_id}, {name: farmer_id}, {name: store_id}, {name: channel}, {name: status}, {name: subtotal_paise}, {name: discount_paise}, {name: tax_paise}, {name: total_paise}, {name: placed_by}, {name: placed_at}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_order_line
+        columns: [{name: id}, {name: tenant_id}, {name: order_id}, {name: sku_id}, {name: batch_id}, {name: qty}, {name: unit_price_paise}, {name: line_total_paise}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_stock_batch
+        columns: [{name: id}, {name: tenant_id}, {name: store_id}, {name: sku_id}, {name: expiry}, {name: qty}, {name: cost_paise}, {name: received_at}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_stock_movement
+        columns: [{name: id}, {name: tenant_id}, {name: store_id}, {name: sku_id}, {name: batch_id}, {name: kind}, {name: qty}, {name: created_at}]
+      - name: public_khata_entry
+        columns: [{name: id}, {name: tenant_id}, {name: farmer_id}, {name: store_id}, {name: type}, {name: amount_paise}, {name: due_date}, {name: harvest_month}, {name: created_at}]
+      - name: public_payment
+        config: {freshness: *hot}
+        columns: [{name: id}, {name: tenant_id}, {name: farmer_id}, {name: store_id}, {name: mode}, {name: amount_paise}, {name: status}, {name: collected_by}, {name: paid_at}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_day_close
+        columns: [{name: id}, {name: tenant_id}, {name: store_id}, {name: business_date}, {name: cash_expected_paise}, {name: cash_counted_paise}, {name: variance_paise}, {name: status}, {name: variance_flagged}, {name: closed_at}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_visit
+        config: {freshness: *hot}
+        columns: [{name: id}, {name: tenant_id}, {name: officer_id}, {name: farmer_id}, {name: farm_id}, {name: village_id}, {name: purpose}, {name: checkin_at}, {name: checkout_at}, {name: geofence_result}, {name: crop_stage}, {name: score}, {name: status}, {name: confirmation_channel}, {name: confirmed_at}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_duty_session
+        config: {freshness: *hot}
+        columns: [{name: id}, {name: tenant_id}, {name: officer_id}, {name: start_at}, {name: end_at}, {name: km}, {name: end_reason}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_refresh_token
+        description: Only id / tenant / user / time (the farmer app-session proxy). Never token_hash or device ids.
+        columns: [{name: id}, {name: tenant_id}, {name: user_id}, {name: created_at}]
+      - name: public_diagnosis
+        columns: [{name: id}, {name: tenant_id}, {name: subject}, {name: farmer_id}, {name: crop_id}, {name: district}, {name: season}, {name: status}, {name: source}, {name: confidence}, {name: final_problem_id}, {name: out_of_scope_reason}, {name: llm_used}, {name: expert_requested_at}, {name: answered_at}, {name: reviewed_at}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_corpus_problem
+        columns: [{name: id}, {name: tenant_id}, {name: pest_or_disease_id}, {name: crop_id}, {name: problem_type}, {name: status}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_pest_or_disease
+        columns: [{name: id}, {name: tenant_id}, {name: code}, {name: name}, {name: type}, {name: crop_id}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_flag
+        columns: [{name: id}, {name: tenant_id}, {name: rule_id}, {name: subject_type}, {name: subject_id}, {name: severity}, {name: status}, {name: scope_cluster_id}, {name: scope_store_id}, {name: sla_due_at}, {name: resolved_at}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_flag_event
+        columns: [{name: id}, {name: tenant_id}, {name: flag_id}, {name: kind}, {name: to_status}, {name: label}, {name: created_at}]

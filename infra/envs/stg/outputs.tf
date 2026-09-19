@@ -50,3 +50,16 @@ output "secret_ids" {
   description = "Secret ids to populate with `gcloud secrets versions add`."
   value       = module.secrets.secret_ids
 }
+
+output "analytics" {
+  description = "BigQuery datasets and service accounts of the analytics layer (dbt: DBT_IMPERSONATE_SA / DBT_SA_<ENV>)."
+  value = {
+    raw_dataset            = module.analytics.raw_dataset
+    staging_dataset        = module.analytics.staging_dataset
+    marts_dataset          = module.analytics.marts_dataset
+    views_dataset          = module.analytics.views_dataset
+    dbt_service_account    = module.analytics.dbt_service_account
+    reader_service_account = module.analytics.reader_service_account
+    stream_name            = module.analytics.stream_name
+  }
+}

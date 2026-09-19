@@ -11,8 +11,10 @@ max_instances       = { api = 5, console = 3, worker = 5, embed = 2 }
 cloud_armor_enabled = true
 cloud_armor_mode    = "preview" # SEC-014: log only
 datastream_enabled  = true
-deletion_protection = true
-notification_email  = ""
+# HUMAN GATE (with the human-only stg apply): true after docs/runbooks/datastream-cdc-setup.md.
+datastream_stream_enabled = false
+deletion_protection       = true
+notification_email        = ""
 # Human: set the pilot tenants' ids before the first stg apply (per-tenant jobs stay
 # unscheduled while this is empty). Channels (page/ticket/digest) are created by hand.
 job_tenant_ids       = []

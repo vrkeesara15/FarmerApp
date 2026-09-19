@@ -1,0 +1,7 @@
+id,tenant_id,rule_id,subject_type,subject_id,severity,status,scope_cluster_id,scope_store_id,sla_due_at,resolved_at,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+fl1,t1,VA-E03,visit,v3,high,open,c1,s1,2026-09-14 07:00:00,,2026-09-12 07:00:00,2026-09-12 07:00:00,,ds-flag-1,1789198800000
+fl2,t1,VA-E01,employee,u-fo1,medium,resolved_fixed,c1,s1,2026-09-04 00:00:00,2026-09-03 12:00:00,2026-09-02 00:00:00,2026-09-03 12:00:00,,ds-flag-2,1788436800000
+fl3,t1,VA-E01,employee,u-fo1,low,resolved_valid,c1,s1,2026-09-07 00:00:00,2026-09-05 06:00:00,2026-09-05 00:00:00,2026-09-05 06:00:00,,ds-flag-3,1788588000000
+fl4,t1,VA-F01,farmer,f4,high,escalated,c2,s3,2026-09-10 06:00:00,,2026-09-08 06:00:00,2026-09-10 07:00:00,,ds-flag-4,1789062000000
+fl5,t2,VA-E02,employee,u2-fo,medium,open,c3,s4,2026-09-12 05:00:00,,2026-09-10 05:00:00,2026-09-10 05:00:00,,ds-flag-5,1789016400000
+fl6,t1,VA-E01,employee,u-fo2,low,open,c2,s3,2026-09-13 05:00:00,,2026-09-11 05:00:00,2026-09-11 06:00:00,2026-09-11 06:00:00,ds-flag-6,1789106400000
