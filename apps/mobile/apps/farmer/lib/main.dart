@@ -5,10 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+import 'main_version.dart';
+import 'platform.dart';
+import 'router.dart';
 import 'security.dart';
 
 /// App version sent on login and refresh (pubspec).
-const String farmerAppVersion = '0.1.0+1';
+const String farmerAppVersion = kisanAppVersion;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,11 +43,13 @@ Future<void> startKisan() async {
   final db = openAppDatabase(opener: opener);
   final settings = await settingsOverrides(KvSettingsStore(db));
   final wipedBefore = await hasWipeNotice(db);
+  final signedIn = !wipedBefore && await store.read() != null;
   final rest = RestJsonClient(
     store: store,
     client: client,
     refreshSession: auth.refresh,
   );
+  final connectivity = PlusConnectivityMonitor();
   final container = ProviderContainer(
     overrides: [
       ...settings,
@@ -53,12 +58,30 @@ Future<void> startKisan() async {
       authApiProvider.overrideWithValue(auth),
       wipeSignalProvider.overrideWithValue(wipe),
       wipeNoticeProvider.overrideWithValue(wipedBefore),
+      signedInProvider.overrideWithValue(signedIn),
       deviceStatusApiProvider.overrideWithValue(
         HttpDeviceStatusApi(rest, store),
       ),
       tenantSettingsApiProvider.overrideWithValue(HttpTenantSettingsApi(rest)),
+      // M6 farmer app: profile, consent, orders, deletion request and visit
+      // confirmation (REST), queued writes over /v1/sync, money through the
+      // shared payments / khata / catalogue clients.
+      kisanApiProvider.overrideWithValue(HttpKisanApi(rest)),
+      syncApiProvider.overrideWithValue(
+        HttpSyncApi(store: store, client: client, refreshSession: auth.refresh),
+      ),
+      connectivityMonitorProvider.overrideWithValue(connectivity),
+      catalogApiProvider.overrideWithValue(HttpCatalogApi(rest)),
+      paymentsApiProvider.overrideWithValue(HttpPaymentsApi(rest)),
+      khataApiProvider.overrideWithValue(HttpKhataApi(rest)),
+      // NF-009 audio prompts (device TTS until recorded clips exist), UPI /
+      // call / WhatsApp intents, the visit QR scanner.
+      audioPromptProvider.overrideWithValue(TtsAudioPrompt()),
+      urlOpenerProvider.overrideWithValue(const LauncherUrlOpener()),
+      barcodeScannerProvider.overrideWithValue(const MobileScannerQrScanner()),
     ],
   );
+  StreamSubscription<bool>? onlineSub;
   RemoteWipeCoordinator(
     signal: wipe,
     steps: (reason) => kisanWipeSteps(
@@ -70,6 +93,7 @@ Future<void> startKisan() async {
     ),
     teardown: () async {
       runApp(const WipeInProgressView());
+      await onlineSub?.cancel();
       container.dispose();
       client.close();
     },
@@ -81,9 +105,20 @@ Future<void> startKisan() async {
         tokens: store,
         api: container.read(deviceStatusApiProvider),
         signal: wipe,
+        isOnline: connectivity.isOnline,
       ),
     );
     unawaited(container.read(tenantSettingsSyncProvider).pullIfStale());
+    // Queued consent / visit confirmations go out on start and whenever the
+    // network returns (NF-002; the farmer app has no background sync).
+    Future<void> flush() =>
+        container.read(kisanFlushProvider)().catchError((Object _) {});
+    if (signedIn) unawaited(flush());
+    onlineSub = connectivity.onlineChanges.listen((online) {
+      if (!online) return;
+      unawaited(container.read(tenantSettingsSyncProvider).pullIfStale());
+      unawaited(flush());
+    });
   }
   runApp(
     UncontrolledProviderScope(container: container, child: const KisanApp()),

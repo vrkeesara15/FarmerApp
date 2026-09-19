@@ -4,18 +4,39 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../router.dart';
+import '../start.dart';
 
-/// F03 OTP entry with resend timer.
-class OtpScreen extends ConsumerWidget {
+/// F03 OTP entry with resend timer; a correct code continues straight to
+/// consent / welcome / home (no extra tap, FM-001 < 60 s).
+class OtpScreen extends ConsumerStatefulWidget {
   /// Creates the screen.
   const OtpScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OtpScreen> createState() => _OtpScreenState();
+}
+
+class _OtpScreenState extends ConsumerState<OtpScreen> {
+  bool _leaving = false;
+
+  Future<void> _continue() async {
+    if (_leaving) return;
+    _leaving = true;
+    final next = await routeAfterLogin(ref);
+    if (mounted) context.go(next);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final app = context.app;
     final l10n = CoreLocalizations.of(context);
     final flow = ref.watch(authFlowProvider);
     final notifier = ref.read(authFlowProvider.notifier);
+    ref.listen<AuthFlowState>(authFlowProvider, (previous, next) {
+      if (next.step == AuthStep.done && previous?.step != AuthStep.done) {
+        _continue();
+      }
+    });
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.otpTitle),
@@ -52,17 +73,19 @@ class OtpScreen extends ConsumerWidget {
                       color: app.palette.statusSuccess,
                     ),
                     const SizedBox(width: Tokens.space2),
-                    Text(
-                      l10n.actionDone,
-                      style: app.text.heading.copyWith(
-                        color: app.palette.statusSuccess,
+                    Expanded(
+                      child: Text(
+                        l10n.actionDone,
+                        style: app.text.heading.copyWith(
+                          color: app.palette.statusSuccess,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ],
               const Spacer(),
-              if (flow.busy)
+              if (flow.busy || flow.step == AuthStep.done)
                 AppButton(
                   label: l10n.otpVerify,
                   loading: true,

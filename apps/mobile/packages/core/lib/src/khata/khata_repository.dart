@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 
 import '../catalog/rest_json_client.dart';
 import '../db/app_database.dart';
+import '../kisan/kisan_cache.dart' show watchTables;
 import 'khata_models.dart';
 
 /// `GET /v1/farmers/{id}/khata` (FA-022).
@@ -118,15 +119,12 @@ class KhataRepository {
     );
   }
 
-  /// [read] now and after every refresh.
-  Stream<KhataView?> watch(String farmerId) async* {
-    yield await read(farmerId);
-    await for (final _ in db.tableUpdates(
-      TableUpdateQuery.onAllTables(<TableInfo<Table, Object?>>[
-        db.khataSnapshots,
-      ]),
-    )) {
-      yield await read(farmerId);
-    }
-  }
+  /// [read] now and after every refresh (the update subscription opens
+  /// before the first read, so a refresh started as the screen opens is
+  /// never missed).
+  Stream<KhataView?> watch(String farmerId) => watchTables(
+    db,
+    <TableInfo<Table, Object?>>[db.khataSnapshots],
+    () => read(farmerId),
+  );
 }

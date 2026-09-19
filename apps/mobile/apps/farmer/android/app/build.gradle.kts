@@ -33,6 +33,18 @@ android {
         versionName = flutter.versionName
     }
 
+    // FM-014 (< 25 MB per ABI): store the native libraries (Flutter engine,
+    // SQLCipher, CameraX JNI) compressed in the APK. Farmers side-load or
+    // download over 2G/3G, so the file size is what they pay for; the cost
+    // is that Android extracts the .so files at install (~17 MB more on
+    // disk, fine on the 16 GB reference phones, NF-001). Play delivers AAB
+    // splits compressed on the wire either way.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
