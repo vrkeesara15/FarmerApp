@@ -166,6 +166,12 @@ class OfficerProfileOut(BaseModel):
     scorecard: ScorecardRow
     duty_days: list[DutyDayOut]
     recent_visits: list[OfficerVisitOut]
+    sales_net_paise: int = Field(
+        default=0,
+        description="Net sales of the orders the officer placed in the range (fulfilled; "
+        "FA-024 shows the same figure in the officer's app).",
+    )
+    sales_orders: int = Field(default=0, description="Those orders.")
 
 
 # --------------------------------------------------------------------------- day replay
@@ -194,7 +200,15 @@ class GapOut(BaseModel):
     end: datetime
     duration_s: int
     duty_session_id: uuid.UUID
-    reason: str | None = Field(description="The officer's reason (VV-008); null until it exists.")
+    reason: str | None = Field(
+        description="The officer's reason (VV-008): network | personal_break | vehicle | "
+        "other; null while not given."
+    )
+    id: uuid.UUID | None = Field(
+        default=None,
+        description="Stable gap id (VV-008 `POST /v1/me/gaps/{gap_id}/reason`).",
+    )
+    note: str | None = Field(default=None, description="The officer's note with the reason.")
 
 
 class ProofItemOut(BaseModel):

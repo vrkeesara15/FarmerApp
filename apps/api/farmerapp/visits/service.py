@@ -52,6 +52,8 @@ from farmerapp.db import audit
 from farmerapp.db.geo import haversine_m, point_wkt
 from farmerapp.farmers.models import Farmer
 from farmerapp.logging import get_logger
+from farmerapp.notifications.models import NotificationKind
+from farmerapp.notifications.service import notify
 from farmerapp.settings import Settings
 from farmerapp.tenants.settings import TenantSettings, get_tenant_settings
 from farmerapp.uploads.blobstore import BlobNotFoundError, BlobStore, parse_uri
@@ -755,6 +757,21 @@ async def request_confirmation(
                 expires_at=expires_at,
             )
         )
+        # FA-007: the farmer app's prompt arrives as a push (deep link to the confirm screen).
+        notify(
+            session,
+            tenant_id=visit.tenant_id,
+            user_id=farmer.user_id,
+            kind=NotificationKind.VISIT_CONFIRMATION_REQUESTED.value,
+            data={
+                "visit_id": visit.id,
+                "confirmation_id": row.id,
+                "officer_id": actor.id,
+                "token": token,
+                "expires_at": expires_at.isoformat(),
+            },
+        )
+        await session.flush()
         return ConfirmationStart(row=row, expires_in=settings.visit_confirm_token_ttl_seconds)
     return ConfirmationStart(
         row=row, expires_in=settings.visit_confirm_token_ttl_seconds, token=token

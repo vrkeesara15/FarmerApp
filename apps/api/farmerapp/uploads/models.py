@@ -42,6 +42,7 @@ class UploadPurpose(StrEnum):
     DIAGNOSIS = "diagnosis"
     PROFILE = "profile"
     CORPUS = "corpus"  # WC-007 corpus manager image uploads (M6)
+    DEMO_PLOT = "demo_plot"  # FA-026 demo plot stage photos (M7)
 
 
 class UploadStatus(StrEnum):

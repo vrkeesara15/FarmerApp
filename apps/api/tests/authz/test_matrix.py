@@ -591,6 +591,42 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
     "PATCH /v1/admin/data-requests/{id}": RouteFixture(
         path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"status": "in_progress"}
     ),
+    # M7 field P1 (FA-007, VV-008, FA-023, FA-026, FA-027): an unknown id is a 404 for every
+    # allowed role; outcomes in tests/notifications, tests/duty, tests/travel,
+    # tests/demo_plots and tests/meetings.
+    "POST /v1/notifications/{id}/read": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "POST /v1/me/gaps/{gap_id}/reason": RouteFixture(
+        path_params=lambda _ctx: {"gap_id": NO_SUCH_ID}, body=lambda _ctx: {"reason": "network"}
+    ),
+    "GET /v1/travel/claims/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "POST /v1/travel/claims/{id}/approve": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {}
+    ),
+    "POST /v1/travel/claims/{id}/reject": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"note": "matrix"}
+    ),
+    "GET /v1/demo-plots/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "POST /v1/demo-plots/{id}/observations": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID},
+        body=lambda _ctx: {"stage": "vegetative", "observed_at": "2026-09-18T05:00:00Z"},
+    ),
+    "POST /v1/demo-plots/{id}/transition": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"to": "active"}
+    ),
+    "POST /v1/demo-plots/{id}/yield": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID},
+        body=lambda _ctx: {"demo_yield_kg_per_acre": "1200"},
+    ),
+    "GET /v1/meetings/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "POST /v1/meetings/{id}/attendance/otp": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID},
+        body=lambda ctx: {"farmer_id": str(ctx.target.farmer.id)},
+    ),
+    "POST /v1/meetings/{id}/attendance": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID},
+        body=lambda _ctx: {"method": "qr", "token": "not-a-real-token-at-all"},
+    ),
+    "POST /v1/meetings/{id}/close": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
     "POST /v1/policies/location/accept": RouteFixture(
         body=lambda _ctx: {
             "version": "2026-09-v1",

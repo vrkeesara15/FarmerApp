@@ -362,6 +362,22 @@ async def decide(
     request.decided_by = actor.id
     request.decided_at = datetime.now(UTC)
     request.decision_note = note
+    if request.requested_by is not None and request.requested_by != actor.id:
+        from farmerapp.notifications.service import notify  # FA-007 (local: import order)
+
+        notify(  # the officer whose credit sale waited learns the decision (push + inbox)
+            session,
+            tenant_id=request.tenant_id,
+            user_id=request.requested_by,
+            kind="credit_approval_decided",
+            data={
+                "approval_id": request.id,
+                "status": str(request.status),
+                "order_id": request.order_id,
+                "farmer_id": request.farmer_id,
+            },
+            body=f"notification.credit_approval_decided.body.{request.status}",
+        )
     await session.flush()
     await session.refresh(request)
     return request

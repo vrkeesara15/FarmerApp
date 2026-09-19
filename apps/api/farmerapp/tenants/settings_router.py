@@ -116,6 +116,9 @@ class SettingsPatch(BaseModel):
     location_policy_version: str | None = None
     sampling: SamplingPatch | None = None
     ta_rate_per_km_paise: int | None = Field(default=None, description="0-10000 paise.")
+    ta_daily_km_cap: int | None = Field(default=None, description="FA-023 1-1000 km a day.")
+    beat_daily_target: int | None = Field(default=None, description="FA-018 1-50 stops.")
+    beat_follow_up_days: int | None = Field(default=None, description="FA-018 1-180 days.")
     store_manager_max_credit_limit_paise: int | None = None
     credit_due_days: int | None = Field(default=None, description="1-730 days.")
     day_close_variance_threshold_paise: int | None = None

@@ -55,6 +55,15 @@ SYNC_ENTITIES: tuple[str, ...] = (
     "khata_entry",
     "credit_approval_request",  # ST-007 / FA-020 A56: read-only on devices, never written
     "diagnosis",  # M6: offline capture (create) + results in the feed; never updated by devices
+    # M7 field P1 (``farmerapp.sync.field_p1``).
+    "notification",  # FA-007 offline inbox; update = read receipt
+    "track_gap",  # VV-008 gap reasons given offline
+    "beat_plan",  # FA-018 the day's plan, reordered offline
+    "travel_claim",  # FA-023 expense claims (receipt uploaded first)
+    "demo_plot",  # FA-026
+    "demo_observation",  # FA-026 stage photos / notes
+    "farmer_meeting",  # FA-027
+    "meeting_attendance",  # FA-027 (OTP online; QR validated when synced)
 )
 #: Never in the change feed, whatever hook sees them: raw location points are high-volume
 #: telemetry the device already has (VV-001) and other officers must never receive (SPEC 2.6).

@@ -9476,6 +9476,1513 @@ paths:
       x-roles:
       - owner
       - tenant_admin
+  /v1/notifications:
+    get:
+      tags:
+      - notifications
+      summary: The caller's inbox, newest first (cursor), with the unread count
+      operationId: listNotifications
+      parameters:
+      - name: unread_only
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: Only unread notifications.
+          default: false
+          title: Unread Only
+        description: Only unread notifications.
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/notifications/read-all:
+    post:
+      tags:
+      - notifications
+      summary: Mark every unread notification of the caller as read
+      operationId: readAllNotifications
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadAllOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/notifications/{id}/read:
+    post:
+      tags:
+      - notifications
+      summary: Mark one of the caller's notifications as read (idempotent)
+      operationId: readNotification
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/devices/me/push-token:
+    post:
+      tags:
+      - notifications
+      summary: Register (or refresh) this device's FCM token for push notifications
+      operationId: registerPushToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushTokenIn'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushTokenOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/devices/me/push-token/remove:
+    post:
+      tags:
+      - notifications
+      summary: Stop pushing to this token (logout)
+      operationId: removePushToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushTokenRemoveIn'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushTokenRemovedOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/me/day:
+    get:
+      tags:
+      - duty
+      summary: 'The caller''s day: duty sessions, km, stops, gaps (with reasons), visits, TA'
+      operationId: getMyDay
+      parameters:
+      - name: date
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          description: The IST day (YYYY-MM-DD).
+          title: Date
+        description: The IST day (YYYY-MM-DD).
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeDayOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+  /v1/me/gaps/{gap_id}/reason:
+    post:
+      tags:
+      - duty
+      summary: Explain a gap in the caller's track (shown to the cluster head)
+      operationId: setGapReason
+      parameters:
+      - name: gap_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Gap Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GapReasonIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GapOutRow'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+  /v1/travel/claims:
+    post:
+      tags:
+      - travel
+      summary: Submit an expense claim (fuel / bus / other) with its receipt photo
+      operationId: submitTravelClaim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TravelClaimIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelClaimOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`claim_date_invalid`, `invalid_blob`, `idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - field_officer
+    get:
+      tags:
+      - travel
+      summary: Expense claims the caller may see (own / own cluster / tenant), oldest first
+      operationId: listTravelClaims
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - submitted
+            - approved
+            - rejected
+            type: string
+          - type: 'null'
+          description: Filter.
+          title: Status
+        description: Filter.
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: One officer.
+          title: Officer Id
+        description: One officer.
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelClaimPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - tenant_admin
+  /v1/travel/claims/{id}:
+    get:
+      tags:
+      - travel
+      summary: One expense claim
+      operationId: getTravelClaim
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelClaimOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - tenant_admin
+  /v1/travel/claims/{id}/approve:
+    post:
+      tags:
+      - travel
+      summary: Approve a submitted claim (cluster head of the officer's cluster)
+      operationId: approveTravelClaim
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimDecisionIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelClaimOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`claim_not_pending`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
+      - tenant_admin
+  /v1/travel/claims/{id}/reject:
+    post:
+      tags:
+      - travel
+      summary: Reject a submitted claim with a note
+      operationId: rejectTravelClaim
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimDecisionIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelClaimOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`claim_not_pending`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
+      - tenant_admin
+  /v1/travel/statement:
+    get:
+      tags:
+      - travel
+      summary: 'Monthly travel statement: daily km and allowance, claims, payable total'
+      operationId: getTravelStatement
+      parameters:
+      - name: month
+        in: query
+        required: true
+        schema:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+          description: YYYY-MM (IST).
+          title: Month
+        description: YYYY-MM (IST).
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Officer (default: the caller on duty).'
+          title: Officer Id
+        description: 'Officer (default: the caller on duty).'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelStatementOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_month`, `officer_required`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - tenant_admin
+  /v1/me/beat:
+    get:
+      tags:
+      - beat
+      summary: The caller's beat plan for a day (generated at 06:00 IST, or on first read)
+      operationId: getMyBeatPlan
+      parameters:
+      - name: date
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          description: The IST day (YYYY-MM-DD).
+          title: Date
+        description: The IST day (YYYY-MM-DD).
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BeatPlanOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`beat_plan_not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - field_officer
+    put:
+      tags:
+      - beat
+      summary: Reorder, add and remove stops (the whole ordered list)
+      operationId: updateMyBeatPlan
+      parameters:
+      - name: date
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          description: The IST day (YYYY-MM-DD).
+          title: Date
+        description: The IST day (YYYY-MM-DD).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BeatPlanUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BeatPlanOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: '`version_conflict`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`beat_item_unknown`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - field_officer
+  /v1/me/performance:
+    get:
+      tags:
+      - performance
+      summary: The caller's KPIs for a period, computed exactly like the console
+      operationId: getMyPerformance
+      parameters:
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'First IST day (inclusive). Default: `to` - 29 days.'
+          title: From
+        description: 'First IST day (inclusive). Default: `to` - 29 days.'
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'Last IST day (inclusive). Default: today (IST).'
+          title: To
+        description: 'Last IST day (inclusive). Default: today (IST).'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`invalid_date_range`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - field_officer
+  /v1/demo-plots:
+    post:
+      tags:
+      - demo-plots
+      summary: Register a demo plot on a farmer's crop plot (vs farmer practice or a plot)
+      operationId: createDemoPlot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DemoPlotCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoPlotOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`demo_plot_invalid`, `idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - field_officer
+    get:
+      tags:
+      - demo-plots
+      summary: Demo plots the caller may see, oldest first (cursor)
+      operationId: listDemoPlots
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - created
+            - active
+            - harvested
+            - reported
+            type: string
+          - type: 'null'
+          title: Status
+      - name: farmer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoPlotPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - tenant_admin
+  /v1/demo-plots/{id}:
+    get:
+      tags:
+      - demo-plots
+      summary: A demo plot with its stage observations
+      operationId: getDemoPlot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoPlotDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - tenant_admin
+  /v1/demo-plots/{id}/observations:
+    post:
+      tags:
+      - demo-plots
+      summary: Record a stage observation with photos (completed demo_plot uploads)
+      operationId: addDemoObservation
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ObservationIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObservationOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`demo_plot_transition_invalid`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_blob`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - field_officer
+  /v1/demo-plots/{id}/transition:
+    post:
+      tags:
+      - demo-plots
+      summary: Activate the demo (treatment applied) or mark it reported
+      operationId: transitionDemoPlot
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DemoTransitionIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoPlotOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`demo_plot_transition_invalid`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - field_officer
+  /v1/demo-plots/{id}/yield:
+    post:
+      tags:
+      - demo-plots
+      summary: 'Enter the harvest: demo vs farmer-practice yield (kg per acre)'
+      operationId: recordDemoYield
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/YieldIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoPlotOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`demo_plot_transition_invalid`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - field_officer
+  /v1/meetings:
+    post:
+      tags:
+      - meetings
+      summary: Start a farmer meeting at a village meeting point (geofenced like a visit)
+      operationId: createMeeting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeetingCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`outside_geofence`, `idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - field_officer
+    get:
+      tags:
+      - meetings
+      summary: Meetings the caller may see, oldest first (cursor)
+      operationId: listMeetings
+      parameters:
+      - name: village_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Village Id
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - tenant_admin
+  /v1/meetings/{id}:
+    get:
+      tags:
+      - meetings
+      summary: A meeting with its attendance list (linked to farmers)
+      operationId: getMeeting
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - tenant_admin
+  /v1/meetings/{id}/attendance/otp:
+    post:
+      tags:
+      - meetings
+      summary: Send an attendance code to a farmer's phone (purpose meeting_attendance)
+      operationId: sendMeetingAttendanceOtp
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceOtpIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceOtpOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`meeting_closed`'
+          content:
+            application/problem+json: {}
+        '429':
+          description: '`otp_resend_limit`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - field_officer
+  /v1/meetings/{id}/attendance:
+    post:
+      tags:
+      - meetings
+      summary: Record a farmer's attendance by OTP code or the farmer app's QR
+      operationId: recordMeetingAttendance
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`otp_invalid`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`meeting_closed`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`attendance_token_invalid`, `idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - field_officer
+  /v1/meetings/{id}/close:
+    post:
+      tags:
+      - meetings
+      summary: Close the meeting (no more attendance)
+      operationId: closeMeeting
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - field_officer
+  /v1/me/attendance-qr:
+    get:
+      tags:
+      - meetings
+      summary: 'Farmer app: a short-lived signed QR token proving the farmer''s presence'
+      operationId: getMyAttendanceQr
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceQrOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`farmer_profile_not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
 components:
   schemas:
     AdjustmentIn:
@@ -9609,6 +11116,175 @@ components:
         officer themself and the roles that read user profiles (``GET /v1/users``); masked
 
         (``+91******3210``) for every other reader.'
+    AttendanceIn:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client id (offline create).
+        method:
+          type: string
+          enum:
+          - otp
+          - qr
+          title: Method
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+          description: Required for `otp`.
+        code:
+          anyOf:
+          - type: string
+            pattern: ^\d{6}$
+          - type: 'null'
+          title: Code
+          description: '`otp`: the code.'
+        token:
+          anyOf:
+          - type: string
+            maxLength: 4096
+            minLength: 16
+          - type: 'null'
+          title: Token
+          description: '`qr`: the scanned token.'
+        recorded_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Recorded At
+          description: 'When the QR was scanned (offline sync); the token must not have expired by then.
+            Default: now.'
+      type: object
+      required:
+      - method
+      title: AttendanceIn
+    AttendanceOtpIn:
+      properties:
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+      type: object
+      required:
+      - farmer_id
+      title: AttendanceOtpIn
+    AttendanceOtpOut:
+      properties:
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        phone_masked:
+          type: string
+          title: Phone Masked
+        expires_in:
+          type: integer
+          title: Expires In
+        resend_after:
+          type: integer
+          title: Resend After
+        resends_left:
+          type: integer
+          title: Resends Left
+      type: object
+      required:
+      - farmer_id
+      - phone_masked
+      - expires_in
+      - resend_after
+      - resends_left
+      title: AttendanceOtpOut
+    AttendanceOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        meeting_id:
+          type: string
+          format: uuid
+          title: Meeting Id
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        farmer_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Farmer Name
+        method:
+          type: string
+          title: Method
+        recorded_at:
+          type: string
+          format: date-time
+          title: Recorded At
+        recorded_by:
+          type: string
+          format: uuid
+          title: Recorded By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - meeting_id
+      - farmer_id
+      - method
+      - recorded_at
+      - recorded_by
+      - created_at
+      - updated_at
+      - version
+      title: AttendanceOut
+    AttendanceQrOut:
+      properties:
+        token:
+          type: string
+          title: Token
+          description: Show as a QR; the officer scans it (FA-027).
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        expires_at:
+          type: string
+          format: date-time
+          title: Expires At
+      type: object
+      required:
+      - token
+      - farmer_id
+      - expires_at
+      title: AttendanceQrOut
     AuditLogOut:
       properties:
         id:
@@ -9887,6 +11563,238 @@ components:
       - available
       title: BatchStateOut
       description: 'A batch after the write: the cached qty equals the ledger sum.'
+    BeatItemIn:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: An existing item's id (keeps its reasons); omit to add.
+        kind:
+          type: string
+          enum:
+          - farmer
+          - village
+          title: Kind
+          default: farmer
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+        village_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Village Id
+        note:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Note
+      type: object
+      title: BeatItemIn
+    BeatItemOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        kind:
+          type: string
+          enum:
+          - farmer
+          - village
+          title: Kind
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+        farmer_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Farmer Name
+        village_id:
+          type: string
+          format: uuid
+          title: Village Id
+        village_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Village Name
+        reasons:
+          items:
+            $ref: '#/components/schemas/BeatReason'
+          type: array
+          title: Reasons
+        priority:
+          type: integer
+          title: Priority
+          description: Higher first when generated; the officer's order wins.
+        source:
+          type: string
+          enum:
+          - system
+          - officer
+          title: Source
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+      type: object
+      required:
+      - id
+      - kind
+      - village_id
+      - priority
+      - source
+      title: BeatItemOut
+    BeatPlanOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        plan_date:
+          type: string
+          format: date
+          title: Plan Date
+        status:
+          type: string
+          title: Status
+          description: generated | edited
+        target:
+          type: integer
+          title: Target
+        items:
+          items:
+            $ref: '#/components/schemas/BeatItemOut'
+          type: array
+          title: Items
+        villages:
+          items:
+            $ref: '#/components/schemas/BeatVillageOut'
+          type: array
+          title: Villages
+          description: Villages in the order first visited.
+        generated_at:
+          type: string
+          format: date-time
+          title: Generated At
+        edited_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Edited At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - officer_id
+      - plan_date
+      - status
+      - target
+      - items
+      - villages
+      - generated_at
+      - edited_at
+      - created_at
+      - updated_at
+      - version
+      title: BeatPlanOut
+    BeatPlanUpdate:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/BeatItemIn'
+          type: array
+          maxItems: 100
+          title: Items
+        version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Version
+          description: Optimistic check (409 on mismatch).
+      type: object
+      required:
+      - items
+      title: BeatPlanUpdate
+      description: 'The whole ordered list: reorder by order, remove by omission, add without ``id``.'
+    BeatReason:
+      properties:
+        code:
+          type: string
+          enum:
+          - follow_up_due
+          - pest_alert
+          - credit_due
+          - demo_plot_stage
+          title: Code
+        detail:
+          additionalProperties: true
+          type: object
+          title: Detail
+      type: object
+      required:
+      - code
+      title: BeatReason
+    BeatVillageOut:
+      properties:
+        village_id:
+          type: string
+          format: uuid
+          title: Village Id
+        village_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Village Name
+        items:
+          type: integer
+          title: Items
+      type: object
+      required:
+      - village_id
+      - village_name
+      - items
+      title: BeatVillageOut
     BrandSplitOut:
       properties:
         own_brand_paise:
@@ -10056,6 +11964,16 @@ components:
       - received_chunks
       - missing_chunks
       title: ChunkAck
+    ClaimDecisionIn:
+      properties:
+        note:
+          anyOf:
+          - type: string
+            maxLength: 1000
+          - type: 'null'
+          title: Note
+      type: object
+      title: ClaimDecisionIn
     ClaimStatusFilter:
       type: string
       enum:
@@ -11759,6 +13677,383 @@ components:
       - due_by
       - created_at
       title: DeletionRequestOut
+    DemoPlotCreate:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client id (offline create).
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        crop_plot_id:
+          type: string
+          format: uuid
+          title: Crop Plot Id
+          description: The demo field (a crop plot of the farmer).
+        baseline:
+          type: string
+          enum:
+          - farmer_practice
+          - comparison_plot
+          title: Baseline
+          default: farmer_practice
+        comparison_crop_plot_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Comparison Crop Plot Id
+          description: 'Required for `comparison_plot`: the plot compared with.'
+        product_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Product Id
+          description: The product demonstrated.
+        treatment:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Treatment
+          description: What is applied, how.
+      type: object
+      required:
+      - farmer_id
+      - crop_plot_id
+      - treatment
+      title: DemoPlotCreate
+    DemoPlotDetailOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        farm_id:
+          type: string
+          format: uuid
+          title: Farm Id
+        crop_plot_id:
+          type: string
+          format: uuid
+          title: Crop Plot Id
+        baseline:
+          type: string
+          title: Baseline
+        comparison_crop_plot_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Comparison Crop Plot Id
+        product_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Product Id
+        treatment:
+          type: string
+          title: Treatment
+        status:
+          type: string
+          title: Status
+          description: created -> active -> harvested -> reported
+        stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Stage
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+        harvested_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Harvested At
+        reported_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Reported At
+        last_observed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Observed At
+        demo_yield_kg_per_acre:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Demo Yield Kg Per Acre
+        practice_yield_kg_per_acre:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Practice Yield Kg Per Acre
+        yield_gain_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Yield Gain Pct
+          description: (demo - practice) / practice x 100, when both yields are in.
+        yield_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Yield Note
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+        observations:
+          items:
+            $ref: '#/components/schemas/ObservationOut'
+          type: array
+          title: Observations
+      type: object
+      required:
+      - id
+      - tenant_id
+      - officer_id
+      - farmer_id
+      - farm_id
+      - crop_plot_id
+      - baseline
+      - comparison_crop_plot_id
+      - product_id
+      - treatment
+      - status
+      - stage
+      - started_at
+      - harvested_at
+      - reported_at
+      - last_observed_at
+      - demo_yield_kg_per_acre
+      - practice_yield_kg_per_acre
+      - yield_gain_pct
+      - yield_note
+      - created_at
+      - updated_at
+      - version
+      - observations
+      title: DemoPlotDetailOut
+    DemoPlotOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        farm_id:
+          type: string
+          format: uuid
+          title: Farm Id
+        crop_plot_id:
+          type: string
+          format: uuid
+          title: Crop Plot Id
+        baseline:
+          type: string
+          title: Baseline
+        comparison_crop_plot_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Comparison Crop Plot Id
+        product_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Product Id
+        treatment:
+          type: string
+          title: Treatment
+        status:
+          type: string
+          title: Status
+          description: created -> active -> harvested -> reported
+        stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Stage
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+        harvested_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Harvested At
+        reported_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Reported At
+        last_observed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Observed At
+        demo_yield_kg_per_acre:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Demo Yield Kg Per Acre
+        practice_yield_kg_per_acre:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Practice Yield Kg Per Acre
+        yield_gain_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Yield Gain Pct
+          description: (demo - practice) / practice x 100, when both yields are in.
+        yield_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Yield Note
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - officer_id
+      - farmer_id
+      - farm_id
+      - crop_plot_id
+      - baseline
+      - comparison_crop_plot_id
+      - product_id
+      - treatment
+      - status
+      - stage
+      - started_at
+      - harvested_at
+      - reported_at
+      - last_observed_at
+      - demo_yield_kg_per_acre
+      - practice_yield_kg_per_acre
+      - yield_gain_pct
+      - yield_note
+      - created_at
+      - updated_at
+      - version
+      title: DemoPlotOut
+    DemoPlotPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/DemoPlotOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: DemoPlotPage
+    DemoTransitionIn:
+      properties:
+        to:
+          type: string
+          enum:
+          - active
+          - reported
+          title: To
+        at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: At
+      type: object
+      required:
+      - to
+      title: DemoTransitionIn
     DeviceBrief:
       properties:
         device_id:
@@ -14492,7 +16787,21 @@ components:
           - type: string
           - type: 'null'
           title: Reason
-          description: The officer's reason (VV-008); null until it exists.
+          description: 'The officer''s reason (VV-008): network | personal_break | vehicle | other; null
+            while not given.'
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Stable gap id (VV-008 `POST /v1/me/gaps/{gap_id}/reason`).
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+          description: The officer's note with the reason.
       type: object
       required:
       - start
@@ -14501,6 +16810,76 @@ components:
       - duty_session_id
       - reason
       title: GapOut
+    GapOutRow:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        duty_session_id:
+          type: string
+          format: uuid
+          title: Duty Session Id
+        start:
+          type: string
+          format: date-time
+          title: Start
+        end:
+          type: string
+          format: date-time
+          title: End
+        duration_s:
+          type: integer
+          title: Duration S
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+        reason_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Reason At
+      type: object
+      required:
+      - id
+      - duty_session_id
+      - start
+      - end
+      - duration_s
+      - reason
+      - note
+      - reason_at
+      title: GapOutRow
+    GapReason:
+      type: string
+      enum:
+      - network
+      - personal_break
+      - vehicle
+      - other
+      title: GapReason
+    GapReasonIn:
+      properties:
+        reason:
+          $ref: '#/components/schemas/GapReason'
+        note:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Note
+      type: object
+      required:
+      - reason
+      title: GapReasonIn
     GeoJsonMultiLineString:
       properties:
         type:
@@ -15764,6 +18143,64 @@ components:
       required:
       - refresh_token
       title: LogoutRequest
+    MeDayOut:
+      properties:
+        date:
+          type: string
+          format: date
+          title: Date
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        duty_sessions:
+          items:
+            $ref: '#/components/schemas/DutySessionBrief'
+          type: array
+          title: Duty Sessions
+        km:
+          type: number
+          title: Km
+          description: The day's km (processed km of ended sessions, VV-006).
+        track:
+          $ref: '#/components/schemas/GeoJsonMultiLineString'
+        stops:
+          items:
+            $ref: '#/components/schemas/StopOut'
+          type: array
+          title: Stops
+        gaps:
+          items:
+            $ref: '#/components/schemas/GapOut'
+          type: array
+          title: Gaps
+          description: Gaps > 30 min while on duty, with reasons.
+        visits:
+          items:
+            $ref: '#/components/schemas/ReplayVisitOut'
+          type: array
+          title: Visits
+        timeline:
+          items:
+            $ref: '#/components/schemas/TimelineEvent'
+          type: array
+          title: Timeline
+        travel:
+          $ref: '#/components/schemas/TravelDayOut'
+          description: FA-023 travel allowance of the day.
+      type: object
+      required:
+      - date
+      - officer_id
+      - duty_sessions
+      - km
+      - track
+      - stops
+      - gaps
+      - visits
+      - timeline
+      - travel
+      title: MeDayOut
     MeOut:
       properties:
         id:
@@ -15824,6 +18261,247 @@ components:
       - created_at
       title: MeOut
       description: '``GET /v1/me``: the profile plus, for a farmer login, their field officer (FM-011).'
+    MeetingCreate:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client id (offline create).
+        village_id:
+          type: string
+          format: uuid
+          title: Village Id
+        topic:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Topic
+        held_at:
+          type: string
+          format: date-time
+          title: Held At
+        checkin_point:
+          $ref: '#/components/schemas/CheckinPoint'
+      type: object
+      required:
+      - village_id
+      - topic
+      - held_at
+      - checkin_point
+      title: MeetingCreate
+    MeetingDetailOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        village_id:
+          type: string
+          format: uuid
+          title: Village Id
+        topic:
+          type: string
+          title: Topic
+        held_at:
+          type: string
+          format: date-time
+          title: Held At
+        checkin_lat:
+          type: number
+          title: Checkin Lat
+        checkin_lon:
+          type: number
+          title: Checkin Lon
+        checkin_accuracy_m:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Checkin Accuracy M
+        geofence_result:
+          type: string
+          title: Geofence Result
+          description: meeting_point (VV-003, like a `meeting` visit).
+        distance_m:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Distance M
+        status:
+          type: string
+          title: Status
+        closed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Closed At
+        attendees:
+          type: integer
+          title: Attendees
+          default: 0
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+        attendance:
+          items:
+            $ref: '#/components/schemas/AttendanceOut'
+          type: array
+          title: Attendance
+      type: object
+      required:
+      - id
+      - tenant_id
+      - officer_id
+      - village_id
+      - topic
+      - held_at
+      - checkin_lat
+      - checkin_lon
+      - checkin_accuracy_m
+      - geofence_result
+      - distance_m
+      - status
+      - closed_at
+      - created_at
+      - updated_at
+      - version
+      - attendance
+      title: MeetingDetailOut
+    MeetingOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        village_id:
+          type: string
+          format: uuid
+          title: Village Id
+        topic:
+          type: string
+          title: Topic
+        held_at:
+          type: string
+          format: date-time
+          title: Held At
+        checkin_lat:
+          type: number
+          title: Checkin Lat
+        checkin_lon:
+          type: number
+          title: Checkin Lon
+        checkin_accuracy_m:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Checkin Accuracy M
+        geofence_result:
+          type: string
+          title: Geofence Result
+          description: meeting_point (VV-003, like a `meeting` visit).
+        distance_m:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Distance M
+        status:
+          type: string
+          title: Status
+        closed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Closed At
+        attendees:
+          type: integer
+          title: Attendees
+          default: 0
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - officer_id
+      - village_id
+      - topic
+      - held_at
+      - checkin_lat
+      - checkin_lon
+      - checkin_accuracy_m
+      - geofence_result
+      - distance_m
+      - status
+      - closed_at
+      - created_at
+      - updated_at
+      - version
+      title: MeetingOut
+    MeetingPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/MeetingOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: MeetingPage
     ModeTotal:
       properties:
         mode:
@@ -15871,6 +18549,216 @@ components:
       - distance_m
       - source
       title: NearestStoreOut
+    NotificationOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        kind:
+          type: string
+          title: Kind
+        title_key:
+          type: string
+          title: Title Key
+          description: i18n key of the title (the app resolves it).
+        body_key:
+          type: string
+          title: Body Key
+          description: i18n key of the body.
+        data:
+          additionalProperties: true
+          type: object
+          title: Data
+          description: Ids for the deep link (see `route`).
+        route:
+          type: string
+          title: Route
+          description: Where the app opens this notification (FA-007 deep link).
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        read_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Read At
+        delivery_status:
+          type: string
+          title: Delivery Status
+          description: pending | delivered | failed | no_device | skipped (push only; the inbox lists
+            every row whatever its push outcome).
+        delivered_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Delivered At
+      type: object
+      required:
+      - id
+      - tenant_id
+      - user_id
+      - kind
+      - title_key
+      - body_key
+      - data
+      - route
+      - created_at
+      - read_at
+      - delivery_status
+      - delivered_at
+      title: NotificationOut
+    NotificationPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/NotificationOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+        unread:
+          type: integer
+          title: Unread
+          description: Unread notifications of the caller (badge).
+      type: object
+      required:
+      - items
+      - unread
+      title: NotificationPage
+    ObservationIn:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client id (offline create).
+        stage:
+          type: string
+          enum:
+          - sown
+          - vegetative
+          - flowering
+          - fruiting
+          - maturity
+          - harvest
+          title: Stage
+        side:
+          type: string
+          enum:
+          - demo
+          - practice
+          - both
+          title: Side
+          default: demo
+        observed_at:
+          type: string
+          format: date-time
+          title: Observed At
+        note:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Note
+        photo_uris:
+          items:
+            type: string
+          type: array
+          maxItems: 10
+          title: Photo Uris
+          description: Completed `demo_plot` uploads.
+      type: object
+      required:
+      - stage
+      - observed_at
+      title: ObservationIn
+    ObservationOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        demo_plot_id:
+          type: string
+          format: uuid
+          title: Demo Plot Id
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        stage:
+          type: string
+          title: Stage
+        side:
+          type: string
+          title: Side
+        observed_at:
+          type: string
+          format: date-time
+          title: Observed At
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+        photo_uris:
+          items:
+            type: string
+          type: array
+          title: Photo Uris
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - demo_plot_id
+      - officer_id
+      - stage
+      - side
+      - observed_at
+      - note
+      - photo_uris
+      - created_at
+      - updated_at
+      - version
+      title: ObservationOut
     OfficerProfileOut:
       properties:
         filters:
@@ -15923,6 +18811,17 @@ components:
             $ref: '#/components/schemas/OfficerVisitOut'
           type: array
           title: Recent Visits
+        sales_net_paise:
+          type: integer
+          title: Sales Net Paise
+          description: Net sales of the orders the officer placed in the range (fulfilled; FA-024 shows
+            the same figure in the officer's app).
+          default: 0
+        sales_orders:
+          type: integer
+          title: Sales Orders
+          description: Those orders.
+          default: 0
       type: object
       required:
       - filters
@@ -17659,6 +20558,107 @@ components:
       - failure_reason
       title: PaymentStatusOut
       description: '``GET /v1/payments/{id}`` — polled by the A53 "waiting for payment" screen.'
+    PerformanceOut:
+      properties:
+        filters:
+          $ref: '#/components/schemas/FiltersOut'
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        from:
+          type: string
+          format: date
+          title: From
+        to:
+          type: string
+          format: date
+          title: To
+        duty_days:
+          type: integer
+          title: Duty Days
+        visits:
+          type: integer
+          title: Visits
+          description: All visits checked in during the period.
+        verified_visits:
+          type: integer
+          title: Verified Visits
+          description: Visits with score >= 70 (VV-004 / SPEC 5.2).
+        verified_visits_per_day:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Verified Visits Per Day
+        unique_farmers_reached:
+          type: integer
+          title: Unique Farmers Reached
+        farmers_added:
+          type: integer
+          title: Farmers Added
+          description: Farmers the officer registered in the period.
+        confirmation_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Confirmation Rate
+          description: Confirmed / all visits (0-1).
+        time_on_farm_s:
+          type: integer
+          title: Time On Farm S
+        conversion_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Conversion Rate
+        sales_net_paise:
+          type: integer
+          title: Sales Net Paise
+          description: Net sales of the orders they placed.
+        sales_orders:
+          type: integer
+          title: Sales Orders
+        collections_paise:
+          type: integer
+          title: Collections Paise
+          description: Money they collected.
+        km_per_day:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Km Per Day
+        rank:
+          type: integer
+          title: Rank
+          description: 'Always 1: the officer''s own row (no ranking against others).'
+        incentive_earned_paise:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Incentive Earned Paise
+          description: Incentive earned in the period (WC-009); null until the rules exist.
+      type: object
+      required:
+      - filters
+      - officer_id
+      - from
+      - to
+      - duty_days
+      - visits
+      - verified_visits
+      - verified_visits_per_day
+      - unique_farmers_reached
+      - farmers_added
+      - confirmation_rate
+      - time_on_farm_s
+      - conversion_rate
+      - sales_net_paise
+      - sales_orders
+      - collections_paise
+      - km_per_day
+      - rank
+      - incentive_earned_paise
+      title: PerformanceOut
     PestList:
       properties:
         items:
@@ -18795,6 +21795,102 @@ components:
       - branding
       title: PublicSettings
       description: What the field and farmer apps read (no finance, credit or invoicing keys).
+    PushTokenIn:
+      properties:
+        token:
+          type: string
+          maxLength: 4096
+          minLength: 16
+          title: Token
+          description: FCM registration token.
+        platform:
+          type: string
+          enum:
+          - android
+          - ios
+          - web
+          title: Platform
+          default: android
+        device_id:
+          anyOf:
+          - type: string
+            maxLength: 128
+          - type: 'null'
+          title: Device Id
+          description: The app's device id (defaults to the device bound to the access token).
+        app_version:
+          anyOf:
+          - type: string
+            maxLength: 32
+          - type: 'null'
+          title: App Version
+      type: object
+      required:
+      - token
+      title: PushTokenIn
+    PushTokenOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        platform:
+          type: string
+          title: Platform
+        device_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Id
+        token_suffix:
+          type: string
+          title: Token Suffix
+          description: Last 6 characters (the token is never echoed).
+        last_registered_at:
+          type: string
+          format: date-time
+          title: Last Registered At
+        active:
+          type: boolean
+          title: Active
+      type: object
+      required:
+      - id
+      - platform
+      - device_id
+      - token_suffix
+      - last_registered_at
+      - active
+      title: PushTokenOut
+    PushTokenRemoveIn:
+      properties:
+        token:
+          type: string
+          maxLength: 4096
+          minLength: 16
+          title: Token
+      type: object
+      required:
+      - token
+      title: PushTokenRemoveIn
+    PushTokenRemovedOut:
+      properties:
+        removed:
+          type: integer
+          title: Removed
+      type: object
+      required:
+      - removed
+      title: PushTokenRemovedOut
+    ReadAllOut:
+      properties:
+        marked:
+          type: integer
+          title: Marked
+      type: object
+      required:
+      - marked
+      title: ReadAllOut
     ReceiptIn:
       properties:
         reference:
@@ -19851,6 +22947,24 @@ components:
           - type: 'null'
           title: Ta Rate Per Km Paise
           description: 0-10000 paise.
+        ta_daily_km_cap:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Ta Daily Km Cap
+          description: FA-023 1-1000 km a day.
+        beat_daily_target:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Beat Daily Target
+          description: FA-018 1-50 stops.
+        beat_follow_up_days:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Beat Follow Up Days
+          description: FA-018 1-180 days.
         store_manager_max_credit_limit_paise:
           anyOf:
           - type: integer
@@ -21043,6 +24157,14 @@ components:
           - khata_entry
           - credit_approval_request
           - diagnosis
+          - notification
+          - track_gap
+          - beat_plan
+          - travel_claim
+          - demo_plot
+          - demo_observation
+          - farmer_meeting
+          - meeting_attendance
           title: Entity
         action:
           type: string
@@ -21128,6 +24250,14 @@ components:
           - khata_entry
           - credit_approval_request
           - diagnosis
+          - notification
+          - track_gap
+          - beat_plan
+          - travel_claim
+          - demo_plot
+          - demo_observation
+          - farmer_meeting
+          - meeting_attendance
           title: Entity
         action:
           type: string
@@ -21304,6 +24434,24 @@ components:
           minimum: 0.0
           title: Ta Rate Per Km Paise
           default: 300
+        ta_daily_km_cap:
+          type: integer
+          maximum: 1000.0
+          minimum: 1.0
+          title: Ta Daily Km Cap
+          default: 150
+        beat_daily_target:
+          type: integer
+          maximum: 50.0
+          minimum: 1.0
+          title: Beat Daily Target
+          default: 10
+        beat_follow_up_days:
+          type: integer
+          maximum: 180.0
+          minimum: 1.0
+          title: Beat Follow Up Days
+          default: 14
         store_manager_max_credit_limit_paise:
           type: integer
           maximum: 10000000000.0
@@ -21706,6 +24854,272 @@ components:
       required:
       - to
       title: TransitionIn
+    TravelClaimIn:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client id (offline create).
+        claim_date:
+          type: string
+          format: date
+          title: Claim Date
+        type:
+          type: string
+          enum:
+          - fuel
+          - bus
+          - other
+          title: Type
+        amount_paise:
+          type: integer
+          maximum: 10000000.0
+          exclusiveMinimum: 0.0
+          title: Amount Paise
+          description: Integer paise (<= Rs 1 lakh).
+        receipt_uri:
+          type: string
+          maxLength: 512
+          minLength: 1
+          title: Receipt Uri
+          description: The receipt photo (completed /v1/uploads).
+        note:
+          anyOf:
+          - type: string
+            maxLength: 1000
+          - type: 'null'
+          title: Note
+      type: object
+      required:
+      - claim_date
+      - type
+      - amount_paise
+      - receipt_uri
+      title: TravelClaimIn
+    TravelClaimOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        claim_date:
+          type: string
+          format: date
+          title: Claim Date
+        type:
+          type: string
+          title: Type
+        amount_paise:
+          type: integer
+          title: Amount Paise
+        receipt_uri:
+          type: string
+          title: Receipt Uri
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+        km_computed:
+          anyOf:
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          - type: 'null'
+          title: Km Computed
+        status:
+          type: string
+          title: Status
+        decided_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Decided By
+        decided_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Decided At
+        decision_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Decision Note
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - tenant_id
+      - officer_id
+      - claim_date
+      - type
+      - amount_paise
+      - receipt_uri
+      - note
+      - km_computed
+      - status
+      - decided_by
+      - decided_at
+      - decision_note
+      - created_at
+      - updated_at
+      - version
+      title: TravelClaimOut
+    TravelClaimPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/TravelClaimOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: TravelClaimPage
+    TravelDayOut:
+      properties:
+        date:
+          type: string
+          format: date
+          title: Date
+        sessions:
+          type: integer
+          title: Sessions
+          description: Ended duty sessions that started that IST day.
+        km:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Km
+          description: Processed duty km of the day (VV-006), before the cap.
+        km_capped:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Km Capped
+          description: min(km, tenant `ta_daily_km_cap`).
+        cap_km:
+          type: integer
+          title: Cap Km
+        rate_per_km_paise:
+          type: integer
+          title: Rate Per Km Paise
+        ta_paise:
+          type: integer
+          title: Ta Paise
+          description: 'Travel allowance: km_capped x rate, rounded to a paisa.'
+        open_session:
+          type: boolean
+          title: Open Session
+          description: A session of that day is still open (km pending).
+      type: object
+      required:
+      - date
+      - sessions
+      - km
+      - km_capped
+      - cap_km
+      - rate_per_km_paise
+      - ta_paise
+      - open_session
+      title: TravelDayOut
+    TravelStatementOut:
+      properties:
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        month:
+          type: string
+          title: Month
+          description: YYYY-MM (IST).
+        rate_per_km_paise:
+          type: integer
+          title: Rate Per Km Paise
+        cap_km:
+          type: integer
+          title: Cap Km
+        days:
+          items:
+            $ref: '#/components/schemas/TravelDayOut'
+          type: array
+          title: Days
+        km_total:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Km Total
+        km_capped_total:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Km Capped Total
+        ta_total_paise:
+          type: integer
+          title: Ta Total Paise
+        claims:
+          items:
+            $ref: '#/components/schemas/TravelClaimOut'
+          type: array
+          title: Claims
+        claims_submitted_paise:
+          type: integer
+          title: Claims Submitted Paise
+        claims_approved_paise:
+          type: integer
+          title: Claims Approved Paise
+        claims_rejected_paise:
+          type: integer
+          title: Claims Rejected Paise
+        payable_paise:
+          type: integer
+          title: Payable Paise
+          description: Travel allowance + approved claims.
+      type: object
+      required:
+      - officer_id
+      - month
+      - rate_per_km_paise
+      - cap_km
+      - days
+      - km_total
+      - km_capped_total
+      - ta_total_paise
+      - claims
+      - claims_submitted_paise
+      - claims_approved_paise
+      - claims_rejected_paise
+      - payable_paise
+      title: TravelStatementOut
     UploadCompleteOut:
       properties:
         upload_id:
@@ -21776,6 +25190,7 @@ components:
       - diagnosis
       - profile
       - corpus
+      - demo_plot
       title: UploadPurpose
     UploadStatusOut:
       properties:
@@ -22838,6 +26253,41 @@ components:
       - expiry
       - other
       title: WriteOffReason
+    YieldIn:
+      properties:
+        demo_yield_kg_per_acre:
+          anyOf:
+          - type: number
+            maximum: 100000.0
+            minimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+          title: Demo Yield Kg Per Acre
+        practice_yield_kg_per_acre:
+          anyOf:
+          - type: number
+            maximum: 100000.0
+            minimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d{0,2}0*$
+          - type: 'null'
+          title: Practice Yield Kg Per Acre
+        harvested_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Harvested At
+        note:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Note
+      type: object
+      required:
+      - demo_yield_kg_per_acre
+      title: YieldIn
     farmerapp__analytics__schemas__FlagOut:
       properties:
         id:

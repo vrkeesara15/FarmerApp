@@ -106,6 +106,7 @@ from farmerapp.policies import service as policies
 from farmerapp.policies.schemas import PolicyAcceptIn
 from farmerapp.rules import engine as rules_engine
 from farmerapp.settings import Settings
+from farmerapp.sync import field_p1
 from farmerapp.sync.models import SyncChange, SyncOp
 from farmerapp.sync.schemas import SyncChangeOut, SyncError, SyncOpIn, SyncResult
 from farmerapp.uploads.blobstore import BlobStore
@@ -150,6 +151,9 @@ CONFLICT_RULES: dict[str, Strategy] = {
     # M6: the device creates a diagnosis offline (photos uploaded first); the result is the
     # server's (pipeline / agronomist) and arrives through the feed.
     "diagnosis": Strategy.SERVER_WINS,
+    # M7 field P1 (``farmerapp.sync.field_p1``): inbox read receipts, gap reasons, beat plans,
+    # travel claims, demo plots + observations, farmer meetings + attendance.
+    **{entity: Strategy(rule) for entity, rule in field_p1.STRATEGIES.items()},
 }
 
 #: ``merge_fields`` entities: fields a device may never overwrite.
@@ -316,7 +320,15 @@ async def _create_diagnosis(
     return (_applied if created else _conflict)(op, DiagnosisOut.from_row(row), row.version)
 
 
+def _from_field(op: SyncOpIn, applied: field_p1.Applied) -> SyncResult:
+    if applied.conflict:
+        return _conflict(op, applied.out, applied.version)
+    return _applied(op, applied.out, applied.version)
+
+
 async def _create(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpContext) -> SyncResult:
+    if op.entity in field_p1.ENTITIES:
+        return _from_field(op, await field_p1.create(session, actor, op, ctx))
     if op.entity == "diagnosis":
         return await _create_diagnosis(session, actor, op, ctx)
     if op.entity == "payment":  # FA-021 officer offline cash / credit capture
@@ -436,6 +448,8 @@ async def _create(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpConte
 
 
 async def _update(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpContext) -> SyncResult:
+    if op.entity in field_p1.ENTITIES:
+        return _from_field(op, await field_p1.update(session, actor, op, ctx))
     _check_write_path(op)
     if op.entity == "duty_session":  # FA-010 end; server-owned end once auto-ended (VV-007)
         duty_row = await duty.own_session(session, actor, op.entity_id)
@@ -721,6 +735,8 @@ def _scope(actor: User) -> Any:
             SyncChange.entity == "diagnosis",
             SyncChange.entity_id.in_(select(Diagnosis.id).where(*diagnosis_filters(actor))),
         ),
+        # M7 field P1 entities (inbox, gaps, beat plans, claims, demo plots, meetings).
+        *field_p1.feed_clauses(actor),
     )
 
 
@@ -806,6 +822,7 @@ async def _current_state(
                 await session.execute(select(model).where(model.id.in_(ids[entity])))
             ).scalars():
                 state[(entity, row.id)] = to_out(row)
+    state.update(await field_p1.current_state(session, ids))
     return state
 
 
