@@ -180,6 +180,9 @@ class Farmer(Base, BaseColumns):
     phone_verified: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("false"), default=False
     )
+    # VA-F06: when the device captured an offline registration (the sync op ``client_ts``,
+    # capped at the server time); NULL for online registrations (``created_at`` applies).
+    captured_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     @staticmethod
     def last4(phone: str) -> str:

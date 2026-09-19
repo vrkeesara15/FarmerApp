@@ -846,7 +846,9 @@ settings.geofence_radius_m, settings.ta_rate_per_km_paise, settings.branding.pri
 ```
 
 New keys go into `TenantSettings` and `SETTINGS_KEYS` (and `PUBLIC_KEYS` if the apps need
-them); `PATCH /v1/settings` validates with the same model. Revocation (`farmerapp/auth/devices.py`):
+them); `PATCH /v1/settings` (owner, director, tenant admin per SPEC 2.6; step-up) validates
+with the same model. Step-up guards every admin action and every bulk export
+(`/v1/audit-logs/export`, `/v1/catalog/export`): a new export must declare `StepUp` too. Revocation (`farmerapp/auth/devices.py`):
 user status and `tokens_valid_after` are checked on every request, device status (lost /
 revoked) through a per-process cache (`SECURITY_CACHE_TTL_SECONDS`, 30 s, at most 60 s);
 refresh answers `session_revoked` or `device_wipe_required`. Field officers are bound to one

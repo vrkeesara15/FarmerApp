@@ -153,10 +153,20 @@ async def test_bad_header_is_reported(client: AsyncClient, world: World, bearer:
 
 
 async def test_export_products_round_trips(
-    client: AsyncClient, world: World, bearer: Bearer, db_session: AsyncSession
+    client: AsyncClient, world: World, bearer: Bearer, step_up: Bearer, db_session: AsyncSession
 ) -> None:
     headers = f.owner(world, bearer)
-    resp = await client.get("/v1/catalog/export", params={"kind": "products"}, headers=headers)
+    # SEC-028: a bulk export needs a fresh step-up token, like the audit export.
+    no_step_up = await client.get(
+        "/v1/catalog/export", params={"kind": "products"}, headers=headers
+    )
+    assert no_step_up.status_code == 401
+    assert no_step_up.json()["code"] == "step_up_required"
+    resp = await client.get(
+        "/v1/catalog/export",
+        params={"kind": "products"},
+        headers={**headers, **step_up(world.a.owner)},
+    )
     assert resp.status_code == 200
     assert resp.headers["content-type"].startswith("text/csv")
     assert "attachment" in resp.headers["content-disposition"]
@@ -175,7 +185,7 @@ async def test_export_products_round_trips(
 
 
 async def test_label_claims_import_creates_drafts_only(
-    client: AsyncClient, world: World, bearer: Bearer, db_session: AsyncSession
+    client: AsyncClient, world: World, bearer: Bearer, step_up: Bearer, db_session: AsyncSession
 ) -> None:
     headers = f.owner(world, bearer)
     agro = f.agronomist(world, bearer)
@@ -253,7 +263,11 @@ async def test_label_claims_import_creates_drafts_only(
     draft = listed.json()["items"][0]
     assert draft["supersedes_id"] == claims[0]["id"] and draft["phi_days"] == 30
 
-    exported = await client.get("/v1/catalog/export", params={"kind": "label_claims"}, headers=agro)
+    exported = await client.get(
+        "/v1/catalog/export",
+        params={"kind": "label_claims"},
+        headers={**agro, **step_up(world.a.user(UserRole.AGRONOMIST))},
+    )
     out = list(csv.DictReader(io.StringIO(exported.text)))
     assert tuple(out[0].keys()) == CLAIM_COLUMNS
     mine = [r for r in out if r["sku_barcode"] == "8909990001001"]

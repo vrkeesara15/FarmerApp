@@ -16,6 +16,7 @@ on:
       - "apps/jobs/**"
       - "rules/**"
       - "docker/postgres/**"
+      - ".dockerignore"
       - "Makefile"
       - ".github/workflows/ci-api.yml"
   push:
@@ -111,3 +112,34 @@ jobs:
       - name: Postgres logs on failure
         if: failure()
         run: docker logs pg || true
+
+  # VA-001: the api / worker / jobs images are built from the repo root and carry rules/
+  # (RULES_DIR=/app/rules); a deployed service without it logs rules_dir_missing and runs no
+  # rules. Build each image and validate the baked-in rules with the image's own code.
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [api, worker, jobs]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.name }} image (repo root context)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.name }}/Dockerfile
+          load: true
+          push: false
+          tags: farmerapp-${{ matrix.name }}:ci
+          cache-from: type=gha,scope=ci-${{ matrix.name }}
+          cache-to: type=gha,scope=ci-${{ matrix.name }},mode=max
+
+      - name: Rules are in the image and valid
+        run: |
+          docker run --rm --entrypoint python farmerapp-${{ matrix.name }}:ci \
+            -m farmerapp.jobs validate-rules

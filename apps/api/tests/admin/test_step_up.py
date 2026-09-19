@@ -35,6 +35,7 @@ def _protected(officer: User) -> list[tuple[str, str, dict[str, Any] | None]]:
         ("POST", f"/v1/users/{officer.id}/devices/phone-x/report-lost", None),
         ("PATCH", "/v1/settings", {"geofence_radius_m": 200}),
         ("GET", "/v1/audit-logs/export", None),
+        ("GET", "/v1/catalog/export?kind=products", None),
     ]
 
 
@@ -48,6 +49,7 @@ ACTIONS = [
     "device_report_lost",
     "settings_change",
     "audit_export",
+    "catalog_export",
 ]
 
 
@@ -90,6 +92,7 @@ def test_contract_marks_protected_operations() -> None:
         ("POST", "/v1/users/{id}/devices/{device_id}/report-lost"),
         ("PATCH", "/v1/settings"),
         ("GET", "/v1/audit-logs/export"),
+        ("GET", "/v1/catalog/export"),
     }
     patch_user = spec["paths"]["/v1/users/{id}"]["patch"]
     assert "step_up_required" in patch_user["responses"]["401"]["description"]

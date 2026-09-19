@@ -3335,6 +3335,7 @@ paths:
             application/problem+json: {}
       x-step-up: true
       x-roles:
+      - director
       - owner
       - tenant_admin
   /v1/settings/public:
@@ -4528,7 +4529,7 @@ paths:
     get:
       tags:
       - catalog
-      summary: CSV export of products + SKUs or label claims
+      summary: CSV export of products + SKUs or label claims (step-up required; audited)
       operationId: exportCatalog
       parameters:
       - name: kind
@@ -4549,13 +4550,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
           description: '`forbidden`'
           content:
             application/problem+json: {}
+      x-step-up: true
       x-roles:
       - agronomist
       - auditor

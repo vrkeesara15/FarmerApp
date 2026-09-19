@@ -144,6 +144,8 @@ async def scorecard(
             store_ids=scope.store_ids,
             officer_ids=scope.officer_ids,
             opened_before=end,
+            viewer=scope.actor,
+            officer_only=scope.own_officer_id is not None,
         ),
     )
     return _rows(scope, visits, duty, regs, cols, bought, counts.by_officer)

@@ -177,11 +177,23 @@ async def test_unknown_keys_and_languages_fail_request_validation(
         assert resp.status_code == 422, resp.text
 
 
-async def test_director_reads_but_cannot_write(
-    client: AsyncClient, director: User, admin_headers: Mint
+async def test_director_writes_settings_with_step_up(
+    client: AsyncClient, director: User, bearer: Mint, admin_headers: Mint
+) -> None:
+    """SPEC 2.6: Owner / director write Settings; SEC-028 step-up still applies."""
+    body = {"geofence_radius_m": 200}
+    resp = await client.patch("/v1/settings", json=body, headers=bearer(director))
+    problem(resp, 401, "step_up_required")
+    resp = await client.patch("/v1/settings", json=body, headers=admin_headers(director))
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["geofence_radius_m"] == 200
+
+
+async def test_other_roles_cannot_write_settings(
+    client: AsyncClient, store_manager: User, admin_headers: Mint
 ) -> None:
     resp = await client.patch(
-        "/v1/settings", json={"geofence_radius_m": 200}, headers=admin_headers(director)
+        "/v1/settings", json={"geofence_radius_m": 200}, headers=admin_headers(store_manager)
     )
     problem(resp, 403, "forbidden")
 

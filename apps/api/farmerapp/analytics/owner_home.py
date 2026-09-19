@@ -25,6 +25,7 @@ from __future__ import annotations
 import uuid
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from datetime import date, timedelta
 from typing import Any
 
@@ -184,22 +185,22 @@ async def owner_home(session: AsyncSession, scope: Scope, flags: FlagCountsPort)
     ]
     ly_book = credit_book(entries, ly.to, due_days, until=ly_end)
 
-    # Open validation flags (through the port: zeros until the flags branch lands).
+    # Open validation flags (through the port; the caller's inbox scope applies).
     fq = FlagQuery(
         tenant_id=scope.tenant_id,
         store_ids=scope.store_ids,
         officer_ids=scope.officer_ids,
         opened_before=end,
+        viewer=scope.actor,
+        officer_only=scope.own_officer_id is not None,
     )
     flag_counts = await flags.counts(session, fq)
     flag_trend = []
     for b in bs:
         at = ist_start(b.end + timedelta(days=1))
-        bucket_query = FlagQuery(fq.tenant_id, fq.store_ids, fq.officer_ids, opened_before=at)
+        bucket_query = replace(fq, opened_before=at)
         flag_trend.append(float((await flags.counts(session, bucket_query)).open_total))
-    ly_flags = await flags.counts(
-        session, FlagQuery(fq.tenant_id, fq.store_ids, fq.officer_ids, opened_before=ly_end)
-    )
+    ly_flags = await flags.counts(session, replace(fq, opened_before=ly_end))
     high = await flags.open_high_severity(session, fq, 10)
 
     days = f.days

@@ -45,7 +45,8 @@ log = get_logger("farmerapp.tenants.settings")
 router = APIRouter(prefix="/settings", tags=["settings"])
 
 READ_ROLES = (Role.OWNER, Role.DIRECTOR, Role.TENANT_ADMIN)
-WRITE_ROLES = (Role.OWNER, Role.TENANT_ADMIN)
+# SPEC 2.6 permissions matrix: Owner / director write Settings (step-up still required).
+WRITE_ROLES = (Role.OWNER, Role.DIRECTOR, Role.TENANT_ADMIN)
 
 
 class InvalidSettingsError(AppError):

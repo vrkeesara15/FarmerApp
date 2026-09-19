@@ -15,7 +15,8 @@ reviewing role (``owner``, ``auditor``, ``cluster_head`` of ``c1``, ``store_mana
     subjects: [f2]                     # inline / event: the records the write touched
     seed:
       users:   [{ref, role, cluster?, store?}]
-      farmers: [{ref, name, village?, registered_by?, phone?, phone_verified?, at?, device?}]
+      farmers: [{ref, name, village?, registered_by?, phone?, phone_verified?, at?, captured?,
+                 device?}]
       farms:   [{ref, farmer, area_acres, square: {east_m, north_m, side_m}}
                 | {ref, farmer, area_acres, ring: [[east_m, north_m], ...]}]
     expect:
@@ -23,7 +24,9 @@ reviewing role (``owner``, ``auditor``, ``cluster_head`` of ``c1``, ``store_mana
 
 Times (``at``) are ``-<n>m`` / ``-<n>h`` / ``-<n>d`` relative to ``now``. Positions are
 metres east / north of the village centre. ``device`` records the farmer's creation in the
-audit trail with that ``X-Device-Id`` and the registering officer as the actor.
+audit trail with that ``X-Device-Id`` and the registering officer as the actor. ``at`` is the
+server insert time (``created_at``); ``captured`` the device capture time of an offline
+registration synced later (``captured_at``, same relative syntax).
 """
 
 from __future__ import annotations
@@ -199,6 +202,7 @@ async def add_farmer(
     farmer = Farmer(
         tenant_id=world.tenant_id,
         created_at=at,
+        captured_at=when(spec["captured"], now) if spec.get("captured") else None,
         phone=phone,
         phone_last4=phone[-4:],
         name=str(spec.get("name", spec["ref"])),

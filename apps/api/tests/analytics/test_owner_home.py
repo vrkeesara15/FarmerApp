@@ -110,7 +110,7 @@ async def test_owner_home_figures(client: AsyncClient, bearer: Bearer, mini: Min
     assert k["active_farmers"]["value"] == 2
     assert k["active_farmers"]["last_year"] == 2
     assert k["open_flags"]["value"] == 0
-    assert body["notes"]["open_flags"] == "pending_flags_branch"
+    assert "open_flags" not in body["notes"]  # the real adapter (no flags in this tenant)
 
     # Series.
     assert len(body["series"]["revenue"]) == 10

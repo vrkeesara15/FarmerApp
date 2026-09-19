@@ -112,6 +112,12 @@ def validate_rules() -> RuleSet:
             raise RuleConfigError(
                 "rules do not match their implementations:\n" + "\n".join(problems)
             )
+        log.info(
+            "rules_loaded",
+            rules_dir=str(rule_set.directory),
+            count=len(rule_set.rules),
+            rules=sorted(rule_set.rules),
+        )
     return rule_set
 
 

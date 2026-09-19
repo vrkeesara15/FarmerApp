@@ -1,0 +1,15 @@
+# Build context of the api / worker / jobs images is the repository root (they need apps/api
+# and the monorepo rules/). Admit only those; everything else (console node_modules, mobile,
+# infra, docs, .env files, .claude worktrees) stays out of the context.
+*
+!apps/api/pyproject.toml
+!apps/api/uv.lock
+!apps/api/.python-version
+!apps/api/README.md
+!apps/api/alembic.ini
+!apps/api/alembic
+!apps/api/farmerapp
+!rules
+**/__pycache__
+**/*.pyc
+**/.DS_Store

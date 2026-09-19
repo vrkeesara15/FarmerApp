@@ -5,9 +5,9 @@ branch (``farmerapp/flags/``, ``farmerapp/rules/``). The owner home ("open valid
 KPI, open high-severity flags) and the field team scorecard ("flags" column) read them only
 through this port, so the analytics package never imports the flags internals.
 
-TODO(M4 flags branch, ``farmerapp/flags``): register the real adapter with
-``app.state.flag_counts = <FlagsFlagCounts()>`` in ``create_app`` once the ``flag`` table
-lands; until then ``NullFlagCounts`` answers zeros and empty lists.
+``create_app`` registers the real adapter (``farmerapp.flags.analytics.FlagTableCounts``,
+reading the ``flag`` table) on ``app.state.flag_counts``; ``NullFlagCounts`` (zeros and empty
+lists) remains the fallback for an app built without it.
 """
 
 from __future__ import annotations
@@ -21,15 +21,24 @@ from typing import Protocol
 from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from farmerapp.auth.models import User
+
 
 @dataclass(frozen=True)
 class FlagQuery:
-    """Which flags to count: the tenant, optional store / officer narrowing, a time window."""
+    """Which flags to count: the tenant, optional store / officer narrowing, a time window.
+
+    ``viewer`` applies the WC-010 inbox scope of the caller (a store manager counts only
+    what their inbox shows); ``officer_only`` restricts to flags about the officers in
+    ``officer_ids`` (an officer's own row or an ``officer_id`` filter) instead of also
+    counting the farmer-data flags of the stores in ``store_ids``."""
 
     tenant_id: uuid.UUID
     store_ids: Collection[uuid.UUID] | None = None  # None = whole tenant
     officer_ids: Collection[uuid.UUID] | None = None  # None = every officer
     opened_before: datetime | None = None  # open as of this instant (None = now)
+    viewer: User | None = None
+    officer_only: bool = False
 
 
 @dataclass(frozen=True)

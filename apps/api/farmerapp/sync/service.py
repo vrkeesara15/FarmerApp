@@ -369,7 +369,12 @@ async def _create(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpConte
             visible = await farmers.visible_farmer(session, actor, op.entity_id)
             return _conflict(op, FarmerOut.from_row(visible), visible.version)
         out = await farmers.create_farmer(
-            session, actor, FarmerCreate.model_validate(payload), settings=settings, now=now
+            session,
+            actor,
+            FarmerCreate.model_validate(payload),
+            settings=settings,
+            now=now,
+            captured_at=op.client_ts,  # VA-F06: burst windows use the capture time
         )
         return _applied(op, out, out.version)
     if op.entity == "farm":

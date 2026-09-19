@@ -7,8 +7,9 @@
 # Every GCP step is guarded with `vars.WIF_PROVIDER != ''` so the workflow is
 # a no-op (image builds only) until bootstrap has been applied.
 #
-# Assumption: each deployable has apps/<name>/Dockerfile built with the repo
-# root as context (worker imports the api domain package).
+# Each deployable has apps/<name>/Dockerfile built with the repo root as context (worker
+# and jobs import the api domain package; api / worker / jobs copy the monorepo rules/ and
+# set RULES_DIR=/app/rules; the root .dockerignore admits only apps/api and rules/).
 name: deploy
 
 on:
@@ -42,7 +43,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        name: [api, console, worker]
+        name: [api, console, worker, jobs]
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
     steps:
@@ -77,6 +78,15 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,scope=${{ matrix.name }},mode=max
           provenance: false
+
+      # VA-001: api / worker / jobs carry rules/ (RULES_DIR=/app/rules); refuse to ship an
+      # image whose rules are missing or invalid.
+      - name: Rules are in the image and valid
+        if: matrix.name != 'console'
+        run: |
+          image="${REGISTRY}/${{ matrix.name }}:${{ steps.meta.outputs.tag }}"
+          if [ "${{ vars.WIF_PROVIDER }}" != "" ]; then docker pull "$image"; fi
+          docker run --rm --entrypoint python "$image" -m farmerapp.jobs validate-rules
 
       - name: trivy image scan (SEC-004)
         uses: aquasecurity/trivy-action@0.28.0

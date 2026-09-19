@@ -4,7 +4,11 @@ within ``window_minutes``, or one device registers farmers for more than
 
 * **Burst**: over the farmers registered in the last ``lookback_hours``, the
   ``max_registrations``-th next registration of the same officer (window function ``lead``)
-  is less than ``window_minutes`` away. One flag per officer and IST day.
+  is less than ``window_minutes`` away. One flag per officer and IST day. Registrations are
+  timed by when the device **captured** them (``farmer.captured_at``, the sync op's
+  ``client_ts``), falling back to the server ``created_at`` for online registrations, so
+  offline captures synced in one batch are not a burst. The look-back itself is on
+  ``created_at`` (arrival), so a burst synced days later is still examined.
 * **Shared device**: the audit trail (FA-006) records the ``X-Device-Id`` of every
   ``farmer.create``; a device used by several officers in the look-back suggests one person
   registering under other accounts. One flag per device and IST day, about the officer with
@@ -39,12 +43,13 @@ IST = ZoneInfo("Asia/Kolkata")
 async def _bursts(ctx: RuleContext, since: datetime) -> list[Finding]:
     n = int(ctx.param("max_registrations"))
     window = timedelta(minutes=float(ctx.param("window_minutes")))
+    at = func.coalesce(Farmer.captured_at, Farmer.created_at)
     base = select(
         Farmer.id,
         Farmer.registered_by,
-        Farmer.created_at,
-        func.lead(Farmer.created_at, n)
-        .over(partition_by=Farmer.registered_by, order_by=(Farmer.created_at, Farmer.id))
+        at.label("at"),
+        func.lead(at, n)
+        .over(partition_by=Farmer.registered_by, order_by=(at, Farmer.id))
         .label("nth_next"),
     ).where(
         Farmer.tenant_id == ctx.tenant_id,

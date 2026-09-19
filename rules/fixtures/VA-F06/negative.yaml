@@ -1,8 +1,12 @@
 description: >
   Eight registrations in 24 minutes (the limit, not above it), eight more spread over a
-  morning, and a device another officer used only outside the 26 h look-back. No flag.
+  morning, a device another officer used only outside the 26 h look-back, and an officer who
+  captured nine farmers offline over two hours (15 minutes apart) and synced them in one
+  batch a minute ago: the server times are seconds apart, the capture times are not. No flag.
 mode: batch
 seed:
+  users:
+    - {ref: officer3, role: field_officer, cluster: c1, store: s1}
   farmers:
     - {ref: b1, registered_by: officer, at: -24m}
     - {ref: b2, registered_by: officer, at: -21m}
@@ -22,5 +26,14 @@ seed:
     - {ref: m8, registered_by: officer2, at: -1.5h}
     - {ref: old, registered_by: officer, at: -30h, device: D1}
     - {ref: new, registered_by: officer2, at: -1h, device: D1}
+    - {ref: o1, registered_by: officer3, at: -1m, captured: -130m}
+    - {ref: o2, registered_by: officer3, at: -1m, captured: -115m}
+    - {ref: o3, registered_by: officer3, at: -1m, captured: -100m}
+    - {ref: o4, registered_by: officer3, at: -1m, captured: -85m}
+    - {ref: o5, registered_by: officer3, at: -1m, captured: -70m}
+    - {ref: o6, registered_by: officer3, at: -1m, captured: -55m}
+    - {ref: o7, registered_by: officer3, at: -1m, captured: -40m}
+    - {ref: o8, registered_by: officer3, at: -1m, captured: -25m}
+    - {ref: o9, registered_by: officer3, at: -1m, captured: -10m}
 expect:
   flags: []

@@ -440,8 +440,13 @@ async def create_farmer(
     *,
     settings: Settings,
     now: datetime | None = None,
+    captured_at: datetime | None = None,
 ) -> FarmerDetailOut:
-    """``now`` is the auth clock (token expiry is checked against it); default: wall clock."""
+    """``now`` is the auth clock (token expiry is checked against it); default: wall clock.
+
+    ``captured_at`` is the device time of an offline capture (the sync op's ``client_ts``):
+    stored capped at the server time so a fast device clock cannot move it into the future;
+    VA-F06 measures registration bursts on it instead of the sync arrival time."""
     if _is_farmer(actor):
         raise ForbiddenError("Farmers cannot register other farmers.")
     tenant_id = actor.tenant_id
@@ -461,9 +466,15 @@ async def create_farmer(
     marketing = next(
         (c.granted for c in body.consents if c.purpose == ConsentPurpose.MARKETING), False
     )
+    created_at = _now()
+    if captured_at is not None:
+        if captured_at.tzinfo is None:
+            captured_at = captured_at.replace(tzinfo=UTC)
+        captured_at = min(captured_at, created_at)
     farmer = Farmer(
         id=body.id or uuid.uuid4(),
-        created_at=_now(),
+        created_at=created_at,
+        captured_at=captured_at,
         tenant_id=tenant_id,
         phone=body.phone,
         phone_last4=Farmer.last4(body.phone),

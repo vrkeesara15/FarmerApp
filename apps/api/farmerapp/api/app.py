@@ -27,6 +27,7 @@ from farmerapp.db import models as _models  # noqa: F401  (registers models + au
 from farmerapp.duty import router as duty_routes
 from farmerapp.farmers import router as farmer_routes
 from farmerapp.flags import router as flag_routes
+from farmerapp.flags.analytics import FLAG_TABLE_COUNTS
 from farmerapp.invoices import router as invoice_routes
 from farmerapp.khata import router as khata_routes
 from farmerapp.location import batch_router as location_batch_routes
@@ -143,6 +144,7 @@ def create_app(
     app.state.blobs = blob_store or build_blob_store(settings)  # NF-003 / SEC-016
     app.state.payments = payment_services or build_payment_services(settings)  # FA-021
     order_payment_events.register()  # FA-020 x FA-021: a captured payment advances its order
+    app.state.flag_counts = FLAG_TABLE_COUNTS  # AN-001 / AN-002: open flags in analytics
     validate_rules()  # VA-001: invalid rules/*.yaml refuse to start
     rule_events.register()  # SPEC 6.1: event rules on the in-process buses
 

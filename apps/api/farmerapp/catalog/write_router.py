@@ -30,6 +30,7 @@ from farmerapp.api.idempotency import idempotent
 from farmerapp.auth.deps import DbSession, Services
 from farmerapp.auth.models import User, UserRole
 from farmerapp.auth.policy import Role, require_roles
+from farmerapp.auth.stepup import STEP_UP_OPENAPI, StepUp
 from farmerapp.catalog import csv_io, prices, service
 from farmerapp.catalog.crops import Crop
 from farmerapp.catalog.models import LabelClaim, PestOrDisease, Product, Sku
@@ -512,12 +513,17 @@ async def import_label_claims(
 @router.get(
     "/export",
     operation_id="exportCatalog",
-    summary="CSV export of products + SKUs or label claims",
+    summary="CSV export of products + SKUs or label claims (step-up required; audited)",
     response_class=StreamingResponse,
-    responses={200: {"content": {"text/csv": {}}, "description": "CSV file."}},
+    openapi_extra=STEP_UP_OPENAPI,
+    responses={
+        200: {"content": {"text/csv": {}}, "description": "CSV file."},
+        **problem_responses((401, "step_up_required")),
+    },
 )
 async def export_catalog(
     actor: Annotated[User, require_roles(*EXPORT_ROLES)],
+    _step_up: StepUp,  # SEC-028: every bulk export needs a fresh OTP, like the audit export
     session: DbSession,
     kind: Annotated[CatalogKind, Query()] = CatalogKind.PRODUCTS,
 ) -> StreamingResponse:

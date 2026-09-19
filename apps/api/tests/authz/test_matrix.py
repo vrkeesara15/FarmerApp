@@ -215,6 +215,7 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
     ),
     "PATCH /v1/settings": RouteFixture(body=lambda _ctx: {"geofence_radius_m": 160}, step_up=True),
     "GET /v1/audit-logs/export": RouteFixture(step_up=True),
+    "GET /v1/catalog/export": RouteFixture(step_up=True),  # SEC-028: exports need step-up
     "POST /v1/auth/step-up": RouteFixture(body=lambda _ctx: {"code": "000000"}),
     "GET /v1/users/{id}": RouteFixture(path_params=_target_owner_id),
     "PATCH /v1/users/{id}": RouteFixture(
