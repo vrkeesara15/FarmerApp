@@ -189,9 +189,11 @@ class _OtpInputState extends State<OtpInput> {
             children: <Widget>[
               Icon(Icons.timer_outlined, color: p.textSecondary),
               const SizedBox(width: Tokens.space2),
-              Text(
-                l10n.otpResendIn(_remaining),
-                style: app.text.body.copyWith(color: p.textSecondary),
+              Expanded(
+                child: Text(
+                  l10n.otpResendIn(_remaining),
+                  style: app.text.body.copyWith(color: p.textSecondary),
+                ),
               ),
             ],
           )

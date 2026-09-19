@@ -1867,5 +1867,801 @@
   "wipeBody": "Your administrator signed this phone out of the app. For safety, the app data on this phone has been deleted.",
   "wipeDeletedList": "Deleted: saved farmers, visits, orders, photos and any work that was not yet sent. Your language setting is kept.",
   "wipeWhatNext": "If this is a mistake, contact your administrator. Once they allow it, you can sign in again.",
-  "wipeSignInAgain": "Sign in again"
+  "wipeSignInAgain": "Sign in again",
+  "audioListen": "Listen",
+  "@audioListen": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "audioUnavailable": "Audio unavailable",
+  "@audioUnavailable": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanLanguagePrompt": "You chose English. Tap Continue.",
+  "@kisanLanguagePrompt": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanAbout": "About",
+  "@kisanAbout": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanAboutVersion": "{app} version {version}",
+  "@kisanAboutVersion": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "app": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanAcres": "{count} acres",
+  "@kisanAcres": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanAcresPlus": "{count}+ acres",
+  "@kisanAcresPlus": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanAddToCart": "Add to cart",
+  "@kisanAddToCart": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanAsOf": "Updated {time}",
+  "@kisanAsOf": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanOfflineAsOf": "Offline. Saved on {time}",
+  "@kisanOfflineAsOf": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanBalanceNow": "Balance now: {amount}",
+  "@kisanBalanceNow": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanBuyProducts": "Buy products",
+  "@kisanBuyProducts": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanCall": "Call",
+  "@kisanCall": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanCartEmpty": "Your cart is empty",
+  "@kisanCartEmpty": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanCartTitle": "My cart",
+  "@kisanCartTitle": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanCheckMyCrop": "Check my crop",
+  "@kisanCheckMyCrop": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanConfirmWithoutRating": "Confirm without rating",
+  "@kisanConfirmWithoutRating": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanConsentAgree": "I agree",
+  "@kisanConsentAgree": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanConsentDataHowToStop": "This is needed to use Kisan. To stop it, delete your account.",
+  "@kisanConsentDataHowToStop": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanConsentDataNeeded": "Say yes to the first card to use Kisan.",
+  "@kisanConsentDataNeeded": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanConsentDataNotice": "We keep your name, phone, village, farm and crop photos to give you advice. Your field officer and store can see them. We never sell your data.",
+  "@kisanConsentDataNotice": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanConsentGivenOn": "Given on {date}",
+  "@kisanConsentGivenOn": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanConsentIntro": "Please read or listen. You can change the second choice any time in Me.",
+  "@kisanConsentIntro": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanConsentOffersNotice": "We send offers and farming tips by SMS or WhatsApp. You can stop them any time in Me.",
+  "@kisanConsentOffersNotice": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanConsentPending": "Saved on this phone. Will send when online.",
+  "@kisanConsentPending": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanConsentSettings": "My consent",
+  "@kisanConsentSettings": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanConsentTitle": "Before we start",
+  "@kisanConsentTitle": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanConsentWithdrawnOn": "Stopped on {date}",
+  "@kisanConsentWithdrawnOn": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanCouldNotOpen": "Could not open. Try again.",
+  "@kisanCouldNotOpen": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanCreditStoreWillConfirm": "Your store will confirm",
+  "@kisanCreditStoreWillConfirm": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanCropDoctorSoonHelp": "Soon you can take a photo of your crop here and get advice.",
+  "@kisanCropDoctorSoonHelp": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanCropDoctorSoonTitle": "Crop doctor is coming",
+  "@kisanCropDoctorSoonTitle": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanCropUnknown": "Crop",
+  "@kisanCropUnknown": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanDeleteAccount": "Delete my account",
+  "@kisanDeleteAccount": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanDeleteAfter": "You can keep using Kisan until then. Call your store if you change your mind.",
+  "@kisanDeleteAfter": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanDeleteAreYouSure": "Are you sure? Your account and data will be deleted. This cannot be undone.",
+  "@kisanDeleteAreYouSure": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanDeleteDueBy": "We will finish by {date}",
+  "@kisanDeleteDueBy": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanDeleteExplain": "We will delete your account, your farm details, crop photos and messages. Records the law asks us to keep, like bills, are kept and then deleted.",
+  "@kisanDeleteExplain": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanDeleteKeep": "No, keep my account",
+  "@kisanDeleteKeep": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanDeleteKeepsDues": "Money you owe the store is still due after the account is deleted.",
+  "@kisanDeleteKeepsDues": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanDeleteRequested": "Request sent · {ticket}",
+  "@kisanDeleteRequested": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "ticket": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanDeleteStatusCompleted": "Your account has been deleted",
+  "@kisanDeleteStatusCompleted": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanDeleteStatusInProgress": "We are deleting your data",
+  "@kisanDeleteStatusInProgress": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanDeleteStatusReceived": "We got your request",
+  "@kisanDeleteStatusReceived": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanDeleteTicket": "Ticket {ticket}",
+  "@kisanDeleteTicket": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "ticket": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanDeleteYes": "Yes, delete",
+  "@kisanDeleteYes": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanDelivery": "Home delivery",
+  "@kisanDelivery": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanDuesTitle": "You owe {amount}",
+  "@kisanDuesTitle": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanFarmUnnamed": "My farm",
+  "@kisanFarmUnnamed": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanFieldOfficer": "Field officer",
+  "@kisanFieldOfficer": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanGoToPay": "Go to pay",
+  "@kisanGoToPay": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanGreeting": "Namaste, {name}",
+  "@kisanGreeting": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanGreetingNoName": "Namaste",
+  "@kisanGreetingNoName": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanHelpCallStore": "Help: call the store",
+  "@kisanHelpCallStore": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanHelpNoPhone": "Store phone not set yet",
+  "@kisanHelpNoPhone": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanHowMany": "How many?",
+  "@kisanHowMany": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanHowPay": "How will you pay?",
+  "@kisanHowPay": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanInStock": "{count} in stock at your store",
+  "@kisanInStock": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanIrrigationQuestion": "How do you water the farm?",
+  "@kisanIrrigationQuestion": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanIrrigationUnknown": "Water: not set",
+  "@kisanIrrigationUnknown": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanItems": "Items",
+  "@kisanItems": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanKhataNotLoaded": "Khata not on this phone yet",
+  "@kisanKhataNotLoaded": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanLess": "Less",
+  "@kisanLess": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanMore": "More",
+  "@kisanMore": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanMyCrops": "My crops",
+  "@kisanMyCrops": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanMyOfficer": "My field officer",
+  "@kisanMyOfficer": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanMyOrders": "My orders",
+  "@kisanMyOrders": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanNavCropDoctor": "Crop doctor",
+  "@kisanNavCropDoctor": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanNavHome": "Home",
+  "@kisanNavHome": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanNavMe": "Me",
+  "@kisanNavMe": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanNavOrders": "Orders",
+  "@kisanNavOrders": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanNeedsInternet": "This needs internet. Try again when online.",
+  "@kisanNeedsInternet": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanNextTaskSoon": "Next task: coming soon",
+  "@kisanNextTaskSoon": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanNo": "No",
+  "@kisanNo": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanNoAlerts": "No pest alerts in your area",
+  "@kisanNoAlerts": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanNoCropsHelp": "Your field officer or store can add your farm.",
+  "@kisanNoCropsHelp": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanNoCropsYet": "No crops yet",
+  "@kisanNoCropsYet": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanNotifications": "Notifications",
+  "@kisanNotifications": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanNotPaidYet": "Not paid yet. You can pay later or at the store.",
+  "@kisanNotPaidYet": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOff": "Off",
+  "@kisanOff": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOffersOff": "Offers and tips: off",
+  "@kisanOffersOff": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOffersOn": "Offers and tips: on",
+  "@kisanOffersOn": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOfficerPhoneMissing": "The officer’s phone is not in the app yet. Ask at your store.",
+  "@kisanOfficerPhoneMissing": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOn": "On",
+  "@kisanOn": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOrderCollected": "Collected",
+  "@kisanOrderCollected": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOrderNotSaved": "This order is not on this phone yet",
+  "@kisanOrderNotSaved": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOrderOnKhata": "On your khata",
+  "@kisanOrderOnKhata": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOrderPaid": "Paid",
+  "@kisanOrderPaid": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOrderPlaced": "Order placed",
+  "@kisanOrderPlaced": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOrdersEmptyHelp": "Tap Buy products to order from your store.",
+  "@kisanOrdersEmptyHelp": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOrderShort": "The store does not have enough of an item. Change the amount.",
+  "@kisanOrderShort": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOrderTitle": "My order",
+  "@kisanOrderTitle": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanOutOfStock": "Not in stock now",
+  "@kisanOutOfStock": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanPaidOn": "Paid on {time}",
+  "@kisanPaidOn": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanPaidThanks": "Paid. Thank you!",
+  "@kisanPaidThanks": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanPayAtStore": "Pay at store",
+  "@kisanPayAtStore": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanPayAtStoreHelp": "Pay cash or UPI when you collect",
+  "@kisanPayAtStoreHelp": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanPayAtStoreNote": "Pay at the store when you collect",
+  "@kisanPayAtStoreNote": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanPayCredit": "Ask for credit",
+  "@kisanPayCredit": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanPaymentDone": "Payment received",
+  "@kisanPaymentDone": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanPaymentFailed": "The payment did not go through. No money was taken.",
+  "@kisanPaymentFailed": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanPaymentRef": "Reference: {ref}",
+  "@kisanPaymentRef": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanPayTitle": "Pay",
+  "@kisanPayTitle": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanPayUpi": "Pay by UPI",
+  "@kisanPayUpi": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanPayUpiHelp": "Opens PhonePe, Google Pay or your UPI app",
+  "@kisanPayUpiHelp": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanPickup": "Pick up at store",
+  "@kisanPickup": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanPickupQuestion": "How will you get it?",
+  "@kisanPickupQuestion": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanPlacedOn": "Ordered on {time}",
+  "@kisanPlacedOn": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanPlaceOrder": "Place order",
+  "@kisanPlaceOrder": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanProductTitle": "Product",
+  "@kisanProductTitle": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanRateQuestion": "How was the visit?",
+  "@kisanRateQuestion": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanRateTitle": "Rate the visit",
+  "@kisanRateTitle": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanRateWhy": "Why?",
+  "@kisanRateWhy": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanReasonAdviceUnclear": "Advice not clear",
+  "@kisanReasonAdviceUnclear": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanReasonDidNotSeeCrop": "Did not see my crop",
+  "@kisanReasonDidNotSeeCrop": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanReasonLookedAtCrop": "Looked at my crop",
+  "@kisanReasonLookedAtCrop": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanReasonOnTime": "Came on time",
+  "@kisanReasonOnTime": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanReasonTooShort": "Visit too short",
+  "@kisanReasonTooShort": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanReasonUsefulAdvice": "Useful advice",
+  "@kisanReasonUsefulAdvice": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanReceiptTitle": "Receipt",
+  "@kisanReceiptTitle": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSave": "Save",
+  "@kisanSave": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSaved": "Saved",
+  "@kisanSaved": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSavedWillSend": "Saved. We will send it when you are online.",
+  "@kisanSavedWillSend": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSaveFailed": "Could not save. Try again.",
+  "@kisanSaveFailed": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanScanButton": "Scan QR",
+  "@kisanScanButton": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanScanHelp": "Ask your field officer to show the QR on their phone, then scan it.",
+  "@kisanScanHelp": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanScanNotVisitQr": "This is not a visit QR. Scan the QR on your officer’s phone.",
+  "@kisanScanNotVisitQr": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanScanTitle": "Scan the visit QR",
+  "@kisanScanTitle": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanScanVisitQr": "Scan visit QR",
+  "@kisanScanVisitQr": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSend": "Send",
+  "@kisanSend": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSetupCropQuestion": "Which crop do you grow?",
+  "@kisanSetupCropQuestion": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSetupLandQuestion": "How much land?",
+  "@kisanSetupLandQuestion": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSetupNoVillages": "Village list not on this phone yet. Your store will add it.",
+  "@kisanSetupNoVillages": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSetupSownQuestion": "When did you sow?",
+  "@kisanSetupSownQuestion": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSetupVillageQuestion": "Your village",
+  "@kisanSetupVillageQuestion": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanShopEmptyHelp": "Try another group of products.",
+  "@kisanShopEmptyHelp": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanShopHelp": "Tap a product to see it and add it to your cart.",
+  "@kisanShopHelp": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSkipForNow": "Skip for now",
+  "@kisanSkipForNow": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSoilQuestion": "What is your soil?",
+  "@kisanSoilQuestion": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSoilUnknown": "Soil: not set",
+  "@kisanSoilUnknown": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSownLonger": "3 months or more",
+  "@kisanSownLonger": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSownThisMonth": "This month",
+  "@kisanSownThisMonth": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSownThisWeek": "This week",
+  "@kisanSownThisWeek": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanSownTwoMonths": "1–2 months ago",
+  "@kisanSownTwoMonths": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanStageIs": "Stage: {stage}",
+  "@kisanStageIs": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "stage": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanStageQuestion": "What stage is the crop in?",
+  "@kisanStageQuestion": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanStageUnknown": "Stage: not set",
+  "@kisanStageUnknown": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanTotalEstimateNote": "The store confirms the final price.",
+  "@kisanTotalEstimateNote": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanTotalToPay": "Total {amount}",
+  "@kisanTotalToPay": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanUpiNoApp": "No UPI app opened. Install a UPI app or pay at the store.",
+  "@kisanUpiNoApp": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanUpiOpenAgain": "Open UPI app again",
+  "@kisanUpiOpenAgain": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanUpiWaiting": "Finish the payment in your UPI app",
+  "@kisanUpiWaiting": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanViewCart": "View cart",
+  "@kisanViewCart": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanVisitAlreadyAnswered": "You already answered for this visit.",
+  "@kisanVisitAlreadyAnswered": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanVisitNoThanks": "Thank you. We will check with the officer.",
+  "@kisanVisitNoThanks": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanVisitQuestion": "Did {name} visit your farm today?",
+  "@kisanVisitQuestion": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanVisitQuestionNoName": "Did your field officer visit your farm today?",
+  "@kisanVisitQuestionNoName": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanVisitTapToAnswer": "Tap to answer",
+  "@kisanVisitTapToAnswer": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanVisitThanks": "Thank you! The visit is confirmed.",
+  "@kisanVisitThanks": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanVisitTitle": "Field officer visit",
+  "@kisanVisitTitle": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanVisitTokenInvalid": "This question has expired. Ask your officer to show the QR.",
+  "@kisanVisitTokenInvalid": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanWeatherSoon": "Weather for your farm is coming soon",
+  "@kisanWeatherSoon": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanWelcomeChange": "Something is wrong: change",
+  "@kisanWelcomeChange": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanWelcomeConfirmHelp": "Please check your farm and crops.",
+  "@kisanWelcomeConfirmHelp": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanWelcomeCorrect": "Yes, this is right",
+  "@kisanWelcomeCorrect": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanWelcomeEditHelp": "Tap a picture to change it.",
+  "@kisanWelcomeEditHelp": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanWelcomeFromOfficer": "Your farm details from {name} (field officer)",
+  "@kisanWelcomeFromOfficer": {
+    "description": "Farmer app (Kisan), M6",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "kisanWelcomeFromYourOfficer": "Your farm details from your field officer",
+  "@kisanWelcomeFromYourOfficer": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanWelcomeTitle": "Welcome",
+  "@kisanWelcomeTitle": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanWhatsApp": "WhatsApp",
+  "@kisanWhatsApp": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanYes": "Yes",
+  "@kisanYes": {
+    "description": "Farmer app (Kisan), M6"
+  },
+  "kisanYourOfficer": "Your field officer",
+  "@kisanYourOfficer": {
+    "description": "Farmer app (Kisan), M6"
+  }
 }

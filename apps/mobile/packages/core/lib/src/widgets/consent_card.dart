@@ -17,6 +17,8 @@ class ConsentCard extends StatelessWidget {
     required this.onChanged,
     this.notice,
     this.onReadAloud,
+    this.readAloud,
+    this.agreeLabel,
     this.toggleKey,
     super.key,
   });
@@ -41,6 +43,14 @@ class ConsentCard extends StatelessWidget {
 
   /// Speaker button handler; the button is shown disabled when null.
   final VoidCallback? onReadAloud;
+
+  /// Replaces the built-in "Read aloud" button (the farmer app passes an
+  /// `AudioButton` that knows whether a voice exists, NF-009).
+  final Widget? readAloud;
+
+  /// Label next to the switch; defaults to "Farmer agrees" (officer
+  /// surfaces). The farmer app says "I agree".
+  final String? agreeLabel;
 
   /// Key for the switch (tests).
   final Key? toggleKey;
@@ -103,25 +113,27 @@ class ConsentCard extends StatelessWidget {
               const SizedBox(height: Tokens.space2),
               Align(
                 alignment: AlignmentDirectional.centerStart,
-                child: TextButton.icon(
-                  onPressed: onReadAloud,
-                  style: TextButton.styleFrom(
-                    foregroundColor: p.primary,
-                    minimumSize: const Size(
-                      Tokens.sizeTouchTargetMin,
-                      Tokens.sizeTouchTargetMin,
+                child:
+                    readAloud ??
+                    TextButton.icon(
+                      onPressed: onReadAloud,
+                      style: TextButton.styleFrom(
+                        foregroundColor: p.primary,
+                        minimumSize: const Size(
+                          Tokens.sizeTouchTargetMin,
+                          Tokens.sizeTouchTargetMin,
+                        ),
+                        textStyle: app.text.label,
+                      ),
+                      icon: const Icon(Icons.volume_up_outlined),
+                      label: Text(l10n.consentReadAloud),
                     ),
-                    textStyle: app.text.label,
-                  ),
-                  icon: const Icon(Icons.volume_up_outlined),
-                  label: Text(l10n.consentReadAloud),
-                ),
               ),
               Row(
                 children: <Widget>[
                   Expanded(
                     child: Text(
-                      l10n.regConsentGiven,
+                      agreeLabel ?? l10n.regConsentGiven,
                       style: app.text.label.copyWith(color: p.textSecondary),
                     ),
                   ),

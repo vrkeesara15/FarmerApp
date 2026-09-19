@@ -5995,6 +5995,1038 @@ abstract class CoreLocalizations {
   /// In en, this message translates to:
   /// **'Sign in again'**
   String get wipeSignInAgain;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Listen'**
+  String get audioListen;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Audio unavailable'**
+  String get audioUnavailable;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'You chose English. Tap Continue.'**
+  String get kisanLanguagePrompt;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get kisanAbout;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'{app} version {version}'**
+  String kisanAboutVersion(String app, String version);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'{count} acres'**
+  String kisanAcres(String count);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'{count}+ acres'**
+  String kisanAcresPlus(String count);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Add to cart'**
+  String get kisanAddToCart;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String kisanAsOf(String time);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Offline. Saved on {time}'**
+  String kisanOfflineAsOf(String time);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Balance now: {amount}'**
+  String kisanBalanceNow(String amount);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Buy products'**
+  String get kisanBuyProducts;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get kisanCall;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Your cart is empty'**
+  String get kisanCartEmpty;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'My cart'**
+  String get kisanCartTitle;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Check my crop'**
+  String get kisanCheckMyCrop;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm without rating'**
+  String get kisanConfirmWithoutRating;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'I agree'**
+  String get kisanConsentAgree;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'This is needed to use Kisan. To stop it, delete your account.'**
+  String get kisanConsentDataHowToStop;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Say yes to the first card to use Kisan.'**
+  String get kisanConsentDataNeeded;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'We keep your name, phone, village, farm and crop photos to give you advice. Your field officer and store can see them. We never sell your data.'**
+  String get kisanConsentDataNotice;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Given on {date}'**
+  String kisanConsentGivenOn(String date);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Please read or listen. You can change the second choice any time in Me.'**
+  String get kisanConsentIntro;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'We send offers and farming tips by SMS or WhatsApp. You can stop them any time in Me.'**
+  String get kisanConsentOffersNotice;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this phone. Will send when online.'**
+  String get kisanConsentPending;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'My consent'**
+  String get kisanConsentSettings;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Before we start'**
+  String get kisanConsentTitle;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped on {date}'**
+  String kisanConsentWithdrawnOn(String date);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open. Try again.'**
+  String get kisanCouldNotOpen;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Your store will confirm'**
+  String get kisanCreditStoreWillConfirm;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Soon you can take a photo of your crop here and get advice.'**
+  String get kisanCropDoctorSoonHelp;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Crop doctor is coming'**
+  String get kisanCropDoctorSoonTitle;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Crop'**
+  String get kisanCropUnknown;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get kisanDeleteAccount;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'You can keep using Kisan until then. Call your store if you change your mind.'**
+  String get kisanDeleteAfter;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure? Your account and data will be deleted. This cannot be undone.'**
+  String get kisanDeleteAreYouSure;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'We will finish by {date}'**
+  String kisanDeleteDueBy(String date);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'We will delete your account, your farm details, crop photos and messages. Records the law asks us to keep, like bills, are kept and then deleted.'**
+  String get kisanDeleteExplain;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'No, keep my account'**
+  String get kisanDeleteKeep;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Money you owe the store is still due after the account is deleted.'**
+  String get kisanDeleteKeepsDues;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent · {ticket}'**
+  String kisanDeleteRequested(String ticket);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been deleted'**
+  String get kisanDeleteStatusCompleted;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'We are deleting your data'**
+  String get kisanDeleteStatusInProgress;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'We got your request'**
+  String get kisanDeleteStatusReceived;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket {ticket}'**
+  String kisanDeleteTicket(String ticket);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, delete'**
+  String get kisanDeleteYes;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Home delivery'**
+  String get kisanDelivery;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'You owe {amount}'**
+  String kisanDuesTitle(String amount);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'My farm'**
+  String get kisanFarmUnnamed;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Field officer'**
+  String get kisanFieldOfficer;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Go to pay'**
+  String get kisanGoToPay;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Namaste, {name}'**
+  String kisanGreeting(String name);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Namaste'**
+  String get kisanGreetingNoName;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Help: call the store'**
+  String get kisanHelpCallStore;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Store phone not set yet'**
+  String get kisanHelpNoPhone;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'How many?'**
+  String get kisanHowMany;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'How will you pay?'**
+  String get kisanHowPay;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'{count} in stock at your store'**
+  String kisanInStock(String count);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'How do you water the farm?'**
+  String get kisanIrrigationQuestion;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Water: not set'**
+  String get kisanIrrigationUnknown;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get kisanItems;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Khata not on this phone yet'**
+  String get kisanKhataNotLoaded;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Less'**
+  String get kisanLess;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get kisanMore;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'My crops'**
+  String get kisanMyCrops;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'My field officer'**
+  String get kisanMyOfficer;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'My orders'**
+  String get kisanMyOrders;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Crop doctor'**
+  String get kisanNavCropDoctor;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get kisanNavHome;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get kisanNavMe;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
+  String get kisanNavOrders;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'This needs internet. Try again when online.'**
+  String get kisanNeedsInternet;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Next task: coming soon'**
+  String get kisanNextTaskSoon;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get kisanNo;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'No pest alerts in your area'**
+  String get kisanNoAlerts;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Your field officer or store can add your farm.'**
+  String get kisanNoCropsHelp;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'No crops yet'**
+  String get kisanNoCropsYet;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get kisanNotifications;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Not paid yet. You can pay later or at the store.'**
+  String get kisanNotPaidYet;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get kisanOff;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Offers and tips: off'**
+  String get kisanOffersOff;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Offers and tips: on'**
+  String get kisanOffersOn;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'The officer’s phone is not in the app yet. Ask at your store.'**
+  String get kisanOfficerPhoneMissing;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get kisanOn;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Collected'**
+  String get kisanOrderCollected;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'This order is not on this phone yet'**
+  String get kisanOrderNotSaved;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'On your khata'**
+  String get kisanOrderOnKhata;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get kisanOrderPaid;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Order placed'**
+  String get kisanOrderPlaced;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Buy products to order from your store.'**
+  String get kisanOrdersEmptyHelp;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'The store does not have enough of an item. Change the amount.'**
+  String get kisanOrderShort;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'My order'**
+  String get kisanOrderTitle;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Not in stock now'**
+  String get kisanOutOfStock;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Paid on {time}'**
+  String kisanPaidOn(String time);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Paid. Thank you!'**
+  String get kisanPaidThanks;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Pay at store'**
+  String get kisanPayAtStore;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Pay cash or UPI when you collect'**
+  String get kisanPayAtStoreHelp;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Pay at the store when you collect'**
+  String get kisanPayAtStoreNote;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for credit'**
+  String get kisanPayCredit;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Payment received'**
+  String get kisanPaymentDone;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'The payment did not go through. No money was taken.'**
+  String get kisanPaymentFailed;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Reference: {ref}'**
+  String kisanPaymentRef(String ref);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Pay'**
+  String get kisanPayTitle;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Pay by UPI'**
+  String get kisanPayUpi;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Opens PhonePe, Google Pay or your UPI app'**
+  String get kisanPayUpiHelp;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Pick up at store'**
+  String get kisanPickup;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'How will you get it?'**
+  String get kisanPickupQuestion;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Ordered on {time}'**
+  String kisanPlacedOn(String time);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Place order'**
+  String get kisanPlaceOrder;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get kisanProductTitle;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'How was the visit?'**
+  String get kisanRateQuestion;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Rate the visit'**
+  String get kisanRateTitle;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Why?'**
+  String get kisanRateWhy;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Advice not clear'**
+  String get kisanReasonAdviceUnclear;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Did not see my crop'**
+  String get kisanReasonDidNotSeeCrop;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Looked at my crop'**
+  String get kisanReasonLookedAtCrop;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Came on time'**
+  String get kisanReasonOnTime;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Visit too short'**
+  String get kisanReasonTooShort;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Useful advice'**
+  String get kisanReasonUsefulAdvice;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get kisanReceiptTitle;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get kisanSave;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get kisanSaved;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. We will send it when you are online.'**
+  String get kisanSavedWillSend;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save. Try again.'**
+  String get kisanSaveFailed;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR'**
+  String get kisanScanButton;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Ask your field officer to show the QR on their phone, then scan it.'**
+  String get kisanScanHelp;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'This is not a visit QR. Scan the QR on your officer’s phone.'**
+  String get kisanScanNotVisitQr;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the visit QR'**
+  String get kisanScanTitle;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Scan visit QR'**
+  String get kisanScanVisitQr;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get kisanSend;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Which crop do you grow?'**
+  String get kisanSetupCropQuestion;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'How much land?'**
+  String get kisanSetupLandQuestion;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Village list not on this phone yet. Your store will add it.'**
+  String get kisanSetupNoVillages;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'When did you sow?'**
+  String get kisanSetupSownQuestion;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Your village'**
+  String get kisanSetupVillageQuestion;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Try another group of products.'**
+  String get kisanShopEmptyHelp;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a product to see it and add it to your cart.'**
+  String get kisanShopHelp;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get kisanSkipForNow;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'What is your soil?'**
+  String get kisanSoilQuestion;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Soil: not set'**
+  String get kisanSoilUnknown;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'3 months or more'**
+  String get kisanSownLonger;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get kisanSownThisMonth;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get kisanSownThisWeek;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'1–2 months ago'**
+  String get kisanSownTwoMonths;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Stage: {stage}'**
+  String kisanStageIs(String stage);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'What stage is the crop in?'**
+  String get kisanStageQuestion;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Stage: not set'**
+  String get kisanStageUnknown;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'The store confirms the final price.'**
+  String get kisanTotalEstimateNote;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Total {amount}'**
+  String kisanTotalToPay(String amount);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'No UPI app opened. Install a UPI app or pay at the store.'**
+  String get kisanUpiNoApp;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Open UPI app again'**
+  String get kisanUpiOpenAgain;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Finish the payment in your UPI app'**
+  String get kisanUpiWaiting;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'View cart'**
+  String get kisanViewCart;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'You already answered for this visit.'**
+  String get kisanVisitAlreadyAnswered;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you. We will check with the officer.'**
+  String get kisanVisitNoThanks;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Did {name} visit your farm today?'**
+  String kisanVisitQuestion(String name);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Did your field officer visit your farm today?'**
+  String get kisanVisitQuestionNoName;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to answer'**
+  String get kisanVisitTapToAnswer;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you! The visit is confirmed.'**
+  String get kisanVisitThanks;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Field officer visit'**
+  String get kisanVisitTitle;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'This question has expired. Ask your officer to show the QR.'**
+  String get kisanVisitTokenInvalid;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Weather for your farm is coming soon'**
+  String get kisanWeatherSoon;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Something is wrong: change'**
+  String get kisanWelcomeChange;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Please check your farm and crops.'**
+  String get kisanWelcomeConfirmHelp;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, this is right'**
+  String get kisanWelcomeCorrect;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a picture to change it.'**
+  String get kisanWelcomeEditHelp;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Your farm details from {name} (field officer)'**
+  String kisanWelcomeFromOfficer(String name);
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Your farm details from your field officer'**
+  String get kisanWelcomeFromYourOfficer;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get kisanWelcomeTitle;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp'**
+  String get kisanWhatsApp;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get kisanYes;
+
+  /// Farmer app (Kisan), M6
+  ///
+  /// In en, this message translates to:
+  /// **'Your field officer'**
+  String get kisanYourOfficer;
 }
 
 class _CoreLocalizationsDelegate

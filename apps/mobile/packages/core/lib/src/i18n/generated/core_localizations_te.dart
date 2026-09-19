@@ -3291,4 +3291,589 @@ class CoreLocalizationsTe extends CoreLocalizations {
 
   @override
   String get wipeSignInAgain => 'మళ్ళీ సైన్ ఇన్ చేయండి';
+
+  @override
+  String get audioListen => 'వినండి';
+
+  @override
+  String get audioUnavailable => 'ఆడియో లేదు';
+
+  @override
+  String get kisanLanguagePrompt =>
+      'మీరు తెలుగు ఎంచుకున్నారు. కొనసాగించు నొక్కండి.';
+
+  @override
+  String get kisanAbout => 'యాప్ గురించి';
+
+  @override
+  String kisanAboutVersion(String app, String version) {
+    return '$app వెర్షన్ $version';
+  }
+
+  @override
+  String kisanAcres(String count) {
+    return '$count ఎకరాలు';
+  }
+
+  @override
+  String kisanAcresPlus(String count) {
+    return '$count+ ఎకరాలు';
+  }
+
+  @override
+  String get kisanAddToCart => 'బుట్టలో చేర్చండి';
+
+  @override
+  String kisanAsOf(String time) {
+    return '$timeకి నవీకరించబడింది';
+  }
+
+  @override
+  String kisanOfflineAsOf(String time) {
+    return 'ఇంటర్నెట్ లేదు. $timeన సేవ్ చేసినది';
+  }
+
+  @override
+  String kisanBalanceNow(String amount) {
+    return 'ఇప్పటి బాకీ: $amount';
+  }
+
+  @override
+  String get kisanBuyProducts => 'సామాను కొనండి';
+
+  @override
+  String get kisanCall => 'కాల్ చేయండి';
+
+  @override
+  String get kisanCartEmpty => 'మీ బుట్ట ఖాళీగా ఉంది';
+
+  @override
+  String get kisanCartTitle => 'నా బుట్ట';
+
+  @override
+  String get kisanCheckMyCrop => 'నా పంట చూపించండి';
+
+  @override
+  String get kisanConfirmWithoutRating => 'రేటింగ్ లేకుండా ధృవీకరించండి';
+
+  @override
+  String get kisanConsentAgree => 'నేను ఒప్పుకుంటున్నాను';
+
+  @override
+  String get kisanConsentDataHowToStop =>
+      'కిసాన్ వాడటానికి ఇది అవసరం. ఆపాలంటే మీ ఖాతాను తొలగించండి.';
+
+  @override
+  String get kisanConsentDataNeeded =>
+      'కిసాన్ వాడటానికి మొదటి కార్డుకు అవును అనండి.';
+
+  @override
+  String get kisanConsentDataNotice =>
+      'సలహా ఇవ్వడానికి మీ పేరు, ఫోన్, ఊరు, పొలం, పంట ఫోటోలు ఉంచుతాం. మీ ఫీల్డ్ ఆఫీసర్, దుకాణం వాటిని చూడగలరు. మీ సమాచారాన్ని మేము ఎప్పుడూ అమ్మము.';
+
+  @override
+  String kisanConsentGivenOn(String date) {
+    return '$dateన ఇచ్చారు';
+  }
+
+  @override
+  String get kisanConsentIntro =>
+      'దయచేసి చదవండి లేదా వినండి. రెండో ఎంపికను ఎప్పుడైనా “నేను”లో మార్చవచ్చు.';
+
+  @override
+  String get kisanConsentOffersNotice =>
+      'ఆఫర్లు, వ్యవసాయ చిట్కాలు SMS లేదా WhatsAppలో పంపుతాం. “నేను”లో ఎప్పుడైనా ఆపవచ్చు.';
+
+  @override
+  String get kisanConsentPending =>
+      'ఈ ఫోన్‌లో సేవ్ అయింది. ఇంటర్నెట్ వచ్చాక పంపుతాం.';
+
+  @override
+  String get kisanConsentSettings => 'నా అనుమతి';
+
+  @override
+  String get kisanConsentTitle => 'మొదలుపెట్టే ముందు';
+
+  @override
+  String kisanConsentWithdrawnOn(String date) {
+    return '$dateన ఆపారు';
+  }
+
+  @override
+  String get kisanCouldNotOpen => 'తెరవలేకపోయాం. మళ్ళీ ప్రయత్నించండి.';
+
+  @override
+  String get kisanCreditStoreWillConfirm => 'మీ దుకాణం నిర్ధారిస్తుంది';
+
+  @override
+  String get kisanCropDoctorSoonHelp =>
+      'త్వరలో ఇక్కడ మీ పంట ఫోటో తీసి సలహా పొందవచ్చు.';
+
+  @override
+  String get kisanCropDoctorSoonTitle => 'పంట వైద్యుడు త్వరలో వస్తోంది';
+
+  @override
+  String get kisanCropUnknown => 'పంట';
+
+  @override
+  String get kisanDeleteAccount => 'నా ఖాతా తొలగించండి';
+
+  @override
+  String get kisanDeleteAfter =>
+      'అప్పటివరకు కిసాన్ వాడవచ్చు. మనసు మారితే మీ దుకాణానికి కాల్ చేయండి.';
+
+  @override
+  String get kisanDeleteAreYouSure =>
+      'నిజంగానా? మీ ఖాతా, సమాచారం తొలగిపోతాయి. మళ్ళీ తెచ్చుకోలేరు.';
+
+  @override
+  String kisanDeleteDueBy(String date) {
+    return '$date లోపు పూర్తి చేస్తాం';
+  }
+
+  @override
+  String get kisanDeleteExplain =>
+      'మీ ఖాతా, పొలం వివరాలు, పంట ఫోటోలు, సందేశాలు తొలగిస్తాం. బిల్లుల వంటి చట్టం చెప్పిన రికార్డులు కొంతకాలం ఉంచి తర్వాత తొలగిస్తాం.';
+
+  @override
+  String get kisanDeleteKeep => 'వద్దు, నా ఖాతా ఉంచండి';
+
+  @override
+  String get kisanDeleteKeepsDues =>
+      'ఖాతా తొలగించినా దుకాణానికి ఇవ్వాల్సిన బాకీ కట్టాలి.';
+
+  @override
+  String kisanDeleteRequested(String ticket) {
+    return 'విన్నపం పంపారు · $ticket';
+  }
+
+  @override
+  String get kisanDeleteStatusCompleted => 'మీ ఖాతా తొలగించబడింది';
+
+  @override
+  String get kisanDeleteStatusInProgress => 'మీ సమాచారాన్ని తొలగిస్తున్నాం';
+
+  @override
+  String get kisanDeleteStatusReceived => 'మీ విన్నపం అందింది';
+
+  @override
+  String kisanDeleteTicket(String ticket) {
+    return 'టికెట్ $ticket';
+  }
+
+  @override
+  String get kisanDeleteYes => 'అవును, తొలగించండి';
+
+  @override
+  String get kisanDelivery => 'ఇంటికి పంపండి';
+
+  @override
+  String kisanDuesTitle(String amount) {
+    return 'మీ బాకీ $amount';
+  }
+
+  @override
+  String get kisanFarmUnnamed => 'నా పొలం';
+
+  @override
+  String get kisanFieldOfficer => 'ఫీల్డ్ ఆఫీసర్';
+
+  @override
+  String get kisanGoToPay => 'చెల్లింపుకు వెళ్ళండి';
+
+  @override
+  String kisanGreeting(String name) {
+    return 'నమస్తే, $name';
+  }
+
+  @override
+  String get kisanGreetingNoName => 'నమస్తే';
+
+  @override
+  String get kisanHelpCallStore => 'సహాయం: దుకాణానికి కాల్ చేయండి';
+
+  @override
+  String get kisanHelpNoPhone => 'దుకాణం ఫోన్ ఇంకా లేదు';
+
+  @override
+  String get kisanHowMany => 'ఎన్ని కావాలి?';
+
+  @override
+  String get kisanHowPay => 'ఎలా చెల్లిస్తారు?';
+
+  @override
+  String kisanInStock(String count) {
+    return 'మీ దుకాణంలో $count ఉన్నాయి';
+  }
+
+  @override
+  String get kisanIrrigationQuestion => 'పొలానికి నీరు ఎలా పెడతారు?';
+
+  @override
+  String get kisanIrrigationUnknown => 'నీరు: తెలియదు';
+
+  @override
+  String get kisanItems => 'సామాను';
+
+  @override
+  String get kisanKhataNotLoaded => 'ఖాతా పుస్తకం ఇంకా ఈ ఫోన్‌లో లేదు';
+
+  @override
+  String get kisanLess => 'తగ్గించు';
+
+  @override
+  String get kisanMore => 'పెంచు';
+
+  @override
+  String get kisanMyCrops => 'నా పంటలు';
+
+  @override
+  String get kisanMyOfficer => 'నా ఫీల్డ్ ఆఫీసర్';
+
+  @override
+  String get kisanMyOrders => 'నా ఆర్డర్లు';
+
+  @override
+  String get kisanNavCropDoctor => 'పంట వైద్యుడు';
+
+  @override
+  String get kisanNavHome => 'హోమ్';
+
+  @override
+  String get kisanNavMe => 'నేను';
+
+  @override
+  String get kisanNavOrders => 'ఆర్డర్లు';
+
+  @override
+  String get kisanNeedsInternet =>
+      'దీనికి ఇంటర్నెట్ కావాలి. ఇంటర్నెట్ వచ్చాక మళ్ళీ ప్రయత్నించండి.';
+
+  @override
+  String get kisanNextTaskSoon => 'తదుపరి పని: త్వరలో';
+
+  @override
+  String get kisanNo => 'లేదు';
+
+  @override
+  String get kisanNoAlerts => 'మీ ప్రాంతంలో పురుగుల హెచ్చరికలు లేవు';
+
+  @override
+  String get kisanNoCropsHelp =>
+      'మీ ఫీల్డ్ ఆఫీసర్ లేదా దుకాణం మీ పొలాన్ని చేర్చగలరు.';
+
+  @override
+  String get kisanNoCropsYet => 'ఇంకా పంటలు లేవు';
+
+  @override
+  String get kisanNotifications => 'నోటిఫికేషన్లు';
+
+  @override
+  String get kisanNotPaidYet =>
+      'ఇంకా చెల్లించలేదు. తర్వాత లేదా దుకాణంలో చెల్లించవచ్చు.';
+
+  @override
+  String get kisanOff => 'ఆఫ్';
+
+  @override
+  String get kisanOffersOff => 'ఆఫర్లు, చిట్కాలు: ఆఫ్';
+
+  @override
+  String get kisanOffersOn => 'ఆఫర్లు, చిట్కాలు: ఆన్';
+
+  @override
+  String get kisanOfficerPhoneMissing =>
+      'ఆఫీసర్ ఫోన్ ఇంకా యాప్‌లో లేదు. మీ దుకాణంలో అడగండి.';
+
+  @override
+  String get kisanOn => 'ఆన్';
+
+  @override
+  String get kisanOrderCollected => 'తీసుకున్నారు';
+
+  @override
+  String get kisanOrderNotSaved => 'ఈ ఆర్డర్ ఇంకా ఈ ఫోన్‌లో లేదు';
+
+  @override
+  String get kisanOrderOnKhata => 'మీ ఖాతాలో రాశారు';
+
+  @override
+  String get kisanOrderPaid => 'చెల్లించారు';
+
+  @override
+  String get kisanOrderPlaced => 'ఆర్డర్ పెట్టారు';
+
+  @override
+  String get kisanOrdersEmptyHelp =>
+      'మీ దుకాణం నుండి ఆర్డర్ చేయడానికి సామాను కొనండి నొక్కండి.';
+
+  @override
+  String get kisanOrderShort =>
+      'దుకాణంలో ఒక సామాను సరిపడా లేదు. సంఖ్య మార్చండి.';
+
+  @override
+  String get kisanOrderTitle => 'నా ఆర్డర్';
+
+  @override
+  String get kisanOutOfStock => 'ఇప్పుడు స్టాక్ లేదు';
+
+  @override
+  String kisanPaidOn(String time) {
+    return '$timeన చెల్లించారు';
+  }
+
+  @override
+  String get kisanPaidThanks => 'చెల్లింపు అయింది. ధన్యవాదాలు!';
+
+  @override
+  String get kisanPayAtStore => 'దుకాణంలో చెల్లిస్తాను';
+
+  @override
+  String get kisanPayAtStoreHelp => 'సామాను తీసుకునేటప్పుడు నగదు లేదా UPI';
+
+  @override
+  String get kisanPayAtStoreNote => 'తీసుకునేటప్పుడు దుకాణంలో చెల్లించండి';
+
+  @override
+  String get kisanPayCredit => 'అప్పు అడగండి';
+
+  @override
+  String get kisanPaymentDone => 'చెల్లింపు అందింది';
+
+  @override
+  String get kisanPaymentFailed => 'చెల్లింపు జరగలేదు. డబ్బు కట్ అవ్వలేదు.';
+
+  @override
+  String kisanPaymentRef(String ref) {
+    return 'సంఖ్య: $ref';
+  }
+
+  @override
+  String get kisanPayTitle => 'చెల్లించండి';
+
+  @override
+  String get kisanPayUpi => 'UPIతో చెల్లించండి';
+
+  @override
+  String get kisanPayUpiHelp =>
+      'PhonePe, Google Pay లేదా మీ UPI యాప్ తెరుస్తుంది';
+
+  @override
+  String get kisanPickup => 'దుకాణంలో తీసుకుంటాను';
+
+  @override
+  String get kisanPickupQuestion => 'ఎలా తీసుకుంటారు?';
+
+  @override
+  String kisanPlacedOn(String time) {
+    return '$timeన ఆర్డర్ చేశారు';
+  }
+
+  @override
+  String get kisanPlaceOrder => 'ఆర్డర్ పెట్టండి';
+
+  @override
+  String get kisanProductTitle => 'సామాను';
+
+  @override
+  String get kisanRateQuestion => 'సందర్శన ఎలా ఉంది?';
+
+  @override
+  String get kisanRateTitle => 'సందర్శనకు రేటింగ్ ఇవ్వండి';
+
+  @override
+  String get kisanRateWhy => 'ఎందుకు?';
+
+  @override
+  String get kisanReasonAdviceUnclear => 'సలహా అర్థం కాలేదు';
+
+  @override
+  String get kisanReasonDidNotSeeCrop => 'నా పంట చూడలేదు';
+
+  @override
+  String get kisanReasonLookedAtCrop => 'నా పంట చూశారు';
+
+  @override
+  String get kisanReasonOnTime => 'సమయానికి వచ్చారు';
+
+  @override
+  String get kisanReasonTooShort => 'చాలా తక్కువ సేపు ఉన్నారు';
+
+  @override
+  String get kisanReasonUsefulAdvice => 'మంచి సలహా';
+
+  @override
+  String get kisanReceiptTitle => 'రసీదు';
+
+  @override
+  String get kisanSave => 'సేవ్ చేయండి';
+
+  @override
+  String get kisanSaved => 'సేవ్ అయింది';
+
+  @override
+  String get kisanSavedWillSend => 'సేవ్ అయింది. ఇంటర్నెట్ వచ్చాక పంపుతాం.';
+
+  @override
+  String get kisanSaveFailed => 'సేవ్ కాలేదు. మళ్ళీ ప్రయత్నించండి.';
+
+  @override
+  String get kisanScanButton => 'QR స్కాన్ చేయండి';
+
+  @override
+  String get kisanScanHelp =>
+      'మీ ఫీల్డ్ ఆఫీసర్‌ను వారి ఫోన్‌లో QR చూపమని అడిగి, దాన్ని స్కాన్ చేయండి.';
+
+  @override
+  String get kisanScanNotVisitQr =>
+      'ఇది సందర్శన QR కాదు. మీ ఆఫీసర్ ఫోన్‌లోని QR స్కాన్ చేయండి.';
+
+  @override
+  String get kisanScanTitle => 'సందర్శన QR స్కాన్';
+
+  @override
+  String get kisanScanVisitQr => 'సందర్శన QR';
+
+  @override
+  String get kisanSend => 'పంపండి';
+
+  @override
+  String get kisanSetupCropQuestion => 'ఏ పంట వేశారు?';
+
+  @override
+  String get kisanSetupLandQuestion => 'ఎంత భూమి?';
+
+  @override
+  String get kisanSetupNoVillages =>
+      'ఊళ్ళ జాబితా ఇంకా ఈ ఫోన్‌లో లేదు. మీ దుకాణం చేరుస్తుంది.';
+
+  @override
+  String get kisanSetupSownQuestion => 'ఎప్పుడు విత్తారు?';
+
+  @override
+  String get kisanSetupVillageQuestion => 'మీ ఊరు';
+
+  @override
+  String get kisanShopEmptyHelp => 'వేరే రకం సామాను చూడండి.';
+
+  @override
+  String get kisanShopHelp =>
+      'సామానును చూసి బుట్టలో చేర్చడానికి దాన్ని నొక్కండి.';
+
+  @override
+  String get kisanSkipForNow => 'ఇప్పటికి వదిలేయండి';
+
+  @override
+  String get kisanSoilQuestion => 'మీ నేల ఏది?';
+
+  @override
+  String get kisanSoilUnknown => 'నేల: తెలియదు';
+
+  @override
+  String get kisanSownLonger => '3 నెలలు లేదా ఎక్కువ';
+
+  @override
+  String get kisanSownThisMonth => 'ఈ నెల';
+
+  @override
+  String get kisanSownThisWeek => 'ఈ వారం';
+
+  @override
+  String get kisanSownTwoMonths => '1–2 నెలల క్రితం';
+
+  @override
+  String kisanStageIs(String stage) {
+    return 'దశ: $stage';
+  }
+
+  @override
+  String get kisanStageQuestion => 'పంట ఏ దశలో ఉంది?';
+
+  @override
+  String get kisanStageUnknown => 'దశ: తెలియదు';
+
+  @override
+  String get kisanTotalEstimateNote => 'చివరి ధర దుకాణం చెబుతుంది.';
+
+  @override
+  String kisanTotalToPay(String amount) {
+    return 'మొత్తం $amount';
+  }
+
+  @override
+  String get kisanUpiNoApp =>
+      'UPI యాప్ తెరుచుకోలేదు. UPI యాప్ వేసుకోండి లేదా దుకాణంలో చెల్లించండి.';
+
+  @override
+  String get kisanUpiOpenAgain => 'UPI యాప్ మళ్ళీ తెరవండి';
+
+  @override
+  String get kisanUpiWaiting => 'మీ UPI యాప్‌లో చెల్లింపు పూర్తి చేయండి';
+
+  @override
+  String get kisanViewCart => 'బుట్ట చూడండి';
+
+  @override
+  String get kisanVisitAlreadyAnswered => 'ఈ సందర్శనకు ఇప్పటికే జవాబు ఇచ్చారు.';
+
+  @override
+  String get kisanVisitNoThanks => 'ధన్యవాదాలు. ఆఫీసర్‌తో మాట్లాడతాం.';
+
+  @override
+  String kisanVisitQuestion(String name) {
+    return 'ఈరోజు $name మీ పొలానికి వచ్చారా?';
+  }
+
+  @override
+  String get kisanVisitQuestionNoName =>
+      'ఈరోజు మీ ఫీల్డ్ ఆఫీసర్ మీ పొలానికి వచ్చారా?';
+
+  @override
+  String get kisanVisitTapToAnswer => 'జవాబు ఇవ్వడానికి నొక్కండి';
+
+  @override
+  String get kisanVisitThanks => 'ధన్యవాదాలు! సందర్శన ధృవీకరించబడింది.';
+
+  @override
+  String get kisanVisitTitle => 'ఫీల్డ్ ఆఫీసర్ సందర్శన';
+
+  @override
+  String get kisanVisitTokenInvalid =>
+      'ఈ ప్రశ్న గడువు ముగిసింది. ఆఫీసర్‌ను QR చూపమని అడగండి.';
+
+  @override
+  String get kisanWeatherSoon => 'మీ పొలం వాతావరణం త్వరలో వస్తుంది';
+
+  @override
+  String get kisanWelcomeChange => 'ఏదో తప్పు ఉంది: మార్చండి';
+
+  @override
+  String get kisanWelcomeConfirmHelp => 'దయచేసి మీ పొలం, పంటలు చూసుకోండి.';
+
+  @override
+  String get kisanWelcomeCorrect => 'అవును, ఇది సరైనది';
+
+  @override
+  String get kisanWelcomeEditHelp => 'మార్చడానికి బొమ్మను నొక్కండి.';
+
+  @override
+  String kisanWelcomeFromOfficer(String name) {
+    return '$name (ఫీల్డ్ ఆఫీసర్) నమోదు చేసిన మీ పొలం వివరాలు';
+  }
+
+  @override
+  String get kisanWelcomeFromYourOfficer =>
+      'మీ ఫీల్డ్ ఆఫీసర్ నమోదు చేసిన మీ పొలం వివరాలు';
+
+  @override
+  String get kisanWelcomeTitle => 'స్వాగతం';
+
+  @override
+  String get kisanWhatsApp => 'WhatsApp';
+
+  @override
+  String get kisanYes => 'అవును';
+
+  @override
+  String get kisanYourOfficer => 'మీ ఫీల్డ్ ఆఫీసర్';
 }

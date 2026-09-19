@@ -39,6 +39,7 @@ class LanguagePicker extends StatelessWidget {
     this.languages = LanguageOption.launchLanguages,
     this.selected,
     this.onPlayAudio,
+    this.audioUnavailable = const <String>{},
     super.key,
   }) : compact = false,
        keyPrefix = null;
@@ -52,7 +53,8 @@ class LanguagePicker extends StatelessWidget {
     this.keyPrefix,
     super.key,
   }) : compact = true,
-       onPlayAudio = null;
+       onPlayAudio = null,
+       audioUnavailable = const <String>{};
 
   /// Chips instead of tiles.
   final bool compact;
@@ -71,6 +73,10 @@ class LanguagePicker extends StatelessWidget {
 
   /// Called when the speaker button is tapped; hidden when `null`.
   final ValueChanged<Locale>? onPlayAudio;
+
+  /// Language codes with no voice on this device: their speaker shows
+  /// "Audio unavailable" (in the tile's language) and is disabled (NF-009).
+  final Set<String> audioUnavailable;
 
   /// Tile height: script name, caption and a 48 dp "Listen" row.
   static const double tileExtent = 144;
@@ -112,6 +118,13 @@ class LanguagePicker extends StatelessWidget {
           option: option,
           englishName: _englishName(l10n, option.locale),
           listenLabel: _ownLocalizations(option.locale, l10n).languagePlayAudio,
+          unavailableLabel: _ownLocalizations(
+            option.locale,
+            l10n,
+          ).audioUnavailable,
+          audioUnavailable: audioUnavailable.contains(
+            option.locale.languageCode,
+          ),
           selected: option.locale == selected,
           onTap: () => onSelected(option.locale),
           onPlay: onPlayAudio == null
@@ -150,6 +163,8 @@ class _LanguageTile extends StatelessWidget {
     required this.option,
     required this.englishName,
     required this.listenLabel,
+    required this.unavailableLabel,
+    required this.audioUnavailable,
     required this.selected,
     required this.onTap,
     required this.onPlay,
@@ -158,6 +173,8 @@ class _LanguageTile extends StatelessWidget {
   final LanguageOption option;
   final String englishName;
   final String listenLabel;
+  final String unavailableLabel;
+  final bool audioUnavailable;
   final bool selected;
   final VoidCallback onTap;
   final VoidCallback? onPlay;
@@ -221,11 +238,13 @@ class _LanguageTile extends StatelessWidget {
                             : Semantics(
                                 container: true,
                                 button: true,
-                                label: '$listenLabel ${option.nativeName}',
+                                label: audioUnavailable
+                                    ? '$unavailableLabel ${option.nativeName}'
+                                    : '$listenLabel ${option.nativeName}',
                                 excludeSemantics: true,
-                                onTap: onPlay,
+                                onTap: audioUnavailable ? null : onPlay,
                                 child: TextButton.icon(
-                                  onPressed: onPlay,
+                                  onPressed: audioUnavailable ? null : onPlay,
                                   style: TextButton.styleFrom(
                                     foregroundColor: p.primary,
                                     minimumSize: const Size(
@@ -237,9 +256,15 @@ class _LanguageTile extends StatelessWidget {
                                     ),
                                     textStyle: app.text.label,
                                   ),
-                                  icon: const Icon(Icons.volume_up_outlined),
+                                  icon: Icon(
+                                    audioUnavailable
+                                        ? Icons.volume_off_outlined
+                                        : Icons.volume_up_outlined,
+                                  ),
                                   label: Text(
-                                    listenLabel,
+                                    audioUnavailable
+                                        ? unavailableLabel
+                                        : listenLabel,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),

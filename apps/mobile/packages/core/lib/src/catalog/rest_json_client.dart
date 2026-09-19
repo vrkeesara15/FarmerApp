@@ -106,6 +106,17 @@ class RestJsonClient {
         .timeout(timeout),
   );
 
+  /// `PATCH path` with a JSON body.
+  Future<RestResponse> patch(String path, Map<String, Object?> body) => _call(
+    (token) => _client
+        .patch(
+          config.resolve(path),
+          headers: <String, String>{..._headers, 'Authorization': token},
+          body: jsonEncode(body),
+        )
+        .timeout(timeout),
+  );
+
   Future<RestResponse> _call(
     Future<http.Response> Function(String bearer) send,
   ) async {
