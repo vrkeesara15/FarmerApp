@@ -56,6 +56,12 @@ farmerapp/
   diagnosis/      M6 diagnosis engine: corpus, encoder, kNN, decision rule, LLM fallback,
                   treatments, review queue (see "Diagnosis engine")
   privacy/        FM-015 / NF-013 data-principal requests (deletion, access, correction)
+  campaigns/      WC-008 / AN-008 consented segments, sends (SMS / WhatsApp / push), ROI;
+                  membership.py = the VA-F09 SegmentMembershipPort adapter
+  incentives/     WC-009 monthly targets, versioned incentive rules engine, payouts;
+                  incentive_for() = the FA-024 IncentivePort function
+  exports/        WC-013 exports + scheduled reports, EmailSender port, cron (IST), AN-015
+                  weekly owner PDF, ST-008 Tally / Zoho accounting files, NF-013 consent export
 alembic/          async Alembic env + migrations
 scripts/          export_openapi.py (writes/checks openapi.yaml)
 tests/            pytest (needs the compose db: `make db`; parallel, see "How the tests run")
@@ -995,6 +1001,50 @@ refresh answers `session_revoked` or `device_wipe_required`. Field officers are 
 device (409 `device_not_bound` until an admin binds the new one). In tests, send
 `X-Step-Up-Token` with the `step_up` fixture (`tests/authz/conftest.py`) or set
 `RouteFixture(step_up=True)` in the authz matrix.
+
+## Growth: campaigns, targets and incentives, exports and reports (M7)
+
+Alembic `0031_growth` (branch label `growth`); contracts for the console and the apps:
+`docs/prs/M7-growth-api.md`.
+
+- **Campaigns** (`farmerapp/campaigns/`, WC-008 / AN-008): `/v1/campaigns` (owner, director,
+  tenant admin; auditor reads). `segments.py` builds audiences from crop, stage, district, store,
+  purchase window and spend, last visit, app usage and language; **consent is always part of
+  the query** (the latest `(farmer, marketing)` consent row must be a grant) and the send job
+  re-checks it per batch (`skipped / consent_withdrawn`). SMS needs the tenant's DLT template id
+  (`campaigns.dlt_templates[template_key]`), WhatsApp a template name; push is a `notification`
+  row (`campaign_message`, text in `data.text`). Scheduling freezes the audience into
+  `campaign_recipient` with a deterministic holdout split; `send-campaigns` sends at most
+  `campaigns.sends_per_run` per run. ROI: orders by a recipient within `attribution_days` of the
+  send (last touch), own-brand lift vs the holdout.
+- **Incentives** (`farmerapp/incentives/`, WC-009): `sales_target` per officer / store and
+  month; `incentive_rule_set` holds versioned JSON rules evaluated by the pure `rules.evaluate`
+  (slabs, per-unit, percent, thresholds, attainment multipliers, caps, VV-005 verified-only
+  eligibility, clawback of orders cancelled after their month); `close-incentives` freezes
+  `incentive_payout`.
+- **Exports** (`farmerapp/exports/`, WC-013): `POST /v1/exports` (step-up, audited) streams any
+  list resource (same filters and scope as its list endpoint) into CSV / XLSX in the exports
+  bucket (`build_exports_store`, `app.state.exports`) and returns a signed URL; `report_schedule`
+  rows (cron in IST) are run by `run-report-schedules` as their owner and emailed through the
+  `EmailSender` port (`EMAIL_PROVIDER=log|fake|smtp|sendgrid`; `log` by default).
+- **Reports and alerts**: `weekly-owner-report` (AN-015, Monday 08:00 IST: one-page PDF of the
+  owner-home KPIs + top 5 flags), `accounting-export` (ST-008: Tally CSV / XML and Zoho CSV per
+  store and day), `stock-alerts` (ST-004: `reorder_level` per store and SKU with a tenant default,
+  60 / 30-day expiry; deduplicated notification rows). Schedules: `exports.jobs.SCHEDULES`.
+
+```python
+# FA-024 (field-agent IncentivePort) and VA-F09 (rules SegmentMembershipPort) adapters
+from farmerapp.campaigns.membership import CAMPAIGN_SEGMENT_MEMBERSHIP
+from farmerapp.incentives.service import incentive_for
+
+result = await incentive_for(
+    session, tenant_id=t, officer_id=o, period_start=date(2027, 3, 1), period_end=date(2027, 4, 1)
+)
+missing = await CAMPAIGN_SEGMENT_MEMBERSHIP.members_without_consent(session, t)
+```
+
+Tests: `tests/growth/` (hand-computed incentive fixture, consent withdrawal between build and
+send, PDF text of the weekly report, Monday 08:00 IST schedule, Tally / Zoho golden columns).
 
 ## Diagnosis engine (M6: DX-002 .. DX-010, WC-006, WC-007, OPS-009, FM-015)
 

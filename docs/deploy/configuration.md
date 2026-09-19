@@ -142,6 +142,9 @@ two URLs are used exactly as before.
 | `ANTHROPIC_API_KEY` | SM `anthropic-api-key` | Anthropic key (read by the SDK) | W | yes |
 | `DIAGNOSIS_EMBED_TIMEOUT_S` / `DIAGNOSIS_LLM_MAX_TOKENS` / `DIAGNOSIS_LLM_EFFORT` / `DIAGNOSIS_KNN_K` / `DIAGNOSIS_HNSW_EF_SEARCH` / `DIAGNOSIS_MAX_ATTEMPTS` | default | 20 / 16000 / `medium` / 20 / 40 / 5 | A W J | no |
 | `PLAY_INTEGRITY_MODE` / `PLAY_INTEGRITY_PACKAGE_NAMES` / `PLAY_INTEGRITY_TIMEOUT_S` | default | `off` / both app ids / 2.0 (`google` is a human gate, SEC-024) | A | no |
+| `EMAIL_PROVIDER` / `EMAIL_FROM` | default | `log` (writes `email_logged`, sends nothing) / `reports@farmerapp.local`; `sendgrid` or `smtp` once a provider exists (human gate, WC-013 / AN-015 / ST-008) | A J | no |
+| `EMAIL_API_URL` / `EMAIL_API_KEY` | default / Secret Manager | SendGrid-style `https://api.sendgrid.com/v3/mail/send` / key secret (only with `EMAIL_PROVIDER=sendgrid`) | J | no |
+| `EMAIL_SMTP_HOST` / `EMAIL_SMTP_PORT` / `EMAIL_SMTP_USERNAME` / `EMAIL_SMTP_PASSWORD` / `EMAIL_SMTP_STARTTLS` / `EMAIL_TIMEOUT_S` | default / Secret Manager (password) | `localhost` / 587 / unset / unset / true / 20 (only with `EMAIL_PROVIDER=smtp`) | J | no |
 
 ## Auth and API edge (api)
 

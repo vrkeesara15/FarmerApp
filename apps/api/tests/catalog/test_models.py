@@ -76,8 +76,9 @@ def test_money_columns_are_integer_paise() -> None:
     assert offenders == []
     # every M3 money column was inspected (update when adding one): 15 in 0011, plus
     # credit_approval_request amount / balance / limit / shortfall in 0012 (ST-007),
-    # plus 6 on invoice in 0013 (ST-001).
-    assert money_columns == 25
+    # plus 6 on invoice in 0013 (ST-001), plus 5 in 0031 (WC-009: sales_target sales /
+    # collections, incentive_payout gross / clawback / amount).
+    assert money_columns == 30
 
 
 def test_every_m3_table_is_a_model_table() -> None:

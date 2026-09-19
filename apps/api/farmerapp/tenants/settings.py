@@ -33,6 +33,16 @@ day_close_deadline_local_time       "22:00"      OPS-007 a working day not close
 languages_enabled                   all five     NF-008 languages the apps offer
 default_language                    "en"         language of a new user
 features.on_device_crop_guess       false        DX-001 apps pre-select the on-device crop guess
+campaigns.attribution_days          14           WC-008 / AN-008 conversion window (days)
+campaigns.dlt_templates             {}           WC-008 template key -> DLT template id (SMS)
+campaigns.whatsapp_templates        {}           WC-008 template key -> WhatsApp template name
+campaigns.sends_per_run             500          WC-008 throttle: recipients sent per job run
+campaigns.holdout_pct               0            AN-008 default control group share (%)
+stock_alerts.default_reorder_level  10           ST-004 reorder level of a SKU without its own
+stock_alerts.expiry_days            [60, 30]     ST-004 expiry alert thresholds (days)
+reports.weekly_owner_emails         []           AN-015 owner / director report addresses
+reports.accounting_emails           []           ST-008 accountant addresses
+accounting.*                        see model    ST-008 Tally / Zoho ledger names
 branding.*                          see Branding C102 app names, colour, logo, support phone
 =================================== ============ ==============================================
 
@@ -109,6 +119,10 @@ SETTINGS_KEYS: Mapping[str, str] = {
     "languages_enabled": "NF-008 languages offered in the apps",
     "default_language": "Language of new users",
     "features": "App feature flags: on_device_crop_guess (DX-001 crop hint, default off)",
+    "campaigns": "WC-008 attribution window, DLT / WhatsApp template ids, throttle, holdout",
+    "stock_alerts": "ST-004 default reorder level and expiry alert thresholds",
+    "reports": "AN-015 weekly owner report and ST-008 accounting export email addresses",
+    "accounting": "ST-008 Tally / Zoho ledger names",
     "branding": "C102 app names, primary colour, logo and support phone (tenant.branding)",
 }
 
@@ -131,6 +145,61 @@ class FeatureSettings(BaseModel):
         description="DX-001: send and pre-select the on-device crop guess. Off until the "
         "field-accuracy gate passes (ml/ondevice/INTEGRATION.md section 7).",
     )
+
+
+_EMAIL = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+Email = Annotated[str, StringConstraints(pattern=_EMAIL, max_length=254)]
+
+
+class CampaignSettings(BaseModel):
+    """WC-008 / AN-008. Template ids are registrations (DLT, WhatsApp Business): human work."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    attribution_days: int = Field(default=14, ge=1, le=90)
+    dlt_templates: dict[str, Annotated[str, StringConstraints(max_length=64)]] = Field(
+        default_factory=dict, description="template key -> DLT template id (TRAI, SMS)"
+    )
+    whatsapp_templates: dict[str, Annotated[str, StringConstraints(max_length=64)]] = Field(
+        default_factory=dict, description="template key -> WhatsApp Business template name"
+    )
+    sends_per_run: int = Field(default=500, ge=1, le=10_000)
+    holdout_pct: int = Field(default=0, ge=0, le=50)
+
+
+class StockAlertSettings(BaseModel):
+    """ST-004 nightly alerts."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    default_reorder_level: int = Field(default=10, ge=0, le=1_000_000)
+    expiry_days: list[Annotated[int, Field(ge=1, le=365)]] = Field(
+        default_factory=lambda: [60, 30], min_length=1, max_length=5
+    )
+
+
+class ReportSettings(BaseModel):
+    """Where recurring reports go (users carry no email address)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    weekly_owner_emails: list[Email] = Field(default_factory=list, max_length=20)
+    accounting_emails: list[Email] = Field(default_factory=list, max_length=20)
+
+
+class AccountingSettings(BaseModel):
+    """ST-008 ledger names in the tenant's books (Tally / Zoho). TODO-HUMAN: the accountant
+    confirms them against the company's chart of accounts."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    sales_ledger_prefix: str = Field(default="Sales", min_length=1, max_length=60)
+    output_tax_prefix: str = Field(default="Output", min_length=1, max_length=60)
+    round_off_ledger: str = Field(default="Round Off", min_length=1, max_length=60)
+    cash_ledger: str = Field(default="Cash", min_length=1, max_length=60)
+    upi_ledger: str = Field(default="UPI Collections", min_length=1, max_length=60)
+    card_ledger: str = Field(default="Card Collections", min_length=1, max_length=60)
+    walk_in_party: str = Field(default="Cash Customer", min_length=1, max_length=60)
 
 
 class Branding(BaseModel):
@@ -182,6 +251,10 @@ class TenantSettings(BaseModel):
     )
     default_language: Language = "en"
     features: FeatureSettings = Field(default_factory=FeatureSettings)
+    campaigns: CampaignSettings = Field(default_factory=CampaignSettings)
+    stock_alerts: StockAlertSettings = Field(default_factory=StockAlertSettings)
+    reports: ReportSettings = Field(default_factory=ReportSettings)
+    accounting: AccountingSettings = Field(default_factory=AccountingSettings)
     branding: Branding = Field(default_factory=Branding)
 
     def auto_duty_end_time(self) -> time:
@@ -286,9 +359,13 @@ __all__ = [
     "PUBLIC_KEYS",
     "SETTINGS_KEYS",
     "SUPPORTED_LANGUAGES",
+    "AccountingSettings",
     "Branding",
+    "CampaignSettings",
     "FeatureSettings",
+    "ReportSettings",
     "SamplingSettings",
+    "StockAlertSettings",
     "TenantSettings",
     "get_tenant_settings",
     "parse_settings",

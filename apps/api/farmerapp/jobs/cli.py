@@ -434,5 +434,9 @@ def diagnosis_queue_age(
         )
 
 
+# M7 growth jobs (WC-008, WC-009, WC-013, AN-015, ST-004, ST-008) register themselves on `cli`.
+from farmerapp.jobs import growth as _growth  # noqa: E402, F401
+
+
 def main() -> None:
     cli(prog_name="python -m farmerapp.jobs")

@@ -9208,8 +9208,1472 @@ paths:
       x-roles:
       - owner
       - tenant_admin
+  /v1/campaigns/segment-count:
+    post:
+      tags:
+      - campaigns
+      summary: Live count of the consented farmers a segment selects (WC-008)
+      operationId: countCampaignSegment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SegmentCountIn'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentCountOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/campaigns:
+    get:
+      tags:
+      - campaigns
+      summary: Campaigns of the tenant, newest first
+      operationId: listCampaigns
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/CampaignStatus'
+          - type: 'null'
+          title: Status
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - director
+      - owner
+      - tenant_admin
+    post:
+      tags:
+      - campaigns
+      summary: Create a draft campaign (segment, channel, messages per language)
+      operationId: createCampaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/campaigns/{id}:
+    get:
+      tags:
+      - campaigns
+      summary: One campaign
+      operationId: getCampaign
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - director
+      - owner
+      - tenant_admin
+    patch:
+      tags:
+      - campaigns
+      summary: Edit a draft campaign
+      operationId: updateCampaign
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignPatch'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_campaign_state`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/campaigns/{id}/schedule:
+    post:
+      tags:
+      - campaigns
+      summary: Freeze the consented audience (holdout split) and schedule the send
+      operationId: scheduleCampaign
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/farmerapp__campaigns__schemas__ScheduleIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_campaign_state`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`empty_segment`, `dlt_template_missing`, `whatsapp_template_missing`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/campaigns/{id}/cancel:
+    post:
+      tags:
+      - campaigns
+      summary: Cancel a draft or scheduled campaign (pending recipients are skipped)
+      operationId: cancelCampaign
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_campaign_state`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/campaigns/{id}/recipients:
+    get:
+      tags:
+      - campaigns
+      summary: Per-recipient delivery status of a campaign (masked phones)
+      operationId: listCampaignRecipients
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/RecipientStatus'
+          - type: 'null'
+          title: Status
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipientPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - director
+      - owner
+      - tenant_admin
+  /v1/campaigns/{id}/roi:
+    get:
+      tags:
+      - campaigns
+      summary: 'AN-008 campaign ROI: sent, delivered, opened, orders, revenue, own-brand lift'
+      operationId: getCampaignRoi
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoiOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - director
+      - owner
+      - tenant_admin
+  /v1/targets:
+    get:
+      tags:
+      - incentives
+      summary: Monthly targets of the officers and stores in the caller's scope
+      operationId: listTargets
+      parameters:
+      - name: month
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          description: Any day of the month (YYYY-MM-DD).
+          title: Month
+        description: Any day of the month (YYYY-MM-DD).
+      - name: subject_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/TargetSubject'
+          - type: 'null'
+          title: Subject Type
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+    put:
+      tags:
+      - incentives
+      summary: Set monthly targets per officer / store (a null metric has no target)
+      operationId: upsertTargets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TargetsIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
+      - tenant_admin
+  /v1/incentive-rules:
+    get:
+      tags:
+      - incentives
+      summary: Incentive rule set versions, newest first
+      operationId: listIncentiveRuleSets
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuleSetList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - tenant_admin
+    post:
+      tags:
+      - incentives
+      summary: Save the rules as a new version (optionally activate it)
+      operationId: createIncentiveRuleSet
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleSetIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuleSetOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`invalid_incentive_rules`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/incentive-rules/{id}:
+    get:
+      tags:
+      - incentives
+      summary: One incentive rule set version
+      operationId: getIncentiveRuleSet
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuleSetOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - tenant_admin
+  /v1/incentive-rules/{id}/activate:
+    post:
+      tags:
+      - incentives
+      summary: Make this version the active rules (the previous one is retired)
+      operationId: activateIncentiveRuleSet
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuleSetOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/incentives/preview:
+    get:
+      tags:
+      - incentives
+      summary: Payout preview of an officer for a month (frozen once the month is closed)
+      operationId: previewIncentive
+      parameters:
+      - name: month
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          description: Any day of the month (YYYY-MM-DD).
+          title: Month
+        description: Any day of the month (YYYY-MM-DD).
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Default: the caller.'
+          title: Officer Id
+        description: 'Default: the caller.'
+      - name: rule_set_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Evaluate this version instead of the active one.
+          title: Rule Set Id
+        description: Evaluate this version instead of the active one.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncentiveOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`no_active_incentive_rules`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+    post:
+      tags:
+      - incentives
+      summary: Evaluate an unsaved rule document for an officer and month (rule editor)
+      operationId: previewIncentiveRules
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncentiveOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_incentive_rules`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/incentives/payouts:
+    get:
+      tags:
+      - incentives
+      summary: Frozen payouts of a closed month for the officers in scope
+      operationId: listIncentivePayouts
+      parameters:
+      - name: month
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          description: Any day of the month (YYYY-MM-DD).
+          title: Month
+        description: Any day of the month (YYYY-MM-DD).
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/incentives/close:
+    post:
+      tags:
+      - incentives
+      summary: Freeze every officer's payout for an ended month (step-up; idempotent)
+      operationId: closeIncentiveMonth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloseIn'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CloseOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`no_active_incentive_rules`, `incentive_month_open`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - director
+      - owner
+  /v1/exports/resources:
+    get:
+      tags:
+      - exports
+      summary: Resources the caller may export, with their columns and formats
+      operationId: listExportResources
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourcesOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/exports:
+    post:
+      tags:
+      - exports
+      summary: Export a list view as CSV / XLSX (step-up; audited); returns a signed URL
+      operationId: createExport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`export_resource_unknown`, `export_filters_invalid`, `export_format_unsupported`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+    get:
+      tags:
+      - exports
+      summary: The caller's exports, newest first (no URLs; fetch one for a fresh link)
+      operationId: listExports
+      parameters:
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/exports/{id}:
+    get:
+      tags:
+      - exports
+      summary: One of the caller's exports with a fresh 15-minute signed URL
+      operationId: getExport
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/report-schedules:
+    get:
+      tags:
+      - exports
+      summary: 'Scheduled reports (admins: the tenant''s; others: their own)'
+      operationId: listReportSchedules
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+    post:
+      tags:
+      - exports
+      summary: Schedule a recurring export emailed to recipients (cron in IST; step-up)
+      operationId: createReportSchedule
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/farmerapp__exports__schemas__ScheduleIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`export_resource_unknown`, `export_filters_invalid`, `export_format_unsupported`,
+            `cron_invalid`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/report-schedules/{id}:
+    patch:
+      tags:
+      - exports
+      summary: Change a scheduled report (step-up)
+      operationId: updateReportSchedule
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchedulePatch'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`export_resource_unknown`, `export_filters_invalid`, `export_format_unsupported`,
+            `cron_invalid`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+    delete:
+      tags:
+      - exports
+      summary: Stop and remove a scheduled report
+      operationId: deleteReportSchedule
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/stores/{id}/reorder-levels:
+    get:
+      tags:
+      - stock
+      summary: ST-004 reorder levels of a store's SKUs (plus the tenant default)
+      operationId: listReorderLevels
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReorderLevelsOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+    put:
+      tags:
+      - stock
+      summary: Set reorder levels per SKU for a store (ST-004 low-stock alerts)
+      operationId: setReorderLevels
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorderLevelsIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReorderLevelsOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
+      - store_manager
 components:
   schemas:
+    AccountingSettings:
+      properties:
+        sales_ledger_prefix:
+          type: string
+          maxLength: 60
+          minLength: 1
+          title: Sales Ledger Prefix
+          default: Sales
+        output_tax_prefix:
+          type: string
+          maxLength: 60
+          minLength: 1
+          title: Output Tax Prefix
+          default: Output
+        round_off_ledger:
+          type: string
+          maxLength: 60
+          minLength: 1
+          title: Round Off Ledger
+          default: Round Off
+        cash_ledger:
+          type: string
+          maxLength: 60
+          minLength: 1
+          title: Cash Ledger
+          default: Cash
+        upi_ledger:
+          type: string
+          maxLength: 60
+          minLength: 1
+          title: Upi Ledger
+          default: UPI Collections
+        card_ledger:
+          type: string
+          maxLength: 60
+          minLength: 1
+          title: Card Ledger
+          default: Card Collections
+        walk_in_party:
+          type: string
+          maxLength: 60
+          minLength: 1
+          title: Walk In Party
+          default: Cash Customer
+      type: object
+      title: AccountingSettings
+      description: 'ST-008 ledger names in the tenant''s books (Tally / Zoho). TODO-HUMAN: the accountant
+
+        confirms them against the company''s chart of accounts.'
     AdjustmentIn:
       properties:
         reason:
@@ -9285,6 +10749,43 @@ components:
       - rejected
       - consumed
       title: ApprovalStatus
+    ArmOut:
+      properties:
+        size:
+          type: integer
+          title: Size
+        converted_farmers:
+          type: integer
+          title: Converted Farmers
+        conversion_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Conversion Rate
+        orders:
+          type: integer
+          title: Orders
+        revenue_paise:
+          type: integer
+          title: Revenue Paise
+        own_brand_revenue_paise:
+          type: integer
+          title: Own Brand Revenue Paise
+        own_brand_share:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Own Brand Share
+      type: object
+      required:
+      - size
+      - converted_farmers
+      - conversion_rate
+      - orders
+      - revenue_paise
+      - own_brand_revenue_paise
+      - own_brand_share
+      title: ArmOut
     AskExpertIn:
       properties:
         note:
@@ -9665,6 +11166,276 @@ components:
       additionalProperties: false
       type: object
       title: BrandingPatch
+    CampaignChannel:
+      type: string
+      enum:
+      - sms
+      - whatsapp
+      - push
+      title: CampaignChannel
+    CampaignIn:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        channel:
+          $ref: '#/components/schemas/CampaignChannel'
+        segment:
+          $ref: '#/components/schemas/Segment'
+        messages:
+          additionalProperties:
+            type: string
+            maxLength: 1000
+            minLength: 1
+          type: object
+          title: Messages
+          description: Message text per language code (`te`, `kn`, `hi`, `mr`, `en`).
+        template_key:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Template Key
+          description: Key into the tenant's `campaigns.dlt_templates` (SMS) or `campaigns.whatsapp_templates`
+            (WhatsApp).
+        attribution_days:
+          anyOf:
+          - type: integer
+            maximum: 90.0
+            minimum: 1.0
+          - type: 'null'
+          title: Attribution Days
+        holdout_pct:
+          anyOf:
+          - type: integer
+            maximum: 50.0
+            minimum: 0.0
+          - type: 'null'
+          title: Holdout Pct
+        notes:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Notes
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - channel
+      - messages
+      title: CampaignIn
+    CampaignOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        channel:
+          type: string
+          title: Channel
+        status:
+          type: string
+          title: Status
+        segment:
+          additionalProperties: true
+          type: object
+          title: Segment
+        messages:
+          additionalProperties:
+            type: string
+          type: object
+          title: Messages
+        template_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Template Key
+        scheduled_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Scheduled At
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Finished At
+        attribution_days:
+          type: integer
+          title: Attribution Days
+        holdout_pct:
+          type: integer
+          title: Holdout Pct
+        audience_size:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Audience Size
+        created_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Created By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+      type: object
+      required:
+      - id
+      - name
+      - channel
+      - status
+      - segment
+      - messages
+      - template_key
+      - scheduled_at
+      - started_at
+      - finished_at
+      - attribution_days
+      - holdout_pct
+      - audience_size
+      - created_by
+      - created_at
+      - notes
+      title: CampaignOut
+    CampaignPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/CampaignOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: CampaignPage
+    CampaignPatch:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 1
+          - type: 'null'
+          title: Name
+        channel:
+          anyOf:
+          - $ref: '#/components/schemas/CampaignChannel'
+          - type: 'null'
+        segment:
+          anyOf:
+          - $ref: '#/components/schemas/Segment'
+          - type: 'null'
+        messages:
+          anyOf:
+          - additionalProperties:
+              type: string
+              maxLength: 1000
+              minLength: 1
+            type: object
+          - type: 'null'
+          title: Messages
+        template_key:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Template Key
+        attribution_days:
+          anyOf:
+          - type: integer
+            maximum: 90.0
+            minimum: 1.0
+          - type: 'null'
+          title: Attribution Days
+        holdout_pct:
+          anyOf:
+          - type: integer
+            maximum: 50.0
+            minimum: 0.0
+          - type: 'null'
+          title: Holdout Pct
+        notes:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Notes
+      additionalProperties: false
+      type: object
+      title: CampaignPatch
+    CampaignSettings:
+      properties:
+        attribution_days:
+          type: integer
+          maximum: 90.0
+          minimum: 1.0
+          title: Attribution Days
+          default: 14
+        dlt_templates:
+          additionalProperties:
+            type: string
+            maxLength: 64
+          type: object
+          title: Dlt Templates
+          description: template key -> DLT template id (TRAI, SMS)
+        whatsapp_templates:
+          additionalProperties:
+            type: string
+            maxLength: 64
+          type: object
+          title: Whatsapp Templates
+          description: template key -> WhatsApp Business template name
+        sends_per_run:
+          type: integer
+          maximum: 10000.0
+          minimum: 1.0
+          title: Sends Per Run
+          default: 500
+        holdout_pct:
+          type: integer
+          maximum: 50.0
+          minimum: 0.0
+          title: Holdout Pct
+          default: 0
+      type: object
+      title: CampaignSettings
+      description: 'WC-008 / AN-008. Template ids are registrations (DLT, WhatsApp Business): human work.'
+    CampaignStatus:
+      type: string
+      enum:
+      - draft
+      - scheduled
+      - sending
+      - sent
+      - cancelled
+      title: CampaignStatus
     CatalogKind:
       type: string
       enum:
@@ -9744,6 +11515,45 @@ components:
       - retired
       - all
       title: ClaimStatusFilter
+    CloseIn:
+      properties:
+        month:
+          type: string
+          format: date
+          title: Month
+      additionalProperties: false
+      type: object
+      required:
+      - month
+      title: CloseIn
+    CloseOut:
+      properties:
+        month:
+          type: string
+          format: date
+          title: Month
+        closed:
+          type: integer
+          title: Closed
+        already_closed:
+          type: integer
+          title: Already Closed
+        total_paise:
+          type: integer
+          title: Total Paise
+        rule_version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Rule Version
+      type: object
+      required:
+      - month
+      - closed
+      - already_closed
+      - total_paise
+      - rule_version
+      title: CloseOut
     ClusterList:
       properties:
         items:
@@ -12634,6 +14444,111 @@ components:
       - type
       - id
       title: EvidenceRecord
+    ExportFormat:
+      type: string
+      enum:
+      - csv
+      - xlsx
+      - xml
+      title: ExportFormat
+    ExportIn:
+      properties:
+        resource:
+          type: string
+          maxLength: 32
+          minLength: 1
+          title: Resource
+          description: '`farmers`, `orders`, `payments`, `visits`, `flags`, `stock`, `audit_logs`, `consent_records`
+            (NF-013), `tally`, `tally_xml`, `zoho` (ST-008).'
+        filters:
+          additionalProperties: true
+          type: object
+          title: Filters
+          description: The list endpoint's filters as a JSON object.
+        format:
+          $ref: '#/components/schemas/ExportFormat'
+          default: csv
+      additionalProperties: false
+      type: object
+      required:
+      - resource
+      title: ExportIn
+    ExportOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        resource:
+          type: string
+          title: Resource
+        format:
+          type: string
+          title: Format
+        filters:
+          additionalProperties: true
+          type: object
+          title: Filters
+        status:
+          type: string
+          title: Status
+        rows:
+          type: integer
+          title: Rows
+        size_bytes:
+          type: integer
+          title: Size Bytes
+        filename:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Filename
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
+          description: 15-minute signed URL (null in listings).
+        url_expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Url Expires At
+      type: object
+      required:
+      - id
+      - resource
+      - format
+      - filters
+      - status
+      - rows
+      - size_bytes
+      - filename
+      - created_at
+      - url
+      - url_expires_at
+      title: ExportOut
+    ExportPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ExportOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: ExportPage
     FarmCreate:
       properties:
         id:
@@ -14317,6 +16232,115 @@ components:
       - code
       - message
       title: ImportRowError
+    IncentiveLineOut:
+      properties:
+        component:
+          type: string
+          title: Component
+        metric:
+          type: string
+          title: Metric
+        value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Value
+        amount_paise:
+          type: integer
+          title: Amount Paise
+        capped:
+          type: boolean
+          title: Capped
+          default: false
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+      type: object
+      required:
+      - component
+      - metric
+      - value
+      - amount_paise
+      title: IncentiveLineOut
+    IncentiveOut:
+      properties:
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        period_start:
+          type: string
+          format: date
+          title: Period Start
+        period_end:
+          type: string
+          format: date
+          title: Period End
+          description: Exclusive.
+        status:
+          type: string
+          title: Status
+          description: '`preview` (live) or `closed` (frozen).'
+        rule_set_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Rule Set Id
+        rule_version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Rule Version
+        eligible:
+          type: boolean
+          title: Eligible
+        metrics:
+          additionalProperties: true
+          type: object
+          title: Metrics
+        targets:
+          additionalProperties: true
+          type: object
+          title: Targets
+        lines:
+          items:
+            $ref: '#/components/schemas/IncentiveLineOut'
+          type: array
+          title: Lines
+        gross_paise:
+          type: integer
+          title: Gross Paise
+        clawback_paise:
+          type: integer
+          title: Clawback Paise
+        amount_paise:
+          type: integer
+          title: Amount Paise
+        reasons:
+          items:
+            type: string
+          type: array
+          title: Reasons
+      type: object
+      required:
+      - officer_id
+      - period_start
+      - period_end
+      - status
+      - rule_set_id
+      - rule_version
+      - eligible
+      - metrics
+      - targets
+      - lines
+      - gross_paise
+      - clawback_paise
+      - amount_paise
+      - reasons
+      title: IncentiveOut
     InvoiceLineOut:
       properties:
         sl:
@@ -17322,6 +19346,26 @@ components:
       - failure_reason
       title: PaymentStatusOut
       description: '``GET /v1/payments/{id}`` — polled by the A53 "waiting for payment" screen.'
+    PayoutList:
+      properties:
+        month:
+          type: string
+          format: date
+          title: Month
+        items:
+          items:
+            $ref: '#/components/schemas/IncentiveOut'
+          type: array
+          title: Items
+        total_paise:
+          type: integer
+          title: Total Paise
+      type: object
+      required:
+      - month
+      - items
+      - total_paise
+      title: PayoutList
     PestList:
       properties:
         items:
@@ -17904,6 +19948,27 @@ components:
       - invoice
       - payment
       title: PosSaleOut
+    PreviewIn:
+      properties:
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        month:
+          type: string
+          format: date
+          title: Month
+        definition:
+          additionalProperties: true
+          type: object
+          title: Definition
+      additionalProperties: false
+      type: object
+      required:
+      - officer_id
+      - month
+      - definition
+      title: PreviewIn
     PriceItemIn:
       properties:
         sku_id:
@@ -18517,6 +20582,117 @@ components:
       - qty
       - cost_paise
       title: ReceiptLineIn
+    RecipientOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        farmer_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Farmer Name
+        phone_masked:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone Masked
+        arm:
+          type: string
+          title: Arm
+        language:
+          type: string
+          title: Language
+        status:
+          type: string
+          title: Status
+        skip_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Skip Reason
+        dlt_template_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Dlt Template Id
+        sent_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Sent At
+        delivered_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Delivered At
+        opened_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Opened At
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+      type: object
+      required:
+      - id
+      - farmer_id
+      - farmer_name
+      - phone_masked
+      - arm
+      - language
+      - status
+      - skip_reason
+      - dlt_template_id
+      - sent_at
+      - delivered_at
+      - opened_at
+      - error
+      title: RecipientOut
+    RecipientPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/RecipientOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+        counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Counts
+          description: Recipients per delivery status.
+      type: object
+      required:
+      - items
+      - counts
+      title: RecipientPage
+    RecipientStatus:
+      type: string
+      enum:
+      - pending
+      - sent
+      - delivered
+      - failed
+      - skipped
+      - holdout
+      title: RecipientStatus
     RecommendableList:
       properties:
         items:
@@ -18656,6 +20832,75 @@ components:
       - index
       - reason
       title: RejectedPoint
+    ReorderLevelIn:
+      properties:
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        reorder_level:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,9}|(?=[\d.]{1,13}0*$)\d{0,9}\.\d{0,3}0*$)
+          title: Reorder Level
+      additionalProperties: false
+      type: object
+      required:
+      - sku_id
+      - reorder_level
+      title: ReorderLevelIn
+    ReorderLevelOut:
+      properties:
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        reorder_level:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Reorder Level
+      type: object
+      required:
+      - sku_id
+      - reorder_level
+      title: ReorderLevelOut
+    ReorderLevelsIn:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ReorderLevelIn'
+          type: array
+          maxItems: 1000
+          minItems: 1
+          title: Items
+      additionalProperties: false
+      type: object
+      required:
+      - items
+      title: ReorderLevelsIn
+    ReorderLevelsOut:
+      properties:
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        default_reorder_level:
+          type: integer
+          title: Default Reorder Level
+          description: Tenant default for SKUs without a row.
+        items:
+          items:
+            $ref: '#/components/schemas/ReorderLevelOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - store_id
+      - default_reorder_level
+      - items
+      title: ReorderLevelsOut
     ReplayPoint:
       properties:
         ts:
@@ -18773,6 +21018,69 @@ components:
       - confirmed_at
       - photos
       title: ReplayVisitOut
+    ReportSettings:
+      properties:
+        weekly_owner_emails:
+          items:
+            type: string
+            maxLength: 254
+            pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          type: array
+          maxItems: 20
+          title: Weekly Owner Emails
+        accounting_emails:
+          items:
+            type: string
+            maxLength: 254
+            pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          type: array
+          maxItems: 20
+          title: Accounting Emails
+      type: object
+      title: ReportSettings
+      description: Where recurring reports go (users carry no email address).
+    ResourceOut:
+      properties:
+        name:
+          type: string
+          title: Name
+        formats:
+          items:
+            type: string
+          type: array
+          title: Formats
+        columns:
+          items:
+            type: string
+          type: array
+          title: Columns
+        filters:
+          items:
+            type: string
+          type: array
+          title: Filters
+        description:
+          type: string
+          title: Description
+      type: object
+      required:
+      - name
+      - formats
+      - columns
+      - filters
+      - description
+      title: ResourceOut
+    ResourcesOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ResourceOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: ResourcesOut
     ReviewAction:
       type: string
       enum:
@@ -19087,6 +21395,195 @@ components:
       - items
       - counts
       title: ReviewQueuePage
+    RoiOut:
+      properties:
+        campaign_id:
+          type: string
+          format: uuid
+          title: Campaign Id
+        name:
+          type: string
+          title: Name
+        channel:
+          type: string
+          title: Channel
+        status:
+          type: string
+          title: Status
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+        attribution_days:
+          type: integer
+          title: Attribution Days
+        audience:
+          type: integer
+          title: Audience
+          description: Target recipients (holdout excluded).
+        sent:
+          type: integer
+          title: Sent
+          description: Accepted by the provider / written as a push notification.
+        delivered:
+          type: integer
+          title: Delivered
+        failed:
+          type: integer
+          title: Failed
+        skipped:
+          type: integer
+          title: Skipped
+        opened:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Opened
+          description: Opened pushes; null where the channel cannot tell.
+        orders:
+          type: integer
+          title: Orders
+        converted_farmers:
+          type: integer
+          title: Converted Farmers
+        conversion_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Conversion Rate
+        revenue_paise:
+          type: integer
+          title: Revenue Paise
+        own_brand_revenue_paise:
+          type: integer
+          title: Own Brand Revenue Paise
+        own_brand_share:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Own Brand Share
+        holdout:
+          anyOf:
+          - $ref: '#/components/schemas/ArmOut'
+          - type: 'null'
+        own_brand_lift:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Own Brand Lift
+          description: Target own-brand share minus holdout share (null without a holdout).
+        conversion_lift:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Conversion Lift
+      type: object
+      required:
+      - campaign_id
+      - name
+      - channel
+      - status
+      - started_at
+      - attribution_days
+      - audience
+      - sent
+      - delivered
+      - failed
+      - skipped
+      - opened
+      - orders
+      - converted_farmers
+      - conversion_rate
+      - revenue_paise
+      - own_brand_revenue_paise
+      - own_brand_share
+      - holdout
+      - own_brand_lift
+      - conversion_lift
+      title: RoiOut
+      description: AN-008 campaign ROI (console C82).
+    RuleSetIn:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        definition:
+          additionalProperties: true
+          type: object
+          title: Definition
+          description: The rule document (see farmerapp/incentives/rules.py and docs/prs/M7-growth-api.md).
+        activate:
+          type: boolean
+          title: Activate
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - definition
+      title: RuleSetIn
+    RuleSetList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/RuleSetOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: RuleSetList
+    RuleSetOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        version:
+          type: integer
+          title: Version
+          description: Rule set version number (1, 2, ...).
+        status:
+          type: string
+          title: Status
+        definition:
+          additionalProperties: true
+          type: object
+          title: Definition
+        created_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Created By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        activated_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Activated At
+      type: object
+      required:
+      - id
+      - name
+      - version
+      - status
+      - definition
+      - created_by
+      - created_at
+      - activated_at
+      title: RuleSetOut
     SamplingPatch:
       properties:
         moving_s:
@@ -19129,6 +21626,144 @@ components:
           default: 900
       type: object
       title: SamplingSettings
+    ScheduleList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ScheduleOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: ScheduleList
+    ScheduleOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        resource:
+          type: string
+          title: Resource
+        format:
+          type: string
+          title: Format
+        filters:
+          additionalProperties: true
+          type: object
+          title: Filters
+        recipients:
+          items:
+            type: string
+          type: array
+          title: Recipients
+        cron:
+          type: string
+          title: Cron
+        timezone:
+          type: string
+          title: Timezone
+          default: Asia/Kolkata
+        active:
+          type: boolean
+          title: Active
+        owner_id:
+          type: string
+          format: uuid
+          title: Owner Id
+        next_run_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Next Run At
+        last_run_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Run At
+        last_status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last Status
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - name
+      - resource
+      - format
+      - filters
+      - recipients
+      - cron
+      - active
+      - owner_id
+      - next_run_at
+      - last_run_at
+      - last_status
+      - created_at
+      title: ScheduleOut
+    SchedulePatch:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 1
+          - type: 'null'
+          title: Name
+        resource:
+          anyOf:
+          - type: string
+            maxLength: 32
+            minLength: 1
+          - type: 'null'
+          title: Resource
+        filters:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Filters
+        format:
+          anyOf:
+          - $ref: '#/components/schemas/ExportFormat'
+          - type: 'null'
+        recipients:
+          anyOf:
+          - items:
+              type: string
+              maxLength: 254
+              pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+            type: array
+            maxItems: 20
+            minItems: 1
+          - type: 'null'
+          title: Recipients
+        cron:
+          anyOf:
+          - type: string
+            maxLength: 64
+            minLength: 9
+          - type: 'null'
+          title: Cron
+        active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Active
+      additionalProperties: false
+      type: object
+      title: SchedulePatch
     ScorecardRow:
       properties:
         officer_id:
@@ -19247,6 +21882,116 @@ components:
       - rabi
       - zaid
       title: Season
+    Segment:
+      properties:
+        crop_ids:
+          items:
+            type: string
+            format: uuid
+          type: array
+          maxItems: 50
+          title: Crop Ids
+        stages:
+          items:
+            $ref: '#/components/schemas/CropStage'
+          type: array
+          title: Stages
+          description: 'Crop stage of a plot (with `crop_ids`: of that crop).'
+        districts:
+          items:
+            type: string
+          type: array
+          maxItems: 50
+          title: Districts
+        store_ids:
+          items:
+            type: string
+            format: uuid
+          type: array
+          maxItems: 100
+          title: Store Ids
+        purchase_within_days:
+          anyOf:
+          - type: integer
+            maximum: 730.0
+            minimum: 1.0
+          - type: 'null'
+          title: Purchase Within Days
+        min_spend_paise:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Min Spend Paise
+          description: Spend within `purchase_within_days` (default 365).
+        no_purchase_within_days:
+          anyOf:
+          - type: integer
+            maximum: 730.0
+            minimum: 1.0
+          - type: 'null'
+          title: No Purchase Within Days
+        visited_within_days:
+          anyOf:
+          - type: integer
+            maximum: 365.0
+            minimum: 1.0
+          - type: 'null'
+          title: Visited Within Days
+        not_visited_within_days:
+          anyOf:
+          - type: integer
+            maximum: 365.0
+            minimum: 1.0
+          - type: 'null'
+          title: Not Visited Within Days
+        app_user:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: App User
+          description: Has the farmer-app login.
+        app_active_within_days:
+          anyOf:
+          - type: integer
+            maximum: 365.0
+            minimum: 1.0
+          - type: 'null'
+          title: App Active Within Days
+        languages:
+          items:
+            type: string
+          type: array
+          maxItems: 5
+          title: Languages
+      additionalProperties: false
+      type: object
+      title: Segment
+      description: The stored segment definition (``campaign.segment``). Every field is optional.
+    SegmentCountIn:
+      properties:
+        segment:
+          $ref: '#/components/schemas/Segment'
+      additionalProperties: false
+      type: object
+      required:
+      - segment
+      title: SegmentCountIn
+    SegmentCountOut:
+      properties:
+        count:
+          type: integer
+          title: Count
+          description: Farmers the campaign would reach (consented only).
+        excluded_no_consent:
+          type: integer
+          title: Excluded No Consent
+          description: Farmers matching every criterion but without current marketing consent.
+      type: object
+      required:
+      - count
+      - excluded_no_consent
+      title: SegmentCountOut
     SeriesPoint:
       properties:
         start:
@@ -19705,6 +22450,26 @@ components:
       required:
       - code
       title: StepUpVerifyRequest
+    StockAlertSettings:
+      properties:
+        default_reorder_level:
+          type: integer
+          maximum: 1000000.0
+          minimum: 0.0
+          title: Default Reorder Level
+          default: 10
+        expiry_days:
+          items:
+            type: integer
+            maximum: 365.0
+            minimum: 1.0
+          type: array
+          maxItems: 5
+          minItems: 1
+          title: Expiry Days
+      type: object
+      title: StockAlertSettings
+      description: ST-004 nightly alerts.
     StockBatchOut:
       properties:
         id:
@@ -20533,6 +23298,161 @@ components:
       - status
       - entity_id
       title: SyncResult
+    TargetItemIn:
+      properties:
+        subject_type:
+          $ref: '#/components/schemas/TargetSubject'
+        subject_id:
+          type: string
+          format: uuid
+          title: Subject Id
+        visits_verified:
+          anyOf:
+          - type: integer
+            maximum: 100000.0
+            minimum: 0.0
+          - type: 'null'
+          title: Visits Verified
+        new_farmers:
+          anyOf:
+          - type: integer
+            maximum: 100000.0
+            minimum: 0.0
+          - type: 'null'
+          title: New Farmers
+        sales_paise:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Sales Paise
+        collections_paise:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Collections Paise
+        own_brand_share_bp:
+          anyOf:
+          - type: integer
+            maximum: 10000.0
+            minimum: 0.0
+          - type: 'null'
+          title: Own Brand Share Bp
+      additionalProperties: false
+      type: object
+      required:
+      - subject_type
+      - subject_id
+      title: TargetItemIn
+    TargetList:
+      properties:
+        month:
+          type: string
+          format: date
+          title: Month
+        items:
+          items:
+            $ref: '#/components/schemas/TargetOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - month
+      - items
+      title: TargetList
+    TargetOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        month:
+          type: string
+          format: date
+          title: Month
+        subject_type:
+          type: string
+          title: Subject Type
+        subject_id:
+          type: string
+          format: uuid
+          title: Subject Id
+        visits_verified:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Visits Verified
+        new_farmers:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: New Farmers
+        sales_paise:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Sales Paise
+        collections_paise:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Collections Paise
+        own_brand_share_bp:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Own Brand Share Bp
+        set_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Set By
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - month
+      - subject_type
+      - subject_id
+      - visits_verified
+      - new_farmers
+      - sales_paise
+      - collections_paise
+      - own_brand_share_bp
+      - set_by
+      - updated_at
+      title: TargetOut
+    TargetSubject:
+      type: string
+      enum:
+      - officer
+      - store
+      title: TargetSubject
+    TargetsIn:
+      properties:
+        month:
+          type: string
+          format: date
+          title: Month
+          description: Any day of the month; stored as its first day.
+        items:
+          items:
+            $ref: '#/components/schemas/TargetItemIn'
+          type: array
+          maxItems: 500
+          minItems: 1
+          title: Items
+      additionalProperties: false
+      type: object
+      required:
+      - month
+      - items
+      title: TargetsIn
     TenantSettings:
       properties:
         consent_version:
@@ -20674,6 +23594,14 @@ components:
           default: en
         features:
           $ref: '#/components/schemas/FeatureSettings'
+        campaigns:
+          $ref: '#/components/schemas/CampaignSettings'
+        stock_alerts:
+          $ref: '#/components/schemas/StockAlertSettings'
+        reports:
+          $ref: '#/components/schemas/ReportSettings'
+        accounting:
+          $ref: '#/components/schemas/AccountingSettings'
         branding:
           $ref: '#/components/schemas/Branding'
       type: object
@@ -22150,6 +25078,18 @@ components:
       - title
       - opened_at
       title: FlagOut
+    farmerapp__campaigns__schemas__ScheduleIn:
+      properties:
+        send_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Send At
+          description: UTC; default now.
+      additionalProperties: false
+      type: object
+      title: ScheduleIn
     farmerapp__catalog__write_schemas__StoreBriefOut:
       properties:
         id:
@@ -22192,6 +25132,52 @@ components:
       type: object
       title: DeviceIntegrityIn
       description: FA-028 flags the app reports at duty start (never blocking, flagged to VA-E01).
+    farmerapp__exports__schemas__ScheduleIn:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        resource:
+          type: string
+          maxLength: 32
+          minLength: 1
+          title: Resource
+        filters:
+          additionalProperties: true
+          type: object
+          title: Filters
+        format:
+          $ref: '#/components/schemas/ExportFormat'
+          default: xlsx
+        recipients:
+          items:
+            type: string
+            maxLength: 254
+            pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          type: array
+          maxItems: 20
+          minItems: 1
+          title: Recipients
+        cron:
+          type: string
+          maxLength: 64
+          minLength: 9
+          title: Cron
+          description: minute hour day month weekday, in IST (`0 8 * * 1` = Monday 08:00).
+          default: 0 8 * * 1
+        active:
+          type: boolean
+          title: Active
+          default: true
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - resource
+      - recipients
+      title: ScheduleIn
     farmerapp__flags__schemas__FlagOut:
       properties:
         id:

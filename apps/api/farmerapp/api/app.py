@@ -22,15 +22,19 @@ from farmerapp.auth import router as auth_routes
 from farmerapp.auth.deps import AuthServices, build_auth_services, tick
 from farmerapp.auth.policy import install_policies
 from farmerapp.auth.scheduler import InProcessScheduler
+from farmerapp.campaigns import router as campaign_routes
 from farmerapp.catalog import router as catalog_routes
 from farmerapp.db import models as _models  # noqa: F401  (registers models + audit listener)
 from farmerapp.diagnosis import corpus_router as corpus_routes
 from farmerapp.diagnosis import router as diagnosis_routes
 from farmerapp.diagnosis.services import DiagnosisServices, build_diagnosis_services
 from farmerapp.duty import router as duty_routes
+from farmerapp.exports import router as export_routes
+from farmerapp.exports.service import build_exports_store
 from farmerapp.farmers import router as farmer_routes
 from farmerapp.flags import router as flag_routes
 from farmerapp.flags.analytics import FLAG_TABLE_COUNTS
+from farmerapp.incentives import router as incentive_routes
 from farmerapp.integrity.deps import build_verifier
 from farmerapp.integrity.verifier import PlayIntegrityVerifier
 from farmerapp.invoices import router as invoice_routes
@@ -49,6 +53,7 @@ from farmerapp.privacy import router as privacy_routes
 from farmerapp.rules import events as rule_events
 from farmerapp.rules.loader import validate_rules
 from farmerapp.settings import Settings, get_settings
+from farmerapp.stock import reorder_router as reorder_routes
 from farmerapp.stock import router as stock_routes
 from farmerapp.sync import router as sync_routes
 from farmerapp.tenants import clusters_router as cluster_routes
@@ -111,6 +116,7 @@ def create_app(
     payment_services: PaymentServices | None = None,
     integrity_verifier: PlayIntegrityVerifier | None = None,
     diagnosis_services: DiagnosisServices | None = None,
+    exports_store: BlobStore | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(level=settings.log_level, json_logs=settings.log_json, service="api")
@@ -161,6 +167,7 @@ def create_app(
     telemetry.instrument_engine(get_engine())
     app.state.auth = auth_services or build_auth_services(settings)
     app.state.blobs = blob_store or build_blob_store(settings)  # NF-003 / SEC-016
+    app.state.exports = exports_store or build_exports_store(settings)  # WC-013 exports bucket
     app.state.payments = payment_services or build_payment_services(settings)  # FA-021
     # SEC-024: Play Integrity token decoding (None = verification off, verdicts "unverified").
     app.state.integrity = integrity_verifier or build_verifier(settings)
@@ -216,6 +223,15 @@ def create_app(
     v1.include_router(corpus_routes.router)
     v1.include_router(privacy_routes.me_router)
     v1.include_router(privacy_routes.admin_router)
+    # M7 growth: campaigns + ROI (WC-008, AN-008), targets and incentives (WC-009), exports
+    # and scheduled reports (WC-013, NF-013, ST-008), reorder levels (ST-004).
+    v1.include_router(campaign_routes.router)
+    v1.include_router(incentive_routes.targets_router)
+    v1.include_router(incentive_routes.rules_router)
+    v1.include_router(incentive_routes.router)
+    v1.include_router(export_routes.router)
+    v1.include_router(export_routes.schedules_router)
+    v1.include_router(reorder_routes.router)
     app.include_router(v1)
 
     # FA-002: refuse to start unless every route declares a role policy (or is public), and
