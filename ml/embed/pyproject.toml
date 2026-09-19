@@ -1,0 +1,45 @@
+[project]
+name = "farmerapp-embed"
+version = "1.0.0"
+description = "FarmerApp DX-002 embed service: pinned SigLIP image encoder -> 768-dim unit vectors for the pgvector kNN"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "torch==2.14.0",
+    "transformers==5.17.0",
+    "safetensors==0.8.0",
+    "huggingface-hub==1.32.0",
+    "fastapi==0.141.1",
+    "uvicorn==0.53.0",
+    "pillow==12.3.0",
+    "numpy>=2,<3",
+]
+
+[dependency-groups]
+dev = ["pytest==9.1.1", "httpx==0.28.1", "ruff==0.16.8"]
+
+[tool.uv]
+package = false
+
+# CPU-only torch on Linux (the container): the default PyPI wheel drags in ~3 GB of CUDA libraries.
+# macOS wheels on PyPI are already CPU / MPS only. For the L4 GPU image see README "GPU".
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -m 'not integration'"
+markers = [
+    "integration: loads the real pinned weights (EMBED_MODEL_DIR or a download); run with -m integration",
+]
+
+[tool.ruff]
+line-length = 110
+extend-exclude = [".venv", ".model"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

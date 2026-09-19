@@ -1,0 +1,11 @@
+.venv
+.model
+**/__pycache__
+.pytest_cache
+.ruff_cache
+tests
+bench.py
+bench_*.json
+scripts
+*.md
+.api-venv
