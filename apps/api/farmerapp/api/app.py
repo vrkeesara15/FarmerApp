@@ -13,6 +13,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from farmerapp import __version__
+from farmerapp.analytics import router as analytics_routes
 from farmerapp.api.errors import PROBLEM_MEDIA_TYPE, install_error_handlers
 from farmerapp.api.middleware import TraceMiddleware
 from farmerapp.api.routes import health
@@ -169,6 +170,8 @@ def create_app(
     v1.include_router(invoice_routes.pos_router)
     v1.include_router(invoice_routes.router)
     v1.include_router(day_close_routes.router)
+    # M4: analytics read API (AN-001 .. AN-003, AN-011, WC-001 .. WC-004).
+    v1.include_router(analytics_routes.router)
     app.include_router(v1)
 
     # FA-002: refuse to start unless every route declares a role policy (or is public), and

@@ -533,6 +533,39 @@ into one head. Notes: `docs/prs/M3-integration.md`.
   `lines[].label_claim_id`) is checked with `catalog.recommendable.assert_sku_recommendable`;
   otherwise 422 `sku_not_recommendable` with `errors[].loc = ["lines", i, "label_claim_id"]`.
 
+## Analytics read API (AN-001 .. AN-003, AN-011, WC-001 .. WC-004)
+
+`farmerapp/analytics/` serves the console dashboards from the live Postgres tables (SPEC
+5.3: BigQuery / dbt are P1). Payloads for the console: `docs/prs/M4-analytics-api.md`.
+
+- Routes (all `GET /v1/analytics/...`, read-only): `owner-home`, `field-team`,
+  `officers/{id}`, `officers/{id}/day-replay?date=`, `farmers`, `farmers/{id}/360`,
+  `stores`, `stores/{id}` (P&L by month). Roles per SPEC 2.6 in `analytics/router.py`.
+- Filters (AN-011): every route takes `from` / `to` (IST dates, default last 30 days) and
+  `cluster_id` / `store_id` / `officer_id` / `crop_id`; `filters.resolve_scope` narrows them
+  by role (cluster head -> cluster, store manager -> store, field officer -> own figures),
+  404s ids out of scope and 422s impossible combinations; responses echo `filters`.
+- KPIs: `analytics/kpi.py` holds the SPEC 5.2 definitions as pure functions over fact
+  records; `analytics/facts.py` loads the facts. Add a KPI there first, with a unit test.
+- Open flags: read only through `analytics/ports.FlagCountsPort` (`app.state.flag_counts`;
+  the null adapter answers zeros until the flags package registers its adapter).
+- Store managers never receive location-derived figures (`km_per_day` is `null`).
+
+```python
+# a new dashboard endpoint: take the filter set, scope it, compute from facts
+@router.get("/thing", response_model=ThingOut)
+async def thing(actor: Annotated[User, require_roles(*ROLES)], session: DbSession,
+                filters: Filters) -> ThingOut:
+    scope = await resolve_scope(session, actor, filters)
+    start, end = scope.filters.bounds          # UTC [start, end) of the IST days
+    rows = await facts.sales_aggregate(session, scope, start, end, ["day", "own_brand"])
+    return ThingOut(filters=scope.echo(), ...)
+```
+
+Performance: `tests/analytics/test_performance.py` times the owner home on a synthetic 50-store
+tenant (WC-001 budget 3 s; ~1.2 s locally). Range aggregates run inside `facts.hash_joins` so
+a freshly loaded, unanalysed table cannot push the planner into a nested loop.
+
 ## Farmer registration writes (FA-012 / FA-013)
 
 `POST /v1/farmers` registers a farmer with nested `farms[{boundary GeoJSON, area_acres, soil,
