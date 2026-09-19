@@ -47,19 +47,43 @@ variable "cloud_armor_mode" {
 }
 
 variable "otp_send_path_regex" {
-  description = "Path regex for OTP send endpoints (rate limit 5/min/IP)."
+  description = "Path regex of the OTP send endpoints (farmerapp/auth/router.py), rate limited per IP."
   type        = string
-  default     = "^/v1/auth/otp(/send)?$"
+  default     = "^/v1/auth/(otp/send|step-up/send)$"
+}
+
+variable "otp_send_per_minute" {
+  description = "SEC-014: OTP sends per minute per IP."
+  type        = number
+  default     = 5
 }
 
 variable "login_path_regex" {
-  description = "Path regex for login/verify endpoints (rate limit 10/min/IP)."
+  description = "Path regex of the login endpoints (OTP verify, step-up verify), rate limited per IP."
   type        = string
-  default     = "^/v1/auth/(login|otp/verify|refresh)$"
+  default     = "^/v1/auth/(otp/verify|step-up)$"
+}
+
+variable "login_per_minute" {
+  description = "SEC-014: login attempts per minute per IP."
+  type        = number
+  default     = 10
 }
 
 variable "india_only_path_regex" {
-  description = "Path regex for farmer/agent APIs restricted to requests originating in India."
+  description = "Path regex (api host) of the field-agent / farmer APIs restricted to requests from India. Excludes /v1/auth, /v1/health, /v1/webhooks and console-only resources."
   type        = string
-  default     = "^/v1/(auth|sync|farmer|agent|visits|location)"
+  default     = "^/v1/(sync|duty|duty-sessions|location|visits|farmers|farms|crop-plots|uploads|blobs)(/|$)"
+}
+
+variable "console_iap_enabled" {
+  description = "SEC-015 (P1): Identity-Aware Proxy in front of the console backend for staff SSO. Off by default; needs the OAuth consent screen configured once (human)."
+  type        = bool
+  default     = false
+}
+
+variable "console_iap_members" {
+  description = "Principals allowed through IAP to the console (e.g. group:farmerapp-staff@example.com)."
+  type        = list(string)
+  default     = []
 }

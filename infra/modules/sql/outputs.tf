@@ -27,3 +27,8 @@ output "replica_private_ip" {
   description = "Read replica private IP (null when no replica)."
   value       = var.read_replica ? google_sql_database_instance.replica[0].private_ip_address : null
 }
+
+output "replica_instance_name" {
+  description = "Read replica instance name (null when no replica)."
+  value       = var.read_replica ? google_sql_database_instance.replica[0].name : null
+}

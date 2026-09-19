@@ -91,12 +91,12 @@ tools that are missing so it still passes locally; CI always runs all four.
 | Postgres 16, private IP only, TLS `ENCRYPTED_ONLY`, IAM auth (`cloudsql.iam_authentication=on`, `google_sql_user` per SA), logical decoding, PITR/HA in prd, replica in prd | `sql` | SPEC 9.4 verbatim; SEC-011 |
 | Secrets, created empty | `secrets` | otp-provider, razorpay-*, llm-api-key, jwt-signing-key |
 | photos / exports / corpus buckets with 9.2 lifecycle rules | `storage` | private, uniform access |
-| api, console, worker, embed | `run_service` | ingress internal-LB (api/console) or internal (worker/embed) |
-| migrate + 5 nightly jobs (02:00 IST onwards) | `run_job` | Cloud Scheduler, Asia/Kolkata |
+| api, console, worker, embed | `run_service` | ingress internal-LB (api/console, invoker IAM disabled: the LB is the only path, SEC-015) or internal-only (worker/embed); min 1/1 api/console in prd (NF-006) |
+| migrate + 9 jobs (`python -m farmerapp.jobs <command>`) | `run_job` | Cloud Scheduler in Asia/Kolkata: run-rules 02:00, flags-sla hourly, sync-silence /15 min, auto-end-duty /10 min, ensure-partitions 00:30, purge-location-points 04:00 (`--apply` prd only), purge-expired hourly, reconcile-payments 06:00, backfill-farm-photo-phash manual. Per-tenant jobs need `job_tenant_ids` |
 | 7 topics, each with `.dlq` + push sub to worker | `pubsub` | 7-day retention, 5 attempts |
-| HTTPS LB, managed cert, Cloud Armor (stg preview, prd enforce) | `lb` | SEC-014/015 |
+| HTTPS LB, managed cert, Cloud Armor (OWASP CRS, OTP 5/min/IP, login 10/min/IP, India geo for field APIs; stg preview, prd enforce), optional console IAP | `lb` | SEC-014/015; reCAPTCHA bot management is a TODO needing keys |
 | BigQuery datasets; Datastream CDC when enabled | `analytics` | `datastream_enabled=false` in dev until M7 |
-| Uptime checks, OPS-003/004/005 alerts, audit log bucket (400 d), dashboard | `monitoring` | SEC-017 |
+| Uptime checks, OPS-001..005 alerts, SLOs + burn-rate alerts, log-based metrics, platform / business / cost dashboards, Data Access audit logs -> locked 400-day bucket | `monitoring` | SPEC 12, SEC-017; reference `docs/runbooks/observability.md` |
 
 Database roles (SEC-011, FA-003): Terraform only creates the IAM users. Migration 0003
 (`apps/api/alembic/versions/0003_rls_roles.py`, run by the `migrate` job as the owner) creates
@@ -107,6 +107,14 @@ be a member of `farmerapp_migrate`. Follow-up: a dedicated `migrate` service acc
 migrate job runs as the jobs SA today, `DB_ROLE=migrator` is a placeholder until the app reads
 IAM credentials); `MIGRATION_DATABASE_URL` / `DATABASE_URL` are then set per job/service.
 
-Open items to verify on the first real dev apply: worker → embed calls with `PRIVATE_RANGES_ONLY`
+Bootstrap also holds the SEC-018 project-level org policies (`bootstrap/security.tf`: India-only
+resource locations on the env projects, `sql.restrictPublicIp`, `compute.requireOsLogin`,
+domain-restricted sharing when `allowed_policy_member_customer_ids` is set) and the SEC-019 SCC
+notification config (`scc_notifications_enabled`, off until SCC Standard is activated on the org).
+They need `roles/orgpolicy.policyAdmin` / SCC org permissions, so a human applies them.
+
+Open items to verify on the first real dev apply: `gcp.resourceLocations` may need `global`
+added if a global resource is refused; `sql_max_connections` per env must match
+`SHOW max_connections`; worker → embed calls with `PRIVATE_RANGES_ONLY`
 egress and `INGRESS_TRAFFIC_INTERNAL` (may need `egress = "ALL_TRAFFIC"` on the worker); Cloud Armor
 bot management on OTP endpoints needs reCAPTCHA Enterprise keys (TODO in `modules/lb`).

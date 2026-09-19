@@ -1,0 +1,16 @@
+# Build context of apps/console/Dockerfile (repository root). BuildKit uses this file instead
+# of the root .dockerignore for this Dockerfile only: admit the console sources and the
+# design tokens, never node_modules, build output, tests or env files.
+*
+!apps/console
+!design/tokens.json
+apps/console/node_modules
+apps/console/.next
+apps/console/out
+apps/console/coverage
+apps/console/playwright-report
+apps/console/test-results
+apps/console/e2e
+apps/console/.env
+apps/console/.env.*
+**/.DS_Store

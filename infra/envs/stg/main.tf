@@ -22,6 +22,7 @@ locals {
     "bigquery.googleapis.com",
     "datastream.googleapis.com",
     "storage.googleapis.com",
+    "iap.googleapis.com", # SEC-015 console IAP toggle (P1)
   ]
 
   topics = [
@@ -37,8 +38,8 @@ locals {
   # SEC-013: secret id → members that may read it. Values are added by an admin.
   secrets = {
     otp-provider            = ["serviceAccount:${module.iam.emails.api}", "serviceAccount:${module.iam.emails.worker}"]
-    razorpay-key-id         = ["serviceAccount:${module.iam.emails.api}", "serviceAccount:${module.iam.emails.worker}"]
-    razorpay-key-secret     = ["serviceAccount:${module.iam.emails.api}", "serviceAccount:${module.iam.emails.worker}"]
+    razorpay-key-id         = ["serviceAccount:${module.iam.emails.api}", "serviceAccount:${module.iam.emails.worker}", "serviceAccount:${module.iam.emails.jobs}"]
+    razorpay-key-secret     = ["serviceAccount:${module.iam.emails.api}", "serviceAccount:${module.iam.emails.worker}", "serviceAccount:${module.iam.emails.jobs}"]
     razorpay-webhook-secret = ["serviceAccount:${module.iam.emails.api}", "serviceAccount:${module.iam.emails.worker}"]
     llm-api-key             = ["serviceAccount:${module.iam.emails.worker}"]
     jwt-signing-key         = ["serviceAccount:${module.iam.emails.api}"]
@@ -53,14 +54,61 @@ locals {
     GCP_REGION  = var.region
   }
 
-  # Nightly jobs (SPEC 8.1) at 02:00 IST, staggered by 30 min to keep the
-  # shared dev database responsive. All run from the api image.
-  nightly_jobs = {
-    nightly-validation = { schedule = "0 2 * * *", args = ["python", "-m", "farmerapp.jobs.validation_batch"] }
-    nightly-evaluation = { schedule = "30 2 * * *", args = ["python", "-m", "farmerapp.jobs.evaluation"] }
-    exports            = { schedule = "0 3 * * *", args = ["python", "-m", "farmerapp.jobs.exports"] }
-    retention-purge    = { schedule = "30 3 * * *", args = ["python", "-m", "farmerapp.jobs.retention_purge"] }
-    beat-plan          = { schedule = "0 4 * * *", args = ["python", "-m", "farmerapp.jobs.beat_plan"] }
+  # Scheduled Cloud Run Jobs: one per `python -m farmerapp.jobs <command>` of
+  # apps/api/farmerapp/jobs/cli.py, run from the jobs image (deploy.yml). Cron in IST
+  # (Cloud Scheduler time_zone Asia/Kolkata). Per-tenant commands get `--tenant-id` once per
+  # entry of var.job_tenant_ids; while that list is empty they are created but not scheduled.
+  # schedule = "" -> manual one-off (`gcloud run jobs execute <name>`).
+  # OPS-005: every job below gets its own failure alert (owner from `owner`).
+  tenant_args  = flatten([for t in var.job_tenant_ids : ["--tenant-id", t]])
+  have_tenants = length(var.job_tenant_ids) > 0
+
+  jobs = {
+    run-rules-batch = {
+      schedule    = "0 2 * * *", tenants = true, owner = "product-owner"
+      args        = concat(["run-rules", "--mode", "batch"], local.tenant_args)
+      description = "VA-001 nightly validation rules, batch mode, 02:00 IST"
+    }
+    flags-sla-escalation = {
+      schedule    = "0 * * * *", tenants = true, owner = "product-owner"
+      args        = concat(["flags-sla-escalation"], local.tenant_args)
+      description = "OPS-010 escalate flags past SLA, hourly"
+    }
+    officer-sync-silence = {
+      schedule    = "*/15 * * * *", tenants = true, owner = "ops-lead"
+      args        = concat(["officer-sync-silence"], local.tenant_args)
+      description = "OPS-006 officers on duty with no sync for 2 h, every 15 min"
+    }
+    auto-end-duty = {
+      schedule    = "*/10 * * * *", tenants = true, owner = "ops-lead"
+      args        = concat(["auto-end-duty"], local.tenant_args)
+      description = "VV-007 auto-end duty sessions, every 10 min"
+    }
+    ensure-partitions = {
+      schedule    = "30 0 * * *", tenants = false, owner = "platform-lead"
+      args        = ["ensure-partitions"]
+      description = "location_point daily partitions ahead, daily 00:30 IST"
+    }
+    purge-location-points = {
+      schedule    = "0 4 * * *", tenants = false, owner = "platform-lead"
+      args        = concat(["purge-location-points"], var.location_purge_apply ? ["--apply"] : [])
+      description = "SPEC 2.6 raw location retention (dry run unless location_purge_apply), daily 04:00 IST"
+    }
+    purge-expired = {
+      schedule    = "15 * * * *", tenants = true, owner = "platform-lead"
+      args        = concat(["purge-expired"], local.tenant_args)
+      description = "NF-003 expired upload sessions and idempotency keys, hourly"
+    }
+    reconcile-payments = {
+      schedule    = "0 6 * * *", tenants = true, owner = "finance-lead"
+      args        = concat(["reconcile-payments"], local.tenant_args)
+      description = "OPS-008 Razorpay settlements vs payments of yesterday, 06:00 IST"
+    }
+    backfill-farm-photo-phash = {
+      schedule    = "", tenants = true, owner = "platform-lead"
+      args        = concat(["backfill-farm-photo-phash"], local.tenant_args)
+      description = "VA-F08 one-off perceptual-hash backfill, manual"
+    }
   }
 }
 
@@ -69,10 +117,6 @@ resource "google_project_service" "apis" {
   project            = var.project_id
   service            = each.value
   disable_on_destroy = false
-}
-
-data "google_project" "this" {
-  project_id = var.project_id
 }
 
 # --- Network ---------------------------------------------------------------
@@ -155,6 +199,7 @@ module "storage" {
       iam = {
         "serviceAccount:${module.iam.emails.api}"    = "roles/storage.objectUser"
         "serviceAccount:${module.iam.emails.worker}" = "roles/storage.objectViewer"
+        "serviceAccount:${module.iam.emails.jobs}"   = "roles/storage.objectViewer" # backfill-farm-photo-phash
       }
     }
     exports = {
@@ -196,13 +241,15 @@ module "api" {
   service_account_email = module.iam.emails.api
   vpc_name              = module.network.vpc_name
   subnet_name           = module.network.subnet_name
-  ingress               = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
-  min_instances         = var.min_instances.api
+  ingress               = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER" # SEC-015
+  invoker_iam_disabled  = true                                     # LB-fronted; ingress is the gate
+  min_instances         = var.min_instances.api                    # NF-006: 1 in prd
   max_instances         = var.max_instances.api
   cpu                   = "1"
   memory                = "1Gi"
+  container_port        = 8000 # apps/api/Dockerfile (uvicorn --port 8000)
+  startup_probe_path    = "/v1/health"
   deletion_protection   = var.deletion_protection
-  invoker_members       = ["allUsers"] # LB-fronted; ingress restricts to the LB
   env = merge(local.db_env, {
     PHOTOS_BUCKET  = module.storage.bucket_names.photos
     EXPORTS_BUCKET = module.storage.bucket_names.exports
@@ -229,16 +276,27 @@ module "console" {
   service_account_email = module.iam.emails.console
   vpc_name              = module.network.vpc_name
   subnet_name           = module.network.subnet_name
-  ingress               = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
-  min_instances         = var.min_instances.console
+  ingress               = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER" # SEC-015
+  invoker_iam_disabled  = true
+  min_instances         = var.min_instances.console # NF-006: 1 in prd
   max_instances         = var.max_instances.console
-  container_port        = 3000
+  container_port        = 3000 # apps/console/Dockerfile (Next standalone server)
   deletion_protection   = var.deletion_protection
-  invoker_members       = ["allUsers"]
   env = {
-    ENV                 = var.env
+    ENV = var.env
+    # Server-side calls (session cookie routes); the browser bundle has NEXT_PUBLIC_API_URL
+    # inlined at image build time (deploy.yml build-arg).
+    API_URL             = "https://api.${var.domain}"
     NEXT_PUBLIC_API_URL = "https://api.${var.domain}"
   }
+}
+
+# SEC-016: the API signs GCS V4 URLs (15 min) with its own identity through IAM signBlob
+# (no key file), which needs Service Account Token Creator on itself.
+resource "google_service_account_iam_member" "api_self_sign" {
+  service_account_id = "projects/${var.project_id}/serviceAccounts/${module.iam.emails.api}"
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${module.iam.emails.api}"
 }
 
 module "worker" {
@@ -251,7 +309,7 @@ module "worker" {
   service_account_email = module.iam.emails.worker
   vpc_name              = module.network.vpc_name
   subnet_name           = module.network.subnet_name
-  ingress               = "INGRESS_TRAFFIC_INTERNAL" # Pub/Sub push only
+  ingress               = "INGRESS_TRAFFIC_INTERNAL_ONLY" # Pub/Sub push only
   min_instances         = var.min_instances.worker
   max_instances         = var.max_instances.worker
   memory                = "1Gi"
@@ -285,7 +343,7 @@ module "embed" {
   service_account_email = module.iam.emails.embed
   vpc_name              = module.network.vpc_name
   subnet_name           = module.network.subnet_name
-  ingress               = "INGRESS_TRAFFIC_INTERNAL" # called by worker only
+  ingress               = "INGRESS_TRAFFIC_INTERNAL_ONLY" # called by worker only
   min_instances         = var.min_instances.embed
   max_instances         = var.max_instances.embed
   cpu                   = "2"
@@ -319,29 +377,33 @@ module "migrate" {
   env                   = merge(local.db_env, { DB_ROLE = "migrator" }) # SEC-011: DDL role separate from app role
 }
 
-module "nightly" {
+module "job" {
   source   = "../../modules/run_job"
-  for_each = local.nightly_jobs
+  for_each = local.jobs
 
-  project_id                      = var.project_id
-  name                            = each.key
-  region                          = var.region
-  image                           = var.bootstrap_image
-  args                            = each.value.args
-  service_account_email           = module.iam.emails.jobs
-  vpc_name                        = module.network.vpc_name
-  subnet_name                     = module.network.subnet_name
-  schedule                        = each.value.schedule
+  project_id            = var.project_id
+  name                  = each.key
+  region                = var.region
+  image                 = var.bootstrap_image
+  command               = ["python", "-m", "farmerapp.jobs"] # same in the api and jobs images
+  args                  = each.value.args
+  service_account_email = module.iam.emails.jobs
+  vpc_name              = module.network.vpc_name
+  subnet_name           = module.network.subnet_name
+  # Per-tenant jobs stay unscheduled until var.job_tenant_ids is set.
+  schedule                        = each.value.tenants && !local.have_tenants ? "" : each.value.schedule
   time_zone                       = "Asia/Kolkata"
   scheduler_service_account_email = module.iam.emails.scheduler
   deletion_protection             = var.deletion_protection
   env = merge(local.db_env, {
+    PHOTOS_BUCKET  = module.storage.bucket_names.photos
     EXPORTS_BUCKET = module.storage.bucket_names.exports
     CORPUS_BUCKET  = module.storage.bucket_names.corpus
   })
-  secret_env = {
-    LLM_API_KEY = module.secrets.secret_ids.llm-api-key
-  }
+  secret_env = each.key == "reconcile-payments" ? {
+    RAZORPAY_KEY_ID     = module.secrets.secret_ids.razorpay-key-id
+    RAZORPAY_KEY_SECRET = module.secrets.secret_ids.razorpay-key-secret
+  } : {}
 
   depends_on = [module.secrets]
 }
@@ -377,6 +439,10 @@ module "lb" {
   console_service_name = module.console.name
   cloud_armor_enabled  = var.cloud_armor_enabled
   cloud_armor_mode     = var.cloud_armor_mode
+  console_iap_enabled  = var.console_iap_enabled
+  console_iap_members  = var.console_iap_members
+
+  depends_on = [google_project_service.apis]
 }
 
 # --- Analytics (Datastream → BigQuery) -------------------------------------------
@@ -405,15 +471,36 @@ module "monitoring" {
   project_id                  = var.project_id
   env                         = var.env
   region                      = var.region
+  runbook_base_url            = var.runbook_base_url
   notification_email          = var.notification_email
+  page_channels               = var.page_channels
+  ticket_channels             = var.ticket_channels
+  digest_channels             = var.digest_channels
   extra_notification_channels = var.extra_notification_channels
-  sql_instance_id             = "${var.project_id}:${module.sql.instance_name}"
-  lock_audit_bucket           = var.lock_audit_bucket
+
+  # OPS-001 (paths exempt from the Cloud Armor geo rule). The webhook only accepts signed
+  # POSTs: a GET answering 405 proves the route is served end to end.
   uptime_checks = {
-    api     = { host = "api.${var.domain}", path = "/healthz" }
-    console = { host = "console.${var.domain}", path = "/" }
-    webhook = { host = "api.${var.domain}", path = "/v1/payments/webhook/health" }
+    api     = { host = "api.${var.domain}", path = "/v1/health" }
+    console = { host = "console.${var.domain}", path = "/login" }
+    webhook = { host = "api.${var.domain}", path = "/v1/webhooks/razorpay", accepted_status = 405 }
   }
 
-  depends_on = [google_project_service.apis]
+  # OPS-003
+  sql_instance_id         = "${var.project_id}:${module.sql.instance_name}"
+  sql_replica_instance_id = var.sql_read_replica ? "${var.project_id}:${module.sql.replica_instance_name}" : ""
+  sql_max_connections     = var.sql_max_connections
+
+  # OPS-004 / OPS-005
+  pubsub_topics = local.topics
+  jobs = merge(
+    { for k, j in local.jobs : k => { owner = j.owner, description = j.description } },
+    { migrate = { owner = "platform-lead", description = "Alembic upgrade head before each deploy" } },
+  )
+
+  # SLOs (12.1) and SEC-017
+  availability_goal = var.availability_goal
+  lock_audit_bucket = var.lock_audit_bucket
+
+  depends_on = [google_project_service.apis, module.pubsub, module.job, module.api]
 }

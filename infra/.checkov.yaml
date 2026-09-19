@@ -17,3 +17,24 @@ skip-check:
   - CKV_GCP_76
   # CKV2_GCP_18: default deny-all ingress firewall exists; Cloud Run has no VM ingress.
   - CKV2_GCP_18
+  # CKV_GCP_81 / 83 / 84: customer-supplied keys on BigQuery, Pub/Sub, Artifact Registry.
+  # Google-managed encryption at rest is the accepted baseline; CMEK is optional per SPEC 9.1
+  # (modules/storage kms_key_name) and is revisited for SaaS (SEC-026 KMS work).
+  - CKV_GCP_81
+  - CKV_GCP_83
+  - CKV_GCP_84
+  # CKV_GCP_6: checkov only accepts require_ssl / client certificates. SEC-011 enforces TLS
+  # with ssl_mode = "ENCRYPTED_ONLY" plus IAM database auth (no passwords, no client certs).
+  - CKV_GCP_6
+  # CKV_GCP_79: latest Postgres major. SPEC 9.4 pins POSTGRES_16 (PostGIS 3 + pgvector parity
+  # with the local image); upgrades go through an ADR.
+  - CKV_GCP_79
+  # CKV2_GCP_13: log_duration logs one line per statement (cost, PII-adjacent). Statement
+  # latency comes from Cloud SQL Query Insights (insights_config) instead.
+  - CKV2_GCP_13
+  # CKV2_GCP_5: Data Access audit logs for all services. SEC-017 scopes them to Cloud SQL,
+  # Secret Manager and GCS (modules/monitoring/audit.tf); Admin Activity is always on.
+  - CKV2_GCP_5
+  # CKV_GCP_125: the GitHub OIDC provider's attribute_condition pins assertion.repository to
+  # var.github_repository (bootstrap/main.tf); checkov cannot resolve the variable.
+  - CKV_GCP_125

@@ -31,8 +31,11 @@ resource "google_project_service_identity" "pubsub" {
   service  = "pubsub.googleapis.com"
 }
 
-resource "google_project_iam_member" "pubsub_token_creator" {
-  project = var.project_id
-  role    = "roles/iam.serviceAccountTokenCreator"
-  member  = "serviceAccount:${google_project_service_identity.pubsub.email}"
+# Scoped to the push identity only (not project-wide Token Creator; CKV_GCP_41 / 49).
+resource "google_service_account_iam_member" "pubsub_token_creator" {
+  for_each = contains(keys(var.service_accounts), var.push_service_account_key) ? toset([var.push_service_account_key]) : toset([])
+
+  service_account_id = google_service_account.sa[each.value].name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${google_project_service_identity.pubsub.email}"
 }

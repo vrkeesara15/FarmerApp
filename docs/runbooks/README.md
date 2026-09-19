@@ -1,17 +1,45 @@
-# Runbooks (SPEC 12.5 — write before pilot)
+# Runbooks (SPEC 12.5)
 
-Every alert in `infra/modules/monitoring` links here. Each runbook has an owner and is a TODO stub
-until it is written and rehearsed before the pilot.
+Every alert policy in `infra/modules/monitoring` names its owner, severity and one of these
+runbooks in its documentation block (the link base is `runbook_base_url` in the env tfvars).
+Each runbook has the same shape: owner, severity, detection signal, steps with exact
+commands, verification, communication, follow-up. Rehearse each one in stg before the pilot.
 
-| Runbook | Owner | Related |
-|---|---|---|
-| [OTP provider outage and failover](otp-provider-outage.md) | Platform lead | SLO OTP delivery, OPS-013 |
-| [Payment webhook backlog](payment-webhook-backlog.md) | Platform lead / Finance | OPS-004, OPS-008 |
-| [Cloud SQL failover and restore](cloud-sql-failover-restore.md) | Platform lead | OPS-003 |
-| [Bad mobile release rollback](bad-mobile-release-rollback.md) | Mobile lead | OPS-002 |
-| [Corpus rollback to previous version](corpus-rollback.md) | Agronomy lead / ML | DX-011 |
-| [Mass location anomaly](mass-location-anomaly.md) | Mobile lead | VV-001, OPS-006 |
-| [Data subject erasure request](data-subject-erasure.md) | Data protection owner | FM-015 |
-| [Suspected data breach (DPDP notification)](suspected-data-breach.md) | Security owner | OPS-013, SEC-019 |
+| Runbook | Owner | Severity | Detection (alert) |
+|---|---|---|---|
+| [Platform incident: API / console down, errors, latency](platform-incident.md) | Platform lead | Sev 1 / 2 | OPS-001 uptime, OPS-002 error rate, SLO availability burn, SLO latency |
+| [OTP provider outage and failover](otp-provider-outage.md) | Platform lead | Sev 1 | SLO OTP delivery < 95% / 10 min, WhatsApp fallback spike |
+| [Payment webhook backlog (DLQ replay)](payment-webhook-backlog.md) | Platform lead + finance lead | Sev 1 | OPS-004 `payment.webhook` backlog / DLQ, OPS-001 webhook uptime |
+| [Cloud SQL failover and restore](cloud-sql-failover-restore.md) | Platform lead | Sev 2, Sev 1 if sustained 30 min | OPS-003 CPU / storage / connections / replica lag |
+| [Disaster recovery (NF-006) and quarterly drill](disaster-recovery.md) | Platform lead | Sev 1 | Region / instance loss, data corruption |
+| [Scheduled job failure](job-failure.md) | Job owner (per alert) | Sev 2 | OPS-005 `job <name> failed` |
+| [Bad mobile release rollback](bad-mobile-release-rollback.md) | Mobile lead | Sev 1 / 2 | Crashlytics crash-free < 99% (OPS-002), sync SLO burn |
+| [Corpus rollback to previous version](corpus-rollback.md) | Agronomy lead / ML | Sev 2 | M6 evaluation job, agronomist reports (placeholder) |
+| [Mass location anomaly](mass-location-anomaly.md) | Mobile lead | Sev 2 | OPS-006 sync-silence spike, officers-on-duty drop |
+| [Data subject erasure request](data-subject-erasure.md) | Data protection owner | Sev 3 (SLA-bound) | Request received (support / grievance officer) |
+| [Suspected data breach (DPDP notification)](suspected-data-breach.md) | Security owner | Sev 1 | SCC HIGH/CRITICAL (SEC-019), Cloud Armor spike, audit-log anomaly, report |
 
-Sev 1 incidents get a blameless postmortem in `docs/postmortems/` within 5 working days (SPEC 12.3).
+Reference: [observability.md](observability.md) — channels, severities, SLOs, dashboards and the
+structured-log field contract the log-based metrics rely on.
+
+## Severity and channels (SPEC 12.3)
+
+| Severity | Examples | Channel | Response |
+|---|---|---|---|
+| Sev 1 | outage, payment failure, data leak | page (phone / PagerDuty) + Slack `#farmerapp-ops` + e-mail | 15 min, 24x7 in sowing seasons |
+| Sev 2 | degraded, job failure | Slack `#farmerapp-ops` + e-mail | next business hour |
+| Sev 3 | business signals, data quality | daily digest to owners | next day |
+
+Every Sev 1 gets a blameless postmortem in `docs/postmortems/` within 5 working days.
+
+## Conventions used in the commands
+
+```bash
+ENV=prd                       # dev | stg | prd
+PROJECT=farmerapp-$ENV
+REGION=asia-south1
+```
+
+Only the platform lead (or delegate) runs state-changing commands in stg / prd. Nothing in
+these runbooks deletes data without the data protection owner's written approval
+(CLAUDE.md: no data deletion in shared environments by automation).
