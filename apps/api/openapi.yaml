@@ -6109,6 +6109,1010 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+  /v1/analytics/owner-home:
+    get:
+      tags:
+      - analytics
+      summary: 'Owner home: KPI row with targets, last year and trends, store map, officers, flags'
+      operationId: getOwnerHome
+      parameters:
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'First IST day (inclusive). Default: `to` - 29 days.'
+          title: From
+        description: 'First IST day (inclusive). Default: `to` - 29 days.'
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'Last IST day (inclusive). Default: today (IST).'
+          title: To
+        description: 'Last IST day (inclusive). Default: today (IST).'
+      - name: cluster_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Cluster to narrow to.
+          title: Cluster Id
+        description: Cluster to narrow to.
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Store to narrow to.
+          title: Store Id
+        description: Store to narrow to.
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Field officer to narrow to.
+          title: Officer Id
+        description: Field officer to narrow to.
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Crop: farmers with a plot of it.'
+          title: Crop Id
+        description: 'Crop: farmers with a plot of it.'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerHomeOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_date_range`, `invalid_filter_combination`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/analytics/field-team:
+    get:
+      tags:
+      - analytics
+      summary: 'Field team scorecard: one ranked row per officer with a weekly sparkline'
+      operationId: getFieldTeam
+      parameters:
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'First IST day (inclusive). Default: `to` - 29 days.'
+          title: From
+        description: 'First IST day (inclusive). Default: `to` - 29 days.'
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'Last IST day (inclusive). Default: today (IST).'
+          title: To
+        description: 'Last IST day (inclusive). Default: today (IST).'
+      - name: cluster_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Cluster to narrow to.
+          title: Cluster Id
+        description: Cluster to narrow to.
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Store to narrow to.
+          title: Store Id
+        description: Store to narrow to.
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Field officer to narrow to.
+          title: Officer Id
+        description: Field officer to narrow to.
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Crop: farmers with a plot of it.'
+          title: Crop Id
+        description: 'Crop: farmers with a plot of it.'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldTeamOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_date_range`, `invalid_filter_combination`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/analytics/officers/{id}:
+    get:
+      tags:
+      - analytics
+      summary: 'Officer profile: scorecard, duty days and recent visits over the range'
+      operationId: getOfficerProfile
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'First IST day (inclusive). Default: `to` - 29 days.'
+          title: From
+        description: 'First IST day (inclusive). Default: `to` - 29 days.'
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'Last IST day (inclusive). Default: today (IST).'
+          title: To
+        description: 'Last IST day (inclusive). Default: today (IST).'
+      - name: cluster_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Cluster to narrow to.
+          title: Cluster Id
+        description: Cluster to narrow to.
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Store to narrow to.
+          title: Store Id
+        description: Store to narrow to.
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Field officer to narrow to.
+          title: Officer Id
+        description: Field officer to narrow to.
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Crop: farmers with a plot of it.'
+          title: Crop Id
+        description: 'Crop: farmers with a plot of it.'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfficerProfileOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_date_range`, `invalid_filter_combination`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/analytics/officers/{id}/day-replay:
+    get:
+      tags:
+      - analytics
+      summary: 'Officer day replay: track, stops, gaps, visits with proof, timeline, km'
+      operationId: getOfficerDayReplay
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: date
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          description: The IST day to replay (YYYY-MM-DD).
+          title: Date
+        description: The IST day to replay (YYYY-MM-DD).
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'First IST day (inclusive). Default: `to` - 29 days.'
+          title: From
+        description: 'First IST day (inclusive). Default: `to` - 29 days.'
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'Last IST day (inclusive). Default: today (IST).'
+          title: To
+        description: 'Last IST day (inclusive). Default: today (IST).'
+      - name: cluster_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Cluster to narrow to.
+          title: Cluster Id
+        description: Cluster to narrow to.
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Store to narrow to.
+          title: Store Id
+        description: Store to narrow to.
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Field officer to narrow to.
+          title: Officer Id
+        description: Field officer to narrow to.
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Crop: farmers with a plot of it.'
+          title: Crop Id
+        description: 'Crop: farmers with a plot of it.'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DayReplayOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_date_range`, `invalid_filter_combination`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - tenant_admin
+  /v1/analytics/farmers:
+    get:
+      tags:
+      - analytics
+      summary: 'Farmers directory: search, filters, sort, cursor; last visit / purchase, credit'
+      operationId: listAnalyticsFarmers
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          description: 'Name or village contains; 4 digits: phone last 4.'
+          title: Q
+        description: 'Name or village contains; 4 digits: phone last 4.'
+      - name: district
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+          title: District
+      - name: stage
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 16
+          - type: 'null'
+          description: Crop stage.
+          title: Stage
+        description: Crop stage.
+      - name: credit_risk
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - low
+            - medium
+            - high
+            type: string
+          - type: 'null'
+          title: Credit Risk
+      - name: last_visit
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - 7d
+            - 30d
+            - 90d
+            - over_90d
+            - never
+            type: string
+          - type: 'null'
+          title: Last Visit
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          description: name, last_visit, last_purchase, ltv, balance, overdue; -desc.
+          default: name
+          title: Sort
+        description: name, last_visit, last_purchase, ltv, balance, overdue; -desc.
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'First IST day (inclusive). Default: `to` - 29 days.'
+          title: From
+        description: 'First IST day (inclusive). Default: `to` - 29 days.'
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'Last IST day (inclusive). Default: today (IST).'
+          title: To
+        description: 'Last IST day (inclusive). Default: today (IST).'
+      - name: cluster_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Cluster to narrow to.
+          title: Cluster Id
+        description: Cluster to narrow to.
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Store to narrow to.
+          title: Store Id
+        description: Store to narrow to.
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Field officer to narrow to.
+          title: Officer Id
+        description: Field officer to narrow to.
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Crop: farmers with a plot of it.'
+          title: Crop Id
+        description: 'Crop: farmers with a plot of it.'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FarmerDirectoryOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_date_range`, `invalid_filter_combination`, `validation_error`, `invalid_sort`'
+          content:
+            application/problem+json: {}
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/analytics/farmers/{id}/360:
+    get:
+      tags:
+      - analytics
+      summary: 'Farmer 360: profile, farms, crops, visits, orders, khata, consent, app usage, LTV'
+      operationId: getFarmer360
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'First IST day (inclusive). Default: `to` - 29 days.'
+          title: From
+        description: 'First IST day (inclusive). Default: `to` - 29 days.'
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'Last IST day (inclusive). Default: today (IST).'
+          title: To
+        description: 'Last IST day (inclusive). Default: today (IST).'
+      - name: cluster_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Cluster to narrow to.
+          title: Cluster Id
+        description: Cluster to narrow to.
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Store to narrow to.
+          title: Store Id
+        description: Store to narrow to.
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Field officer to narrow to.
+          title: Officer Id
+        description: Field officer to narrow to.
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Crop: farmers with a plot of it.'
+          title: Crop Id
+        description: 'Crop: farmers with a plot of it.'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Farmer360Out'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_date_range`, `invalid_filter_combination`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/analytics/stores:
+    get:
+      tags:
+      - analytics
+      summary: 'Stores: sales, margin, stock value, credit book and last day-close variance'
+      operationId: listAnalyticsStores
+      parameters:
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'First IST day (inclusive). Default: `to` - 29 days.'
+          title: From
+        description: 'First IST day (inclusive). Default: `to` - 29 days.'
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'Last IST day (inclusive). Default: today (IST).'
+          title: To
+        description: 'Last IST day (inclusive). Default: today (IST).'
+      - name: cluster_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Cluster to narrow to.
+          title: Cluster Id
+        description: Cluster to narrow to.
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Store to narrow to.
+          title: Store Id
+        description: Store to narrow to.
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Field officer to narrow to.
+          title: Officer Id
+        description: Field officer to narrow to.
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Crop: farmers with a plot of it.'
+          title: Crop Id
+        description: 'Crop: farmers with a plot of it.'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreListOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_date_range`, `invalid_filter_combination`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/analytics/stores/{id}:
+    get:
+      tags:
+      - analytics
+      summary: 'Store detail: category and brand sales, stock, credit ageing, day closes, P&L'
+      operationId: getAnalyticsStore
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'First IST day (inclusive). Default: `to` - 29 days.'
+          title: From
+        description: 'First IST day (inclusive). Default: `to` - 29 days.'
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'Last IST day (inclusive). Default: today (IST).'
+          title: To
+        description: 'Last IST day (inclusive). Default: today (IST).'
+      - name: cluster_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Cluster to narrow to.
+          title: Cluster Id
+        description: Cluster to narrow to.
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Store to narrow to.
+          title: Store Id
+        description: Store to narrow to.
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Field officer to narrow to.
+          title: Officer Id
+        description: Field officer to narrow to.
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Crop: farmers with a plot of it.'
+          title: Crop Id
+        description: 'Crop: farmers with a plot of it.'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_date_range`, `invalid_filter_combination`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
 components:
   schemas:
     AdjustmentIn:
@@ -6153,6 +7157,31 @@ components:
       - batch_id
       - counted_qty
       title: AdjustmentLineIn
+    AppUsageOut:
+      properties:
+        has_app_login:
+          type: boolean
+          title: Has App Login
+        last_session_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Session At
+        sessions_last_60_days:
+          type: integer
+          title: Sessions Last 60 Days
+        proxy:
+          type: string
+          title: Proxy
+          description: How app sessions are measured (refresh-token issuance).
+      type: object
+      required:
+      - has_app_login
+      - last_session_at
+      - sessions_last_60_days
+      - proxy
+      title: AppUsageOut
     ApprovalStatus:
       type: string
       enum:
@@ -6398,12 +7427,62 @@ components:
       - available
       title: BatchStateOut
       description: 'A batch after the write: the cached qty equals the ledger sum.'
+    BrandSplitOut:
+      properties:
+        own_brand_paise:
+          type: integer
+          title: Own Brand Paise
+        multi_brand_paise:
+          type: integer
+          title: Multi Brand Paise
+        own_brand_share:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Own Brand Share
+        own_brand_margin_paise:
+          type: integer
+          title: Own Brand Margin Paise
+        multi_brand_margin_paise:
+          type: integer
+          title: Multi Brand Margin Paise
+      type: object
+      required:
+      - own_brand_paise
+      - multi_brand_paise
+      - own_brand_share
+      - own_brand_margin_paise
+      - multi_brand_margin_paise
+      title: BrandSplitOut
     CatalogKind:
       type: string
       enum:
       - products
       - label_claims
       title: CatalogKind
+    CategorySalesOut:
+      properties:
+        category:
+          type: string
+          title: Category
+        net_sales_paise:
+          type: integer
+          title: Net Sales Paise
+        gross_margin_paise:
+          type: integer
+          title: Gross Margin Paise
+        share:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Share
+      type: object
+      required:
+      - category
+      - net_sales_paise
+      - gross_margin_paise
+      - share
+      title: CategorySalesOut
     CheckinPoint:
       properties:
         lat:
@@ -6567,6 +7646,32 @@ components:
       - granted
       title: ConsentCreate
       description: '``POST /v1/farmers/{id}/consents``: append a grant or a withdrawal.'
+    ConsentEventOut:
+      properties:
+        purpose:
+          type: string
+          title: Purpose
+        granted:
+          type: boolean
+          title: Granted
+        at:
+          type: string
+          format: date-time
+          title: At
+        version:
+          type: string
+          title: Version
+        channel:
+          type: string
+          title: Channel
+      type: object
+      required:
+      - purpose
+      - granted
+      - at
+      - version
+      - channel
+      title: ConsentEventOut
     ConsentIn:
       properties:
         purpose:
@@ -6585,6 +7690,24 @@ components:
       - purpose
       - granted
       title: ConsentIn
+    ConsentOut:
+      properties:
+        current:
+          additionalProperties:
+            type: boolean
+          type: object
+          title: Current
+          description: Latest state per purpose (`data`, `marketing`).
+        history:
+          items:
+            $ref: '#/components/schemas/ConsentEventOut'
+          type: array
+          title: History
+      type: object
+      required:
+      - current
+      - history
+      title: ConsentOut
     ConsentPurpose:
       type: string
       enum:
@@ -6793,6 +7916,29 @@ components:
       required:
       - items
       title: CreditApprovalPage
+    CreditBookOut:
+      properties:
+        outstanding_paise:
+          type: integer
+          title: Outstanding Paise
+        overdue_paise:
+          type: integer
+          title: Overdue Paise
+        buckets:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Buckets
+        accounts:
+          type: integer
+          title: Accounts
+      type: object
+      required:
+      - outstanding_paise
+      - overdue_paise
+      - buckets
+      - accounts
+      title: CreditBookOut
     CreditDecisionIn:
       properties:
         note:
@@ -7220,6 +8366,72 @@ components:
       required:
       - reason
       title: DayCloseReopenIn
+    DayReplayOut:
+      properties:
+        filters:
+          $ref: '#/components/schemas/FiltersOut'
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        officer_name:
+          type: string
+          title: Officer Name
+        date:
+          type: string
+          format: date
+          title: Date
+        duty_sessions:
+          items:
+            $ref: '#/components/schemas/DutySessionBrief'
+          type: array
+          title: Duty Sessions
+        km:
+          type: number
+          title: Km
+        track:
+          $ref: '#/components/schemas/GeoJsonMultiLineString'
+        points:
+          items:
+            $ref: '#/components/schemas/ReplayPoint'
+          type: array
+          title: Points
+          description: Kept points in time order (playback).
+        stops:
+          items:
+            $ref: '#/components/schemas/StopOut'
+          type: array
+          title: Stops
+        gaps:
+          items:
+            $ref: '#/components/schemas/GapOut'
+          type: array
+          title: Gaps
+        visits:
+          items:
+            $ref: '#/components/schemas/ReplayVisitOut'
+          type: array
+          title: Visits
+        timeline:
+          items:
+            $ref: '#/components/schemas/TimelineEvent'
+          type: array
+          title: Timeline
+      type: object
+      required:
+      - filters
+      - officer_id
+      - officer_name
+      - date
+      - duty_sessions
+      - km
+      - track
+      - points
+      - stops
+      - gaps
+      - visits
+      - timeline
+      title: DayReplayOut
     DaySummaryOut:
       properties:
         store_id:
@@ -7301,6 +8513,46 @@ components:
       - l
       - kg
       title: DoseUnit
+    DutyDayOut:
+      properties:
+        day:
+          type: string
+          format: date
+          title: Day
+        start_at:
+          type: string
+          format: date-time
+          title: Start At
+        end_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End At
+        km:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Km
+        visits:
+          type: integer
+          title: Visits
+        verified_visits:
+          type: integer
+          title: Verified Visits
+        time_on_farm_s:
+          type: integer
+          title: Time On Farm S
+      type: object
+      required:
+      - day
+      - start_at
+      - end_at
+      - km
+      - visits
+      - verified_visits
+      - time_on_farm_s
+      title: DutyDayOut
     DutyEndIn:
       properties:
         end_at:
@@ -7347,6 +8599,40 @@ components:
       - upload_interval_s
       title: DutyPolicyOut
       description: VV-001 sampling policy served to the app, from the tenant settings.
+    DutySessionBrief:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        start_at:
+          type: string
+          format: date-time
+          title: Start At
+        end_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End At
+        end_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: End Reason
+        km:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Km
+      type: object
+      required:
+      - id
+      - start_at
+      - end_at
+      - end_reason
+      - km
+      title: DutySessionBrief
     DutySessionOut:
       properties:
         id:
@@ -7852,6 +9138,80 @@ components:
           title: Photos
       type: object
       title: FarmUpdate
+    Farmer360Out:
+      properties:
+        filters:
+          $ref: '#/components/schemas/FiltersOut'
+        profile:
+          $ref: '#/components/schemas/FarmerProfileOut'
+        farms:
+          items:
+            $ref: '#/components/schemas/FarmerFarmOut'
+          type: array
+          title: Farms
+        visits:
+          items:
+            $ref: '#/components/schemas/FarmerVisitOut'
+          type: array
+          title: Visits
+        diagnoses:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Diagnoses
+          description: Empty until the diagnosis engine (M6).
+        orders:
+          items:
+            $ref: '#/components/schemas/FarmerOrderOut'
+          type: array
+          title: Orders
+        khata:
+          $ref: '#/components/schemas/KhataSummaryOut'
+        consent:
+          $ref: '#/components/schemas/ConsentOut'
+        app_usage:
+          $ref: '#/components/schemas/AppUsageOut'
+        ltv_paise:
+          type: integer
+          title: Ltv Paise
+        last_visit_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Visit At
+        last_purchase_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Purchase At
+        active:
+          type: boolean
+          title: Active
+        notes:
+          additionalProperties:
+            type: string
+          type: object
+          title: Notes
+      type: object
+      required:
+      - filters
+      - profile
+      - farms
+      - visits
+      - diagnoses
+      - orders
+      - khata
+      - consent
+      - app_usage
+      - ltv_paise
+      - last_visit_at
+      - last_purchase_at
+      - active
+      - notes
+      title: Farmer360Out
     FarmerConfirm:
       properties:
         token:
@@ -7939,6 +9299,63 @@ components:
       - name
       - village_id
       title: FarmerCreate
+    FarmerCropPlotOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        crop_code:
+          type: string
+          title: Crop Code
+        crop_name:
+          type: string
+          title: Crop Name
+        variety:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Variety
+        season:
+          type: string
+          title: Season
+        sowing_date:
+          type: string
+          format: date
+          title: Sowing Date
+        stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Stage
+        expected_harvest:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Expected Harvest
+        area_acres:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Area Acres
+      type: object
+      required:
+      - id
+      - crop_id
+      - crop_code
+      - crop_name
+      - variety
+      - season
+      - sowing_date
+      - stage
+      - expected_harvest
+      - area_acres
+      title: FarmerCropPlotOut
     FarmerDetailOut:
       properties:
         id:
@@ -8058,6 +9475,140 @@ components:
 
 
         ``warnings`` is the union of the farms'' VA-F03 warnings on a write (empty on reads).'
+    FarmerDirectoryOut:
+      properties:
+        filters:
+          $ref: '#/components/schemas/FiltersOut'
+        items:
+          items:
+            $ref: '#/components/schemas/FarmerRow'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - filters
+      - items
+      - next_cursor
+      - total
+      title: FarmerDirectoryOut
+    FarmerFarmOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+        survey_no:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Survey No
+        area_acres:
+          type: number
+          title: Area Acres
+        area_acres_computed:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Area Acres Computed
+        soil:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Soil
+        irrigation:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Irrigation
+        boundary:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Boundary
+          description: GeoJSON Polygon.
+        centroid:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Centroid
+          description: GeoJSON Point.
+        crop_plots:
+          items:
+            $ref: '#/components/schemas/FarmerCropPlotOut'
+          type: array
+          title: Crop Plots
+      type: object
+      required:
+      - id
+      - name
+      - survey_no
+      - area_acres
+      - area_acres_computed
+      - soil
+      - irrigation
+      - boundary
+      - centroid
+      - crop_plots
+      title: FarmerFarmOut
+    FarmerOrderOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        channel:
+          type: string
+          title: Channel
+        status:
+          type: string
+          title: Status
+        total_paise:
+          type: integer
+          title: Total Paise
+        placed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Placed At
+        invoice_no:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Invoice No
+        lines:
+          type: integer
+          title: Lines
+      type: object
+      required:
+      - id
+      - store_id
+      - channel
+      - status
+      - total_paise
+      - placed_at
+      - invoice_no
+      - lines
+      title: FarmerOrderOut
     FarmerOut:
       properties:
         id:
@@ -8159,6 +9710,190 @@ components:
       - version
       title: FarmerOut
       description: Directory row. ``phone`` is masked for roles that read crop data only (agronomist).
+    FarmerProfileOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        phone:
+          type: string
+          title: Phone
+        phone_verified:
+          type: boolean
+          title: Phone Verified
+        language:
+          type: string
+          title: Language
+        landmark:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Landmark
+        source:
+          type: string
+          title: Source
+        village_id:
+          type: string
+          format: uuid
+          title: Village Id
+        village:
+          type: string
+          title: Village
+        district:
+          type: string
+          title: District
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        registered_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Registered By
+        registered_by_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Registered By Name
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - name
+      - phone
+      - phone_verified
+      - language
+      - landmark
+      - source
+      - village_id
+      - village
+      - district
+      - store_id
+      - registered_by
+      - registered_by_name
+      - created_at
+      - updated_at
+      title: FarmerProfileOut
+    FarmerRow:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        phone_masked:
+          type: string
+          title: Phone Masked
+          description: '`******1234` (SPEC AN-014: full phone on the 360).'
+        village_id:
+          type: string
+          format: uuid
+          title: Village Id
+        village:
+          type: string
+          title: Village
+        district:
+          type: string
+          title: District
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        registered_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Registered By
+        crops:
+          items:
+            type: string
+          type: array
+          title: Crops
+          description: Crop codes of the live crop plots.
+        stages:
+          items:
+            type: string
+          type: array
+          title: Stages
+        acres:
+          type: number
+          title: Acres
+        last_visit_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Visit At
+        last_purchase_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Purchase At
+        balance_paise:
+          type: integer
+          title: Balance Paise
+        overdue_paise:
+          type: integer
+          title: Overdue Paise
+        credit_risk:
+          type: string
+          enum:
+          - low
+          - medium
+          - high
+          title: Credit Risk
+        ltv_paise:
+          type: integer
+          title: Ltv Paise
+        app_user:
+          type: boolean
+          title: App User
+        consent_marketing:
+          type: boolean
+          title: Consent Marketing
+      type: object
+      required:
+      - id
+      - name
+      - phone_masked
+      - village_id
+      - village
+      - district
+      - store_id
+      - registered_by
+      - crops
+      - stages
+      - acres
+      - last_visit_at
+      - last_purchase_at
+      - balance_paise
+      - overdue_paise
+      - credit_risk
+      - ltv_paise
+      - app_user
+      - consent_marketing
+      title: FarmerRow
     FarmerUpdate:
       properties:
         version:
@@ -8200,6 +9935,130 @@ components:
       additionalProperties: false
       type: object
       title: FarmerUpdate
+    FarmerVisitOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        officer_name:
+          type: string
+          title: Officer Name
+        purpose:
+          type: string
+          title: Purpose
+        checkin_at:
+          type: string
+          format: date-time
+          title: Checkin At
+        checkout_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Checkout At
+        status:
+          type: string
+          title: Status
+        score:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Score
+        confirmed:
+          type: boolean
+          title: Confirmed
+        crop_stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Crop Stage
+      type: object
+      required:
+      - id
+      - officer_id
+      - officer_name
+      - purpose
+      - checkin_at
+      - checkout_at
+      - status
+      - score
+      - confirmed
+      - crop_stage
+      title: FarmerVisitOut
+    FieldTeamOut:
+      properties:
+        filters:
+          $ref: '#/components/schemas/FiltersOut'
+        location_visible:
+          type: boolean
+          title: Location Visible
+          description: 'False: `km_per_day` is withheld (SPEC 2.6).'
+        items:
+          items:
+            $ref: '#/components/schemas/ScorecardRow'
+          type: array
+          title: Items
+      type: object
+      required:
+      - filters
+      - location_visible
+      - items
+      title: FieldTeamOut
+    FiltersOut:
+      properties:
+        from:
+          type: string
+          format: date
+          title: From
+        to:
+          type: string
+          format: date
+          title: To
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        officer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Officer Id
+        crop_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+        days:
+          type: integer
+          title: Days
+          description: Days in the range (inclusive).
+        scope:
+          type: string
+          title: Scope
+          description: 'Role narrowing applied on top: `tenant`, `cluster`, `store` or `own`.'
+      type: object
+      required:
+      - from
+      - to
+      - days
+      - scope
+      title: FiltersOut
+      description: The applied filters, echoed in every analytics response (AN-011).
     FlagCommentOut:
       properties:
         id:
@@ -8438,116 +10297,11 @@ components:
       - note
       - created_at
       title: FlagEventOut
-    FlagOut:
-      properties:
-        id:
-          type: string
-          format: uuid
-          title: Id
-        rule_id:
-          type: string
-          title: Rule Id
-        rule_version:
-          type: integer
-          title: Rule Version
-        subject_type:
-          type: string
-          title: Subject Type
-        subject_id:
-          type: string
-          format: uuid
-          title: Subject Id
-        severity:
-          type: string
-          title: Severity
-        title:
-          type: string
-          title: Title
-        status:
-          $ref: '#/components/schemas/FlagStatus'
-        owner_id:
-          anyOf:
-          - type: string
-            format: uuid
-          - type: 'null'
-          title: Owner Id
-        owner_role:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Owner Role
-        watchers:
-          items:
-            type: string
-            format: uuid
-          type: array
-          title: Watchers
-        sla_due_at:
-          type: string
-          format: date-time
-          title: Sla Due At
-        overdue:
-          type: boolean
-          title: Overdue
-        escalation_level:
-          type: integer
-          title: Escalation Level
-        raised_by_mode:
-          type: string
-          title: Raised By Mode
-        resolution_note:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Resolution Note
-        resolved_at:
-          anyOf:
-          - type: string
-            format: date-time
-          - type: 'null'
-          title: Resolved At
-        resolved_by:
-          anyOf:
-          - type: string
-            format: uuid
-          - type: 'null'
-          title: Resolved By
-        created_at:
-          type: string
-          format: date-time
-          title: Created At
-        version:
-          type: integer
-          title: Version
-      type: object
-      required:
-      - id
-      - rule_id
-      - rule_version
-      - subject_type
-      - subject_id
-      - severity
-      - title
-      - status
-      - owner_id
-      - owner_role
-      - watchers
-      - sla_due_at
-      - overdue
-      - escalation_level
-      - raised_by_mode
-      - resolution_note
-      - resolved_at
-      - resolved_by
-      - created_at
-      - version
-      title: FlagOut
-      description: 'An inbox row (FlagCard): no evidence bundle, see ``FlagDetailOut``.'
     FlagPage:
       properties:
         items:
           items:
-            $ref: '#/components/schemas/FlagOut'
+            $ref: '#/components/schemas/farmerapp__flags__schemas__FlagOut'
           type: array
           title: Items
         next_cursor:
@@ -8578,6 +10332,58 @@ components:
       - pickup
       - delivery
       title: Fulfilment
+    GapOut:
+      properties:
+        start:
+          type: string
+          format: date-time
+          title: Start
+        end:
+          type: string
+          format: date-time
+          title: End
+        duration_s:
+          type: integer
+          title: Duration S
+        duty_session_id:
+          type: string
+          format: uuid
+          title: Duty Session Id
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+          description: The officer's reason (VV-008); null until it exists.
+      type: object
+      required:
+      - start
+      - end
+      - duration_s
+      - duty_session_id
+      - reason
+      title: GapOut
+    GeoJsonMultiLineString:
+      properties:
+        type:
+          type: string
+          const: MultiLineString
+          title: Type
+          default: MultiLineString
+        coordinates:
+          items:
+            items:
+              items:
+                type: number
+              type: array
+            type: array
+          type: array
+          title: Coordinates
+          description: '[[[lon, lat], ...], ...]'
+      type: object
+      required:
+      - coordinates
+      title: GeoJsonMultiLineString
     GeoJsonPolygon:
       properties:
         type:
@@ -9147,6 +10953,100 @@ components:
       - overdue_buckets
       - entries
       title: KhataOut
+    KhataSummaryOut:
+      properties:
+        balance_paise:
+          type: integer
+          title: Balance Paise
+        overdue_paise:
+          type: integer
+          title: Overdue Paise
+        overdue_buckets:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Overdue Buckets
+        next_due_date:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Next Due Date
+        credit_limits:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Credit Limits
+          description: '`{store_id, limit_paise}` per store.'
+        last_payment_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Payment At
+        credit_risk:
+          type: string
+          enum:
+          - low
+          - medium
+          - high
+          title: Credit Risk
+      type: object
+      required:
+      - balance_paise
+      - overdue_paise
+      - overdue_buckets
+      - next_due_date
+      - credit_limits
+      - last_payment_at
+      - credit_risk
+      title: KhataSummaryOut
+    KpiOut:
+      properties:
+        key:
+          type: string
+          title: Key
+          description: '`revenue`, `own_brand_share`, `credit_outstanding`, `credit_overdue`, `verified_visits`,
+            `active_farmers`, `open_flags`.'
+        unit:
+          type: string
+          enum:
+          - paise
+          - ratio
+          - count
+          title: Unit
+        value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Value
+        target:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Target
+          description: From the tenant setting `targets` (additive KPIs scaled to the range).
+        last_year:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Last Year
+          description: Same period last year.
+        trend:
+          items:
+            $ref: '#/components/schemas/SeriesPoint'
+          type: array
+          title: Trend
+      type: object
+      required:
+      - key
+      - unit
+      - value
+      - target
+      - last_year
+      - trend
+      title: KpiOut
     LabelClaimCreate:
       properties:
         dose_per_acre:
@@ -9455,6 +11355,24 @@ components:
       - own
       - leased
       title: LandOwnership
+    LastDayCloseOut:
+      properties:
+        business_date:
+          type: string
+          format: date
+          title: Business Date
+        variance_paise:
+          type: integer
+          title: Variance Paise
+        status:
+          type: string
+          title: Status
+      type: object
+      required:
+      - business_date
+      - variance_paise
+      - status
+      title: LastDayCloseOut
     LatLon:
       properties:
         lat:
@@ -9747,6 +11665,154 @@ components:
       - distance_m
       - source
       title: NearestStoreOut
+    OfficerProfileOut:
+      properties:
+        filters:
+          $ref: '#/components/schemas/FiltersOut'
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        phone:
+          type: string
+          title: Phone
+        status:
+          type: string
+          title: Status
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        store_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Store Name
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+        on_duty:
+          type: boolean
+          title: On Duty
+        location_visible:
+          type: boolean
+          title: Location Visible
+        scorecard:
+          $ref: '#/components/schemas/ScorecardRow'
+        duty_days:
+          items:
+            $ref: '#/components/schemas/DutyDayOut'
+          type: array
+          title: Duty Days
+        recent_visits:
+          items:
+            $ref: '#/components/schemas/OfficerVisitOut'
+          type: array
+          title: Recent Visits
+      type: object
+      required:
+      - filters
+      - id
+      - name
+      - phone
+      - status
+      - store_id
+      - store_name
+      - cluster_id
+      - on_duty
+      - location_visible
+      - scorecard
+      - duty_days
+      - recent_visits
+      title: OfficerProfileOut
+    OfficerRankOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        verified_visits:
+          type: integer
+          title: Verified Visits
+        duty_days:
+          type: integer
+          title: Duty Days
+        verified_visits_per_day:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Verified Visits Per Day
+      type: object
+      required:
+      - id
+      - name
+      - store_id
+      - verified_visits
+      - duty_days
+      - verified_visits_per_day
+      title: OfficerRankOut
+    OfficerVisitOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        farmer_name:
+          type: string
+          title: Farmer Name
+        checkin_at:
+          type: string
+          format: date-time
+          title: Checkin At
+        checkout_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Checkout At
+        status:
+          type: string
+          title: Status
+        score:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Score
+        purpose:
+          type: string
+          title: Purpose
+      type: object
+      required:
+      - id
+      - farmer_id
+      - farmer_name
+      - checkin_at
+      - checkout_at
+      - status
+      - score
+      - purpose
+      title: OfficerVisitOut
     OpenDebitOut:
       properties:
         entry_id:
@@ -10662,6 +12728,98 @@ components:
       - created_at
       - version
       title: OverrideRequestOut
+    OwnerHomeOut:
+      properties:
+        filters:
+          $ref: '#/components/schemas/FiltersOut'
+        granularity:
+          type: string
+          enum:
+          - day
+          - week
+          title: Granularity
+        kpis:
+          items:
+            $ref: '#/components/schemas/KpiOut'
+          type: array
+          title: Kpis
+        credit_overdue_buckets:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Credit Overdue Buckets
+          description: '`0_30` / `31_60` / `61_90` / `90_plus` paise as of `to`.'
+        series:
+          $ref: '#/components/schemas/OwnerHomeSeries'
+        stores:
+          items:
+            $ref: '#/components/schemas/StoreMapItem'
+          type: array
+          title: Stores
+        officers_top:
+          items:
+            $ref: '#/components/schemas/OfficerRankOut'
+          type: array
+          title: Officers Top
+        officers_bottom:
+          items:
+            $ref: '#/components/schemas/OfficerRankOut'
+          type: array
+          title: Officers Bottom
+        high_severity_flags:
+          items:
+            $ref: '#/components/schemas/farmerapp__analytics__schemas__FlagOut'
+          type: array
+          title: High Severity Flags
+        crop_health_alerts:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Crop Health Alerts
+          description: Always empty until AN-006 (crop health map, P1).
+        notes:
+          additionalProperties:
+            type: string
+          type: object
+          title: Notes
+      type: object
+      required:
+      - filters
+      - granularity
+      - kpis
+      - credit_overdue_buckets
+      - series
+      - stores
+      - officers_top
+      - officers_bottom
+      - high_severity_flags
+      - crop_health_alerts
+      - notes
+      title: OwnerHomeOut
+    OwnerHomeSeries:
+      properties:
+        revenue:
+          items:
+            $ref: '#/components/schemas/SeriesPoint'
+          type: array
+          title: Revenue
+        revenue_last_year:
+          items:
+            $ref: '#/components/schemas/SeriesPoint'
+          type: array
+          title: Revenue Last Year
+        own_brand_share:
+          items:
+            $ref: '#/components/schemas/SeriesPoint'
+          type: array
+          title: Own Brand Share
+      type: object
+      required:
+      - revenue
+      - revenue_last_year
+      - own_brand_share
+      title: OwnerHomeSeries
     PackUnit:
       type: string
       enum:
@@ -11304,6 +13462,56 @@ components:
       - resend_after
       - resends_left
       title: PhoneVerifySendResponse
+    PnlMonthOut:
+      properties:
+        month:
+          type: string
+          title: Month
+          description: '`YYYY-MM`.'
+        partial:
+          type: boolean
+          title: Partial
+          description: The range covers only part of the month.
+        gross_sales_paise:
+          type: integer
+          title: Gross Sales Paise
+        discounts_paise:
+          type: integer
+          title: Discounts Paise
+        net_sales_paise:
+          type: integer
+          title: Net Sales Paise
+        cogs_paise:
+          type: integer
+          title: Cogs Paise
+        gross_margin_paise:
+          type: integer
+          title: Gross Margin Paise
+        gross_margin_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Gross Margin Pct
+        write_offs_paise:
+          type: integer
+          title: Write Offs Paise
+        contribution_paise:
+          type: integer
+          title: Contribution Paise
+          description: Gross margin less write-offs.
+      type: object
+      required:
+      - month
+      - partial
+      - gross_sales_paise
+      - discounts_paise
+      - net_sales_paise
+      - cogs_paise
+      - gross_margin_paise
+      - gross_margin_pct
+      - write_offs_paise
+      - contribution_paise
+      title: PnlMonthOut
     PointIn:
       properties:
         lat:
@@ -12128,6 +14336,33 @@ components:
       - version
       - skus
       title: ProductWithSkusOut
+    ProofItemOut:
+      properties:
+        kind:
+          type: string
+          enum:
+          - geofence
+          - photo
+          - confirmation
+          - duration
+          - integrity
+          title: Kind
+        satisfied:
+          type: boolean
+          title: Satisfied
+        points:
+          type: integer
+          title: Points
+        max_points:
+          type: integer
+          title: Max Points
+      type: object
+      required:
+      - kind
+      - satisfied
+      - points
+      - max_points
+      title: ProofItemOut
     ReceiptIn:
       properties:
         reference:
@@ -12320,6 +14555,234 @@ components:
       - index
       - reason
       title: RejectedPoint
+    ReplayPoint:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        lat:
+          type: number
+          title: Lat
+        lon:
+          type: number
+          title: Lon
+        accuracy_m:
+          type: number
+          title: Accuracy M
+      type: object
+      required:
+      - ts
+      - lat
+      - lon
+      - accuracy_m
+      title: ReplayPoint
+    ReplayVisitOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        farmer_name:
+          type: string
+          title: Farmer Name
+        purpose:
+          type: string
+          title: Purpose
+        checkin_at:
+          type: string
+          format: date-time
+          title: Checkin At
+        checkout_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Checkout At
+        duration_s:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Duration S
+        lat:
+          type: number
+          title: Lat
+        lon:
+          type: number
+          title: Lon
+        geofence_result:
+          type: string
+          title: Geofence Result
+        status:
+          type: string
+          title: Status
+        colour:
+          type: string
+          enum:
+          - green
+          - amber
+          - red
+          - grey
+          title: Colour
+        score:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Score
+        score_components:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Score Components
+        proof:
+          items:
+            $ref: '#/components/schemas/ProofItemOut'
+          type: array
+          title: Proof
+        confirmed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Confirmed At
+        photos:
+          type: integer
+          title: Photos
+      type: object
+      required:
+      - id
+      - farmer_id
+      - farmer_name
+      - purpose
+      - checkin_at
+      - checkout_at
+      - duration_s
+      - lat
+      - lon
+      - geofence_result
+      - status
+      - colour
+      - score
+      - score_components
+      - proof
+      - confirmed_at
+      - photos
+      title: ReplayVisitOut
+    ScorecardRow:
+      properties:
+        officer_id:
+          type: string
+          format: uuid
+          title: Officer Id
+        name:
+          type: string
+          title: Name
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+        rank:
+          type: integer
+          title: Rank
+        duty_days:
+          type: integer
+          title: Duty Days
+        visits:
+          type: integer
+          title: Visits
+        verified_visits:
+          type: integer
+          title: Verified Visits
+        verified_visits_per_day:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Verified Visits Per Day
+        unique_farmers_reached:
+          type: integer
+          title: Unique Farmers Reached
+        new_registrations:
+          type: integer
+          title: New Registrations
+        confirmation_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Confirmation Rate
+        avg_time_on_farm_s:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Avg Time On Farm S
+          description: Time on farm / verified visits.
+        time_on_farm_s:
+          type: integer
+          title: Time On Farm S
+        km_per_day:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Km Per Day
+          description: Duty km / duty days. Null for callers who may not see tracks (SPEC 2.6).
+        conversion_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Conversion Rate
+        converted_farmers:
+          type: integer
+          title: Converted Farmers
+        visited_farmers:
+          type: integer
+          title: Visited Farmers
+        collections_paise:
+          type: integer
+          title: Collections Paise
+        flags:
+          type: integer
+          title: Flags
+        trend:
+          items:
+            $ref: '#/components/schemas/SeriesPoint'
+          type: array
+          title: Trend
+          description: Verified visits per week (sparkline).
+      type: object
+      required:
+      - officer_id
+      - name
+      - store_id
+      - cluster_id
+      - rank
+      - duty_days
+      - visits
+      - verified_visits
+      - verified_visits_per_day
+      - unique_farmers_reached
+      - new_registrations
+      - confirmation_rate
+      - avg_time_on_farm_s
+      - time_on_farm_s
+      - km_per_day
+      - conversion_rate
+      - converted_farmers
+      - visited_farmers
+      - collections_paise
+      - flags
+      - trend
+      title: ScorecardRow
     Season:
       type: string
       enum:
@@ -12327,6 +14790,28 @@ components:
       - rabi
       - zaid
       title: Season
+    SeriesPoint:
+      properties:
+        start:
+          type: string
+          format: date
+          title: Start
+        end:
+          type: string
+          format: date
+          title: End
+          description: Last day of the bucket (inclusive).
+        value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Value
+      type: object
+      required:
+      - start
+      - end
+      - value
+      title: SeriesPoint
     Severity:
       type: string
       enum:
@@ -12779,6 +15264,39 @@ components:
       required:
       - items
       title: StockPage
+    StockSummaryOut:
+      properties:
+        value_paise:
+          type: integer
+          title: Value Paise
+        skus_in_stock:
+          type: integer
+          title: Skus In Stock
+        turns:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Turns
+          description: COGS in the range / current stock value at cost.
+        turns_annualised:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Turns Annualised
+        stockouts:
+          items:
+            $ref: '#/components/schemas/StockoutOut'
+          type: array
+          title: Stockouts
+          description: SKUs the store has stocked, now at zero.
+      type: object
+      required:
+      - value_paise
+      - skus_in_stock
+      - turns
+      - turns_annualised
+      - stockouts
+      title: StockSummaryOut
     StockWriteOut:
       properties:
         ref_type:
@@ -12807,6 +15325,51 @@ components:
       - movements
       - batches
       title: StockWriteOut
+    StockoutOut:
+      properties:
+        sku_id:
+          type: string
+          format: uuid
+          title: Sku Id
+        product_name:
+          type: string
+          title: Product Name
+        pack:
+          type: string
+          title: Pack
+      type: object
+      required:
+      - sku_id
+      - product_name
+      - pack
+      title: StockoutOut
+    StopOut:
+      properties:
+        lat:
+          type: number
+          title: Lat
+        lon:
+          type: number
+          title: Lon
+        start:
+          type: string
+          format: date-time
+          title: Start
+        end:
+          type: string
+          format: date-time
+          title: End
+        duration_s:
+          type: integer
+          title: Duration S
+      type: object
+      required:
+      - lat
+      - lon
+      - start
+      - end
+      - duration_s
+      title: StopOut
     StoreBalanceOut:
       properties:
         store_id:
@@ -12832,6 +15395,280 @@ components:
       required:
       - items
       title: StoreBriefList
+    StoreDayCloseOut:
+      properties:
+        business_date:
+          type: string
+          format: date
+          title: Business Date
+        cash_expected_paise:
+          type: integer
+          title: Cash Expected Paise
+        cash_counted_paise:
+          type: integer
+          title: Cash Counted Paise
+        variance_paise:
+          type: integer
+          title: Variance Paise
+        status:
+          type: string
+          title: Status
+        variance_flagged:
+          type: boolean
+          title: Variance Flagged
+      type: object
+      required:
+      - business_date
+      - cash_expected_paise
+      - cash_counted_paise
+      - variance_paise
+      - status
+      - variance_flagged
+      title: StoreDayCloseOut
+    StoreDetailOut:
+      properties:
+        filters:
+          $ref: '#/components/schemas/FiltersOut'
+        id:
+          type: string
+          format: uuid
+          title: Id
+        code:
+          type: string
+          title: Code
+        name:
+          type: string
+          title: Name
+        district:
+          type: string
+          title: District
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+        net_sales_paise:
+          type: integer
+          title: Net Sales Paise
+        cogs_paise:
+          type: integer
+          title: Cogs Paise
+        gross_margin_paise:
+          type: integer
+          title: Gross Margin Paise
+        gross_margin_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Gross Margin Pct
+        sales_by_category:
+          items:
+            $ref: '#/components/schemas/CategorySalesOut'
+          type: array
+          title: Sales By Category
+        brand_split:
+          $ref: '#/components/schemas/BrandSplitOut'
+        stock:
+          $ref: '#/components/schemas/StockSummaryOut'
+        credit_book:
+          $ref: '#/components/schemas/CreditBookOut'
+        day_closes:
+          items:
+            $ref: '#/components/schemas/StoreDayCloseOut'
+          type: array
+          title: Day Closes
+        pnl:
+          items:
+            $ref: '#/components/schemas/PnlMonthOut'
+          type: array
+          title: Pnl
+        pnl_opex_included:
+          type: boolean
+          title: Pnl Opex Included
+          default: false
+        pnl_note:
+          type: string
+          title: Pnl Note
+      type: object
+      required:
+      - filters
+      - id
+      - code
+      - name
+      - district
+      - cluster_id
+      - net_sales_paise
+      - cogs_paise
+      - gross_margin_paise
+      - gross_margin_pct
+      - sales_by_category
+      - brand_split
+      - stock
+      - credit_book
+      - day_closes
+      - pnl
+      - pnl_note
+      title: StoreDetailOut
+    StoreListOut:
+      properties:
+        filters:
+          $ref: '#/components/schemas/FiltersOut'
+        items:
+          items:
+            $ref: '#/components/schemas/StoreRow'
+          type: array
+          title: Items
+      type: object
+      required:
+      - filters
+      - items
+      title: StoreListOut
+    StoreMapItem:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        code:
+          type: string
+          title: Code
+        name:
+          type: string
+          title: Name
+        district:
+          type: string
+          title: District
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+        lat:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Lat
+        lon:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Lon
+        revenue_paise:
+          type: integer
+          title: Revenue Paise
+        own_brand_share:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Own Brand Share
+        overdue_paise:
+          type: integer
+          title: Overdue Paise
+        score:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Score
+          description: Performance score 0-100 (see `band`).
+        band:
+          type: string
+          enum:
+          - green
+          - amber
+          - red
+          - none
+          title: Band
+      type: object
+      required:
+      - id
+      - code
+      - name
+      - district
+      - cluster_id
+      - lat
+      - lon
+      - revenue_paise
+      - own_brand_share
+      - overdue_paise
+      - score
+      - band
+      title: StoreMapItem
+    StoreRow:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        code:
+          type: string
+          title: Code
+        name:
+          type: string
+          title: Name
+        district:
+          type: string
+          title: District
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+        net_sales_paise:
+          type: integer
+          title: Net Sales Paise
+        cogs_paise:
+          type: integer
+          title: Cogs Paise
+        gross_margin_paise:
+          type: integer
+          title: Gross Margin Paise
+        gross_margin_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Gross Margin Pct
+        own_brand_share:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Own Brand Share
+        orders:
+          type: integer
+          title: Orders
+        stock_value_paise:
+          type: integer
+          title: Stock Value Paise
+        credit_outstanding_paise:
+          type: integer
+          title: Credit Outstanding Paise
+        credit_overdue_paise:
+          type: integer
+          title: Credit Overdue Paise
+        last_day_close:
+          anyOf:
+          - $ref: '#/components/schemas/LastDayCloseOut'
+          - type: 'null'
+      type: object
+      required:
+      - id
+      - code
+      - name
+      - district
+      - cluster_id
+      - net_sales_paise
+      - cogs_paise
+      - gross_margin_paise
+      - gross_margin_pct
+      - own_brand_share
+      - orders
+      - stock_value_paise
+      - credit_outstanding_paise
+      - credit_overdue_paise
+      - last_day_close
+      title: StoreRow
     Subject:
       type: string
       enum:
@@ -13068,6 +15905,38 @@ components:
       - status
       - entity_id
       title: SyncResult
+    TimelineEvent:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        type:
+          type: string
+          enum:
+          - duty_start
+          - duty_end
+          - visit_checkin
+          - visit_checkout
+          - stop
+          - gap_start
+          - gap_end
+          title: Type
+        ref_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Ref Id
+        detail:
+          additionalProperties: true
+          type: object
+          title: Detail
+      type: object
+      required:
+      - ts
+      - type
+      title: TimelineEvent
     TokenResponse:
       properties:
         access_token:
@@ -14234,6 +17103,51 @@ components:
       - expiry
       - other
       title: WriteOffReason
+    farmerapp__analytics__schemas__FlagOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        rule:
+          type: string
+          title: Rule
+        severity:
+          type: string
+          title: Severity
+        title:
+          type: string
+          title: Title
+        opened_at:
+          type: string
+          format: date-time
+          title: Opened At
+        officer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Officer Id
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+      type: object
+      required:
+      - id
+      - rule
+      - severity
+      - title
+      - opened_at
+      title: FlagOut
     farmerapp__catalog__write_schemas__StoreBriefOut:
       properties:
         id:
@@ -14269,6 +17183,111 @@ components:
       type: object
       title: DeviceIntegrityIn
       description: FA-028 flags the app reports at duty start (never blocking, flagged to VA-E01).
+    farmerapp__flags__schemas__FlagOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        rule_id:
+          type: string
+          title: Rule Id
+        rule_version:
+          type: integer
+          title: Rule Version
+        subject_type:
+          type: string
+          title: Subject Type
+        subject_id:
+          type: string
+          format: uuid
+          title: Subject Id
+        severity:
+          type: string
+          title: Severity
+        title:
+          type: string
+          title: Title
+        status:
+          $ref: '#/components/schemas/FlagStatus'
+        owner_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Owner Id
+        owner_role:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Owner Role
+        watchers:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: Watchers
+        sla_due_at:
+          type: string
+          format: date-time
+          title: Sla Due At
+        overdue:
+          type: boolean
+          title: Overdue
+        escalation_level:
+          type: integer
+          title: Escalation Level
+        raised_by_mode:
+          type: string
+          title: Raised By Mode
+        resolution_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Resolution Note
+        resolved_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Resolved At
+        resolved_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Resolved By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - rule_id
+      - rule_version
+      - subject_type
+      - subject_id
+      - severity
+      - title
+      - status
+      - owner_id
+      - owner_role
+      - watchers
+      - sla_due_at
+      - overdue
+      - escalation_level
+      - raised_by_mode
+      - resolution_note
+      - resolved_at
+      - resolved_by
+      - created_at
+      - version
+      title: FlagOut
+      description: 'An inbox row (FlagCard): no evidence bundle, see ``FlagDetailOut``.'
     farmerapp__invoices__schemas__SignedUrlOut:
       properties:
         url:

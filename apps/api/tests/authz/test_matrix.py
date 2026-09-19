@@ -486,6 +486,15 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
         path_params=lambda _ctx: {"id": NO_SUCH_ID},
         body=lambda ctx: {"user_id": str(ctx.target.owner.id)},
     ),
+    # M4 analytics reads (AN-001 .. AN-003, AN-011, WC-001 .. WC-004): scope outcomes (404
+    # outside the caller's cluster / store / own records, 422 filter combinations) are tested
+    # in tests/analytics.
+    "GET /v1/analytics/officers/{id}": RouteFixture(path_params=_target_officer_id),
+    "GET /v1/analytics/officers/{id}/day-replay": RouteFixture(
+        path_params=_target_officer_id, query={"date": "2026-09-18"}
+    ),
+    "GET /v1/analytics/farmers/{id}/360": RouteFixture(path_params=_target_farmer_id),
+    "GET /v1/analytics/stores/{id}": RouteFixture(path_params=_store_id),
     "POST /v1/policies/location/accept": RouteFixture(
         body=lambda _ctx: {
             "version": "2026-09-v1",
