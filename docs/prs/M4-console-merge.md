@@ -116,3 +116,12 @@ stays 3 s and the owner-home code keeps its coverage from the other analytics te
   console screen yet, so they are listed without a link (as before).
 * `deviceSummary()` in `lib/admin.ts` stays (tested, mirrors the API's order); the table uses
   the API's `device_status`.
+
+## Update 2026-09-19: npm audit resolved without Next 16
+
+`next@15.5.25` pins `postcss@8.4.31` as a nested dependency. An npm `overrides` entry
+(`"next": {"postcss": "^8.5.28"}`) makes Next use the patched `postcss@8.5.28` already in the
+tree for Vite and autoprefixer, still within postcss 8. `npm audit --audit-level=high --omit=dev`
+now reports 0 vulnerabilities, so the CI step passes unchanged. `npm run check` (275 vitest,
+build) and Playwright (24/24) pass with the override. The follow-up to upgrade to Next 16
+stays open as a normal dependency update, no longer a security blocker.

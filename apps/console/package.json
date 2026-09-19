@@ -2,7 +2,7 @@
   "name": "@farmerapp/console",
   "version": "0.1.0",
   "private": true,
-  "description": "FarmerApp web console (owners and managers) — Next.js App Router, TypeScript strict, Tailwind, shadcn/ui, TanStack Query.",
+  "description": "FarmerApp web console (owners and managers) \u2014 Next.js App Router, TypeScript strict, Tailwind, shadcn/ui, TanStack Query.",
   "scripts": {
     "dev": "next dev",
     "prebuild": "node scripts/tokens-to-css.mjs",
@@ -67,5 +67,10 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "^8.5.28"
+    }
   }
 }
