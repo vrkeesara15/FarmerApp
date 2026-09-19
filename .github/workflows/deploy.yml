@@ -86,7 +86,11 @@ jobs:
         run: |
           image="${REGISTRY}/${{ matrix.name }}:${{ steps.meta.outputs.tag }}"
           if [ "${{ vars.WIF_PROVIDER }}" != "" ]; then docker pull "$image"; fi
-          docker run --rm --entrypoint python "$image" -m farmerapp.jobs validate-rules
+          expected=$(find rules -maxdepth 1 -name '*.yaml' | wc -l | tr -d ' ')
+          out=$(docker run --rm --entrypoint python "$image" -m farmerapp.jobs validate-rules)
+          echo "$out"
+          echo "$out" | grep -q "validate-rules: ${expected} rules OK" \
+            || { echo "::error::image has not the ${expected} rules of rules/"; exit 1; }
 
       - name: trivy image scan (SEC-004)
         uses: aquasecurity/trivy-action@0.28.0

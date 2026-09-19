@@ -56,6 +56,7 @@ from farmerapp.farmers.models import (
     FarmPhoto,
 )
 from farmerapp.farmers.phone_verify import verify_token
+from farmerapp.farmers.photo_hash import farm_photo_phash
 from farmerapp.farmers.schemas import (
     ConsentIn,
     ConsentRecordOut,
@@ -76,7 +77,7 @@ from farmerapp.rules.schema import Subject
 from farmerapp.settings import Settings
 from farmerapp.tenants.models import Village
 from farmerapp.tenants.settings import get_tenant_settings
-from farmerapp.uploads.blobstore import parse_uri
+from farmerapp.uploads.blobstore import BlobStore, parse_uri
 from farmerapp.uploads.models import UploadSession, UploadStatus
 
 AREA_TOLERANCE = Decimal("0.30")  # VA-F03: declared vs measured within ±30 %
@@ -191,7 +192,7 @@ def _check_version(row: Any, expected: int | None) -> None:
 
 # --------------------------------------------------------------------------- M4 rules
 FARMER_REGISTERED = "farmer.registered"
-FARM_PHOTO = "farm.photo"  # VA-F08: new farm photos (sha256 reuse across farmers)
+FARM_PHOTO = "farm.photo"  # VA-F08: new farm photos (pHash / sha256 reuse across farmers)
 
 
 async def _validate(
@@ -269,10 +270,16 @@ async def check_boundary(
 
 # --------------------------------------------------------------------------- photos
 async def _photo_rows(
-    session: AsyncSession, tenant_id: uuid.UUID, farm_id: uuid.UUID, uris: list[str]
+    session: AsyncSession,
+    tenant_id: uuid.UUID,
+    farm_id: uuid.UUID,
+    uris: list[str],
+    blobs: BlobStore | None = None,
 ) -> list[FarmPhoto]:
     """``farm_photo`` rows for completed uploads of this tenant (sha256 copied from the
-    upload session; a URI outside the tenant's prefix is rejected)."""
+    upload session; a URI outside the tenant's prefix is rejected). With ``blobs`` the
+    perceptual hash is computed from the blob (VA-F08 near-duplicates); without it, or for
+    a missing / undecodable blob, ``phash`` stays NULL (``backfill-farm-photo-phash``)."""
     rows: list[FarmPhoto] = []
     for uri in dict.fromkeys(uris):
         try:
@@ -299,6 +306,7 @@ async def _photo_rows(
                 farm_id=farm_id,
                 blob_uri=uri,
                 sha256=upload.sha256 if upload is not None else None,
+                phash=await farm_photo_phash(blobs, uri) if blobs is not None else None,
                 taken_at=upload.created_at if upload is not None else None,
             )
         )
@@ -442,12 +450,14 @@ async def create_farmer(
     settings: Settings,
     now: datetime | None = None,
     captured_at: datetime | None = None,
+    blobs: BlobStore | None = None,
 ) -> FarmerDetailOut:
     """``now`` is the auth clock (token expiry is checked against it); default: wall clock.
 
     ``captured_at`` is the device time of an offline capture (the sync op's ``client_ts``):
     stored capped at the server time so a fast device clock cannot move it into the future;
-    VA-F06 measures registration bursts on it instead of the sync arrival time."""
+    VA-F06 measures registration bursts on it instead of the sync arrival time. ``blobs``
+    reads farm photos for their perceptual hash (VA-F08)."""
     if _is_farmer(actor):
         raise ForbiddenError("Farmers cannot register other farmers.")
     tenant_id = actor.tenant_id
@@ -494,7 +504,7 @@ async def create_farmer(
     await session.flush()
     warnings = Warnings()
     for farm_body in body.farms:
-        farm, farm_warnings = await _add_farm(session, farmer, farm_body)
+        farm, farm_warnings = await _add_farm(session, farmer, farm_body, blobs=blobs)
         for w in farm_warnings:
             warnings.add(farm.id, w)
     for consent in body.consents:
@@ -531,7 +541,7 @@ async def mark_phone_verified(session: AsyncSession, farmer: Farmer) -> FarmerOu
 
 # --------------------------------------------------------------------------- farm
 async def _add_farm(
-    session: AsyncSession, farmer: Farmer, body: FarmCreate
+    session: AsyncSession, farmer: Farmer, body: FarmCreate, *, blobs: BlobStore | None = None
 ) -> tuple[Farm, list[str]]:
     farm_id = body.id or uuid.uuid4()
     warnings: list[str] = []
@@ -560,7 +570,7 @@ async def _add_farm(
     await session.flush()
     for plot_body in body.crop_plots:
         await _add_crop_plot(session, farm, plot_body)
-    photos = await _photo_rows(session, farmer.tenant_id, farm.id, body.photos)
+    photos = await _photo_rows(session, farmer.tenant_id, farm.id, body.photos, blobs)
     session.add_all(photos)
     await session.flush()
     if photos:
@@ -568,15 +578,29 @@ async def _add_farm(
     return farm, warnings
 
 
-async def add_farm(session: AsyncSession, actor: User, farmer: Farmer, body: FarmCreate) -> FarmOut:
+async def add_farm(
+    session: AsyncSession,
+    actor: User,
+    farmer: Farmer,
+    body: FarmCreate,
+    *,
+    blobs: BlobStore | None = None,
+) -> FarmOut:
     if _is_farmer(actor) and farmer.user_id != actor.id:
         raise NotFoundError("Farmer not found.")
-    farm, warnings = await _add_farm(session, farmer, body)
+    farm, warnings = await _add_farm(session, farmer, body, blobs=blobs)
     await _validate(session, farmer.tenant_id, farmer.id)
     return await farm_out(session, farm, warnings)
 
 
-async def update_farm(session: AsyncSession, actor: User, farm: Farm, body: FarmUpdate) -> FarmOut:
+async def update_farm(
+    session: AsyncSession,
+    actor: User,
+    farm: Farm,
+    body: FarmUpdate,
+    *,
+    blobs: BlobStore | None = None,
+) -> FarmOut:
     _check_version(farm, body.version)
     changes = body.model_dump(exclude_unset=True, exclude={"version", "boundary", "photos"})
     warnings: list[str] = []
@@ -603,7 +627,7 @@ async def update_farm(session: AsyncSession, actor: User, farm: Farm, body: Farm
                 photo.deleted_at = _now()
         known = {p.blob_uri for p in existing[farm.id]}
         new_uris = [u for u in body.photos if u not in known]
-        session.add_all(await _photo_rows(session, farm.tenant_id, farm.id, new_uris))
+        session.add_all(await _photo_rows(session, farm.tenant_id, farm.id, new_uris, blobs))
     await session.flush()
     if new_uris:
         await rules_engine.emit(session, farm.tenant_id, FARM_PHOTO, [farm.id])

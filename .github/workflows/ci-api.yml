@@ -140,6 +140,11 @@ jobs:
           cache-to: type=gha,scope=ci-${{ matrix.name }},mode=max
 
       - name: Rules are in the image and valid
+        # every rules/*.yaml of the checkout (11 P0 rules at M4) must be in the image
         run: |
-          docker run --rm --entrypoint python farmerapp-${{ matrix.name }}:ci \
-            -m farmerapp.jobs validate-rules
+          expected=$(find rules -maxdepth 1 -name '*.yaml' | wc -l | tr -d ' ')
+          out=$(docker run --rm --entrypoint python farmerapp-${{ matrix.name }}:ci \
+            -m farmerapp.jobs validate-rules)
+          echo "$out"
+          echo "$out" | grep -q "validate-rules: ${expected} rules OK" \
+            || { echo "::error::image has not the ${expected} rules of rules/"; exit 1; }

@@ -20,7 +20,7 @@ reviewing role (``owner``, ``auditor``, ``cluster_head`` of ``c1``, ``store_mana
       farms:   [{ref, farmer, area_acres, square: {east_m, north_m, side_m}}
                 | {ref, farmer, area_acres, ring: [[east_m, north_m], ...]}]
       villages: [{ref, meeting_point: {east_m, north_m}, radius_m?}]   # edits v1 / v2
-      farm_photos: [{ref, farm, sha256, blob?}]
+      farm_photos: [{ref, farm, sha256?, phash?, blob?}]
       duty:    [{ref, officer?, start, end?, integrity?: {is_mock, is_rooted, clock_drift_s}}]
       points:  [{duty, at, east_m, north_m, accuracy_m?, is_mock?, is_rooted?, clock_drift_s?}]
       visits:  [{ref, officer?, farmer, farm?, at, minutes?, east_m?, north_m?, geofence?,
@@ -108,6 +108,22 @@ _UNITS = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}
 
 def fixture_path(rule_id: str, case: str) -> Path:
     return FIXTURES_DIR / rule_id / f"{case}.yaml"
+
+
+def fixture_cases(rule_id: str) -> list[str]:
+    """``positive`` and ``negative`` (required, VA-007) plus any extra scenario of the rule,
+    ``positive-<name>.yaml`` / ``negative-<name>.yaml`` (e.g. VA-F08 ``positive-farm-photo``)."""
+    extra = sorted(
+        path.stem
+        for path in (FIXTURES_DIR / rule_id).glob("*.yaml")
+        if path.stem not in CASES and path.stem.startswith(tuple(f"{c}-" for c in CASES))
+    )
+    return [*CASES, *extra]
+
+
+def case_sign(case: str) -> str:
+    """``positive`` / ``negative`` of a fixture case name."""
+    return case.split("-", 1)[0]
 
 
 def load_fixture(rule_id: str, case: str) -> dict[str, Any]:
@@ -298,6 +314,7 @@ async def add_farm_photo(session: AsyncSession, world: BaseWorld, spec: dict[str
         farm_id=world.refs[spec["farm"]],
         blob_uri=spec.get("blob") or f"gs://fixtures/{world.tenant_id}/farm/{spec['ref']}.jpg",
         sha256=spec.get("sha256"),
+        phash=spec.get("phash"),
     )
     session.add(photo)
     await session.flush()

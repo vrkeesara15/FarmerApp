@@ -375,6 +375,7 @@ async def _create(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpConte
             settings=settings,
             now=now,
             captured_at=op.client_ts,  # VA-F06: burst windows use the capture time
+            blobs=ctx.blobs,  # VA-F08: farm photo pHash
         )
         return _applied(op, out, out.version)
     if op.entity == "farm":
@@ -383,7 +384,7 @@ async def _create(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpConte
             return _conflict(op, await farmers.farm_out(session, farm), farm.version)
         farmer = await farmers.visible_farmer(session, actor, _uuid(payload.get("farmer_id")))
         farm_out = await farmers.add_farm(
-            session, actor, farmer, FarmCreate.model_validate(payload)
+            session, actor, farmer, FarmCreate.model_validate(payload), blobs=ctx.blobs
         )
         return _applied(op, farm_out, farm_out.version)
     if op.entity == "crop_plot":
@@ -436,7 +437,11 @@ async def _update(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpConte
         if _loses_conflict(op, farm):
             return _conflict(op, await farmers.farm_out(session, farm), farm.version)
         farm_out = await farmers.update_farm(
-            session, actor, farm, FarmUpdate.model_validate({**op.payload, "version": None})
+            session,
+            actor,
+            farm,
+            FarmUpdate.model_validate({**op.payload, "version": None}),
+            blobs=ctx.blobs,
         )
         return _applied(op, farm_out, farm_out.version)
     if op.entity == "crop_plot":

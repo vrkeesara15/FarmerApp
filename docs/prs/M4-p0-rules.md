@@ -3,7 +3,8 @@
 Branch `feat/M4-p0-rules` (on `feat/M4-rules-engine-flags` d3868bd; merge after that branch
 lands on `main`). Requirement IDs: VA-F08, VA-E01, VA-E02, VA-E03, VA-E04, VA-E05, VA-E08
 (done). With VA-F01 / F02 / F03 / F06 from the kickoff, all eleven P0 rules of SPEC 6.2 / 6.3
-are in place. No migration.
+are in place. The branch itself has no migration; the farm-photo pHash follow-up on `main`
+adds `0023` (below). **Merged into `main`** — see "Merge into main" and "Follow-up done".
 
 ## Rules
 
@@ -43,9 +44,8 @@ rule has a routing test.
 
 ## Decisions and assumptions
 
-- **No migration.** `farm_photo` has no pHash column, so VA-F08 matches farm photos by sha256
-  (identical bytes). Adding `farm_photo.phash` needs the farm write path to read the blob;
-  follow-up (would be `0022_p0_rules`).
+- **No migration on the branch.** `farm_photo` had no pHash column, so the branch matched
+  farm photos by sha256 only. Done on `main` as `0023_farm_photo_phash` (see "Follow-up done").
 - **Event-only rules need their subjects**: VA-E01 / E02 / E08 / F08 return nothing when run
   without subject ids, so they never scan a tenant.
 - **VA-E01 day** is the IST day; points of a session crossing midnight count for both days.
@@ -80,3 +80,65 @@ rule has a routing test.
 
 ruff, ruff format, mypy strict, `validate-rules` (11 rules), pytest with coverage, OpenAPI
 check (unchanged) and bandit green.
+
+## Merge into main (2026-09-19)
+
+`merge(M4): feat/M4-p0-rules` (--no-ff, branch at 7b11a6d, on top of the M4 integration
+1a4c118: analytics / admin merges, `0021_merge_m4_heads`, `0022` `farmer.captured_at`, VA-F06
+on capture time, rules baked into the images).
+
+| File | Resolution |
+|---|---|
+| `tests/location/test_partitions.py` | main's version kept (its own host-time-zone fix, 9f93f9b) |
+| `tests/rules/harness.py` | both: `captured:` (VA-F06 capture time) and the field-data seeding (duty, points, visits, photos, farm photos, confirmations, villages) |
+| `docs/progress.md` | newest status per row: VA-F06 keeps the integration note (capture time), the seven rules take the branch's `done` rows |
+| auto-merged | `rules/README.md`, worker dispatch (`location.batch`), visits events, `location/ingest.py`, `farmers/service.py` (`farm.photo` emit next to `captured_at`), `visits/service.py`, `test_fixtures.py` (`P0_RULES` = all eleven) |
+
+`apps/api/README.md` and `openapi.yaml` did not conflict; `make openapi` leaves `openapi.yaml`
+unchanged (no endpoint or schema changed). `alembic heads` was still `0022` after the merge.
+The worktree `.claude/worktrees/agent-a5d20757823866aec` and its branch were removed; the
+feature branch is kept.
+
+## Follow-up done: perceptual hash for farm photos (VA-F08)
+
+- **Alembic `0023_farm_photo_phash`** (down 0022; expand-only): nullable `farm_photo.phash`
+  (16 hex chars) and `ix_farm_photo_tenant_phash (tenant_id, phash)`. Verified on a scratch
+  database: `upgrade 0022` (no column) -> `upgrade head` (column + index) -> `downgrade 0022`
+  (both gone) -> `upgrade head`. `alembic heads` -> `0023 (head)`.
+- **Write path**: `farmers/photo_hash.py::farm_photo_phash` reads the blob and hashes it with
+  the visit-photo helper (`visits.photos.phash`, Pillow + imagehash). Registration, farm add
+  and farm edit take the blob store (routers: `get_blob_store(request)`; sync `farmer` /
+  `farm` create and `farm` update: `ctx.blobs`). A missing or undecodable blob leaves `phash`
+  NULL (the photo is still stored, as before).
+- **VA-F08** now compares all farm and visit photos of other farmers in one query: a match is
+  identical bytes (sha256) or both pHashes within `max_hamming_distance`; the evidence metric
+  `match` is `phash` whenever both photos have a hash (distance reported), else `sha256`.
+  Visit-vs-visit reuse with a missing pHash but identical bytes is now caught as well.
+- **Backfill**: `python -m farmerapp.jobs backfill-farm-photo-phash --tenant <id|fcc|gfl>
+  [--batch-size 200] [--no-run-rules]` — per tenant, as the system actor, keyset-paged over
+  live farm photos with `phash IS NULL`; afterwards VA-F08 runs (`farm.photo`) on the farms
+  that got a hash so near-duplicates already on file are flagged. Idempotent: hashed rows
+  are skipped, the dedupe key never repeats an open flag; missing / undecodable blobs are
+  counted (`unhashable`) and retried on the next run. Run once per tenant after deploying
+  0023 (manual; not scheduled).
+- **Fixtures**: `rules/fixtures/VA-F08/positive-farm-photo.yaml` (f2's farm photo is f1's
+  re-encoded and resized: different sha256, pHash 2 bits away; hashes computed from real
+  images) and `negative-farm-photo.yaml` (a different field 34 bits away, and a cropped copy
+  on the same farmer's other farm). The original positive / negative pair is unchanged. The
+  harness runs extra `positive-<name>` / `negative-<name>` cases with the required pair; an
+  unrecognised file in a fixture directory fails the tests.
+- **Tests**: `tests/visits/test_farm_photo_phash.py` — real JPEGs (re-encoded, cropped, a
+  different field) within / beyond 6 bits; registration stores the hash and a re-encoded copy
+  for another farmer raises VA-F08 (`match: phash`); farm add (cropped copy) and farm edit
+  (re-encoded copy; a non-image and a missing blob stored with NULL); backfill (3 scanned, 2
+  hashed, 1 unhashable, 2 flags; second run hashes nothing and raises nothing; `run_rules`
+  off); CLI.
+
+## Rules in the images
+
+The CI `images` job (`ci-api.yml`) and the deploy workflow now compare the
+`validate-rules` output inside each image with the number of `rules/*.yaml` in the checkout
+(11 today), so an image carrying a stale rule set fails. Verified locally: `docker compose
+build api`; `docker run farmerapp/api:local` logs `{"event": "rules_loaded", "rules_dir":
+"/app/rules", "count": 11, ...}`; `validate-rules` in the image: 11 rules OK.
+

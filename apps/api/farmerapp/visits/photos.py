@@ -1,10 +1,10 @@
 """Photo evidence helpers (FA-015, VA-E08): perceptual hash and EXIF fallback.
 
 * ``phash(data)`` — the 64-bit DCT perceptual hash (``imagehash.phash``) as 16 hex
-  characters, the value stored on ``visit_photo.phash`` for VA-E08 duplicate detection
-  (near-duplicates have a small Hamming distance; identical bytes hash the same). ``None``
-  when the bytes are not an image Pillow can decode (the row is still stored: a corrupt
-  file is evidence too).
+  characters, the value stored on ``visit_photo.phash`` (VA-E08) and ``farm_photo.phash``
+  (VA-F08) for duplicate detection (near-duplicates have a small Hamming distance;
+  identical bytes hash the same). ``None`` when the bytes are not an image Pillow can
+  decode (the row is still stored: a corrupt file is evidence too).
 * ``read_exif(data)`` — best-effort ``DateTimeOriginal`` (+ ``OffsetTimeOriginal``) and GPS
   from the JPEG's EXIF, used only when the device did not send ``exif_time`` /
   ``exif_point`` (the in-app camera writes both into the upload payload, NF-004). EXIF
@@ -48,7 +48,7 @@ def phash(data: bytes) -> str | None:
         with Image.open(io.BytesIO(data)) as image:
             return str(imagehash.phash(image))
     except (UnidentifiedImageError, OSError, ValueError):
-        log.warning("visit_photo_undecodable", size=len(data))
+        log.warning("photo_undecodable", size=len(data))
         return None
 
 

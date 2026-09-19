@@ -14,7 +14,8 @@
   declared.
 * ``crop_plot`` — a crop on a farm in a season (many per farm; FA-013 "3 crop plots").
 * ``farm_photo`` — photos of a farm boundary walk (FA-012): the blob URI from a completed
-  NF-003 upload, its sha256, when it was taken and the EXIF point if the device had one.
+  NF-003 upload, its sha256 and perceptual hash (``phash``, VA-F08), when it was taken and
+  the EXIF point if the device had one.
 * ``consent_record`` — append-only (FM-002, NF-013): granting and withdrawing are *rows*,
   never updates; the latest row per ``(subject, purpose)`` is the current state. The app role
   cannot UPDATE or DELETE it (``APPEND_ONLY_TABLES``).
@@ -42,6 +43,7 @@ from sqlalchemy import (
     Index,
     Numeric,
     String,
+    Text,
     UniqueConstraint,
     Uuid,
     cast,
@@ -244,6 +246,7 @@ class FarmPhoto(Base, BaseColumns):
     __tablename__ = "farm_photo"
     __table_args__ = (
         Index("ix_farm_photo_farm_id", "farm_id"),
+        Index("ix_farm_photo_tenant_phash", "tenant_id", "phash"),  # VA-F08 near-duplicates
         CheckConstraint("char_length(blob_uri) > 0", name="blob_uri"),
     )
 
@@ -252,6 +255,8 @@ class FarmPhoto(Base, BaseColumns):
     )
     blob_uri: Mapped[str] = mapped_column(String(512), nullable=False)  # gs://bucket/key
     sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # 64-bit pHash as 16 hex chars (VA-F08; NULL until computed / not a decodable image)
+    phash: Mapped[str | None] = mapped_column(Text, nullable=True)
     taken_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     location: Mapped[Any] = mapped_column(  # EXIF point, if the device recorded one
         Geography(geometry_type="POINT", srid=SRID, spatial_index=False), nullable=True

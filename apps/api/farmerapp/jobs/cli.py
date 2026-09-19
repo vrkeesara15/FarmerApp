@@ -292,6 +292,35 @@ def validate_rules_command(
     typer.echo(f"validate-rules: {len(rule_set.rules)} rules OK ({', '.join(rule_set.rules)})")
 
 
+@cli.command("backfill-farm-photo-phash")
+def backfill_farm_photo_phash(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+    batch_size: int = typer.Option(200, min=1, help="Photos read per page."),
+    run_rules: bool = typer.Option(
+        True, "--run-rules/--no-run-rules", help="Run VA-F08 on the farms that got a hash."
+    ),
+) -> None:
+    """VA-F08: compute ``farm_photo.phash`` for farm photos stored before Alembic 0023 (read
+    from the blob store), then run VA-F08 on their farms. Idempotent: only photos without a
+    hash are read; missing / undecodable blobs stay NULL and are reported."""
+    from farmerapp.farmers.photo_hash import backfill_farm_photo_phash as backfill
+    from farmerapp.uploads.blobstore import build_blob_store
+
+    _setup()
+    blobs = build_blob_store(get_settings())
+    reports = asyncio.run(
+        backfill(_tenants(tenant), blobs=blobs, batch_size=batch_size, run_rules=run_rules)
+    )
+    for r in reports:
+        typer.echo(
+            f"backfill-farm-photo-phash: tenant={r.tenant_id} scanned={r.scanned} "
+            f"hashed={r.hashed} unhashable={r.unhashable} farms_checked={r.farms_checked} "
+            f"flags_raised={r.flags_raised}"
+        )
+
+
 @cli.command("flags-sla-escalation")
 def flags_sla_escalation(
     tenant: list[str] = typer.Option(  # noqa: B008

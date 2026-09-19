@@ -20,6 +20,8 @@ from tests.rules.harness import (
     FIXTURES_DIR,
     P0_RULES,
     assert_expected,
+    case_sign,
+    fixture_cases,
     fixture_path,
     load_fixture,
     run_fixture,
@@ -27,7 +29,7 @@ from tests.rules.harness import (
 
 RULE_SET = load_rules(DEFAULT_RULES_DIR)
 RULE_IDS = sorted(set(RULE_SET.rules) | set(implementations()))
-PAIRS = [(rule_id, case) for rule_id in RULE_IDS for case in CASES]
+PAIRS = [(rule_id, case) for rule_id in RULE_IDS for case in fixture_cases(rule_id)]
 
 
 def test_rules_exist() -> None:
@@ -49,10 +51,22 @@ def test_no_orphan_fixtures() -> None:
     assert orphans == []
 
 
-@pytest.mark.parametrize("rule_id", RULE_IDS)
-def test_fixture_expectations_have_the_right_sign(rule_id: str) -> None:
-    assert load_fixture(rule_id, "positive")["expect"]["flags"], "a positive case must flag"
-    assert load_fixture(rule_id, "negative")["expect"]["flags"] == [], "a negative must not"
+@pytest.mark.parametrize(("rule_id", "case"), PAIRS, ids=[f"{r}-{c}" for r, c in PAIRS])
+def test_fixture_expectations_have_the_right_sign(rule_id: str, case: str) -> None:
+    flags = load_fixture(rule_id, case)["expect"]["flags"]
+    if case_sign(case) == "positive":
+        assert flags, "a positive case must flag"
+    else:
+        assert flags == [], "a negative must not"
+
+
+def test_extra_fixture_cases_are_named_by_sign() -> None:
+    """Extra scenarios are ``positive-<name>`` / ``negative-<name>``; anything else in a
+    rule's fixture directory would silently never run."""
+    for rule_id in RULE_IDS:
+        for path in (FIXTURES_DIR / rule_id).glob("*"):
+            assert path.stem in fixture_cases(rule_id), f"unrecognised fixture {path}"
+    assert "positive-farm-photo" in fixture_cases("VA-F08")
 
 
 @pytest.mark.parametrize(("rule_id", "case"), PAIRS, ids=[f"{r}-{c}" for r, c in PAIRS])

@@ -18,6 +18,8 @@ rules/
     VA-F02/
       positive.yaml           # must raise the expected flag(s)
       negative.yaml           # must raise nothing
+    VA-F08/
+      positive-farm-photo.yaml  # optional extra scenarios: positive-<name> / negative-<name>
 ```
 
 Implementations live in `apps/api/farmerapp/rules/checks/va_<id>.py` (one module per rule,
@@ -106,7 +108,8 @@ routing (VA-003), SLA, a `created` history event and `flag_assigned` notificatio
    Evidence is all a reviewer (and the VA-004 review agent) sees: cite every record id.
 3. Import the module in `checks/__init__.py`.
 4. `rules/fixtures/VA-XNN/positive.yaml` and `negative.yaml` (below). A rule without both
-   fails CI (VA-007).
+   fails CI (VA-007). Further scenarios go in `positive-<name>.yaml` / `negative-<name>.yaml`
+   and run like the required pair (any other file name in the directory fails the tests).
 
 ## Fixtures (VA-007)
 
@@ -147,7 +150,7 @@ seed:
               east_m: 1000, geofence: inside, purpose: advisory, integrity: {clock_drift_s: 400}}]
   photos:   [{ref: p1, visit: visit1, sha256: "...", phash: "c3a5f00f12345678",
               flags: [exif_time_mismatch]}]
-  farm_photos: [{ref: fp1, farm: farm1, sha256: "..."}]
+  farm_photos: [{ref: fp1, farm: farm1, sha256: "...", phash: "d4392bd4730f9472"}]
   confirmations: [{ref: c1, visit: visit1, channel: sms_otp, at: -1h,
                    phone: "+919876500001", device: OFFICER-PHONE}]
 ```
@@ -165,7 +168,7 @@ of digits only would otherwise parse as a number).
 | VA-F02 | duplicate farmer: same phone digits, or similar name + village + farms within 50 m | inline, batch | store manager |
 | VA-F03 | farm polygon: area ±30 %, self-intersection, > 20 % overlap           | inline, batch  | store manager |
 | VA-F06 | > 8 registrations in < 30 min by one officer; a device shared by officers | event, batch | cluster head (+ auditors) |
-| VA-F08 | visit photo pHash within 6 bits of another farmer's photo; farm photo with the same bytes (sha256) as another farmer's | event (`visit.photo`, `visit.created`, `farm.photo`) | store manager (+ auditors) |
+| VA-F08 | farm or visit photo whose pHash is within 6 bits of another farmer's farm or visit photo (re-encoded, resized, slightly cropped), or with the same bytes (sha256) | event (`visit.photo`, `visit.created`, `farm.photo`) | store manager (+ auditors) |
 | VA-E01 | mock location, rooted device or clock drift > 300 s at duty start, in a location batch or at check-in; one flag per officer-day | event (`duty.started`, `location.batch`, `visit.created`) | cluster head (+ auditors) |
 | VA-E02 | > 90 km/h between consecutive points (accuracy ≤ 100 m, jumps within the combined accuracy ignored); one flag per officer-day | event (`location.batch`) | cluster head (+ auditors) |
 | VA-E03 | ≥ 5 farms' visits pairwise within 200 m on one IST day, away from any village meeting point | batch | cluster head (+ auditors) |

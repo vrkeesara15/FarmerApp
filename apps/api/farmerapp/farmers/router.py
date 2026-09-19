@@ -48,6 +48,7 @@ from farmerapp.farmers.schemas import (
     PhoneVerifySendRequest,
     PhoneVerifySendResponse,
 )
+from farmerapp.uploads.router import get_blob_store
 
 router = APIRouter(prefix="/farmers", tags=["farmers"])
 farm_router = APIRouter(prefix="/farms", tags=["farmers"])
@@ -243,7 +244,12 @@ async def create_farmer(
     services: Services,
 ) -> FarmerDetailOut:
     return await service.create_farmer(
-        session, actor, body, settings=services.settings, now=services.clock.now()
+        session,
+        actor,
+        body,
+        settings=services.settings,
+        now=services.clock.now(),
+        blobs=get_blob_store(request),
     )
 
 
@@ -297,7 +303,7 @@ async def create_farm(
     session: DbSession,
 ) -> FarmOut:
     farmer = await service.visible_farmer(session, actor, id)
-    return await service.add_farm(session, actor, farmer, body)
+    return await service.add_farm(session, actor, farmer, body, blobs=get_blob_store(request))
 
 
 @router.post(
@@ -331,13 +337,14 @@ async def create_consent(
     ),
 )
 async def update_farm(
+    request: Request,
     id: uuid.UUID,
     body: FarmUpdate,
     actor: Annotated[User, require_roles(*EDIT_ROLES)],
     session: DbSession,
 ) -> FarmOut:
     farm = await service.visible_farm(session, actor, id)
-    return await service.update_farm(session, actor, farm, body)
+    return await service.update_farm(session, actor, farm, body, blobs=get_blob_store(request))
 
 
 @farm_router.delete(

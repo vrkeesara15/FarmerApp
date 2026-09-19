@@ -1,0 +1,22 @@
+description: >
+  f2's new farm photo shows a different field (pHash 34 bits from f1's farm photo), and the
+  slightly cropped copy of it belongs to f2's own other farm (same farmer: not VA-F08). No
+  flag.
+mode: event
+trigger: farm.photo
+subjects: [farm2]
+now: "2026-09-18T06:30:00Z"
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+    - {ref: f2, at: -1d}
+  farms:
+    - {ref: farm1, farmer: f1, area_acres: 1.5}
+    - {ref: farm2, farmer: f2, area_acres: 1.5}
+    - {ref: farm3, farmer: f2, area_acres: 0.5}
+  farm_photos:
+    - {ref: fp1, farm: farm1, sha256: "7e7a0d053656080e2990b7f927d9880dc736f8798813f25787b96a5f7ba7a584", phash: "88dcccb4c672a373"}
+    - {ref: fp2, farm: farm2, sha256: "6c61ca125e5d95ebd05b41bd5f52a17452e5fd24ebcc70fa56e5e0c6296b77b8", phash: "d4392bd4730f9472"}
+    - {ref: fp3, farm: farm3, sha256: "57db56e8afc840b30f8c5b8726a9e6307e577c9b506be7b1c15aa81a49a3cc70", phash: "f4312bd4730f9472"}
+expect:
+  flags: []

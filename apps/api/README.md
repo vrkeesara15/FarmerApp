@@ -583,7 +583,12 @@ await engine.emit(session, tenant_id, "farmer.registered", [farmer.id])
   `python -m farmerapp.jobs flags-sla-escalation --tenant ...` (OPS-010, hourly: unresolved
   flags past their SLA move one level up with a fresh SLA and a `flag_escalated`
   notification), `python -m farmerapp.jobs validate-rules [--rules-dir]` (run by
-  `make check-api`: YAML valid, every rule implemented, both fixtures present).
+  `make check-api`: YAML valid, every rule implemented, both fixtures present),
+  `python -m farmerapp.jobs backfill-farm-photo-phash --tenant ... [--batch-size N]
+  [--no-run-rules]` (VA-F08, once after Alembic 0023: computes `farm_photo.phash` from the
+  blob store for rows without one, then runs VA-F08 on their farms; idempotent, missing /
+  undecodable blobs stay NULL and are counted). New farm photos get their pHash on the
+  write path (registration, farm add / edit, their sync ops; `farmers/photo_hash.py`).
 - Tests: golden fixtures `tests/rules/test_fixtures.py` (harness `tests/rules/harness.py`),
   loader / tuning `tests/rules/test_loader.py`, runners `tests/rules/test_engine.py`, API
   `tests/flags/test_api.py`, routing / dedupe / SLA `tests/flags/test_service.py`.

@@ -114,7 +114,7 @@ director needs step-up and then succeeds, and a store manager gets 403.
 - Console screens for WC-001–004, WC-010–012, WC-103, AN-001–003, AN-011 (API done).
 - Cloud Scheduler for `run-rules --mode batch` and `flags-sla-escalation`; nightly Cloud Run
   jobs still run the api image (which now carries the rules).
-- VA-F08, VA-E01–E05, VA-E08 (another loop is adding them on the rules branch).
+- VA-F08, VA-E01–E05, VA-E08 (another loop is adding them on the rules branch). Merged 2026-09-19 with the farm-photo pHash follow-up: docs/prs/M4-p0-rules.md.
 - `targets` (owner-home goals) is not in the typed `TenantSettings` yet, so `PATCH /v1/settings`
   cannot write it (WC-009).
 

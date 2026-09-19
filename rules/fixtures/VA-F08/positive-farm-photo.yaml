@@ -1,0 +1,22 @@
+description: >
+  Near-duplicate farm photo: f2's new farm photo is f1's farm photo re-encoded at a lower
+  JPEG quality and resized (different bytes, pHash 2 bits away; hashes computed from real
+  images with the app's Pillow / imagehash helper). A high severity farmer-data flag about
+  f2 for the store manager, watched by the auditor.
+mode: event
+trigger: farm.photo
+subjects: [farm2]
+now: "2026-09-18T06:30:00Z"
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+    - {ref: f2, at: -1d}
+  farms:
+    - {ref: farm1, farmer: f1, area_acres: 1.5}
+    - {ref: farm2, farmer: f2, area_acres: 1.5}
+  farm_photos:
+    - {ref: fp1, farm: farm1, sha256: "6c61ca125e5d95ebd05b41bd5f52a17452e5fd24ebcc70fa56e5e0c6296b77b8", phash: "d4392bd4730f9472"}
+    - {ref: fp2, farm: farm2, sha256: "f615a57041596139853fe41d51c69062d9900e31e122755fca6945e7b320bd9d", phash: "f4312bd4730f9472"}
+expect:
+  flags:
+    - {subject: f2, severity: high, owner: store_manager, watchers: [auditor], reasons: [photo_reuse]}
