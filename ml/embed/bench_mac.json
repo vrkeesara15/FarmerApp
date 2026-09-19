@@ -1,0 +1,51 @@
+{
+  "machine": "Apple M5, 10 cores, Darwin 25.4, native macOS torch CPU",
+  "torch": "2.14.0",
+  "model": "siglip-base-patch16-224",
+  "revision": "7fd15f0689c79d79e38b1c2e2e2370a7bf2761ed",
+  "runs": 20,
+  "results": [
+    {
+      "threads": 2,
+      "batch": 1,
+      "p50_ms": 92.2,
+      "p95_ms": 93.9,
+      "per_image_p95_ms": 93.9
+    },
+    {
+      "threads": 2,
+      "batch": 4,
+      "p50_ms": 295.0,
+      "p95_ms": 303.2,
+      "per_image_p95_ms": 75.8
+    },
+    {
+      "threads": 2,
+      "batch": 8,
+      "p50_ms": 561.6,
+      "p95_ms": 568.4,
+      "per_image_p95_ms": 71.0
+    },
+    {
+      "threads": 4,
+      "batch": 1,
+      "p50_ms": 91.2,
+      "p95_ms": 104.6,
+      "per_image_p95_ms": 104.6
+    },
+    {
+      "threads": 4,
+      "batch": 4,
+      "p50_ms": 265.4,
+      "p95_ms": 271.4,
+      "per_image_p95_ms": 67.9
+    },
+    {
+      "threads": 4,
+      "batch": 8,
+      "p50_ms": 490.5,
+      "p95_ms": 500.6,
+      "per_image_p95_ms": 62.6
+    }
+  ]
+}
