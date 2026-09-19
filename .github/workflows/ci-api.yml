@@ -2,7 +2,8 @@
 # coverage >= 80%, OpenAPI diff, rule fixtures, bandit, pip-audit (SEC-002/003/006).
 #
 # Assumptions (owned by the API agent / root Makefile):
-#   - docker/postgres/Dockerfile builds Postgres 16 + PostGIS + pgvector (same image as docker-compose).
+#   - docker/postgres/Dockerfile builds Postgres 16 + PostGIS 3 + pgvector (same image as docker-compose)
+#     on the multi-arch official postgres:16-bookworm base (ADR 0004); amd64 here, arm64 on Macs.
 #   - `make check-api` runs ruff, mypy --strict, pytest --cov --cov-fail-under=80 and the rule fixtures;
 #     SKIP_AUDIT=0 keeps pip-audit inside it, we still run bandit/pip-audit explicitly below.
 #   - `make openapi` regenerates apps/api/openapi.yaml.

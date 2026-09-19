@@ -64,6 +64,19 @@ make openapi     # regenerate apps/api/openapi.yaml (commit it)
 
 Inside this directory: `uv sync`, then `uv run <cmd>`.
 
+### Local database image (ADR 0004)
+
+`make db` / `make up` build `docker/postgres/Dockerfile`: the official multi-arch
+`postgres:16-bookworm` image plus PostGIS 3.6 and pgvector 0.8 from PGDG (tag
+`farmerapp/postgres:16-postgis3-pgvector-multiarch`, volume `farmerapp_pgdata_arm64`), so it
+runs natively on Apple Silicon; CI builds the same Dockerfile on amd64. Alembic 0001 creates the
+extensions. `make db` never recreates a running container (`--no-recreate`): after changing
+`docker/postgres` run `make down` (volumes are kept) and `make db migrate seed`.
+
+The old amd64 `postgis/postgis:16-3.4` volume `farmerapp_pgdata` is no longer used. Removing it
+is an optional manual step once you no longer need its data:
+`docker volume rm farmerapp_pgdata` (stop any container still using it first).
+
 ## Seed data (M1-KICKOFF, SPEC 10.5)
 
 `make seed` (`python -m farmerapp.jobs seed [--small]`) upserts two demo tenants as the app role

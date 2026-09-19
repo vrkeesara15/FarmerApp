@@ -3,8 +3,9 @@ name: farmerapp
 
 services:
   db:
+    # Postgres 16 + PostGIS 3 + pgvector on the multi-arch official image (ADR 0004).
     build: docker/postgres
-    image: farmerapp/postgres:16-3.4-pgvector
+    image: farmerapp/postgres:16-postgis3-pgvector-multiarch
     environment:
       POSTGRES_DB: farmerapp
       POSTGRES_USER: farmerapp
@@ -13,7 +14,7 @@ services:
       # Host port is configurable (DB_PORT in .env) for machines with a local Postgres on 5432.
       - "${DB_PORT:-5432}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata_arm64:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U farmerapp -d farmerapp"]
       interval: 2s
@@ -98,5 +99,7 @@ services:
         condition: service_started
 
 volumes:
-  pgdata:
+  # Native multi-arch image (ADR 0004) gets its own volume; the old amd64 PostGIS image's
+  # `farmerapp_pgdata` is left alone (optional cleanup: `docker volume rm farmerapp_pgdata`).
+  pgdata_arm64:
   gcsdata:

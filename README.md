@@ -38,7 +38,7 @@ farmerapp/
 ## Quick start
 
 ```bash
-make up       # Postgres 16 + PostGIS + pgvector, Pub/Sub emulator, fake GCS, mock SMS/payment servers
+make up       # Postgres 16 + PostGIS 3 + pgvector (native multi-arch image), Pub/Sub emulator, fake GCS, mock SMS/payment servers
 make seed     # demo tenant: 5 stores, 5 officers, 200 farmers
 make check    # the same lint, type, test and infra checks CI runs — must pass before "done"
 ```
