@@ -141,19 +141,20 @@ def io_details(tflite: bytes) -> dict:
 
 
 def metadata(tflite: bytes, keras_path: Path, cfg: TrainConfig, evaluation: dict | None,
-             folded: dict[str, int]) -> dict:
+             folded: dict[str, int], *, model_version: str = MODEL_VERSION, source: str = "public",
+             training_manifest_uri: str | None = None) -> dict:
     th = Thresholds()
     run_cfg = keras_path.parent / "config.json"
     io = io_details(tflite)
     return {
         "model_name": MODEL_NAME,
-        "model_version": MODEL_VERSION,
+        "model_version": model_version,
         "file": TFLITE_NAME,
         "size_bytes": len(tflite),
         "sha256": hashlib.sha256(tflite).hexdigest(),
         "created_at": dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "git_sha": git_sha(),
-        "source": "public",
+        "source": source,
         "architecture": f"{cfg.backbone} (alpha {cfg.alpha}, ImageNet init) + plant / quality / crop heads",
         "quantization": "int8 full-integer post-training (weights + activations), uint8 input, float32 output",
         "export_surgery": {"dead_squeeze_excite_channels_folded": folded,
@@ -179,6 +180,8 @@ def metadata(tflite: bytes, keras_path: Path, cfg: TrainConfig, evaluation: dict
                     "source; DX-012 fine-tunes monthly on them.",
         },
         "evaluation": evaluation,
+        # DX-012: the API's export this candidate was fine-tuned on (None for the bootstrap).
+        "training_manifest_uri": training_manifest_uri,
     }
 
 
@@ -187,6 +190,10 @@ def main() -> None:
     parser.add_argument("--keras", type=Path, default=RUNS_DIR / "latest" / "model.keras")
     parser.add_argument("--out", type=Path, default=ARTIFACTS_DIR)
     parser.add_argument("--skip-eval", action="store_true")
+    parser.add_argument("--model-version", default=MODEL_VERSION,
+                        help="DX-012 candidates: finetune.py writes the next version to next_version.txt")
+    parser.add_argument("--source", default="public", help="public (bootstrap) or public+field (DX-012)")
+    parser.add_argument("--training-manifest-uri", default=None, help="DX-012 training export gs:// URI")
     parser.add_argument("--max-int8-drop", type=float, default=0.03,
                         help="fail if int8 accuracy on any head is this much below the float model (eval_keras.json)")
     args = parser.parse_args()
@@ -227,9 +234,10 @@ def main() -> None:
             evaluation["int8_drop"] = drop
             print(f"int8 drop vs float: {drop}")
 
-    meta = metadata(tflite, args.keras, cfg, evaluation, folded)
+    meta = metadata(tflite, args.keras, cfg, evaluation, folded, model_version=args.model_version,
+                    source=args.source, training_manifest_uri=args.training_manifest_uri)
     (args.out / "metadata.json").write_text(json.dumps(meta, indent=2) + "\n")
-    print(f"wrote {args.out / 'metadata.json'} (version {MODEL_VERSION}, sha256 {meta['sha256'][:12]})")
+    print(f"wrote {args.out / 'metadata.json'} (version {args.model_version}, sha256 {meta['sha256'][:12]})")
     if evaluation and max(evaluation.get("int8_drop", {"-": 0.0}).values()) > args.max_int8_drop:
         sys.exit(f"int8 quantisation costs more than {args.max_int8_drop:.0%} on a head: {evaluation['int8_drop']}")
 

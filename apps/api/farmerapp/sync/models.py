@@ -64,6 +64,8 @@ SYNC_ENTITIES: tuple[str, ...] = (
     "demo_observation",  # FA-026 stage photos / notes
     "farmer_meeting",  # FA-027
     "meeting_attendance",  # FA-027 (OTP online; QR validated when synced)
+    # M7 farmer P1 (``farmerapp.advisory.sync_ops``).
+    "crop_plot_task",  # M7 FM-007: calendar offline; devices update status / reminder only
 )
 #: Never in the change feed, whatever hook sees them: raw location points are high-volume
 #: telemetry the device already has (VV-001) and other officers must never receive (SPEC 2.6).

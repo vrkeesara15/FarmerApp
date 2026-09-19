@@ -5,7 +5,7 @@ region              = "asia-south1"
 domain              = "stg.farmerapp.in"
 sql_tier            = "db-custom-1-3840"
 sql_read_replica    = false
-sql_max_connections = 100 # max_connections flag (= the tier default); budget 67 / 80
+sql_max_connections = 100 # max_connections flag (= the tier default); budget 79 / 80 (one more job needs a bigger flag or smaller pools)
 min_instances       = { api = 0, console = 0, worker = 0, embed = 0 }
 max_instances       = { api = 5, console = 3, worker = 5, embed = 2 }
 cloud_armor_enabled = true
@@ -26,3 +26,6 @@ db_pool = {
   worker = { pool_size = 2, max_overflow = 0 }
   jobs   = { pool_size = 1, max_overflow = 1 }
 }
+
+# M7 VA-004 review agent (docs/prs/M7-rules.md): on.
+flag_summary_llm = "claude"

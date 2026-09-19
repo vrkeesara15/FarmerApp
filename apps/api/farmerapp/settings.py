@@ -90,7 +90,8 @@ CLOUD_REQUIRED_ENV: dict[str, frozenset[str]] = {
     },
     # ANTHROPIC_API_KEY is read by the Anthropic SDK (DX-004 fallback runs in the worker).
     "worker": _CLOUD_RUNTIME_ENV | _RAZORPAY_SECRETS | {"ANTHROPIC_API_KEY"},
-    "jobs": _CLOUD_RUNTIME_ENV,
+    # M7: flags-summarise (VA-004) reads ANTHROPIC_API_KEY; DX-011 / DX-012 use CORPUS_BUCKET.
+    "jobs": _CLOUD_RUNTIME_ENV | {"ANTHROPIC_API_KEY", "CORPUS_BUCKET"},
     "migrate": _CLOUD_BASE_ENV,
 }
 #: Extra names for single Cloud Run jobs (``python -m farmerapp.jobs <command>``).
@@ -313,6 +314,33 @@ class Settings(BaseSettings):
     )
     flag_summary_llm_max_tokens: int = Field(
         default=4_000, ge=256, description="max_tokens of one VA-004 summary call."
+    )
+    # --- M7 farmer P1: weather, evaluation, model releases (FM-008, DX-011, DX-012) ---------
+    weather_provider: Literal["open_meteo", "fake"] = Field(
+        default="open_meteo",
+        description="FM-008 forecast source: 'open_meteo' = the free Open-Meteo API (no key; "
+        "called by the server only, with the 0.1-degree grid cell's coordinates and nothing "
+        "else), 'fake' = deterministic in-process forecast (tests, offline dev).",
+    )
+    weather_base_url: str = Field(
+        default="https://api.open-meteo.com", description="Open-Meteo forecast API base URL."
+    )
+    weather_timeout_s: float = Field(default=8.0, gt=0, le=30, description="Forecast timeout.")
+    weather_cache_ttl_seconds: int = Field(
+        default=10_800,
+        ge=0,
+        le=86_400,
+        description="FM-008 forecast cache per 0.1-degree grid cell (3 h), per instance.",
+    )
+    corpus_bucket: str = Field(
+        default="farmerapp-local-corpus",
+        description="DX-011 / DX-012 corpus bucket: held-out test manifest, training-set "
+        "exports, candidate on-device models (the 'corpus' bucket of infra/modules/storage).",
+    )
+    diagnosis_eval_manifest: str = Field(
+        default="eval/heldout/manifest.csv",
+        description="DX-011 held-out, agronomist-labelled manifest: a key in CORPUS_BUCKET or "
+        "a full gs:// URI. Image paths in it are relative to the manifest.",
     )
     diagnosis_knn_k: int = Field(default=20, ge=1, le=100, description="DX-002 neighbours.")
     diagnosis_hnsw_ef_search: int = Field(

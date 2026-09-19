@@ -13,6 +13,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from farmerapp import __version__, telemetry
+from farmerapp.advisory import router as advisory_routes
 from farmerapp.analytics import router as analytics_routes
 from farmerapp.api.errors import PROBLEM_MEDIA_TYPE, install_error_handlers
 from farmerapp.api.middleware import TraceMiddleware
@@ -48,6 +49,7 @@ from farmerapp.location import batch_router as location_batch_routes
 from farmerapp.location import router as location_routes
 from farmerapp.logging import configure_logging, get_logger
 from farmerapp.meetings import router as meeting_routes
+from farmerapp.mlops import router as mlops_routes
 from farmerapp.notifications import router as notification_routes
 from farmerapp.orders import payment_events as order_payment_events
 from farmerapp.orders import router as order_routes
@@ -232,6 +234,9 @@ def create_app(
     v1.include_router(flag_routes.router)
     # M4: analytics read API (AN-001 .. AN-003, AN-011, WC-001 .. WC-004).
     v1.include_router(analytics_routes.router)
+    # M7 farmer P1 (DX-011, DX-012, AN-007), before /diagnoses/{id} so `quality` and
+    # `evaluations` are not read as diagnosis ids: quality, evaluations, model releases.
+    v1.include_router(mlops_routes.router)
     # M6: diagnosis engine, agronomist queue, corpus manager (SPEC 3, WC-006, WC-007) and
     # data-principal requests (FM-015, NF-013).
     v1.include_router(diagnosis_routes.router)
@@ -259,6 +264,8 @@ def create_app(
     v1.include_router(export_routes.router)
     v1.include_router(export_routes.schedules_router)
     v1.include_router(reorder_routes.router)
+    # M7 farmer P1: crop calendar, weather, outbreak alerts, crop health (FM-007..009, AN-006).
+    v1.include_router(advisory_routes.router)
     app.include_router(v1)
 
     # FA-002: refuse to start unless every route declares a role policy (or is public), and

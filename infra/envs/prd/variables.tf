@@ -232,6 +232,17 @@ variable "diagnosis_llm" {
   }
 }
 
+variable "flag_summary_llm" {
+  description = "VA-004 review agent (FLAG_SUMMARY_LLM on worker and jobs): claude (needs a version in the anthropic-api-key secret) or off."
+  type        = string
+  default     = "off"
+
+  validation {
+    condition     = contains(["claude", "off"], var.flag_summary_llm)
+    error_message = "The flag_summary_llm value must be claude or off."
+  }
+}
+
 variable "diagnosis_llm_model" {
   description = "DX-004 model id (DIAGNOSIS_LLM_MODEL)."
   type        = string

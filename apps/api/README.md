@@ -826,6 +826,68 @@ records the verdict on `request.state.integrity` and in `audit_log.integrity` of
 row of the request. It never blocks; `failed` / `absent` verdicts log `integrity_signal` and
 VA-E01 flags failed ones.
 
+## Farmer advisory: crop calendar, weather, outbreak alerts (M7: FM-007, FM-008, FM-009, AN-006)
+
+Alembic `0032` (`crop_task_template`, `crop_plot_task`, `outbreak_alert`); contracts for the
+apps and the console: `docs/prs/M7-farmer-p1-api.md`. Package `farmerapp/advisory/`:
+
+| Module | What |
+|---|---|
+| `templates.py` | FM-007 seed calendars of the six pilot crops (task key, type, day offset from sowing, duration, stage, titles + short instructions in all five languages, product category); `jobs seed` adds the missing ones and never overwrites an edit. |
+| `calendar.py` | generation per crop plot (`due_date = sowing_date + day_offset`), regeneration when the sowing date, the crop or the crop's templates change (pending tasks updated **in place**, done tasks kept, removed templates soft-deleted), the reminder job and the task update used by REST and sync. |
+| `weather.py` | FM-008 `WeatherProvider` port, `OpenMeteoProvider` (free, no key), `FakeWeatherProvider`, the per-grid-cell cache and `spray_windows` (pure). |
+| `outbreaks.py` | DX-013 cases -> weekly counts -> `evaluate` (pure rule) -> `outbreak_alert` + notifications; the FM-009 alert list and the AN-006 crop health cells. |
+| `router.py` | `GET /v1/me/calendar`, `GET /v1/farmers/{id}/calendar`, `PATCH /v1/calendar/tasks/{id}`, `GET/POST/PATCH/DELETE /v1/calendar/templates`, `GET /v1/farms/{id}/weather`, `GET /v1/alerts`, `GET /v1/analytics/crop-health`. |
+| `sync_ops.py` | the `crop_plot_task` sync entity (update only: `status`, `reminder_enabled`; everything else is server-owned). |
+
+- The calendar is materialised on read, after a crop plot write and by the daily job, so seeded
+  and synced plots get one without a migration backfill.
+- Reminders (`calendar-reminders`, 07:00 IST) write `crop_task_reminder` notifications for the
+  farmer's login, once per task (`reminded_at`), outside the tenant's `quiet_hours` and not
+  before `calendar_reminders.local_time`. Farmers without an app login are counted, not messaged.
+- FM-008 privacy: the API alone calls Open-Meteo, with the **0.1-degree grid cell** of the farm
+  (about 11 km) and nothing else; forecasts are cached per cell for 3 h per instance
+  (`WEATHER_CACHE_TTL_SECONDS`). Spray advice covers the next 72 h in 3-hour IST windows: a
+  window with rain probability >= 30 %, rain >= 0.5 mm or wind >= 15 km/h is **hidden** (it is in
+  `spray.avoided` with its reasons), heat and humidity only add cautions; every threshold is a
+  tenant setting (`weather`).
+- DX-013 rule (tenant setting `outbreak`, same definition as `mart_crop_health_weekly`): a
+  district x crop x problem x ISO week with >= 3 confirmed cases **and** >= 2x the mean of the
+  previous 4 weeks. `outbreak-detection` (06:30 IST) re-evaluates this week and the last one,
+  writes one alert per cell and notifies the district's farmers growing that crop, their
+  officers and the agronomists **once**.
+
+```sh
+python -m farmerapp.jobs calendar-reminders  --tenant fcc   # FM-007 daily 07:00 IST
+python -m farmerapp.jobs outbreak-detection  --tenant fcc   # DX-013 / FM-009 daily 06:30 IST
+```
+
+## Diagnosis ML operations (M7: DX-011, DX-012, AN-007)
+
+Alembic `0032` (`evaluation_run`, `model_release`, `corpus_embedding`, `encoder_activation`).
+Package `farmerapp/mlops/`:
+
+| Module | What |
+|---|---|
+| `evaluation.py` | DX-011: the evaluation logic `ml/eval/evaluate.py` now imports, plus the nightly job (held-out manifest from the corpus bucket, run in a rolled-back savepoint, `evaluation_run` with per-crop / per-problem metrics, > 5 point drop -> `diagnosis_eval_accuracy_drop` + notifications). |
+| `quality.py` | AN-007 summary: corpus share, escalation rate, review SLA stats, top unknowns, the latest evaluation. |
+| `releases.py` | DX-012 approval gate: `register_candidate` (sha256 from the bytes), `decide` (candidate -> approved / rejected, approved -> retired; audited), `current_release`. |
+| `training_export.py` | DX-012 weekly export of approved corpus field images as an `ml/ondevice` manifest in the corpus bucket (no personal data; the split is the on-device hash split). |
+| `reembed.py` | DX-012 re-embedding: stage vectors of a new encoder in `corpus_embedding`, `nearest_staged` (the kNN falls back to staging during the rollout) and `activate_encoder` (one transaction, previous vectors kept, audited). |
+| `router.py` | `GET /v1/diagnoses/quality`, `GET /v1/diagnoses/evaluations[/{id}]`, `GET /v1/models/on-device/current`, `GET /v1/models/releases[/{id}]`, `POST /v1/models/releases/{id}/decision` (step-up). |
+
+```sh
+python -m farmerapp.jobs diagnosis-evaluate   --tenant fcc              # DX-011 nightly 01:00 IST
+python -m farmerapp.jobs export-training-set  --tenant fcc              # DX-012 weekly
+python -m farmerapp.jobs register-model-candidate --tenant fcc \
+    --artifact-uri gs://…/model.tflite --metadata-uri gs://…/metadata.json
+python -m farmerapp.jobs reembed-corpus  --tenant fcc --encoder-name … --encoder-version …
+python -m farmerapp.jobs activate-encoder --tenant fcc --encoder-name … --encoder-version …
+```
+
+Only **approved** releases reach a phone; the pipelines that produce candidates are
+`ml/pipelines` (compiled KFP, wiring is a human gate).
+
 ## Ops monitor jobs (SPEC 12.2)
 
 | Job | Schedule (IaC) | What |
@@ -835,6 +897,12 @@ VA-E01 flags failed ones.
 | `reconcile-payments --tenant-id … [--date]` | 06:00 IST | OPS-008 settlements vs paid payments; mismatches open an `OPS-008` flag (finance ticket, accountants watch it) |
 | `flags-sla-escalation --tenant …` | hourly | OPS-010 overdue flags one rung up, `flag_escalated` notification |
 | `diagnosis-queue-age --tenant … [--date]` | hourly | OPS-009 / DX-006 diagnoses waiting > 18 h for an agronomist (once each), daily LLM fallback rate (alert > 40 %), stale queued re-delivery |
+| `flags-summarise --tenant …` | every 10 min | VA-004 review-agent summaries of flags raised on the API path (`FLAG_SUMMARY_LLM`) |
+| `rules-quality-report --tenant …` | Monday 03:00 IST | VA-006 rule precision report; rules under 30 % over four weeks are auto-disabled |
+| `calendar-reminders --tenant …` | 07:00 IST | FM-007 calendar generation + due-task reminders (quiet hours respected) |
+| `outbreak-detection --tenant … [--weeks-back]` | 06:30 IST | DX-013 / FM-009 outbreak clusters by district and week, alerts + notifications |
+| `diagnosis-evaluate --tenant … [--manifest] [--llm]` | 01:00 IST | DX-011 nightly evaluation on the held-out set, alert on a > 5 point top-1 drop |
+| `export-training-set --tenant … [--include-public]` | Sunday 02:00 IST | DX-012 approved corpus field images -> training manifest in the corpus bucket |
 
 ## Latency suite (NF-005)
 

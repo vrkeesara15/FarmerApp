@@ -35,6 +35,7 @@ Entity = Literal[
     "demo_observation",
     "farmer_meeting",
     "meeting_attendance",
+    "crop_plot_task",  # M7 FM-007 (update: status / reminder_enabled)
 ]
 Action = Literal["create", "update", "delete"]
 ResultStatus = Literal["applied", "duplicate", "conflict", "rejected"]

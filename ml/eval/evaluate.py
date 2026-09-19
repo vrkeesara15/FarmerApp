@@ -16,7 +16,9 @@ Usage (from ``apps/api``; ``make seed`` first for the demo corpus)::
     uv run python ../../ml/eval/evaluate.py \\
         --manifest ../../ml/eval/testset/ci/manifest.csv --tenant fcc
 
-The JSON report goes to ``--out`` (default ``ml/eval/reports/latest.json``, not committed).
+The logic is ``farmerapp.mlops.evaluation`` (shared with the DX-011 nightly job
+``python -m farmerapp.jobs diagnosis-evaluate``, which reads the held-out manifest from the
+corpus bucket and records an ``evaluation_run``). The JSON report goes to ``--out`` (default ``ml/eval/reports/latest.json``, not committed).
 
 ``--llm`` overrides ``DIAGNOSIS_LLM`` (``fake`` by default here, so a run costs nothing;
 ``claude`` evaluates the real fallback — it sends the test photos to the provider).
@@ -32,208 +34,40 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import csv
-import json
 import sys
-import uuid
-from collections import defaultdict
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+# DX-011: the evaluation logic lives in the API package so the nightly job
+# (``python -m farmerapp.jobs diagnosis-evaluate``) runs exactly the same code in-process.
+from farmerapp.mlops.evaluation import (
+    COLUMNS,
+    OUT_OF_SCOPE,
+    CaseResult,
+    Report,
+    Row,
+    Tally,
+    evaluate,
+    load_manifest,
+    parse_manifest,
+    read_image,
+    write_report,
+)
 
-from farmerapp.catalog.crops import Crop
-from farmerapp.catalog.models import PestOrDisease
-from farmerapp.diagnosis.corpus import current_version
-from farmerapp.diagnosis.images import synthetic_leaf, synthetic_non_plant
-from farmerapp.diagnosis.models import CorpusProblem, DiagnosisStatus
-from farmerapp.diagnosis.pipeline import Case, decide_case
-from farmerapp.diagnosis.services import DiagnosisServices
-
-OUT_OF_SCOPE = "out_of_scope"
-COLUMNS = ("image", "crop", "true_problem", "district", "season")
-
-
-@dataclass(frozen=True)
-class Row:
-    image: str
-    crop: str
-    true_problem: str
-    district: str | None = None
-    season: str | None = None
-
-
-@dataclass
-class CaseResult:
-    image: str
-    crop: str
-    true_problem: str
-    predicted: str | None
-    status: str
-    source: str | None
-    confidence: str | None
-    correct: bool
-    top1: float | None
-    llm_used: bool
-    reason: str | None
-
-
-@dataclass
-class Tally:
-    cases: int = 0
-    correct: int = 0
-    corpus_answers: int = 0
-    llm_used: int = 0
-    escalated: int = 0
-    out_of_scope: int = 0
-
-    def add(self, result: CaseResult) -> None:
-        self.cases += 1
-        self.correct += result.correct
-        self.corpus_answers += result.status == DiagnosisStatus.ANSWERED.value
-        self.llm_used += result.llm_used
-        self.escalated += result.status != DiagnosisStatus.ANSWERED.value
-        self.out_of_scope += result.status == DiagnosisStatus.OUT_OF_SCOPE.value
-
-    def summary(self) -> dict[str, Any]:
-        n = self.cases or 1
-        return {
-            **asdict(self),
-            "top1_accuracy": round(self.correct / n, 4),
-            "corpus_answer_share": round(self.corpus_answers / n, 4),
-            "llm_share": round(self.llm_used / n, 4),
-            "escalation_rate": round(self.escalated / n, 4),
-            "out_of_scope_share": round(self.out_of_scope / n, 4),
-        }
-
-
-@dataclass
-class Report:
-    manifest: str
-    tenant_id: str
-    encoder: str
-    llm: str
-    corpus_version: int
-    generated_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
-    totals: dict[str, Any] = field(default_factory=dict)
-    per_crop: dict[str, Any] = field(default_factory=dict)
-    per_problem: dict[str, Any] = field(default_factory=dict)
-    hallucinated_out_of_scope: int = 0
-    cases: list[dict[str, Any]] = field(default_factory=list)
-
-    def to_json(self) -> dict[str, Any]:
-        return asdict(self)
-
-
-def load_manifest(path: Path) -> list[Row]:
-    with path.open(newline="", encoding="utf-8") as handle:
-        reader = csv.DictReader(handle)
-        missing = set(COLUMNS[:3]) - set(reader.fieldnames or ())
-        if missing:
-            raise ValueError(f"manifest {path} lacks columns {sorted(missing)}")
-        return [
-            Row(
-                image=r["image"].strip(),
-                crop=(r.get("crop") or "unknown").strip(),
-                true_problem=r["true_problem"].strip(),
-                district=(r.get("district") or "").strip() or None,
-                season=(r.get("season") or "").strip() or None,
-            )
-            for r in reader
-            if r.get("image", "").strip()
-        ]
-
-
-async def read_image(ref: str, base: Path, services: DiagnosisServices) -> bytes:
-    if ref.startswith("synthetic://"):
-        kind, name, variant = ref.removeprefix("synthetic://").split("/")
-        if kind == "leaf":
-            return synthetic_leaf(name, int(variant))
-        return synthetic_non_plant(name, int(variant))
-    if ref.startswith("gs://"):
-        return await services.blobs.get(ref)
-    return (base / ref).read_bytes()
-
-
-async def evaluate(
-    session: AsyncSession,
-    services: DiagnosisServices,
-    tenant_id: uuid.UUID,
-    rows: Sequence[Row],
-    *,
-    base: Path,
-    manifest: str = "",
-) -> Report:
-    """Run every row through ``decide_case`` (the session is expected to be rolled back)."""
-    crops = {
-        c.code: c
-        for c in (await session.execute(select(Crop).where(Crop.tenant_id == tenant_id))).scalars()
-    }
-    codes = {
-        problem_id: code
-        for problem_id, code in (
-            await session.execute(
-                select(CorpusProblem.id, PestOrDisease.code).join(
-                    PestOrDisease, PestOrDisease.id == CorpusProblem.pest_or_disease_id
-                )
-            )
-        ).tuples()
-    }
-    report = Report(
-        manifest=manifest,
-        tenant_id=str(tenant_id),
-        encoder=services.encoder.info.label,
-        llm=services.llm.model,
-        corpus_version=await current_version(session, tenant_id),
-    )
-    totals, per_crop, per_problem = Tally(), defaultdict(Tally), defaultdict(Tally)
-    for row in rows:
-        data = await read_image(row.image, base, services)
-        crop = crops.get(row.crop) if row.crop != "unknown" else None
-        case = Case(
-            tenant_id=tenant_id,
-            images=[(row.image, "", data)],
-            crop=crop,
-            district=row.district,
-            season=row.season,
-        )
-        verdict = await decide_case(session, services, case, final_attempt=True)
-        predicted = codes.get(verdict.problem.id) if verdict.problem is not None else None
-        if row.true_problem == OUT_OF_SCOPE:
-            correct = predicted is None
-            report.hallucinated_out_of_scope += predicted is not None
-        else:
-            correct = predicted == row.true_problem
-        result = CaseResult(
-            image=row.image,
-            crop=row.crop,
-            true_problem=row.true_problem,
-            predicted=predicted,
-            status=verdict.status.value,
-            source=verdict.source.value if verdict.source else None,
-            confidence=verdict.confidence.value if verdict.confidence else None,
-            correct=correct,
-            top1=(verdict.scores or {}).get("top1"),
-            llm_used=verdict.llm_used,
-            reason=verdict.reason,
-        )
-        totals.add(result)
-        per_crop[row.crop].add(result)
-        per_problem[row.true_problem].add(result)
-        report.cases.append(asdict(result))
-    report.totals = totals.summary()
-    report.per_crop = {k: v.summary() for k, v in sorted(per_crop.items())}
-    report.per_problem = {k: v.summary() for k, v in sorted(per_problem.items())}
-    return report
-
-
-def write_report(report: Report, out: Path) -> None:
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(report.to_json(), indent=2, ensure_ascii=False) + "\n")
+__all__ = [
+    "COLUMNS",
+    "OUT_OF_SCOPE",
+    "CaseResult",
+    "Report",
+    "Row",
+    "Tally",
+    "evaluate",
+    "load_manifest",
+    "main",
+    "parse_manifest",
+    "read_image",
+    "write_report",
+]
 
 
 async def _run(args: argparse.Namespace) -> Report:

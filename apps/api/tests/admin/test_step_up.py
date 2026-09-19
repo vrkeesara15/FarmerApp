@@ -99,6 +99,7 @@ def test_contract_marks_protected_operations() -> None:
         ("POST", "/v1/report-schedules"),
         ("PATCH", "/v1/report-schedules/{id}"),
         ("POST", "/v1/incentives/close"),
+        ("POST", "/v1/models/releases/{id}/decision"),  # M7 DX-012 model approval
     }
     patch_user = spec["paths"]["/v1/users/{id}"]["patch"]
     assert "step_up_required" in patch_user["responses"]["401"]["description"]

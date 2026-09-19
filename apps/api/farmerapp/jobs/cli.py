@@ -545,6 +545,222 @@ def generate_beat_plans(
         )
 
 
+# --------------------------------------------------------------------------- M7 farmer P1
+@cli.command("calendar-reminders")
+def calendar_reminders(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+) -> None:
+    """FM-007: generate missing / stale crop calendars and write today's task reminders
+    (notification rows) for farmers with an app login, outside the tenant's quiet hours.
+    Daily 07:00 IST."""
+    from farmerapp.advisory.calendar import run_calendar_reminders
+
+    _setup()
+    for r in asyncio.run(run_calendar_reminders(_tenants(tenant))):
+        typer.echo(
+            f"calendar-reminders: tenant={r.tenant_id} day={r.day} state={r.state} "
+            f"plots={r.plots_checked} generated={r.tasks_generated} "
+            f"reminded={len(r.reminded)} no_login={r.no_login}"
+        )
+
+
+@cli.command("outbreak-detection")
+def outbreak_detection(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+    weeks_back: int = typer.Option(1, min=0, max=8, help="Also re-evaluate N weeks before."),
+) -> None:
+    """DX-013 / FM-009: cluster confirmed diagnoses by district, crop, problem and ISO week;
+    raise outbreak alerts where the tenant rule fires and notify farmers growing the crop in
+    the district, officers and agronomists (once per alert). Daily 06:30 IST."""
+    from farmerapp.advisory.outbreaks import run_outbreak_detection
+
+    _setup()
+    for r in asyncio.run(run_outbreak_detection(_tenants(tenant), weeks_back=weeks_back)):
+        typer.echo(
+            f"outbreak-detection: tenant={r.tenant_id} weeks={[w.isoformat() for w in r.weeks]} "
+            f"cells={r.cells} fired={len(r.fired)} new_alerts={len(r.created)} "
+            f"notified_farmers={r.notified_farmers} notified_staff={r.notified_staff}"
+        )
+        for c in r.fired:
+            typer.echo(
+                f"  {c.district} crop={c.crop_id} problem={c.problem_id} week={c.week_start} "
+                f"cases={c.cases} prior_mean={c.prior_mean}"
+            )
+
+
+@cli.command("diagnosis-evaluate")
+def diagnosis_evaluate(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+    manifest: str | None = typer.Option(
+        None, help="Manifest key in CORPUS_BUCKET or gs:// URI (default DIAGNOSIS_EVAL_MANIFEST)."
+    ),
+    llm: str = typer.Option(
+        "off", help="LLM fallback during the run: off (default), fake, or configured."
+    ),
+) -> None:
+    """DX-011: evaluate the diagnosis pipeline on the held-out, agronomist-labelled manifest
+    (rolled back: nothing written but the run), record an evaluation_run with metrics per
+    crop and problem, and alert when top-1 accuracy drops by more than 5 points. Nightly."""
+    from farmerapp.diagnosis.services import build_diagnosis_services
+    from farmerapp.mlops.evaluation import run_nightly_evaluation
+
+    _setup()
+    if llm not in ("off", "fake", "configured"):
+        raise typer.BadParameter("off | fake | configured", param_hint="--llm")
+    settings = get_settings()
+    if llm != "configured":
+        settings = settings.model_copy(update={"diagnosis_llm": llm})
+    services = build_diagnosis_services(settings)
+    runs = asyncio.run(
+        run_nightly_evaluation(_tenants(tenant), services=services, manifest=manifest)
+    )
+    failed = False
+    for r in runs:
+        failed |= r.status != "ok"
+        typer.echo(
+            f"diagnosis-evaluate: tenant={r.tenant_id} status={r.status} cases={r.cases} "
+            f"top1={r.top1_accuracy} corpus_share={r.corpus_answer_share} "
+            f"escalation={r.escalation_rate} delta_points={r.top1_delta_points} "
+            f"alerted={r.alerted}"
+        )
+    if failed:
+        raise typer.Exit(1)
+
+
+@cli.command("export-training-set")
+def export_training_set(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+    include_public: bool = typer.Option(
+        False, "--include-public", help="Also export the public bootstrap images."
+    ),
+) -> None:
+    """DX-012: export the approved corpus field images as a training manifest (ml/ondevice
+    format) into the corpus bucket for the monthly on-device fine-tune. Weekly."""
+    from farmerapp.mlops.evaluation import corpus_blob_store
+    from farmerapp.mlops.training_export import run_export
+
+    _setup()
+    sources = ("internal", "public") if include_public else ("internal",)
+    blobs = corpus_blob_store(get_settings())
+    for r in asyncio.run(run_export(_tenants(tenant), blobs=blobs, sources=sources)):
+        typer.echo(
+            f"export-training-set: tenant={r.tenant_id} images={r.images} "
+            f"per_crop={r.per_crop} per_split={r.per_split} manifest={r.manifest_uri}"
+        )
+
+
+@cli.command("register-model-candidate")
+def register_model_candidate(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+    artifact_uri: str = typer.Option(..., help="gs:// URI of the candidate .tflite."),
+    metadata_uri: str = typer.Option(..., help="gs:// URI of its metadata.json."),
+    training_manifest_uri: str | None = typer.Option(None, help="Training manifest used."),
+    pipeline_run: str | None = typer.Option(None, help="Vertex AI pipeline run name."),
+) -> None:
+    """DX-012: record a fine-tuned on-device model as a release candidate (sha256 from the
+    bytes) and notify the approvers. The last step of the retraining pipeline; manual."""
+    from farmerapp.mlops.evaluation import corpus_blob_store
+    from farmerapp.mlops.releases import run_register_candidate
+
+    _setup()
+    results = asyncio.run(
+        run_register_candidate(
+            _tenants(tenant),
+            blobs=corpus_blob_store(get_settings()),
+            artifact_uri=artifact_uri,
+            metadata_uri=metadata_uri,
+            training_manifest_uri=training_manifest_uri,
+            pipeline_run=pipeline_run,
+        )
+    )
+    for tenant_id, row, created in results:
+        typer.echo(
+            f"register-model-candidate: tenant={tenant_id} release={row.id} "
+            f"version={row.model_version} status={row.status} created={created}"
+        )
+
+
+@cli.command("reembed-corpus")
+def reembed_corpus(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+    encoder_name: str = typer.Option(..., help="New encoder name (the embed service's)."),
+    encoder_version: str = typer.Option(..., help="New encoder version."),
+    batch_size: int = typer.Option(32, min=1, max=256, help="Images per embed call."),
+    max_images: int | None = typer.Option(None, min=1, help="Stop after N (resumable)."),
+    embed_url: str | None = typer.Option(
+        None, help="Base URL of the new embed service (default DIAGNOSIS_EMBED_URL)."
+    ),
+) -> None:
+    """DX-012: embed every live corpus image with a new encoder into corpus_embedding
+    (staging; resumable). Nothing changes for diagnoses until activate-encoder. Manual."""
+    from farmerapp.diagnosis.encoder import build_encoder
+    from farmerapp.mlops.reembed import run_reembed
+    from farmerapp.uploads.blobstore import build_blob_store
+
+    _setup()
+    settings = get_settings().model_copy(
+        update={
+            "diagnosis_encoder_name": encoder_name,
+            "diagnosis_encoder_version": encoder_version,
+            **({"diagnosis_embed_url": embed_url} if embed_url else {}),
+        }
+    )
+    encoder = build_encoder(settings)
+    if encoder.info.name != encoder_name or encoder.info.version != encoder_version:
+        raise typer.BadParameter(
+            f"the configured encoder answers as {encoder.info.label}", param_hint="--encoder-name"
+        )
+    reports = asyncio.run(
+        run_reembed(
+            _tenants(tenant),
+            encoder=encoder,
+            blobs=build_blob_store(settings),
+            batch_size=batch_size,
+            max_images=max_images,
+        )
+    )
+    for r in reports:
+        typer.echo(
+            f"reembed-corpus: tenant={r.tenant_id} encoder={r.encoder} embedded={r.embedded} "
+            f"remaining={r.remaining} missing_blobs={len(r.missing_blobs or [])}"
+        )
+
+
+@cli.command("activate-encoder")
+def activate_encoder(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+    encoder_name: str = typer.Option(..., help="Encoder to activate."),
+    encoder_version: str = typer.Option(..., help="Its version."),
+    note: str | None = typer.Option(None, help="Why (kept on the activation row)."),
+) -> None:
+    """DX-012: flip the tenant's corpus to a fully staged encoder in one transaction (the
+    previous vectors are kept for rollback; audited). Human-run after the threshold retune."""
+    from farmerapp.diagnosis.encoder import EncoderInfo
+    from farmerapp.mlops.reembed import run_activate
+
+    _setup()
+    info = EncoderInfo(name=encoder_name, version=encoder_version)
+    for r in asyncio.run(run_activate(_tenants(tenant), encoder=info, note=note)):
+        typer.echo(
+            f"activate-encoder: tenant={r.tenant_id} encoder={r.encoder} images={r.images} "
+            f"previous={r.previous}"
+        )
+
+
 # M7 growth jobs (WC-008, WC-009, WC-013, AN-015, ST-004, ST-008) register themselves on `cli`.
 from farmerapp.jobs import growth as _growth  # noqa: E402, F401
 

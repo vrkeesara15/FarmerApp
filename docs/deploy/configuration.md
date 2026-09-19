@@ -93,9 +93,9 @@ unless
 
 | env | max_connections | api | worker | jobs | reserve | total | 80% ceiling |
 |---|---|---|---|---|---|---|---|
-| dev | 100 (flag; the db-g1-small default of 50 cannot hold 11 jobs + the reserve) | 3 x (2 + 1) = 9 | 2 x (2 + 0) = 4 | 11 x (1 + 1) = 22 | 20 | 55 | 80 |
-| stg | 100 | 5 x (2 + 1) = 15 | 5 x (2 + 0) = 10 | 11 x (1 + 1) = 22 | 20 | 67 | 80 |
-| prd | 200 | 20 x (2 + 1) = 60 | 20 x (2 + 0) = 40 | 11 x (1 + 1) = 22 | 20 | 142 | 160 |
+| dev | 100 (flag; the db-g1-small default of 50 cannot hold 17 jobs + the reserve) | 3 x (2 + 1) = 9 | 2 x (2 + 0) = 4 | 17 x (1 + 1) = 34 | 20 | 67 | 80 |
+| stg | 100 | 5 x (2 + 1) = 15 | 5 x (2 + 0) = 10 | 17 x (1 + 1) = 34 | 20 | 79 | 80 |
+| prd | 200 | 20 x (2 + 1) = 60 | 20 x (2 + 0) = 40 | 17 x (1 + 1) = 34 | 20 | 154 | 160 |
 
 dev and stg now set `max_instances` in their tfvars (dev api 3 / worker 2, stg api 5 /
 worker 5; console and embed lowered alike); prd keeps the defaults (api 20, worker 20). To scale
@@ -139,9 +139,13 @@ two URLs are used exactly as before.
 | `DIAGNOSIS_LLM` | TF `var.diagnosis_llm` | `claude` (or `off`; prd guard refuses `fake`) | A W J | yes |
 | `DIAGNOSIS_LLM_MODEL` | TF `var.diagnosis_llm_model` | `claude-opus-5` | A W J | yes |
 | `DIAGNOSIS_DELIVERY` | TF | `pubsub` (worker runs the pipeline) | A W J | yes |
-| `ANTHROPIC_API_KEY` | SM `anthropic-api-key` | Anthropic key (read by the SDK) | W | yes |
+| `ANTHROPIC_API_KEY` | SM `anthropic-api-key` | Anthropic key (read by the SDK) | W J | yes |
 | `DIAGNOSIS_EMBED_TIMEOUT_S` / `DIAGNOSIS_LLM_MAX_TOKENS` / `DIAGNOSIS_LLM_EFFORT` / `DIAGNOSIS_KNN_K` / `DIAGNOSIS_HNSW_EF_SEARCH` / `DIAGNOSIS_MAX_ATTEMPTS` | default | 20 / 16000 / `medium` / 20 / 40 / 5 | A W J | no |
-| `FLAG_SUMMARY_LLM` / `FLAG_SUMMARY_LLM_MODEL` / `FLAG_SUMMARY_LLM_MAX_TOKENS` | default (TF to add, M7 human gate) | `off` / `claude-opus-5` / 4000; stg / prd set `claude` on worker and jobs (VA-004 review agent; jobs then also need `ANTHROPIC_API_KEY`) | W J | no |
+| `FLAG_SUMMARY_LLM` | TF `var.flag_summary_llm` (worker, jobs) | `off` in dev, `claude` in stg / prd (VA-004 review agent) | W J | no |
+| `FLAG_SUMMARY_LLM_MODEL` / `FLAG_SUMMARY_LLM_MAX_TOKENS` | default | `claude-opus-5` / 4000 | W J | no |
+| `CORPUS_BUCKET` | TF `module.storage.bucket_names.corpus` | the `corpus` bucket: DX-011 held-out manifest, DX-012 training exports and candidate models | J (A signs approved-model URLs by `gs://` URI) | yes (jobs) |
+| `DIAGNOSIS_EVAL_MANIFEST` | default | `eval/heldout/manifest.csv` in `CORPUS_BUCKET` (or a `gs://` URI); upload is a human gate | J | no |
+| `WEATHER_PROVIDER` / `WEATHER_BASE_URL` / `WEATHER_TIMEOUT_S` / `WEATHER_CACHE_TTL_SECONDS` | default | `open_meteo` / `https://api.open-meteo.com` / 8 / 10800 (FM-008; only 0.1-degree grid-cell coordinates are sent; Terraform never sets the name, so deployments get `open_meteo`) | A | no |
 | `PLAY_INTEGRITY_MODE` / `PLAY_INTEGRITY_PACKAGE_NAMES` / `PLAY_INTEGRITY_TIMEOUT_S` | default | `off` / both app ids / 2.0 (`google` is a human gate, SEC-024) | A | no |
 | `PUSH_PROVIDER` | default (M7; TF wiring pending) | `off`; `fcm` once the Firebase project is set up (human gate; prd guard refuses `fake`) — FCM HTTP v1 with the runtime SA's OAuth token (role `cloudmessaging.messages.create`), no server key | W J | no |
 | `FCM_PROJECT` / `NOTIFY_MAX_ATTEMPTS` | default | `GCP_PROJECT` / 5 | W J | no |
@@ -185,7 +189,7 @@ Not app settings: the console (`API_URL`, `NEXT_PUBLIC_API_URL`, `ENV`) and `emb
 | `otp-sms-provider-url` / `otp-whatsapp-provider-url` | api | gateway endpoints |
 | `razorpay-key-id` / `razorpay-key-secret` | api, worker, jobs | Razorpay key pair (test mode outside prd) |
 | `razorpay-webhook-secret` | api, worker | webhook HMAC secret |
-| `anthropic-api-key` | worker | Anthropic API key |
+| `anthropic-api-key` | worker, jobs | Anthropic API key (DX-004 fallback; VA-004 summaries) |
 | `otp-provider` | api (not mounted) | reserved for the DLT SMS / WhatsApp adapter config |
 | `datastream-db-password` | Datastream service agent (when `datastream_enabled`) | password of the Postgres `datastream` replication login; add it only when setting up CDC ([datastream-cdc-setup](../runbooks/datastream-cdc-setup.md)), no service mounts it |
 

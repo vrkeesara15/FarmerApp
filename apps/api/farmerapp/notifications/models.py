@@ -57,6 +57,11 @@ class NotificationKind(StrEnum):
     TRAVEL_CLAIM_SUBMITTED = "travel_claim_submitted"  # FA-023: to the cluster head
     TRAVEL_CLAIM_DECIDED = "travel_claim_decided"  # FA-023: to the officer
     BEAT_PLAN_READY = "beat_plan_ready"  # FA-018: the 06:00 plan is ready
+    # M7 farmer P1 (crop calendar, outbreaks, diagnosis ML operations).
+    CROP_TASK_REMINDER = "crop_task_reminder"  # FM-007: a crop calendar task is due
+    OUTBREAK_ALERT = "outbreak_alert"  # DX-013 / FM-009: pest / disease cluster in a district
+    DIAGNOSIS_EVAL_DROP = "diagnosis_eval_drop"  # DX-011: top-1 accuracy fell > 5 points
+    MODEL_RELEASE_CANDIDATE = "model_release_candidate"  # DX-012: a model awaits approval
 
 
 class DeliveryStatus(StrEnum):

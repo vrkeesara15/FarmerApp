@@ -119,13 +119,40 @@ recognises the dataset rather than the crop. SPEC 3 expects lab-to-field drops o
 Read these numbers as proof that the pipeline works, not as field accuracy. The accuracy gate
 needs pilot field images (human gate, see docs/progress.md DX-001).
 
+## Monthly fine-tune on field images (DX-012, M7)
+
+```sh
+gcloud storage rsync --recursive gs://farmerapp-<env>-corpus data/mirror/farmerapp-<env>-corpus
+uv run python finetune.py \
+  --training-export data/mirror/<corpus>/training/<tenant>/<YYYYMMDD>/manifest.csv \
+  --training-export-uri gs://<corpus>/training/<tenant>/<YYYYMMDD>/manifest.csv \
+  --images-dir data/mirror --base runs/latest/model.keras --out runs/candidate
+uv run python export.py --keras runs/candidate/model.keras --out runs/candidate/export \
+  --model-version "$(cat runs/candidate/next_version.txt)" --source public+field \
+  --training-manifest-uri gs://<corpus>/training/<tenant>/<YYYYMMDD>/manifest.csv
+```
+
+`ondevice/field.py` (TensorFlow-free, `tests/test_field.py`) turns the API's weekly
+`export-training-set` manifest into manifest rows: each image is fetched from the mirror,
+**sha256-checked** (a tampered or missing image is skipped and reported, never trained on),
+centre-cropped and cached under `data/cache/field/`; its split is the same stable hash split as
+the public rows, keyed on the diagnosis the image came from, so photos of one case never straddle
+train and test. `finetune.py` merges them with the public manifest and fine-tunes the previous
+model at a low learning rate; `export.py` takes `--model-version` / `--source` /
+`--training-manifest-uri` so the candidate's `metadata.json` says what it was trained on.
+
+The candidate is uploaded to `gs://<corpus>/models/on-device/<version>/` and registered through
+`python -m farmerapp.jobs register-model-candidate`; **an agronomist or the owner approves it**
+(`POST /v1/models/releases/{id}/decision`) before any app downloads it
+(`GET /v1/models/on-device/current`, sha256 verified on the device). The Vertex AI pipeline that
+chains these steps is `ml/pipelines` (compiled, wiring is a human gate).
+
 ## Next steps
 
-- Dataset manifest over the field corpus bucket (`farmerapp-<env>-corpus`), split by
-  district / season so photos of the same farm never straddle splits (replace the `key` in
-  `ondevice/manifest.py`). Public images stay tagged `source=public`.
-- Monthly fine-tune as a Vertex AI pipeline with an approval gate (DX-012). Acceptance: no top-1
-  drop > 5 points on `ml/eval/testset`.
+- Field-image acceptance gate: no top-1 drop > 5 points on `ml/eval/testset` before approving a
+  candidate (the numbers are in the release's `evaluation`; the approver checks them).
+- `key` for field rows is the diagnosis id today; district / season keys once enough pilot data
+  exists.
 - Each new artefact is copied into `apps/mobile/packages/core/assets/models/` by a PR and is never
   hot-loaded. Bump `MODEL_VERSION` (`ondevice-v<major>.<minor>`) when labels or the output layout
   change (major) or the weights change (minor).

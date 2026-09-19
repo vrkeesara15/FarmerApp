@@ -145,11 +145,19 @@ Changing the model, revision, pre-processing or numeric precision is a **new enc
 
 1. new `VERSION` (and `NAME` / `REVISION` / `WEIGHTS_SHA256`) in `embed/spec.py`, new image;
 2. deploy it **next to** the old one (separate service or revision tag) and **re-embed the whole
-   corpus** with it (the DX-012 re-embedding job; the kNN only compares vectors with the same
+   corpus** with it: `python -m farmerapp.jobs reembed-corpus --tenant … --encoder-name …
+   --encoder-version … [--embed-url <new service>]` stages the new vectors in `corpus_embedding`
+   (resumable, nothing changes for diagnoses yet; the kNN only compares vectors with the same
    `encoder` label, so old and new never mix);
-3. retune the DX-003 thresholds per crop on the held-out set (`ml/eval`);
-4. move the API pin (`DIAGNOSIS_ENCODER_NAME` / `DIAGNOSIS_ENCODER_VERSION`) and retire the old
-   service. Diagnoses keep their `model_versions.encoder` for replay (DX-005).
+3. retune the DX-003 thresholds per crop on the held-out set (`ml/eval`, `diagnosis-evaluate`);
+4. move the API pin (`DIAGNOSIS_ENCODER_NAME` / `DIAGNOSIS_ENCODER_VERSION`). While the corpus is
+   still on the old encoder the kNN answers from the staged vectors, so the rollout has no gap;
+5. `python -m farmerapp.jobs activate-encoder --tenant … --encoder-name … --encoder-version …`
+   flips the corpus in **one transaction** (it refuses unless every live image is staged, keeps
+   the previous vectors — activating the old version again is the rollback — and writes an
+   `encoder_activation` row plus an audit row), then retire the old service. Diagnoses keep their
+   `model_versions.encoder` for replay (DX-005). `ml/pipelines` has the Vertex pipeline for
+   steps 2-3.
 
 ## Layout
 
