@@ -3,7 +3,8 @@
 * ``run_rules_job`` — ``python -m farmerapp.jobs run-rules --mode batch --tenant fcc``: every
   enabled batch rule per tenant, one transaction per tenant, as the system actor. Scheduled
   nightly at 02:00 IST (Cloud Scheduler -> Cloud Run Job, infra). Re-running is safe: the
-  dedupe key never duplicates an unresolved flag.
+  dedupe key never duplicates an unresolved flag. The flags it raised are then summarised
+  by the VA-004 review agent (``FLAG_SUMMARY_LLM``; off = nothing happens).
 * ``run_sla_escalation`` — ``python -m farmerapp.jobs flags-sla-escalation --tenant fcc``:
   unresolved flags past their SLA move one rung up (``flags.service.escalate_overdue``).
   Hourly.
@@ -24,6 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.db import audit
 from farmerapp.db.session import job_session
+from farmerapp.flags.review_agent import FlagSummaryClient
 from farmerapp.flags.service import Escalation, escalate_overdue
 from farmerapp.rules.engine import RunReport, run_rules
 from farmerapp.rules.loader import RuleSet, get_rule_set
@@ -57,6 +59,8 @@ async def run_rules_job(
     now: datetime | None = None,
     session_provider: SessionProvider = job_session,
     rule_set: RuleSet | None = None,
+    summarise: bool = True,
+    summary_client: FlagSummaryClient | None = None,
 ) -> list[RunReport]:
     now = now or datetime.now(UTC)
     wanted = list(rule_ids) if rule_ids is not None else None
@@ -64,11 +68,21 @@ async def run_rules_job(
     for tenant_id in tenant_ids:
         with audit.actor_scope(audit.system_actor(tenant_id)):
             async with session_provider(tenant_id) as session:
-                reports.append(
-                    await run_rules(
-                        session, tenant_id, mode, rule_ids=wanted, now=now, rule_set=rule_set
-                    )
+                report = await run_rules(
+                    session, tenant_id, mode, rule_ids=wanted, now=now, rule_set=rule_set
                 )
+        reports.append(report)
+        if summarise and report.flag_ids:
+            # VA-004: the review agent summarises the committed flags, one transaction each.
+            from farmerapp.flags.review_agent import summarise_flags
+
+            await summarise_flags(
+                tenant_id,
+                report.flag_ids,
+                client=summary_client,
+                session_provider=session_provider,
+                rule_set=rule_set,
+            )
     return reports
 
 

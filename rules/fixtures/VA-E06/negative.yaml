@@ -1,0 +1,21 @@
+description: >
+  A duty day with movement every hour or two and a visit in between (longest gap 1.5 h), and
+  a second officer's two-hour session spent at one place. No flag.
+mode: batch
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+  duty:
+    - {ref: d1, officer: officer, start: -6h, end: -1h}
+    - {ref: d2, officer: officer2, start: -4h, end: -2h}
+  points:
+    - {duty: d1, at: -5.5h, east_m: 0, north_m: 0}
+    - {duty: d1, at: -4.5h, east_m: 500, north_m: 0}
+    - {duty: d1, at: -3h, east_m: 1000, north_m: 0}
+    - {duty: d1, at: -2h, east_m: 1500, north_m: 0}
+    - {duty: d2, at: -3.5h, east_m: 0, north_m: 0}
+    - {duty: d2, at: -2.5h, east_m: 10, north_m: 0}
+  visits:
+    - {ref: visit1, officer: officer, farmer: f1, at: -4h, minutes: 30, east_m: 500}
+expect:
+  flags: []

@@ -1,0 +1,15 @@
+# VA-E11 (SPEC 6.3): performance drift (coaching) — an officer's verified visits fell by more
+# than `max_drop_share` week on week for two consecutive complete IST weeks (Mon-Sun).
+id: VA-E11
+version: 1
+title: Performance drift (coaching)
+subject: employee
+mode: batch
+severity: low
+owner_role: cluster_head
+sla_hours: 168
+enabled: true
+params:
+  max_drop_share: 0.3
+  min_base_visits: 5           # the first of the three weeks needs this many verified visits
+tenant_overrides: {}

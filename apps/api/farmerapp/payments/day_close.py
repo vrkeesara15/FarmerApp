@@ -301,7 +301,10 @@ async def close_day(
     if flagged:
         notified = await _notify_auditors(session, close, threshold)
         await session.flush()
-        bus.publish(
+        # VA-E10 (M7) subscribes with a writing handler: dispatch runs it in this
+        # transaction, inside a savepoint (a failing rule never rolls back the close).
+        await bus.dispatch(
+            session,
             CashVarianceDetected(
                 tenant_id=close.tenant_id,
                 day_close_id=close.id,
@@ -313,7 +316,7 @@ async def close_day(
                 threshold_paise=threshold,
                 closed_by=actor.id,
                 at=now,
-            )
+            ),
         )
         log.warning(
             "day_close_variance_flagged",

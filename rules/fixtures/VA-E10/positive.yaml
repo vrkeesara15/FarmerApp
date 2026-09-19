@@ -1,0 +1,13 @@
+description: >
+  The store manager's day close counted Rs 1,000 less cash than expected (threshold Rs 500).
+  The day close's CashVarianceDetected event (`day_close.variance`) raises one medium flag
+  about the store manager for the cluster head.
+mode: event
+trigger: day_close.variance
+subjects: [dc1]
+seed:
+  day_closes:
+    - {ref: dc1, closed_by: store_manager, at: -2h, expected: 1000000, counted: 900000}
+expect:
+  flags:
+    - {subject: store_manager, severity: medium, owner: cluster_head, watchers: [], reasons: [variance_above_threshold]}

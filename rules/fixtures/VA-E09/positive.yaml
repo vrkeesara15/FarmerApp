@@ -1,0 +1,22 @@
+description: >
+  Today the officer sold at a 20 % discount (policy: 10 %) and sold to a farmer registered
+  with a staff member's phone. In August officer2 placed three orders before the 25th (the
+  incentive cut-off) and cancelled all three after it. High severity: cluster head plus
+  auditors, one flag each.
+mode: batch
+seed:
+  users:
+    - {ref: staff1, role: field_officer, cluster: c1, store: s1, phone: "+919100000077"}
+  farmers:
+    - {ref: f1, at: -30d}
+    - {ref: relative, at: -30d, phone: "+919100000077"}
+  orders:
+    - {ref: o1, placed_by: officer, farmer: f1, at: -3h, subtotal: 100000, discount: 20000}
+    - {ref: o2, placed_by: officer, farmer: relative, at: -2h, subtotal: 50000}
+    - {ref: o3, placed_by: officer2, farmer: f1, at: -30d, subtotal: 80000, cancelled: -20d}
+    - {ref: o4, placed_by: officer2, farmer: f1, at: -29d, subtotal: 60000, cancelled: -20d}
+    - {ref: o5, placed_by: officer2, farmer: f1, at: -28d, subtotal: 70000, cancelled: -19d}
+expect:
+  flags:
+    - {subject: officer, severity: high, owner: cluster_head, watchers: [auditor], reasons: [discount_above_policy, sale_to_staff_phone]}
+    - {subject: officer2, severity: high, owner: cluster_head, watchers: [auditor], reasons: [cancellations_after_cutoff]}

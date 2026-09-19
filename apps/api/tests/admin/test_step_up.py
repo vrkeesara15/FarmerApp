@@ -93,6 +93,7 @@ def test_contract_marks_protected_operations() -> None:
         ("PATCH", "/v1/settings"),
         ("GET", "/v1/audit-logs/export"),
         ("GET", "/v1/catalog/export"),
+        ("POST", "/v1/flags/rules/{rule_id}/enable"),  # M7 VA-006 rule re-enable
     }
     patch_user = spec["paths"]["/v1/users/{id}"]["patch"]
     assert "step_up_required" in patch_user["responses"]["401"]["description"]

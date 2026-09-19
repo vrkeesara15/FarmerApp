@@ -1,0 +1,35 @@
+description: >
+  Friday 18 September 2026. The officer's verified visits over the last three complete IST
+  weeks: 10 (24-30 Aug), 6 (31 Aug - 6 Sep, -40 %), 3 (7-13 Sep, -50 %). Down more than
+  30 % two weeks running: one low severity coaching flag for the cluster head.
+mode: batch
+seed:
+  farmers:
+    - {ref: f1, at: -60d}
+  visits:
+    # week of 24 Aug: 10 verified visits
+    - {ref: a1, farmer: f1, at: -25d, minutes: 20, status: verified}
+    - {ref: a2, farmer: f1, at: -25d, minutes: 20, status: verified}
+    - {ref: a3, farmer: f1, at: -24d, minutes: 20, status: verified}
+    - {ref: a4, farmer: f1, at: -24d, minutes: 20, status: verified}
+    - {ref: a5, farmer: f1, at: -23d, minutes: 20, status: verified}
+    - {ref: a6, farmer: f1, at: -23d, minutes: 20, status: verified}
+    - {ref: a7, farmer: f1, at: -22d, minutes: 20, status: verified}
+    - {ref: a8, farmer: f1, at: -22d, minutes: 20, status: verified}
+    - {ref: a9, farmer: f1, at: -21d, minutes: 20, status: verified}
+    - {ref: a10, farmer: f1, at: -21d, minutes: 20, status: verified}
+    # week of 31 Aug: 6 verified (and one unverified, which does not count)
+    - {ref: b1, farmer: f1, at: -18d, minutes: 20, status: verified}
+    - {ref: b2, farmer: f1, at: -17d, minutes: 20, status: verified}
+    - {ref: b3, farmer: f1, at: -16d, minutes: 20, status: verified}
+    - {ref: b4, farmer: f1, at: -15d, minutes: 20, status: verified}
+    - {ref: b5, farmer: f1, at: -14d, minutes: 20, status: verified}
+    - {ref: b6, farmer: f1, at: -14d, minutes: 20, status: verified}
+    - {ref: b7, farmer: f1, at: -13d, minutes: 20, status: unverified}
+    # week of 7 Sep: 3 verified
+    - {ref: c1, farmer: f1, at: -11d, minutes: 20, status: verified}
+    - {ref: c2, farmer: f1, at: -9d, minutes: 20, status: verified}
+    - {ref: c3, farmer: f1, at: -7d, minutes: 20, status: verified}
+expect:
+  flags:
+    - {subject: officer, severity: low, owner: cluster_head, watchers: [], reasons: [performance_drift]}

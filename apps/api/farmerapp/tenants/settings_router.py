@@ -38,6 +38,7 @@ from farmerapp.tenants.settings import (
     FeatureSettings,
     Language,
     SamplingSettings,
+    ServiceArea,
     TenantSettings,
     parse_settings,
     settings_from_tenant,
@@ -133,6 +134,11 @@ class SettingsPatch(BaseModel):
     default_language: Language | None = None
     features: FeaturesPatch | None = None
     branding: BrandingPatch | None = None
+    service_area: ServiceArea | None = Field(
+        default=None, description="VA-F04 service districts (replaces the whole list)."
+    )
+    discount_policy_max_bps: int | None = Field(default=None, description="VA-E09 0-10000 bp.")
+    incentive_cutoff_day: int | None = Field(default=None, description="VA-E09 day 1-28.")
 
 
 def _merge(current: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:

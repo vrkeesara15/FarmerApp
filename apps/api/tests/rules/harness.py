@@ -42,6 +42,11 @@ Field data (M4 employee rules): ``duty`` sessions and their location ``points`` 
 ``photo_flags`` given directly), confirmations (``phone`` creates the OTP challenge the
 code went to; ``device`` is ``confirmed_via_device_id``). Everything is relative to the
 fixture's fixed ``now``: fixtures never depend on the wall clock.
+
+M7 records (tenant settings, crop calendar and plots, consents, farmer logins, orders, khata,
+day closes and the port fakes for segments, TA claims and land cover) are seeded by
+``tests.rules.harness_m7.seed_m7``; its docstring lists the keys. ``duty`` also takes ``km``
+and ``visits`` a ``status`` (VV-005 ``verified`` / ``partial`` / ``unverified``).
 """
 
 from __future__ import annotations
@@ -69,6 +74,12 @@ from farmerapp.location.models import DutySession, LocationPoint
 from farmerapp.location.partitions import ensure_partitions
 from farmerapp.rules.engine import RunReport, run_rules
 from farmerapp.rules.loader import DEFAULT_RULES_DIR, RuleSet, load_rules
+from farmerapp.rules.ports import (
+    InMemoryLandCover,
+    InMemorySegments,
+    InMemoryTravelClaims,
+    override_ports,
+)
 from farmerapp.rules.schema import Mode
 from farmerapp.tenants.models import Cluster, Store, Village
 from farmerapp.visits.models import (
@@ -98,6 +109,23 @@ P0_RULES = frozenset(
         "VA-E08",
     }
 )
+#: The ten M7 rules (the rest of SPEC 6.2 / 6.3).
+M7_RULES = frozenset(
+    {
+        "VA-F04",
+        "VA-F05",
+        "VA-F07",
+        "VA-F09",
+        "VA-F10",
+        "VA-E06",
+        "VA-E07",
+        "VA-E09",
+        "VA-E10",
+        "VA-E11",
+    }
+)
+#: Every rule of SPEC 6.2 / 6.3.
+ALL_RULES = P0_RULES | M7_RULES
 CASES = ("positive", "negative")
 VILLAGE_LON, VILLAGE_LAT = 79.55, 18.02
 DEFAULT_NOW = datetime(2026, 9, 18, 6, 30, tzinfo=UTC)  # 12:00 IST
@@ -165,6 +193,10 @@ class BaseWorld:
     slug: str
     refs: dict[str, uuid.UUID] = field(default_factory=dict)
     users: dict[str, User] = field(default_factory=dict)
+    #: M7 port fakes (``farmerapp.rules.ports``) the fixture fills; installed for each run.
+    segments: InMemorySegments = field(default_factory=InMemorySegments)
+    travel_claims: InMemoryTravelClaims = field(default_factory=InMemoryTravelClaims)
+    land_cover: InMemoryLandCover = field(default_factory=InMemoryLandCover)
 
     def id(self, ref: str) -> uuid.UUID:
         return self.refs[ref]
@@ -340,6 +372,7 @@ async def add_duty(
         start_at=when(spec.get("start"), now),
         end_at=end,
         end_reason="manual" if end is not None else None,
+        km=Decimal(str(spec["km"])) if spec.get("km") is not None else None,
         start_point=_point(spec),
         policy_version="1",
         device_integrity=_integrity(spec.get("integrity")),
@@ -408,7 +441,7 @@ async def add_visit(
         checkin_accuracy_m=8.0,
         geofence_result=GeofenceResult(spec.get("geofence", "inside")).value,
         override_note="fixture" if spec.get("geofence") == "override" else None,
-        status=VisitStatus.OPEN.value,
+        status=VisitStatus(spec.get("status", "open")).value,
         device_integrity={**integrity, "issues": issues},
         flags=[],
     )
@@ -510,6 +543,9 @@ async def seed(
         await add_visit_photo(session, world, spec)
     for spec in records.get("confirmations") or []:
         await add_confirmation(session, world, spec, now)
+    from tests.rules.harness_m7 import seed_m7  # M7 records (orders, khata, ports...)
+
+    await seed_m7(session, world, records, now)
 
 
 @dataclass(frozen=True)
@@ -532,16 +568,19 @@ async def run_fixture(
     rule_set = rule_set or load_rules(DEFAULT_RULES_DIR)
     mode = Mode(data.get("mode", "batch"))
     subjects = [world.refs[r] for r in data.get("subjects") or []] or None
-    report = await run_rules(
-        session,
-        world.tenant_id,
-        mode,
-        subject_ids=subjects if mode != Mode.BATCH else None,
-        trigger=data.get("trigger"),
-        rule_ids=[rule_id],
-        now=now,
-        rule_set=rule_set,
-    )
+    with override_ports(
+        segments=world.segments, travel_claims=world.travel_claims, land_cover=world.land_cover
+    ):
+        report = await run_rules(
+            session,
+            world.tenant_id,
+            mode,
+            subject_ids=subjects if mode != Mode.BATCH else None,
+            trigger=data.get("trigger"),
+            rule_ids=[rule_id],
+            now=now,
+            rule_set=rule_set,
+        )
     flags = (
         (
             await session.execute(

@@ -520,6 +520,17 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
         path_params=lambda _ctx: {"id": NO_SUCH_ID},
         body=lambda ctx: {"user_id": str(ctx.target.owner.id)},
     ),
+    # M7 VA-005 (flags about the caller) and VA-006 (rule re-enable, step-up); outcomes in
+    # tests/flags/test_subject_view.py and tests/flags/test_precision.py.
+    "GET /v1/flags/mine/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "POST /v1/flags/mine/{id}/explanations": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"body": "matrix"}
+    ),
+    "POST /v1/flags/rules/{rule_id}/enable": RouteFixture(
+        path_params=lambda _ctx: {"rule_id": "VA-F01"},
+        body=lambda _ctx: {"reason": "matrix"},
+        step_up=True,
+    ),
     # M4 analytics reads (AN-001 .. AN-003, AN-011, WC-001 .. WC-004): scope outcomes (404
     # outside the caller's cluster / store / own records, 422 filter combinations) are tested
     # in tests/analytics.

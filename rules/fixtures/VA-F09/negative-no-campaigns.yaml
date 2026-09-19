@@ -1,0 +1,9 @@
+description: >
+  Before WC-008 campaigns exist the segment port returns no rows: a farmer without any
+  marketing consent is not flagged. No flag.
+mode: batch
+seed:
+  farmers:
+    - {ref: never, name: Ramesh, at: -60d}
+expect:
+  flags: []

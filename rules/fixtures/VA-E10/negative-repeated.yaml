@@ -1,0 +1,13 @@
+description: >
+  Nightly batch: two small variances in 14 days, a 50 paise rounding difference, a reopened
+  close and a small variance 20 days ago. No flag.
+mode: batch
+seed:
+  day_closes:
+    - {ref: dc1, closed_by: store_manager, at: -20d, expected: 500000, counted: 498000}
+    - {ref: dc2, closed_by: store_manager, at: -6d, expected: 500000, counted: 498500}
+    - {ref: dc3, closed_by: store_manager, at: -3d, expected: 500000, counted: 503000}
+    - {ref: dc4, closed_by: store_manager, at: -2d, expected: 500000, counted: 500050}
+    - {ref: dc5, closed_by: store_manager, at: -1d, expected: 500000, counted: 497000, status: reopened}
+expect:
+  flags: []

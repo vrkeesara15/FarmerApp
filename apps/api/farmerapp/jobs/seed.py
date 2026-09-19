@@ -759,7 +759,25 @@ async def _seed_tenant(
         await session.flush()
         created[table] = len(missing)
         totals[table] = len(existing[table] | {row.id for row in generated.rows[table]})
+    await _seed_rules_reference(session, demo, tenant)
     return tenant, users_created, created, totals
+
+
+async def _seed_rules_reference(session: AsyncSession, demo: DemoTenant, tenant: Tenant) -> None:
+    """M7 rules: the VA-F04 service area (unless the tenant set one) and, for Telangana
+    tenants, the VA-F05 crop calendar (idempotent)."""
+    from farmerapp.rules.reference import StorePoint, seed_crop_calendar, service_area_setting
+
+    settings = dict(tenant.settings or {})
+    if not (settings.get("service_area") or {}).get("districts"):
+        settings["service_area"] = service_area_setting(
+            StorePoint(s.code, s.district, s.state, s.lon, s.lat) for s in demo.stores
+        )
+        tenant.settings = settings
+    for state in sorted({s.state for s in demo.stores}):
+        if state == "Telangana":
+            await seed_crop_calendar(session, tenant.id, state=state)
+    await session.flush()
 
 
 async def seed_demo(

@@ -1,0 +1,14 @@
+# VA-F07 (SPEC 6.2): ghost farmer — registered at least `inactive_days` ago and, since the
+# registration, no confirmed visit, no purchase and no app login.
+id: VA-F07
+version: 1
+title: Ghost farmer
+subject: farmer
+mode: batch
+severity: medium
+owner_role: store_manager
+sla_hours: 168
+enabled: true
+params:
+  inactive_days: 60
+tenant_overrides: {}

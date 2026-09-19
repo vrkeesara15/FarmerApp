@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from enum import StrEnum
 from typing import Any
 
@@ -33,8 +34,10 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Text,
+    UniqueConstraint,
     Uuid,
     text,
 )
@@ -193,6 +196,76 @@ class FlagComment(Base, BaseColumns):
     )
 
 
+class SummaryStatus(StrEnum):
+    """VA-004: where the review agent's summary of a flag stands."""
+
+    PENDING = "pending"
+    DONE = "done"
+    REFUSED = "refused"  # the model declined (stop_reason refusal); no summary, logged
+    INVALID = "invalid"  # twice an answer that failed the schema or cited ids outside
+    ERROR = "error"  # a non-retryable provider error
+    DISABLED = "disabled"  # FLAG_SUMMARY_LLM=off
+
+
+class FlagSummary(Base, BaseColumns):
+    """VA-004 review agent output for one flag (migration 0029): three plain lines, a
+    suggested action and the record ids it cites — all from the evidence bundle only."""
+
+    __tablename__ = "flag_summary"
+    __table_args__ = (
+        CheckConstraint(f"status IN ({sql_in(SummaryStatus)})", name="status"),
+        Index("ix_flag_summary_tenant_status", "tenant_id", "status"),
+        UniqueConstraint("flag_id", name="uq_flag_summary_flag_id"),
+    )
+
+    flag_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("flag.id", ondelete="CASCADE"), nullable=False
+    )
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    summary_lines: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
+    suggested_action: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cited_record_ids: Mapped[list[str]] = mapped_column(
+        JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb")
+    )
+    model: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class OverrideSource(StrEnum):
+    AUTO_PRECISION = "auto_precision"  # VA-006: precision < 30 % over four weeks
+    ADMIN = "admin"  # an admin re-enabled (or disabled) the rule
+
+
+class RuleTenantOverride(Base, BaseColumns):
+    """VA-006: a tenant's runtime switch of one rule, on top of ``rules/<id>.yaml``.
+
+    ``enabled = false`` stops the engine running the rule for the tenant (auto-disabled
+    pending review); an admin re-enables it (``enabled = true``, ``set_at`` = the restart of
+    its precision window). The YAML ``enabled: false`` still wins: an override never turns on
+    a rule the config switched off. Audited by the FA-006 listener and ``rule.*`` rows."""
+
+    __tablename__ = "rule_tenant_override"
+    __table_args__ = (
+        CheckConstraint(f"source IN ({sql_in(OverrideSource)})", name="source"),
+        CheckConstraint("char_length(reason) > 0", name="reason"),
+        UniqueConstraint("tenant_id", "rule_id", name="uq_rule_tenant_override_rule"),
+    )
+
+    rule_id: Mapped[str] = mapped_column(String(16), nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    source: Mapped[str] = mapped_column(String(16), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    rule_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    precision: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    resolved_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    set_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("user.id", ondelete="SET NULL"), nullable=True
+    )
+    set_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 __all__ = [
     "LABELS",
     "RESOLVED",
@@ -204,4 +277,8 @@ __all__ = [
     "FlagEventKind",
     "FlagLabel",
     "FlagStatus",
+    "FlagSummary",
+    "OverrideSource",
+    "RuleTenantOverride",
+    "SummaryStatus",
 ]

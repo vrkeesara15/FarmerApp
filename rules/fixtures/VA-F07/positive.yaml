@@ -1,0 +1,14 @@
+description: >
+  Two farmers registered 90 days ago: one with no activity at all, one whose only order was
+  cancelled (a cancelled order is not a purchase). Two medium flags for the store manager.
+mode: batch
+seed:
+  farmers:
+    - {ref: ghost, name: Ramesh, at: -90d}
+    - {ref: cancelled_only, name: Suresh, at: -90d}
+  orders:
+    - {ref: o1, farmer: cancelled_only, at: -80d, subtotal: 50000, cancelled: -79d}
+expect:
+  flags:
+    - {subject: ghost, severity: medium, owner: store_manager, watchers: [], reasons: [ghost_farmer]}
+    - {subject: cancelled_only, severity: medium, owner: store_manager, watchers: [], reasons: [ghost_farmer]}

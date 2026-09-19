@@ -308,7 +308,17 @@ async def test_batch_job_is_idempotent(db_session: AsyncSession, world: BaseWorl
         "VA-E03",
         "VA-E04",
         "VA-E05",
-    }  # the nightly batch rules; event-only rules (VA-F08, VA-E01/E02/E08) never run here
+        # M7
+        "VA-F04",
+        "VA-F05",
+        "VA-F07",
+        "VA-F09",
+        "VA-F10",
+        "VA-E06",
+        "VA-E09",
+        "VA-E10",
+        "VA-E11",
+    }  # the nightly batch rules; event-only rules (VA-F08, VA-E01/E02/E07/E08) never run here
     assert len(await _flags(db_session, world)) == before
 
     sla = await jobs.run_sla_escalation(

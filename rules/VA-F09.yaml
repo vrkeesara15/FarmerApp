@@ -1,0 +1,15 @@
+# VA-F09 (SPEC 6.2): consent missing or withdrawn, but the farmer is in a campaign segment.
+# Segments come from WC-008 campaigns through `SegmentMembershipPort` (no rows until the
+# campaigns package registers its adapter).
+id: VA-F09
+version: 1
+title: Consent missing or withdrawn for a campaign segment member
+subject: farmer
+mode: batch
+severity: high
+owner_role: store_manager
+sla_hours: 24
+enabled: true
+params:
+  consent_purpose: marketing   # FM-002 purpose a campaign needs
+tenant_overrides: {}

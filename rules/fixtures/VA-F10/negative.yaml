@@ -1,0 +1,17 @@
+description: >
+  A debit due 100 days ago that the farmer paid in full; a new credit sale while the earlier
+  debit is not yet due; a debit 60 days overdue (under 90) with no new credit. No flag.
+mode: batch
+seed:
+  farmers:
+    - {ref: paid, name: Ramesh, at: -300d}
+    - {ref: not_due, name: Suresh, at: -300d}
+    - {ref: behind, name: Venkatesh, at: -300d}
+  khata:
+    - {ref: d1, farmer: paid, type: debit, amount: 1000000, at: -200d, due: -100d}
+    - {ref: c1, farmer: paid, type: credit, amount: 1000000, at: -95d}
+    - {ref: d2, farmer: not_due, type: debit, amount: 500000, at: -40d, due: 2026-10-31}
+    - {ref: d3, farmer: not_due, type: debit, amount: 200000, at: -2d, due: 2026-12-31}
+    - {ref: d4, farmer: behind, type: debit, amount: 300000, at: -150d, due: -60d}
+expect:
+  flags: []

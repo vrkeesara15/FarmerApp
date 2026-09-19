@@ -1,0 +1,17 @@
+description: >
+  One farmer owes a debit due 100 days ago (overdue > 90 days). Another had a debit 10 days
+  overdue when the store wrote a new credit sale two days ago. Two medium flags for the store
+  manager.
+mode: batch
+seed:
+  farmers:
+    - {ref: late, name: Ramesh, at: -300d}
+    - {ref: more_credit, name: Suresh, at: -300d}
+  khata:
+    - {ref: d1, farmer: late, type: debit, amount: 1000000, at: -200d, due: -100d}
+    - {ref: d2, farmer: more_credit, type: debit, amount: 500000, at: -60d, due: -10d}
+    - {ref: d3, farmer: more_credit, type: debit, amount: 200000, at: -2d, due: 2026-12-31}
+expect:
+  flags:
+    - {subject: late, severity: medium, owner: store_manager, watchers: [], reasons: [overdue_90]}
+    - {subject: more_credit, severity: medium, owner: store_manager, watchers: [], reasons: [credit_while_overdue]}

@@ -55,6 +55,8 @@ class RunReport:
     raised: Counter[str] = field(default_factory=Counter)
     failed: list[str] = field(default_factory=list)
     flag_ids: list[uuid.UUID] = field(default_factory=list)
+    #: rules switched off for the tenant at runtime (VA-006 ``rule_tenant_override``)
+    skipped: list[str] = field(default_factory=list)
 
     @property
     def total_raised(self) -> int:
@@ -69,6 +71,28 @@ async def _tenant_slug(session: AsyncSession, tenant_id: uuid.UUID) -> str | Non
     cache: dict[uuid.UUID, str | None] = session.info.setdefault(_SLUGS, {})
     if tenant_id not in cache:
         cache[tenant_id] = await session.scalar(select(Tenant.slug).where(Tenant.id == tenant_id))
+    return cache[tenant_id]
+
+
+DISABLED_CACHE = "rules_disabled_by_tenant"
+
+
+async def _disabled_by_tenant(session: AsyncSession, tenant_id: uuid.UUID) -> set[str]:
+    """Rules the tenant switched off at runtime (VA-006), read once per session (NF-005: a
+    sync batch runs the inline rules many times). ``flags.precision`` drops the cache when it
+    writes an override in the same session."""
+    from farmerapp.flags.models import RuleTenantOverride
+
+    cache: dict[uuid.UUID, set[str]] = session.info.setdefault(DISABLED_CACHE, {})
+    if tenant_id not in cache:
+        rows = await session.scalars(
+            select(RuleTenantOverride.rule_id).where(
+                RuleTenantOverride.tenant_id == tenant_id,
+                RuleTenantOverride.deleted_at.is_(None),
+                RuleTenantOverride.enabled.is_(False),
+            )
+        )
+        cache[tenant_id] = set(rows)
     return cache[tenant_id]
 
 
@@ -141,12 +165,16 @@ async def run_rules(
     slug = await _tenant_slug(session, tenant_id)
     wanted = set(rule_ids) if rule_ids is not None else None
     ids = tuple(subject_ids) if subject_ids is not None else None
+    disabled = await _disabled_by_tenant(session, tenant_id)
     for config in candidates:
         if wanted is not None and config.id not in wanted:
             continue
         if subject is not None and config.subject != subject and trigger is None:
             continue
         if not config.enabled_for(slug):
+            continue
+        if config.id in disabled:  # VA-006: auto-disabled pending review (or by an admin)
+            report.skipped.append(config.id)
             continue
         impl = impls.get(config.id)
         if impl is None:

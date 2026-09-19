@@ -1,0 +1,11 @@
+description: >
+  A tenant without service districts and without a land-cover layer (the defaults until the
+  human gates are done): even a farm 100 km away is not judged. No flag.
+mode: batch
+seed:
+  farmers:
+    - {ref: far, name: Ramesh, at: -10d}
+  farms:
+    - {ref: farm_far, farmer: far, area_acres: 1.0, square: {east_m: 100000, north_m: 0, side_m: 64}}
+expect:
+  flags: []

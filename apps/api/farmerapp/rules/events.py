@@ -21,7 +21,14 @@
   ``DutyStarted`` (location)       ``duty.started``       the duty session
   ``LocationBatchIngested``        ``location.batch``     the duty session
   ``PaymentCaptured`` (payments)   ``payment.captured``   the payment
+  ``CashVarianceDetected``         ``day_close.variance`` the day close
+  (payments, ST-006 day close)
   ==============================  =====================  ==========================
+
+  FA-023 TA claims (M7, travel package): ``on_travel_claim_submitted(session, tenant_id,
+  claim_id, ...)`` is the seam the travel write path calls after it flushed a submitted
+  claim (``ta.claim.submitted``, subject = the claim; VA-E07 reads the claim through
+  ``TravelClaimPort``). The Pub/Sub worker accepts the same topic with ``claim_id``.
 
   Write paths that own a session without a bus (FA-012 registration, farm photos) call
   ``engine.emit`` directly (``farmer.registered``, ``farm.photo``).
@@ -66,6 +73,8 @@ SUBJECT_KEYS: dict[str, str] = {
     "farm.photo": "farm_id",
     "payment.webhook": "payment_id",
     "payment.captured": "payment_id",
+    "day_close.variance": "day_close_id",  # M7 VA-E10
+    "ta.claim.submitted": "claim_id",  # M7 VA-E07 (FA-023 travel claims)
 }
 
 
@@ -90,7 +99,15 @@ async def handle_event_message(
         return None
     with audit.actor_scope(audit.system_actor(tenant_id)):
         async with session_provider(tenant_id) as session:
-            return await emit(session, tenant_id, topic, [subject_id], payload=body, now=now)
+            report = await emit(session, tenant_id, topic, [subject_id], payload=body, now=now)
+    if report.flag_ids:
+        # VA-004: summarise the flags this event raised, after they are committed.
+        from farmerapp.flags.review_agent import summarise_flags
+
+        await summarise_flags(
+            tenant_id, report.flag_ids, session_provider=session_provider, rule_set=rule_set
+        )
+    return report
 
 
 async def _run_subscribed(
@@ -117,6 +134,40 @@ async def _on_payment_captured(
         event.payment_id,
         payload={"order_id": str(event.order_id), "store_id": str(event.store_id)},
         at=event.at,
+    )
+
+
+async def _on_cash_variance(
+    session: AsyncSession, event: payment_events.CashVarianceDetected
+) -> None:
+    await _run_subscribed(
+        session,
+        event.tenant_id,
+        "day_close.variance",
+        event.day_close_id,
+        payload={"store_id": str(event.store_id), "closed_by": str(event.closed_by)},
+        at=event.at,
+    )
+
+
+async def on_travel_claim_submitted(
+    session: AsyncSession,
+    tenant_id: uuid.UUID,
+    claim_id: uuid.UUID,
+    *,
+    officer_id: uuid.UUID,
+    at: datetime,
+) -> None:
+    """FA-023 seam: run the ``ta.claim.submitted`` rules (VA-E07) for a claim the travel write
+    path just flushed, in its transaction (call inside a savepoint: a failing rule is logged
+    by the engine and never rolls back the claim)."""
+    await _run_subscribed(
+        session,
+        tenant_id,
+        "ta.claim.submitted",
+        claim_id,
+        payload={"officer_id": str(officer_id)},
+        at=at,
     )
 
 
@@ -186,6 +237,7 @@ async def _on_location_batch(
 def register() -> None:
     """Subscribe the event runner to the in-process buses (idempotent)."""
     payment_events.bus.subscribe_async(payment_events.PaymentCaptured, _on_payment_captured)
+    payment_events.bus.subscribe_async(payment_events.CashVarianceDetected, _on_cash_variance)
     visit_events.bus.subscribe_async(visit_events.VisitCheckedIn, _on_visit_checked_in)
     visit_events.bus.subscribe_async(visit_events.VisitPhotoAdded, _on_visit_photo)
     visit_events.bus.subscribe_async(visit_events.VisitConfirmed, _on_visit_confirmed)
@@ -194,4 +246,4 @@ def register() -> None:
     location_events.bus.subscribe_async(location_events.LocationBatchIngested, _on_location_batch)
 
 
-__all__ = ["SUBJECT_KEYS", "handle_event_message", "register"]
+__all__ = ["SUBJECT_KEYS", "handle_event_message", "on_travel_claim_submitted", "register"]

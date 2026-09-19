@@ -1,0 +1,14 @@
+description: >
+  Two duty sessions yesterday of 25 km and 15 km (40 km); the claim says 44 km, 10 % more,
+  within the 15 % tolerance. No flag.
+mode: event
+trigger: ta.claim.submitted
+subjects: [claim1]
+seed:
+  duty:
+    - {ref: d1, officer: officer, start: -30h, end: -27h, km: 25.0}
+    - {ref: d2, officer: officer, start: -26h, end: -23h, km: 15.0}
+  travel_claims:
+    - {ref: claim1, officer: officer, day: -26h, km: 44.0}
+expect:
+  flags: []

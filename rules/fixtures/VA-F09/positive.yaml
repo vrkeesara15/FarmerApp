@@ -1,0 +1,23 @@
+description: >
+  A campaign segment (SegmentMembershipPort fake, standing in for WC-008 campaigns) holds a
+  farmer who never gave marketing consent and one who withdrew it two days ago; a third
+  member consented. Two high severity flags: store manager plus the auditors.
+mode: batch
+seed:
+  farmers:
+    - {ref: never, name: Ramesh, at: -60d}
+    - {ref: withdrew, name: Suresh, at: -60d}
+    - {ref: consented, name: Venkatesh, at: -60d}
+  consents:
+    - {farmer: withdrew, purpose: marketing, granted: -60d}
+    - {farmer: withdrew, purpose: marketing, withdrawn: -2d}
+    - {farmer: consented, purpose: marketing, granted: -60d}
+    - {farmer: never, purpose: data, granted: -60d}
+  segment_members:
+    - {farmer: never, segment: paddy-kharif-growers, campaign: cmp-1}
+    - {farmer: withdrew, segment: paddy-kharif-growers, campaign: cmp-1}
+    - {farmer: consented, segment: paddy-kharif-growers, campaign: cmp-1}
+expect:
+  flags:
+    - {subject: never, severity: high, owner: store_manager, watchers: [auditor], reasons: [consent_missing]}
+    - {subject: withdrew, severity: high, owner: store_manager, watchers: [auditor], reasons: [consent_withdrawn]}

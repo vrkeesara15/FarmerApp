@@ -20,7 +20,7 @@ from farmerapp.diagnosis.models import (
     LlmCallLog,
 )
 from farmerapp.farmers.models import ConsentRecord, CropPlot, Farm, Farmer, FarmPhoto
-from farmerapp.flags.models import Flag, FlagComment, FlagEvent
+from farmerapp.flags.models import Flag, FlagComment, FlagEvent, FlagSummary, RuleTenantOverride
 from farmerapp.invoices.models import Invoice, InvoiceCounter
 from farmerapp.khata.models import CreditApprovalRequest, CreditLimit, KhataEntry
 from farmerapp.location.models import DutySession, LocationDailyAgg, LocationPoint, PolicyAcceptance
@@ -29,6 +29,7 @@ from farmerapp.orders.models import Order, OrderLine, OrderStatusEvent
 from farmerapp.payments.models import DayClose, Payment, WebhookEvent
 from farmerapp.pii.models import TenantDataKey
 from farmerapp.privacy.models import DataRequest
+from farmerapp.rules.models import CropCalendar
 from farmerapp.stock.models import StockBatch, StockMovement, StockReservation
 from farmerapp.sync.models import SyncChange, SyncOp
 from farmerapp.tenants.models import Cluster, Store, Village
@@ -45,6 +46,7 @@ __all__ = [
     "CreditApprovalRequest",
     "CreditLimit",
     "Crop",
+    "CropCalendar",
     "CropPlot",
     "DataRequest",
     "DayClose",
@@ -59,6 +61,7 @@ __all__ = [
     "Flag",
     "FlagComment",
     "FlagEvent",
+    "FlagSummary",
     "IdempotencyKey",
     "Invoice",
     "InvoiceCounter",
@@ -79,6 +82,7 @@ __all__ = [
     "PriceList",
     "Product",
     "RefreshToken",
+    "RuleTenantOverride",
     "Sku",
     "StockBatch",
     "StockMovement",

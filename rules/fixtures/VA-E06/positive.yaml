@@ -1,0 +1,21 @@
+description: >
+  The officer started duty at 06:00 IST and stayed within 30 m of one spot (no movement, no
+  stop boundary) until a first visit at 10:30: 4.5 hours on duty with no activity. One low
+  severity flag for the cluster head.
+mode: batch
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+  duty:
+    - {ref: d1, officer: officer, start: -6h}
+  points:
+    - {duty: d1, at: -5.9h, east_m: 0, north_m: 0}
+    - {duty: d1, at: -5h, east_m: 20, north_m: 0}
+    - {duty: d1, at: -4h, east_m: 10, north_m: 15}
+    - {duty: d1, at: -3h, east_m: 0, north_m: 25}
+    - {duty: d1, at: -2h, east_m: 5, north_m: 5}
+  visits:
+    - {ref: visit1, officer: officer, farmer: f1, at: -1.5h, minutes: 20, east_m: 0}
+expect:
+  flags:
+    - {subject: officer, severity: low, owner: cluster_head, watchers: [], reasons: [idle_on_duty]}

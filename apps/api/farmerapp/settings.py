@@ -302,6 +302,18 @@ class Settings(BaseSettings):
         description="'pubsub' publishes diagnosis.requested for the worker (stg / prd); "
         "'inline' runs the pipeline in the request (local / dev without the emulator).",
     )
+    flag_summary_llm: Literal["claude", "fake", "off"] = Field(
+        default="off",
+        description="VA-004 review agent: 'claude' = Anthropic Messages API (ANTHROPIC_API_KEY; "
+        "worker and jobs), 'fake' = deterministic stand-in (local dev), 'off' = no summaries "
+        "(the default until stg / prd set it; docs/prs/M7-rules.md).",
+    )
+    flag_summary_llm_model: str = Field(
+        default="claude-opus-5", description="VA-004 model id (FLAG_SUMMARY_LLM_MODEL)."
+    )
+    flag_summary_llm_max_tokens: int = Field(
+        default=4_000, ge=256, description="max_tokens of one VA-004 summary call."
+    )
     diagnosis_knn_k: int = Field(default=20, ge=1, le=100, description="DX-002 neighbours.")
     diagnosis_hnsw_ef_search: int = Field(
         default=40,
