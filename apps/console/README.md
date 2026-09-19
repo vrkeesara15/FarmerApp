@@ -49,6 +49,7 @@ Auth (FA-001): `auth.sendOtp` / `auth.verifyOtp` call the real `/v1/auth/*` endp
 - `authedFetch` (`lib/api.ts`) — bearer token from the session; a 401 triggers one refresh + retry.
 - `lib/catalog.ts` (typed `/v1/catalog/*` calls and role lists), `lib/hooks/catalog.ts` (TanStack Query hooks; queries wait for `status === "authenticated"`; every write invalidates the catalogue cache), `lib/catalog-schemas.ts` (zod schemas for react-hook-form, mirroring the API rules), `lib/problem-messages.ts` (problem `code` → `problems.*` message key).
 - Screens: C50 `/products`, C51 `/products/label-claims` (Approve only for the agronomist — SPEC 14.6 human gate; "Preview recommendation" calls `GET /v1/catalog/recommendable`), C52 `/products/prices`. Specs in `design/screens/C50.md`–`C52.md`.
+- Crop doctor (M6, WC-006 / WC-007): C60 `/agronomist` review queue, C61 `/agronomist/corpus` corpus manager (chunked uploads in `lib/uploads.ts`), C62 `/agronomist/quality` basic quality view; `lib/diagnosis.ts`, `lib/corpus.ts`, `lib/hooks/diagnosis.ts`, mock `lib/mock/diagnosis.ts`. Agronomists work there, owners read. Specs in `design/screens/C60.md`–`C62.md`.
 
 ## Mock API roles and catalogue
 

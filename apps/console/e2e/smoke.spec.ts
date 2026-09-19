@@ -27,14 +27,13 @@ test.describe("console smoke (mock API)", () => {
     await expect(page.getByRole("alert").filter({ hasText: "Sign-in failed" })).toBeVisible();
   });
 
-  test("shell routes render EmptyState and theme toggles", async ({ page }) => {
-    for (const path of ["/agronomist"]) {
-      await page.goto(path);
-      await expect(page.getByTestId("empty-state")).toBeVisible();
-    }
-    // M4 dashboards (C10, C20, C30, C40) and C70 / C101 / C102 / C103 are data screens:
-    // signed out they ask to sign in.
+  test("shell routes ask to sign in and theme toggles", async ({ page }) => {
+    // M4 dashboards (C10, C20, C30, C40), C60-C62 (M6) and C70 / C101 / C102 / C103 are data
+    // screens: signed out they ask to sign in.
     for (const path of [
+      "/agronomist",
+      "/agronomist/corpus",
+      "/agronomist/quality",
       "/home",
       "/field-team",
       "/farmers",

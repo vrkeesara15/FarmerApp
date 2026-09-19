@@ -344,7 +344,13 @@
   },
   "agronomist": {
     "title": "Agronomist",
-    "empty": "The review queue will appear here."
+    "subnav": "Agronomist sections",
+    "readOnly": "Read only: only agronomists review diagnoses and change the corpus.",
+    "nav": {
+      "queue": "Review queue",
+      "corpus": "Corpus",
+      "quality": "Diagnosis quality"
+    }
   },
   "flags": {
     "title": "Flags",
@@ -756,7 +762,17 @@
     "invalidAssignment": "Choose an existing store or cluster.",
     "roleNotGrantable": "Only an owner can grant or change the owner role.",
     "cannotModifySelf": "You cannot change your own role or status.",
-    "invalidSettings": "Some settings are out of range. Check the highlighted fields."
+    "invalidSettings": "Some settings are out of range. Check the highlighted fields.",
+    "corpusProblemExists": "This crop already has a live corpus entry for this problem.",
+    "corpusProblemInvalid": "The pest or disease does not fit this crop, or a required name is missing.",
+    "corpusEntryLocked": "Approved and retired entries are locked. Retire it and create a new entry.",
+    "corpusImageExists": "This image is already in the corpus for this problem.",
+    "corpusTransition": "This move is not allowed from the entry's current status.",
+    "diagnosisNotReviewable": "This diagnosis is still being processed and cannot be reviewed yet.",
+    "reviewInvalid": "Pick a live corpus problem of the same crop, or choose another decision.",
+    "imageMissing": "The upload did not complete. Upload the image again.",
+    "encoderUnavailable": "The image encoder is unavailable. Try again in a few minutes.",
+    "uploadFailed": "The upload failed. Check the file and try again."
   },
   "validation": {
     "required": "Required",
@@ -1356,5 +1372,309 @@
     "errors": {
       "entityId": "Use the id or its first characters (0-9, a-f and -)."
     }
+  },
+  "queue": {
+    "title": "Review queue",
+    "subtitle": "Provisional, out-of-scope and flagged diagnoses, oldest first. Review within 24 hours.",
+    "filters": {
+      "label": "Queue filters",
+      "crop": "Crop",
+      "confidence": "Confidence",
+      "age": "Age",
+      "ageAny": "Any age",
+      "ageOver": "Older than {n} h",
+      "flagged": "Flagged only"
+    },
+    "sortOldest": "Oldest first",
+    "total": "{n} waiting",
+    "overdue": "{n} past 18 h",
+    "emptyTitle": "The queue is clear",
+    "empty": "No diagnoses are waiting for review.",
+    "emptyFilteredTitle": "Nothing matches these filters",
+    "emptyFiltered": "Change or clear the filters to see more.",
+    "loadMore": "Load more",
+    "open": "Open diagnosis",
+    "waiting": "Waiting {n}",
+    "selectPrompt": "Select a diagnosis to review it.",
+    "noLabel": "No label yet",
+    "unknownCrop": "Unknown crop",
+    "flagged": "Flagged",
+    "askExpert": "Farmer asked an expert",
+    "sla": {
+      "dueIn": "Review due in {n}",
+      "warning": "18 h alert · due in {n}",
+      "breach": "SLA breached {n} ago"
+    },
+    "status": {
+      "queued": "Queued",
+      "answered": "Answered",
+      "provisional": "Provisional",
+      "confirmed": "Confirmed",
+      "corrected": "Corrected",
+      "out_of_scope": "Out of scope"
+    },
+    "source": {
+      "corpus": "Corpus",
+      "llm": "LLM",
+      "agronomist": "Agronomist",
+      "none": "No answer"
+    }
+  },
+  "review": {
+    "photos": "Photos",
+    "photoAlt": "Farmer photo {n}",
+    "openPhoto": "Open photo {n}",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "zoomReset": "Reset zoom",
+    "zoomLevel": "{n}%",
+    "context": "Farm context",
+    "crop": "Crop",
+    "district": "District",
+    "season": "Season",
+    "stage": "Crop stage",
+    "captured": "Captured",
+    "privacy": "Only crop, district, season and stage are shown here.",
+    "currentLabel": "Current label",
+    "outOfScope": "Out of scope: {reason}",
+    "oosReason": {
+      "not_a_plant": "no plant in the photo",
+      "unsupported_crop": "crop not in the corpus",
+      "unreadable_image": "photo unreadable",
+      "no_match": "no close corpus match",
+      "expert_not_diagnosable": "not diagnosable"
+    },
+    "candidates": {
+      "title": "Model candidates",
+      "problem": "Problem",
+      "similarity": "Similarity",
+      "votes": "Votes (top 10)",
+      "share": "Vote share",
+      "corpusPick": "Corpus pick",
+      "llmPick": "LLM pick",
+      "none": "No corpus candidates: similarity was below the floor.",
+      "thresholds": "Thresholds v{v}: T1 {t1} · agreement {agreement} · floor {floor}"
+    },
+    "llm": {
+      "title": "LLM answer",
+      "label": "Automated suggestion — verify",
+      "answer": "Answer",
+      "confidence": "Model confidence",
+      "reasoning": "Reasoning",
+      "unknown": "Unknown: the model did not choose a candidate.",
+      "notAPlant": "The model saw no plant in the photo.",
+      "notUsed": "The LLM was not used for this diagnosis.",
+      "symptoms": "Visible symptoms"
+    },
+    "provenance": {
+      "title": "Provenance",
+      "source": "Answer source",
+      "encoder": "Image encoder",
+      "onDevice": "On-device model",
+      "llm": "LLM model",
+      "corpus": "Corpus version",
+      "notUsed": "Not used"
+    },
+    "history": "Review history",
+    "historyEntry": "{action}: {from} → {to}",
+    "form": {
+      "title": "Your review",
+      "action": "Decision",
+      "confirm": "Confirm label",
+      "correct": "Correct label",
+      "notDiagnosable": "Not diagnosable",
+      "problem": "Correct problem",
+      "search": "Search problems in any language",
+      "problemHelp": "Live corpus problems of {crop}.",
+      "noProblems": "No corpus problems match.",
+      "note": "Note for the record",
+      "addToCorpus": "Add these photos to the corpus (as reviewed images; approve them in the corpus)",
+      "submit": "Submit review",
+      "nothingToConfirm": "There is no label to confirm; correct it or mark it not diagnosable.",
+      "errors": {
+        "action": "Choose a decision.",
+        "problem": "Pick the correct problem.",
+        "same": "Pick a problem other than the current label, or confirm it.",
+        "note": "Add a note."
+      }
+    },
+    "done": {
+      "title": "Review saved",
+      "notified": "The farmer and their field officer have been notified.",
+      "result": "The farmer now sees: {problem} ({status}).",
+      "notDiagnosable": "The farmer now sees: not diagnosable. Their field officer will follow up.",
+      "corpusAdded": "{n} photos added to the corpus as reviewed images.",
+      "next": "Next in queue"
+    },
+    "ownerNote": "Owners can read the queue; only agronomists review."
+  },
+  "corpus": {
+    "title": "Corpus manager",
+    "subtitle": "Problems, field images, the approval workflow and version history.",
+    "productionNote": "Only approved entries are used in production: approved problems with their approved images. Approving is the regulatory human gate.",
+    "version": "Corpus version {v}",
+    "filters": {
+      "label": "Corpus filters",
+      "crop": "Crop",
+      "status": "Status",
+      "source": "Source",
+      "production": "Show what production uses"
+    },
+    "columns": {
+      "problem": "Problem",
+      "type": "Type",
+      "crop": "Crop",
+      "status": "Status",
+      "images": "Images",
+      "served": "Served images",
+      "source": "Source",
+      "approvedIn": "Approved in"
+    },
+    "imageCounts": "{approved} approved · {reviewed} reviewed · {draft} draft",
+    "status": {
+      "draft": "Draft",
+      "reviewed": "Reviewed",
+      "approved": "Approved",
+      "retired": "Retired"
+    },
+    "source": {
+      "internal": "Field (internal)",
+      "public": "Public dataset"
+    },
+    "type": {
+      "disease": "Disease",
+      "pest": "Pest",
+      "nutrient": "Nutrient",
+      "abiotic": "Abiotic"
+    },
+    "new": "New problem",
+    "edit": "Edit",
+    "open": "Open {name}",
+    "emptyTitle": "No corpus problems",
+    "empty": "No corpus problems match these filters.",
+    "locked": "Approved and retired entries are locked. Retire it and create a new entry to change it.",
+    "actions": {
+      "label": "Workflow",
+      "reviewed": "Mark reviewed",
+      "approved": "Approve",
+      "draft": "Back to draft",
+      "retired": "Retire"
+    },
+    "transitionNote": "Note (optional)",
+    "approve": {
+      "title": "Approve for production",
+      "body": "Approving makes this entry available to production diagnoses and moves the corpus from version {from} to {to}.",
+      "gate": "This is the regulatory human gate. Confirm that you have checked the label, the names in every language and the images.",
+      "check": "I have verified this entry",
+      "includeImages": "Also approve the {n} reviewed images of this problem",
+      "confirm": "Approve and publish"
+    },
+    "retire": {
+      "title": "Retire entry",
+      "body": "Retired entries are never used again. Retiring an approved entry changes production and bumps the corpus version.",
+      "confirm": "Retire"
+    },
+    "bumped": "Corpus version is now {v}",
+    "moved": "Moved to {status}",
+    "dialog": {
+      "createTitle": "New corpus problem",
+      "editTitle": "Edit {name}",
+      "crop": "Crop",
+      "pest": "Pest or disease",
+      "pestHelp": "From the product master. One live entry per crop and problem.",
+      "type": "Type: {type}",
+      "names": "Names",
+      "nameIn": "Name ({lang})",
+      "symptoms": "Symptoms checklist",
+      "symptomsIn": "Symptoms in {lang}, one per line",
+      "practicesIn": "Cultural practices in {lang}, one per line",
+      "source": "Source",
+      "notes": "Notes",
+      "nameRequired": "The English name is required.",
+      "pestRequired": "Choose the pest or disease.",
+      "cropRequired": "Choose a crop.",
+      "missing": "Missing: {langs}"
+    },
+    "detail": {
+      "title": "Problem detail",
+      "close": "Close detail",
+      "symptoms": "Symptoms ({lang})",
+      "noSymptoms": "No symptoms in this language yet.",
+      "labelledBy": "Labelled by",
+      "reviewedAt": "Reviewed",
+      "approvedAt": "Approved",
+      "approvedIn": "Approved in version {v}",
+      "retiredAt": "Retired",
+      "notes": "Notes"
+    },
+    "images": {
+      "title": "Images",
+      "empty": "No images yet.",
+      "upload": "Upload image",
+      "file": "Image file",
+      "uploadHelp": "JPEG or PNG. Uploaded in 256 KB chunks, then embedded by the server.",
+      "uploading": "Uploading {pct}%",
+      "embedding": "Embedding…",
+      "embedded": "Embedded · {encoder}",
+      "fromReview": "From a review",
+      "alt": "{problem}, image {n}",
+      "fileRequired": "Choose an image file."
+    },
+    "meta": {
+      "stage": "Stage",
+      "part": "Part",
+      "severity": "Severity",
+      "region": "Region",
+      "season": "Season",
+      "source": "Source"
+    },
+    "part": {
+      "leaf": "Leaf",
+      "stem": "Stem",
+      "fruit": "Fruit",
+      "whole": "Whole plant"
+    },
+    "season": {
+      "kharif": "Kharif",
+      "rabi": "Rabi",
+      "zaid": "Zaid"
+    },
+    "versions": {
+      "title": "Version history",
+      "current": "Current",
+      "changes": "{p} problems · {i} images · {r} retired",
+      "empty": "No versions yet."
+    }
+  },
+  "quality": {
+    "title": "Diagnosis quality",
+    "subtitle": "Basic view from the review queue and the last {days} days of diagnoses.",
+    "interim": "Interim view computed in the browser. The full dashboard (AN-007, M7) replaces it with server figures and test-set accuracy.",
+    "sample": "{n} diagnoses in the last {days} days",
+    "bySource": "Answered by source",
+    "answeredByCorpus": "Answered by corpus",
+    "answeredByCorpusHelp": "Share of answered diagnoses the corpus answered without the LLM.",
+    "escalation": "Escalation rate",
+    "escalationHelp": "Share of diagnoses sent to the agronomist queue.",
+    "reviewSla": "Reviewed within 24 h",
+    "reviewSlaHelp": "Of the reviewed diagnoses in the period.",
+    "queue": "Queue now",
+    "queueHelp": "{overdue} past 18 h",
+    "queueAge": "Queue age",
+    "buckets": {
+      "lt6": "Under 6 h",
+      "h6to18": "6–18 h",
+      "h18to24": "18–24 h",
+      "gt24": "Over 24 h"
+    },
+    "topUnknowns": "Top unknowns",
+    "unknownsHelp": "Out-of-scope and unlabelled answers by crop and reason.",
+    "unknownsEmpty": "No unknowns in the period.",
+    "unknownRow": "{crop} · {reason}",
+    "unknownReason": "LLM could not choose",
+    "accuracy": "Test-set accuracy",
+    "accuracyPending": "Arrives with the nightly evaluation (DX-011) in AN-007.",
+    "notAvailable": "Not available",
+    "count": "{n}"
   }
 }

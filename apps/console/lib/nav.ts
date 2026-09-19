@@ -33,11 +33,18 @@ export const FARMER_ROLES = [...OWNER_HOME_ROLES, "field_officer"] as const;
 
 export const STORE_ROLES = [...OWNER_HOME_ROLES, "accountant"] as const;
 
+/**
+ * C60-C62 crop doctor screens (WC-006, WC-007): agronomists work there, owners read them
+ * (`/v1/diagnoses/review-queue` and `/v1/corpus/*` reads); every other role is hidden.
+ */
+export const AGRONOMIST_ROLES = ["agronomist", "owner"] as const;
+
 export const ROUTE_ROLES: Readonly<Record<string, readonly string[]>> = {
   "/home": OWNER_HOME_ROLES,
   "/field-team": FIELD_TEAM_ROLES,
   "/farmers": FARMER_ROLES,
   "/stores": STORE_ROLES,
+  "/agronomist": AGRONOMIST_ROLES,
   "/flags": FLAG_READ_ROLES,
   "/admin/users": USER_READ_ROLES,
   "/settings": SETTINGS_ROLES,
