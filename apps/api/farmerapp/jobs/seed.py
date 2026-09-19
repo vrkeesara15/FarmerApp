@@ -760,7 +760,15 @@ async def _seed_tenant(
         created[table] = len(missing)
         totals[table] = len(existing[table] | {row.id for row in generated.rows[table]})
     await _seed_rules_reference(session, demo, tenant)
+    await _seed_crop_calendar_templates(session, tenant)
     return tenant, users_created, created, totals
+
+
+async def _seed_crop_calendar_templates(session: AsyncSession, tenant: Tenant) -> None:
+    """M7 FM-007: the pilot crops' calendar templates (idempotent; never overwrites edits)."""
+    from farmerapp.advisory.templates import seed_crop_task_templates
+
+    await seed_crop_task_templates(session, tenant.id)
 
 
 async def _seed_rules_reference(session: AsyncSession, demo: DemoTenant, tenant: Tenant) -> None:

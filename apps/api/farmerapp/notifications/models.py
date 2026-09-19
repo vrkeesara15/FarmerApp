@@ -40,6 +40,10 @@ class NotificationKind(StrEnum):
     #: FM-006: a farmer / officer asked an expert about an answered case (to agronomists)
     DIAGNOSIS_EXPERT_REQUESTED = "diagnosis_expert_requested"
     DATA_REQUEST_RECEIVED = "data_request_received"  # FM-015 / NF-013: a ticket to handle
+    CROP_TASK_REMINDER = "crop_task_reminder"  # FM-007: a crop calendar task is due
+    OUTBREAK_ALERT = "outbreak_alert"  # DX-013 / FM-009: pest / disease cluster in a district
+    DIAGNOSIS_EVAL_DROP = "diagnosis_eval_drop"  # DX-011: top-1 accuracy fell > 5 points
+    MODEL_RELEASE_CANDIDATE = "model_release_candidate"  # DX-012: a model awaits approval
 
 
 class Notification(Base, TenantRow):

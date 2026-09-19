@@ -4,6 +4,7 @@ Importing this package also installs the FA-006 audit listener (``farmerapp.db.a
 """
 
 import farmerapp.db.audit  # noqa: F401  (registers the session listener)
+from farmerapp.advisory.models import CropPlotTask, CropTaskTemplate, OutbreakAlert
 from farmerapp.api.idempotency import IdempotencyKey
 from farmerapp.auth.models import Device, OtpChallenge, RefreshToken, User
 from farmerapp.catalog.crops import Crop
@@ -24,6 +25,7 @@ from farmerapp.flags.models import Flag, FlagComment, FlagEvent, FlagSummary, Ru
 from farmerapp.invoices.models import Invoice, InvoiceCounter
 from farmerapp.khata.models import CreditApprovalRequest, CreditLimit, KhataEntry
 from farmerapp.location.models import DutySession, LocationDailyAgg, LocationPoint, PolicyAcceptance
+from farmerapp.mlops.models import CorpusEmbedding, EncoderActivation, EvaluationRun, ModelRelease
 from farmerapp.notifications.models import Notification
 from farmerapp.orders.models import Order, OrderLine, OrderStatusEvent
 from farmerapp.payments.models import DayClose, Payment, WebhookEvent
@@ -40,6 +42,7 @@ __all__ = [
     "AuditLog",
     "Cluster",
     "ConsentRecord",
+    "CorpusEmbedding",
     "CorpusImage",
     "CorpusProblem",
     "CorpusVersion",
@@ -48,6 +51,8 @@ __all__ = [
     "Crop",
     "CropCalendar",
     "CropPlot",
+    "CropPlotTask",
+    "CropTaskTemplate",
     "DataRequest",
     "DayClose",
     "Device",
@@ -55,6 +60,8 @@ __all__ = [
     "DiagnosisReview",
     "DiagnosisThreshold",
     "DutySession",
+    "EncoderActivation",
+    "EvaluationRun",
     "Farm",
     "FarmPhoto",
     "Farmer",
@@ -70,11 +77,13 @@ __all__ = [
     "LlmCallLog",
     "LocationDailyAgg",
     "LocationPoint",
+    "ModelRelease",
     "Notification",
     "Order",
     "OrderLine",
     "OrderStatusEvent",
     "OtpChallenge",
+    "OutbreakAlert",
     "OverrideRequest",
     "Payment",
     "PestOrDisease",

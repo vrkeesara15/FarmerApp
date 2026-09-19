@@ -55,6 +55,7 @@ SYNC_ENTITIES: tuple[str, ...] = (
     "khata_entry",
     "credit_approval_request",  # ST-007 / FA-020 A56: read-only on devices, never written
     "diagnosis",  # M6: offline capture (create) + results in the feed; never updated by devices
+    "crop_plot_task",  # M7 FM-007: calendar offline; devices update status / reminder only
 )
 #: Never in the change feed, whatever hook sees them: raw location points are high-volume
 #: telemetry the device already has (VV-001) and other officers must never receive (SPEC 2.6).

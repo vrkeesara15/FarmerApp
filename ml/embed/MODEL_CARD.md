@@ -46,7 +46,9 @@ crop and encoder (cosine, pgvector HNSW). The encoder is **not** a classifier; t
 ## Changing the model
 
 A new model, revision or pre-processing is a **new `VERSION`** in `embed/spec.py`: rebuild the
-image, re-embed the whole corpus into the new encoder's vectors (DX-012), then move the API pin
-(`DIAGNOSIS_ENCODER_VERSION`). The service refuses (409) requests for any other name / version and
+image, re-embed the whole corpus into the new encoder's vectors (`python -m farmerapp.jobs
+reembed-corpus`, staged in `corpus_embedding`), move the API pin (`DIAGNOSIS_ENCODER_VERSION`)
+and flip the corpus in one transaction (`activate-encoder`) — the full order is in README.md
+"Switching models" (DX-012). The service refuses (409) requests for any other name / version and
 the API refuses responses for any other name / version / dim, so two embedding spaces are never
 mixed.

@@ -215,6 +215,7 @@ def _env() -> Iterator[None]:
     os.environ["DIAGNOSIS_LLM"] = "fake"
     os.environ["DIAGNOSIS_ENCODER"] = "fake"
     os.environ["DIAGNOSIS_DELIVERY"] = "inline"
+    os.environ["WEATHER_PROVIDER"] = "fake"  # FM-008: never call Open-Meteo from tests
     os.environ.pop("ANTHROPIC_API_KEY", None)
     os.environ["BLOB_LOCAL_DIR"] = tempfile.mkdtemp(prefix="farmerapp-blobs-")
     get_settings.cache_clear()

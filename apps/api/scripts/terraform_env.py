@@ -124,6 +124,8 @@ _STAND_INS: dict[str, str] = {
     "module.sql.database_name": "farmerapp",
     "module.storage.bucket_names.photos": "farmerapp-prd-photos",
     "module.storage.bucket_names.exports": "farmerapp-prd-exports",
+    "module.storage.bucket_names.corpus": "farmerapp-prd-corpus",
+    "var.flag_summary_llm": "claude",
     "module.kms.pii_key_name": (
         "projects/farmerapp-prd/locations/asia-south1/keyRings/farmerapp-prd/cryptoKeys/pii"
     ),

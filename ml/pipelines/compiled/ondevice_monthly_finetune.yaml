@@ -1,0 +1,229 @@
+# PIPELINE DEFINITION
+# Name: ondevice-monthly-finetune
+# Description: DX-012: export approved field images, fine-tune the on-device model, register a candidate; an agronomist / owner approves it in the console before any app downloads it.
+# Inputs:
+#    base_model_uri: str
+#    base_version: str
+#    corpus_bucket: str
+#    export_date: str
+#    project: str
+#    region: str
+#    tenant_id: str
+components:
+  comp-finetune-and-export:
+    executorLabel: exec-finetune-and-export
+    inputDefinitions:
+      parameters:
+        base_model_uri:
+          parameterType: STRING
+        base_version:
+          parameterType: STRING
+        corpus_bucket:
+          parameterType: STRING
+        export_date:
+          parameterType: STRING
+        tenant_id:
+          parameterType: STRING
+    outputDefinitions:
+      parameters:
+        artifact_uri:
+          parameterType: STRING
+        metadata_uri:
+          parameterType: STRING
+  comp-register-candidate:
+    executorLabel: exec-register-candidate
+    inputDefinitions:
+      parameters:
+        artifact_uri:
+          parameterType: STRING
+        job:
+          parameterType: STRING
+        metadata_uri:
+          parameterType: STRING
+        project:
+          parameterType: STRING
+        region:
+          parameterType: STRING
+        tenant_id:
+          parameterType: STRING
+  comp-run-api-job:
+    executorLabel: exec-run-api-job
+    inputDefinitions:
+      parameters:
+        command:
+          parameterType: STRING
+        job:
+          parameterType: STRING
+        project:
+          parameterType: STRING
+        region:
+          parameterType: STRING
+        tenant_id:
+          parameterType: STRING
+deploymentSpec:
+  executors:
+    exec-finetune-and-export:
+      container:
+        args:
+        - '{{$.inputs.parameters[''corpus_bucket'']}}'
+        - '{{$.inputs.parameters[''tenant_id'']}}'
+        - '{{$.inputs.parameters[''export_date'']}}'
+        - '{{$.inputs.parameters[''base_model_uri'']}}'
+        - '{{$.inputs.parameters[''base_version'']}}'
+        - '{{$.outputs.parameters[''artifact_uri''].output_file}}'
+        - '{{$.outputs.parameters[''metadata_uri''].output_file}}'
+        command:
+        - bash
+        - -ceu
+        - "\ncorpus=\"$1\"; tenant=\"$2\"; day=\"$3\"; base_uri=\"$4\"; base_version=\"\
+          $5\"; out_artifact=\"$6\"; out_meta=\"$7\"\nexport_uri=\"gs://${corpus}/training/${tenant}/${day}/manifest.csv\"\
+          \nmkdir -p data/mirror runs/base\ngcloud storage cp \"${export_uri}\" data/export.csv\n\
+          gcloud storage rsync --recursive \"gs://${corpus}\" \"data/mirror/${corpus}\"\
+          \ --exclude=\"^(training|models|eval)/\"\ngcloud storage cp \"${base_uri}\"\
+          \ runs/base/model.keras\nuv run --frozen python finetune.py --training-export\
+          \ data/export.csv --training-export-uri \"${export_uri}\" \\\n  --images-dir\
+          \ data/mirror --base runs/base/model.keras --base-version \"${base_version}\"\
+          \ --out runs/candidate\nversion=\"$(cat runs/candidate/next_version.txt)\"\
+          \nuv run --frozen python export.py --keras runs/candidate/model.keras --out\
+          \ runs/candidate/export \\\n  --model-version \"${version}\" --source public+field\
+          \ --training-manifest-uri \"${export_uri}\"\ndest=\"gs://${corpus}/models/on-device/${version}\"\
+          \ngcloud storage cp runs/candidate/export/crop_quality_v1.tflite \"${dest}/model.tflite\"\
+          \ngcloud storage cp runs/candidate/export/metadata.json \"${dest}/metadata.json\"\
+          \ngcloud storage cp runs/candidate/model.keras \"${dest}/model.keras\"\n\
+          mkdir -p \"$(dirname \"${out_artifact}\")\" \"$(dirname \"${out_meta}\"\
+          )\"\nprintf '%s' \"${dest}/model.tflite\" > \"${out_artifact}\"\nprintf\
+          \ '%s' \"${dest}/metadata.json\" > \"${out_meta}\"\n"
+        - finetune
+        image: asia-south1-docker.pkg.dev/farmerapp-dev/farmerapp/ondevice-train:latest
+        resources:
+          cpuLimit: 8.0
+          memoryLimit: 32.0
+          resourceCpuLimit: '8'
+          resourceMemoryLimit: 32G
+    exec-register-candidate:
+      container:
+        args:
+        - '{{$.inputs.parameters[''project'']}}'
+        - '{{$.inputs.parameters[''region'']}}'
+        - '{{$.inputs.parameters[''job'']}}'
+        - '{{$.inputs.parameters[''tenant_id'']}}'
+        - '{{$.inputs.parameters[''artifact_uri'']}}'
+        - '{{$.inputs.parameters[''metadata_uri'']}}'
+        - '{{$.pipeline_job_name}}'
+        command:
+        - bash
+        - -ceu
+        - args="register-model-candidate,--tenant-id,$3,--artifact-uri,$4,--metadata-uri,$5,--pipeline-run,$6";
+          set -- "$0" "$1" "$2" "$args"; gcloud run jobs execute "$2" --project "$0"
+          --region "$1" --wait --args="$3"
+        image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+    exec-run-api-job:
+      container:
+        args:
+        - '{{$.inputs.parameters[''project'']}}'
+        - '{{$.inputs.parameters[''region'']}}'
+        - '{{$.inputs.parameters[''job'']}}'
+        - '{{$.inputs.parameters[''command'']}}'
+        - '{{$.inputs.parameters[''tenant_id'']}}'
+        command:
+        - bash
+        - -ceu
+        - args="$3,--tenant-id,$4"; set -- "$0" "$1" "$2" "$args"; gcloud run jobs
+          execute "$2" --project "$0" --region "$1" --wait --args="$3"
+        image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+pipelineInfo:
+  description: 'DX-012: export approved field images, fine-tune the on-device model,
+    register a candidate; an agronomist / owner approves it in the console before
+    any app downloads it.'
+  name: ondevice-monthly-finetune
+root:
+  dag:
+    tasks:
+      finetune-and-export:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-finetune-and-export
+        dependentTasks:
+        - run-api-job
+        inputs:
+          parameters:
+            base_model_uri:
+              componentInputParameter: base_model_uri
+            base_version:
+              componentInputParameter: base_version
+            corpus_bucket:
+              componentInputParameter: corpus_bucket
+            export_date:
+              componentInputParameter: export_date
+            tenant_id:
+              componentInputParameter: tenant_id
+        taskInfo:
+          name: finetune-and-export
+      register-candidate:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-register-candidate
+        dependentTasks:
+        - finetune-and-export
+        inputs:
+          parameters:
+            artifact_uri:
+              taskOutputParameter:
+                outputParameterKey: artifact_uri
+                producerTask: finetune-and-export
+            job:
+              runtimeValue:
+                constant: export-training-set
+            metadata_uri:
+              taskOutputParameter:
+                outputParameterKey: metadata_uri
+                producerTask: finetune-and-export
+            project:
+              componentInputParameter: project
+            region:
+              componentInputParameter: region
+            tenant_id:
+              componentInputParameter: tenant_id
+        taskInfo:
+          name: register-model-candidate (approval gate in the API)
+      run-api-job:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-run-api-job
+        inputs:
+          parameters:
+            command:
+              runtimeValue:
+                constant: export-training-set
+            job:
+              runtimeValue:
+                constant: export-training-set
+            project:
+              componentInputParameter: project
+            region:
+              componentInputParameter: region
+            tenant_id:
+              componentInputParameter: tenant_id
+        taskInfo:
+          name: export-training-set
+  inputDefinitions:
+    parameters:
+      base_model_uri:
+        parameterType: STRING
+      base_version:
+        parameterType: STRING
+      corpus_bucket:
+        parameterType: STRING
+      export_date:
+        parameterType: STRING
+      project:
+        parameterType: STRING
+      region:
+        parameterType: STRING
+      tenant_id:
+        parameterType: STRING
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.13.0

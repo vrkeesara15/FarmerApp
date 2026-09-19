@@ -37,6 +37,13 @@ service_area.districts              []           VA-F04 districts the tenant ser
                                                  state, bbox or polygon); empty = not checked
 discount_policy_max_bps             1000         VA-E09 most discount on a sale (bp of subtotal)
 incentive_cutoff_day                25           VA-E09 day of month the incentive is computed
+quiet_hours                         21:00-07:00  FM-007 no farmer reminders in this IST window
+calendar_reminders.*                see model    FM-007 reminder time (07:00 IST), lookback days
+weather.*                           see model    FM-008 spray thresholds: rain >= 30 %, wind >=
+                                                 15 km/h hide a window; heat / humidity cautions
+outbreak.*                          see model    DX-013 / FM-009 >= 3 cases and >= 2x the
+                                                 trailing 4-week mean; farmer alerts on
+diagnosis_evaluation.*              see model    DX-011 alert when top-1 drops > 5 points
 branding.*                          see Branding C102 app names, colour, logo, support phone
 =================================== ============ ==============================================
 
@@ -116,6 +123,11 @@ SETTINGS_KEYS: Mapping[str, str] = {
     "service_area": "VA-F04 service districts: [{code, name, state, bbox | polygon}]",
     "discount_policy_max_bps": "VA-E09 largest discount on a sale, basis points of subtotal",
     "incentive_cutoff_day": "VA-E09 day of month the officer incentive is computed (1-28)",
+    "quiet_hours": "FM-007 IST window (start, end HH:MM) with no farmer reminders",
+    "calendar_reminders": "FM-007 crop task reminders: local_time (HH:MM IST), lookback_days",
+    "weather": "FM-008 spray advice thresholds (rain %, wind km/h) and heat / humidity cautions",
+    "outbreak": "DX-013 / FM-009 outbreak rule (min_cases, ratio, baseline_weeks) and alerts",
+    "diagnosis_evaluation": "DX-011 nightly evaluation alert threshold (top-1 drop in points)",
     "branding": "C102 app names, primary colour, logo and support phone (tenant.branding)",
 }
 
@@ -188,6 +200,80 @@ class ServiceArea(BaseModel):
         return next((d for d in self.districts if d.contains(lon, lat)), None)
 
 
+class QuietHours(BaseModel):
+    """FM-007: farmer reminders are not written inside this IST window (may wrap midnight)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    start: str = Field(default="21:00", pattern=_HHMM)
+    end: str = Field(default="07:00", pattern=_HHMM)
+
+    def contains(self, local: time) -> bool:
+        start, end = _hhmm(self.start), _hhmm(self.end)
+        if start == end:
+            return False
+        if start < end:
+            return start <= local < end
+        return local >= start or local < end
+
+
+class CalendarReminderSettings(BaseModel):
+    """FM-007: when the daily reminder job writes the day's crop task reminders."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    local_time: str = Field(default="07:00", pattern=_HHMM)
+    #: tasks due up to this many days ago that were never reminded still get one
+    lookback_days: int = Field(default=2, ge=0, le=14)
+
+
+class WeatherSettings(BaseModel):
+    """FM-008 spray advice: a 3-hour window is hidden ("avoid") when rain or wind reach the
+    thresholds; heat and humidity only add cautions."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    spray_max_rain_probability_pct: int = Field(default=30, ge=0, le=100)
+    spray_max_rain_mm: float = Field(default=0.5, ge=0, le=50)
+    spray_max_wind_kmh: float = Field(default=15.0, gt=0, le=100)
+    caution_max_temperature_c: float = Field(default=35.0, ge=10, le=55)
+    caution_max_humidity_pct: int = Field(default=90, ge=10, le=100)
+    caution_min_humidity_pct: int = Field(default=30, ge=0, le=90)
+
+
+class OutbreakSettings(BaseModel):
+    """DX-013 / FM-009 outbreak rule, the same as ``mart_crop_health_weekly``: a district x
+    crop x problem x ISO week with ``>= min_cases`` confirmed cases and ``>= ratio`` times the
+    mean of the ``baseline_weeks`` weeks before it."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    min_cases: int = Field(default=3, ge=1, le=1000)
+    ratio: float = Field(default=2.0, ge=1.0, le=20.0)
+    baseline_weeks: int = Field(default=4, ge=1, le=26)
+    #: count corpus answers of high confidence (status answered) next to agronomist reviews
+    include_answered: bool = True
+    #: FM-009 crop-protection advisories to farmers of the district growing the crop
+    #: (TODO-LEGAL: sent without marketing consent; see docs/prs/M7-farmer-p1-api.md)
+    farmer_alerts_enabled: bool = True
+    #: an alert stays listed (``GET /v1/alerts``) this many weeks after its week
+    active_weeks: int = Field(default=2, ge=1, le=8)
+
+
+class EvaluationSettings(BaseModel):
+    """DX-011: the nightly evaluation alerts when top-1 accuracy drops by more than this many
+    percentage points against the previous run."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    alert_drop_points: float = Field(default=5.0, gt=0, le=50)
+
+
+def _hhmm(value: str) -> time:
+    hour, minute = value.split(":")
+    return time(int(hour), int(minute))
+
+
 class Branding(BaseModel):
     """``tenant.branding`` (C102): overrides of the app names (null: the i18n default,
     "Mitra" / "Kisan"), the primary colour, the logo (a blob URI from ``/v1/uploads``) and
@@ -240,6 +326,11 @@ class TenantSettings(BaseModel):
     service_area: ServiceArea = Field(default_factory=ServiceArea)
     discount_policy_max_bps: int = Field(default=1000, ge=0, le=10_000)
     incentive_cutoff_day: int = Field(default=25, ge=1, le=28)
+    quiet_hours: QuietHours = Field(default_factory=QuietHours)
+    calendar_reminders: CalendarReminderSettings = Field(default_factory=CalendarReminderSettings)
+    weather: WeatherSettings = Field(default_factory=WeatherSettings)
+    outbreak: OutbreakSettings = Field(default_factory=OutbreakSettings)
+    diagnosis_evaluation: EvaluationSettings = Field(default_factory=EvaluationSettings)
     branding: Branding = Field(default_factory=Branding)
 
     def auto_duty_end_time(self) -> time:
@@ -345,11 +436,16 @@ __all__ = [
     "SETTINGS_KEYS",
     "SUPPORTED_LANGUAGES",
     "Branding",
+    "CalendarReminderSettings",
+    "EvaluationSettings",
     "FeatureSettings",
+    "OutbreakSettings",
+    "QuietHours",
     "SamplingSettings",
     "ServiceArea",
     "ServiceDistrict",
     "TenantSettings",
+    "WeatherSettings",
     "get_tenant_settings",
     "parse_settings",
     "settings_from_tenant",

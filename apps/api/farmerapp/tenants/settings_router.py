@@ -35,11 +35,16 @@ from farmerapp.logging import get_logger
 from farmerapp.tenants.settings import (
     PUBLIC_KEYS,
     Branding,
+    CalendarReminderSettings,
+    EvaluationSettings,
     FeatureSettings,
     Language,
+    OutbreakSettings,
+    QuietHours,
     SamplingSettings,
     ServiceArea,
     TenantSettings,
+    WeatherSettings,
     parse_settings,
     settings_from_tenant,
 )
@@ -139,6 +144,19 @@ class SettingsPatch(BaseModel):
     )
     discount_policy_max_bps: int | None = Field(default=None, description="VA-E09 0-10000 bp.")
     incentive_cutoff_day: int | None = Field(default=None, description="VA-E09 day 1-28.")
+    quiet_hours: QuietHours | None = Field(default=None, description="FM-007 (whole object).")
+    calendar_reminders: CalendarReminderSettings | None = Field(
+        default=None, description="FM-007 reminder time and lookback (whole object)."
+    )
+    weather: WeatherSettings | None = Field(
+        default=None, description="FM-008 spray thresholds (whole object)."
+    )
+    outbreak: OutbreakSettings | None = Field(
+        default=None, description="DX-013 / FM-009 outbreak rule and alerts (whole object)."
+    )
+    diagnosis_evaluation: EvaluationSettings | None = Field(
+        default=None, description="DX-011 alert threshold (whole object)."
+    )
 
 
 def _merge(current: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:

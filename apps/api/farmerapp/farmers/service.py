@@ -695,6 +695,8 @@ async def update_crop_plot(
         setattr(plot, key, value)
     await session.flush()
     await session.refresh(plot)
+    if {"sowing_date", "crop_id", "season"} & changes.keys():
+        await _calendar_changed(session, plot)  # FM-007: regenerate the pending tasks
     return CropPlotOut.from_row(plot)
 
 
@@ -705,7 +707,14 @@ async def delete_crop_plot(
     plot.deleted_at = _now()
     await session.flush()
     await session.refresh(plot)
+    await _calendar_changed(session, plot)  # FM-007: pending tasks go with the plot
     return CropPlotOut.from_row(plot)
+
+
+async def _calendar_changed(session: AsyncSession, plot: CropPlot) -> None:
+    from farmerapp.advisory.calendar import on_plot_changed
+
+    await on_plot_changed(session, plot)
 
 
 __all__ = [

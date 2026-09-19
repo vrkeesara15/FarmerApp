@@ -167,7 +167,9 @@ jobs:
         run: |
           for job in run-rules-batch flags-sla-escalation officer-sync-silence auto-end-duty \
                      ensure-partitions purge-location-points purge-expired store-day-watch \
-                     diagnosis-queue-age reconcile-payments backfill-farm-photo-phash; do
+                     diagnosis-queue-age reconcile-payments backfill-farm-photo-phash \
+                     flags-summarise rules-quality-report calendar-reminders outbreak-detection \
+                     diagnosis-evaluate export-training-set; do
             gcloud run jobs update "$job" --region "$REGION" --project "$DEV_PROJECT" \
               --image "${REGISTRY}/jobs:${{ needs.build.outputs.tag }}" --quiet
           done

@@ -79,6 +79,21 @@ async def nearest(
         .limit(k)
     )
     rows = (await session.execute(stmt)).all()
+    if not rows:
+        # DX-012 rollout: the API pin moved to a new encoder whose vectors are staged in
+        # corpus_embedding but not activated yet (farmerapp.mlops.reembed).
+        from farmerapp.mlops.reembed import has_staged, nearest_staged
+
+        if await has_staged(session, tenant_id, encoder):
+            return await nearest_staged(
+                session,
+                vector,
+                tenant_id=tenant_id,
+                crop_id=crop_id,
+                encoder=encoder,
+                problem_ids=problem_ids,
+                k=k,
+            )
     return [
         Neighbour(image_id=row.id, problem_id=row.problem_id, similarity=1.0 - float(row.distance))
         for row in rows

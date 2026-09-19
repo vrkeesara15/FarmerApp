@@ -27,6 +27,7 @@ Entity = Literal[
     "khata_entry",
     "credit_approval_request",
     "diagnosis",
+    "crop_plot_task",  # M7 FM-007 (update: status / reminder_enabled)
 ]
 Action = Literal["create", "update", "delete"]
 ResultStatus = Literal["applied", "duplicate", "conflict", "rejected"]

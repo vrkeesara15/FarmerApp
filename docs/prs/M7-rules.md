@@ -104,11 +104,12 @@ the new routes. OpenAPI regenerated.
   (`farmerapp/rules/reference.py`); add district rows where needed.
 * **Policies (VA-E09)**: owner confirms the discount policy (10 %) and incentive cut-off
   day (25th) per tenant.
-* **Infra (parent / infra agent)**: Pub/Sub topic `flag.created` + worker push subscription;
+* **Infra (parent / infra agent)**: ~~Pub/Sub topic `flag.created` + worker push subscription;
   Cloud Scheduler jobs `flags-summarise` (every 10 min) and `rules-quality-report` (Monday
-  03:00 IST); `FLAG_SUMMARY_LLM=claude` + `ANTHROPIC_API_KEY` on the jobs service
-  (the worker already has the key); `.env.example` lines for `FLAG_SUMMARY_LLM*` (outside
-  this branch's paths).
+  03:00 IST); `FLAG_SUMMARY_LLM=claude` + `ANTHROPIC_API_KEY` on the jobs service~~ — **done
+  2026-09-19 in `feat/M7-farmer-p1-api`** (`var.flag_summary_llm`: off in dev, claude in
+  stg / prd; the topic gets its DLQ and push subscription from `modules/pubsub`).
+  Still open: `.env.example` lines for `FLAG_SUMMARY_LLM*` (outside both branches' paths).
 * **Integration**: WC-008 registers its `SegmentMembershipPort`; FA-023 registers its
   `TravelClaimPort` and calls `on_travel_claim_submitted` after a claim is submitted.
 * **Console / apps**: the flag detail should render `automated_summary` under

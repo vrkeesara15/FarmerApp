@@ -65,6 +65,7 @@ APPEND_ONLY_TABLES = frozenset(
         "corpus_version",  # M6 DX-005: monotonic corpus versions
         "diagnosis_review",  # M6 WC-006: agronomist review history
         "llm_call_log",  # M6 SEC-027 / SPEC 3.4: LLM prompts + outputs, kept one year
+        "encoder_activation",  # M7 DX-012: history of active-encoder flips
     }
 )
 

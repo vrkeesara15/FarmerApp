@@ -8279,6 +8279,318 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+  /v1/diagnoses/quality:
+    get:
+      tags:
+      - diagnosis-ops
+      summary: 'AN-007: corpus share, escalation rate, review SLA, top unknowns, latest evaluation'
+      operationId: getDiagnosisQuality
+      parameters:
+      - name: days
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 365
+          minimum: 1
+          default: 30
+          title: Days
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualityOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - director
+      - owner
+      - tenant_admin
+  /v1/diagnoses/evaluations:
+    get:
+      tags:
+      - diagnosis-ops
+      summary: 'DX-011: nightly evaluation runs, newest first'
+      operationId: listDiagnosisEvaluations
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 30
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationListOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - director
+      - owner
+      - tenant_admin
+  /v1/diagnoses/evaluations/{id}:
+    get:
+      tags:
+      - diagnosis-ops
+      summary: 'DX-011: one evaluation run with metrics per crop and per problem'
+      operationId: getDiagnosisEvaluation
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationRunOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - director
+      - owner
+      - tenant_admin
+  /v1/models/on-device/current:
+    get:
+      tags:
+      - diagnosis-ops
+      summary: 'DX-012: the approved on-device model to download (signed URL, sha256)'
+      operationId: getCurrentOnDeviceModel
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnDeviceModelOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`no_approved_model`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/models/releases:
+    get:
+      tags:
+      - diagnosis-ops
+      summary: 'DX-012: on-device model releases (candidates first, then newest)'
+      operationId: listModelReleases
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/ReleaseStatus'
+          - type: 'null'
+          title: Status
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelReleaseListOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - director
+      - owner
+      - tenant_admin
+  /v1/models/releases/{id}:
+    get:
+      tags:
+      - diagnosis-ops
+      summary: 'DX-012: one release with its metadata and evaluation numbers'
+      operationId: getModelRelease
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelReleaseOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - director
+      - owner
+      - tenant_admin
+  /v1/models/releases/{id}/decision:
+    post:
+      tags:
+      - diagnosis-ops
+      summary: 'DX-012 approval gate: approve / reject a candidate, retire a release (step-up)'
+      operationId: decideModelRelease
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReleaseDecisionIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelReleaseOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_transition`, `evaluation_missing`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - agronomist
+      - owner
   /v1/diagnoses:
     post:
       tags:
@@ -9476,6 +9788,504 @@ paths:
       x-roles:
       - owner
       - tenant_admin
+  /v1/me/calendar:
+    get:
+      tags:
+      - advisory
+      summary: 'FM-007: the farmer''s crop calendar (every active crop plot and its tasks)'
+      operationId: getMyCalendar
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
+  /v1/farmers/{id}/calendar:
+    get:
+      tags:
+      - advisory
+      summary: 'FM-007: a farmer''s crop calendar (staff in scope, or the farmer)'
+      operationId: getFarmerCalendar
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: crop_plot_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Plot Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/calendar/tasks/{id}:
+    patch:
+      tags:
+      - advisory
+      summary: 'FM-007: mark a task done (or not) and switch its reminder'
+      operationId: updateCalendarTask
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdateIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CropPlotTaskOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`version_conflict`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
+      - field_officer
+  /v1/calendar/templates:
+    get:
+      tags:
+      - advisory
+      summary: 'FM-007: the agronomist-maintained crop calendar templates'
+      operationId: listCalendarTemplates
+      parameters:
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+      - name: include_inactive
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Inactive
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateListOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+    post:
+      tags:
+      - advisory
+      summary: 'FM-007: add a task to a crop''s calendar (agronomist)'
+      operationId: createCalendarTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`template_exists`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+  /v1/calendar/templates/{id}:
+    patch:
+      tags:
+      - advisory
+      summary: 'FM-007: change a template; pending tasks follow on the next read / job run'
+      operationId: updateCalendarTemplate
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`version_conflict`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+    delete:
+      tags:
+      - advisory
+      summary: 'FM-007: remove a template (soft delete; pending tasks go on the next read)'
+      operationId: deleteCalendarTemplate
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+  /v1/farms/{id}/weather:
+    get:
+      tags:
+      - advisory
+      summary: 'FM-008: 7-day forecast, next 72 h hourly and 3-hour spray windows at a farm'
+      operationId: getFarmWeather
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '503':
+          description: '`weather_unavailable`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/alerts:
+    get:
+      tags:
+      - advisory
+      summary: 'FM-009: active pest and disease alerts (the farmer''s district, or by district)'
+      operationId: listOutbreakAlerts
+      parameters:
+      - name: district
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+          title: District
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertListOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/analytics/crop-health:
+    get:
+      tags:
+      - advisory
+      summary: 'AN-006: confirmed problems by district and ISO week with outbreak flags'
+      operationId: getCropHealth
+      parameters:
+      - name: weeks
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 52
+          minimum: 1
+          default: 8
+          title: Weeks
+      - name: district
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+          title: District
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CropHealthOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - director
+      - owner
+      - tenant_admin
 components:
   schemas:
     AdjustmentIn:
@@ -9520,6 +10330,23 @@ components:
       - batch_id
       - counted_qty
       title: AdjustmentLineIn
+    AlertListOut:
+      properties:
+        districts:
+          items:
+            type: string
+          type: array
+          title: Districts
+        items:
+          items:
+            $ref: '#/components/schemas/OutbreakAlertOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - districts
+      - items
+      title: AlertListOut
     AppUsageOut:
       properties:
         has_app_login:
@@ -9985,6 +10812,90 @@ components:
       additionalProperties: false
       type: object
       title: BrandingPatch
+    CalendarOut:
+      properties:
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        today:
+          type: string
+          format: date
+          title: Today
+          description: Today in IST (the app shows overdue / today / upcoming).
+        plots:
+          items:
+            $ref: '#/components/schemas/CalendarPlotOut'
+          type: array
+          title: Plots
+      type: object
+      required:
+      - farmer_id
+      - today
+      - plots
+      title: CalendarOut
+      description: 'A farmer''s calendar: every active crop plot with its tasks (oldest due first).'
+    CalendarPlotOut:
+      properties:
+        crop_plot_id:
+          type: string
+          format: uuid
+          title: Crop Plot Id
+        farm_id:
+          type: string
+          format: uuid
+          title: Farm Id
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        crop_code:
+          type: string
+          title: Crop Code
+        crop_names:
+          additionalProperties:
+            type: string
+          type: object
+          title: Crop Names
+        season:
+          type: string
+          title: Season
+        sowing_date:
+          type: string
+          format: date
+          title: Sowing Date
+        tasks:
+          items:
+            $ref: '#/components/schemas/CropPlotTaskOut'
+          type: array
+          title: Tasks
+      type: object
+      required:
+      - crop_plot_id
+      - farm_id
+      - crop_id
+      - crop_code
+      - crop_names
+      - season
+      - sowing_date
+      - tasks
+      title: CalendarPlotOut
+    CalendarReminderSettings:
+      properties:
+        local_time:
+          type: string
+          pattern: ^([01]\d|2[0-3]):[0-5]\d$
+          title: Local Time
+          default: 07:00
+        lookback_days:
+          type: integer
+          maximum: 14.0
+          minimum: 0.0
+          title: Lookback Days
+          default: 2
+      type: object
+      title: CalendarReminderSettings
+      description: 'FM-007: when the daily reminder job writes the day''s crop task reminders.'
     CatalogKind:
       type: string
       enum:
@@ -11129,6 +12040,100 @@ components:
       - code
       - confidence
       title: CropGuessIn
+    CropHealthCellOut:
+      properties:
+        district:
+          type: string
+          title: District
+        week_start:
+          type: string
+          format: date
+          title: Week Start
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        crop_code:
+          type: string
+          title: Crop Code
+        problem_id:
+          type: string
+          format: uuid
+          title: Problem Id
+        problem_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Problem Code
+        problem_type:
+          type: string
+          title: Problem Type
+        confirmed_cases:
+          type: integer
+          title: Confirmed Cases
+        farmers_affected:
+          type: integer
+          title: Farmers Affected
+        prior_mean:
+          type: number
+          title: Prior Mean
+        outbreak:
+          type: boolean
+          title: Outbreak
+        alert_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Alert Id
+      type: object
+      required:
+      - district
+      - week_start
+      - crop_id
+      - crop_code
+      - problem_id
+      - problem_code
+      - problem_type
+      - confirmed_cases
+      - farmers_affected
+      - prior_mean
+      - outbreak
+      - alert_id
+      title: CropHealthCellOut
+    CropHealthOut:
+      properties:
+        weeks:
+          type: integer
+          title: Weeks
+        from_week:
+          type: string
+          format: date
+          title: From Week
+        to_week:
+          type: string
+          format: date
+          title: To Week
+        rule:
+          additionalProperties: true
+          type: object
+          title: Rule
+        items:
+          items:
+            $ref: '#/components/schemas/CropHealthCellOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - weeks
+      - from_week
+      - to_week
+      - rule
+      - items
+      title: CropHealthOut
+      description: 'AN-006: confirmed problems by district and ISO week with the outbreak flag
+
+        (district level only; no farm locations).'
     CropList:
       properties:
         items:
@@ -11292,6 +12297,126 @@ components:
       - updated_at
       - version
       title: CropPlotOut
+    CropPlotTaskOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        crop_plot_id:
+          type: string
+          format: uuid
+          title: Crop Plot Id
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        template_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Template Id
+        task_key:
+          type: string
+          title: Task Key
+        task_type:
+          $ref: '#/components/schemas/TaskType'
+        stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Stage
+        due_date:
+          type: string
+          format: date
+          title: Due Date
+        end_date:
+          type: string
+          format: date
+          title: End Date
+        titles:
+          additionalProperties:
+            type: string
+          type: object
+          title: Titles
+        instructions:
+          additionalProperties:
+            type: string
+          type: object
+          title: Instructions
+        product_category:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Product Category
+        sort_order:
+          type: integer
+          title: Sort Order
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        done_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Done At
+        reminder_enabled:
+          type: boolean
+          title: Reminder Enabled
+        reminded_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Reminded At
+        basis_sowing_date:
+          type: string
+          format: date
+          title: Basis Sowing Date
+        version:
+          type: integer
+          title: Version
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+      type: object
+      required:
+      - id
+      - tenant_id
+      - crop_plot_id
+      - farmer_id
+      - template_id
+      - task_key
+      - task_type
+      - stage
+      - due_date
+      - end_date
+      - titles
+      - instructions
+      - product_category
+      - sort_order
+      - status
+      - done_at
+      - reminder_enabled
+      - reminded_at
+      - basis_sowing_date
+      - version
+      - updated_at
+      - deleted_at
+      title: CropPlotTaskOut
+      description: One calendar task (also the ``crop_plot_task`` sync entity).
     CropPlotUpdate:
       properties:
         version:
@@ -11353,6 +12478,52 @@ components:
       - maturity
       - harvested
       title: CropStage
+    DailyForecastOut:
+      properties:
+        date:
+          type: string
+          format: date
+          title: Date
+        temperature_max_c:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Temperature Max C
+        temperature_min_c:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Temperature Min C
+        precipitation_mm:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Precipitation Mm
+        precipitation_probability_pct:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Precipitation Probability Pct
+        wind_max_kmh:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Wind Max Kmh
+        weather_code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Weather Code
+      type: object
+      required:
+      - date
+      - temperature_max_c
+      - temperature_min_c
+      - precipitation_mm
+      - precipitation_probability_pct
+      - wind_max_kmh
+      - weather_code
+      title: DailyForecastOut
     DataRequestOut:
       properties:
         id:
@@ -12885,6 +14056,241 @@ components:
       - debit
       - credit
       title: EntryType
+    EvaluationListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/EvaluationSummaryOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: EvaluationListOut
+    EvaluationRunOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        status:
+          type: string
+          title: Status
+        manifest:
+          type: string
+          title: Manifest
+        started_at:
+          type: string
+          format: date-time
+          title: Started At
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Finished At
+        encoder:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Encoder
+        llm:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Llm
+        corpus_version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Corpus Version
+        cases:
+          type: integer
+          title: Cases
+        top1_accuracy:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Top1 Accuracy
+        corpus_answer_share:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Corpus Answer Share
+        escalation_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Escalation Rate
+        hallucinated_out_of_scope:
+          type: integer
+          title: Hallucinated Out Of Scope
+        previous_run_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Previous Run Id
+        top1_delta_points:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Top1 Delta Points
+        alerted:
+          type: boolean
+          title: Alerted
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+        totals:
+          additionalProperties: true
+          type: object
+          title: Totals
+        per_crop:
+          additionalProperties: true
+          type: object
+          title: Per Crop
+        per_problem:
+          additionalProperties: true
+          type: object
+          title: Per Problem
+      type: object
+      required:
+      - id
+      - status
+      - manifest
+      - started_at
+      - finished_at
+      - encoder
+      - llm
+      - corpus_version
+      - cases
+      - top1_accuracy
+      - corpus_answer_share
+      - escalation_rate
+      - hallucinated_out_of_scope
+      - previous_run_id
+      - top1_delta_points
+      - alerted
+      - error
+      - totals
+      - per_crop
+      - per_problem
+      title: EvaluationRunOut
+    EvaluationSettings:
+      properties:
+        alert_drop_points:
+          type: number
+          maximum: 50.0
+          exclusiveMinimum: 0.0
+          title: Alert Drop Points
+          default: 5.0
+      type: object
+      title: EvaluationSettings
+      description: 'DX-011: the nightly evaluation alerts when top-1 accuracy drops by more than this
+        many
+
+        percentage points against the previous run.'
+    EvaluationSummaryOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        status:
+          type: string
+          title: Status
+        manifest:
+          type: string
+          title: Manifest
+        started_at:
+          type: string
+          format: date-time
+          title: Started At
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Finished At
+        encoder:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Encoder
+        llm:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Llm
+        corpus_version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Corpus Version
+        cases:
+          type: integer
+          title: Cases
+        top1_accuracy:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Top1 Accuracy
+        corpus_answer_share:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Corpus Answer Share
+        escalation_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Escalation Rate
+        hallucinated_out_of_scope:
+          type: integer
+          title: Hallucinated Out Of Scope
+        previous_run_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Previous Run Id
+        top1_delta_points:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Top1 Delta Points
+        alerted:
+          type: boolean
+          title: Alerted
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+      type: object
+      required:
+      - id
+      - status
+      - manifest
+      - started_at
+      - finished_at
+      - encoder
+      - llm
+      - corpus_version
+      - cases
+      - top1_accuracy
+      - corpus_answer_share
+      - escalation_rate
+      - hallucinated_out_of_scope
+      - previous_run_id
+      - top1_delta_points
+      - alerted
+      - error
+      title: EvaluationSummaryOut
+      description: One DX-011 run without the per-crop / per-problem tallies.
     EvidenceOut:
       properties:
         records:
@@ -14567,6 +15973,52 @@ components:
       - version
       - env
       title: HealthResponse
+    HourlyForecastOut:
+      properties:
+        time:
+          type: string
+          format: date-time
+          title: Time
+        temperature_c:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Temperature C
+        relative_humidity_pct:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Relative Humidity Pct
+        precipitation_probability_pct:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Precipitation Probability Pct
+        precipitation_mm:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Precipitation Mm
+        wind_kmh:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Wind Kmh
+        wind_gust_kmh:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Wind Gust Kmh
+      type: object
+      required:
+      - time
+      - temperature_c
+      - relative_humidity_pct
+      - precipitation_probability_pct
+      - precipitation_mm
+      - wind_kmh
+      - wind_gust_kmh
+      title: HourlyForecastOut
     ImagePart:
       type: string
       enum:
@@ -15840,6 +17292,106 @@ components:
       - count
       - amount_paise
       title: ModeTotal
+    ModelReleaseListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ModelReleaseOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: ModelReleaseListOut
+    ModelReleaseOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        kind:
+          type: string
+          title: Kind
+        model_name:
+          type: string
+          title: Model Name
+        model_version:
+          type: string
+          title: Model Version
+        artifact_uri:
+          type: string
+          title: Artifact Uri
+        sha256:
+          type: string
+          title: Sha256
+        size_bytes:
+          type: integer
+          title: Size Bytes
+        metadata:
+          additionalProperties: true
+          type: object
+          title: Metadata
+        evaluation:
+          additionalProperties: true
+          type: object
+          title: Evaluation
+        training_manifest_uri:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Training Manifest Uri
+        pipeline_run:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Pipeline Run
+        status:
+          type: string
+          title: Status
+        decided_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Decided By
+        decided_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Decided At
+        decision_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Decision Note
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - kind
+      - model_name
+      - model_version
+      - artifact_uri
+      - sha256
+      - size_bytes
+      - metadata
+      - evaluation
+      - training_manifest_uri
+      - pipeline_run
+      - status
+      - decided_by
+      - decided_at
+      - decision_note
+      - created_at
+      - version
+      title: ModelReleaseOut
     NearestStoreOut:
       properties:
         farmer_id:
@@ -16106,6 +17658,58 @@ components:
       description: 'DX-001 on-device check (ml/ondevice/INTEGRATION.md section 5), kept as DX-005
 
         provenance. Scores describe the accepted photos; no location or identity.'
+    OnDeviceModelOut:
+      properties:
+        release_id:
+          type: string
+          format: uuid
+          title: Release Id
+        model_name:
+          type: string
+          title: Model Name
+        model_version:
+          type: string
+          title: Model Version
+        sha256:
+          type: string
+          title: Sha256
+        size_bytes:
+          type: integer
+          title: Size Bytes
+        url:
+          type: string
+          title: Url
+          description: Signed download URL (15 minutes).
+        url_expires_at:
+          type: string
+          format: date-time
+          title: Url Expires At
+        labels:
+          title: Labels
+        thresholds:
+          title: Thresholds
+        input:
+          title: Input
+        output:
+          title: Output
+        approved_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Approved At
+      type: object
+      required:
+      - release_id
+      - model_name
+      - model_version
+      - sha256
+      - size_bytes
+      - url
+      - url_expires_at
+      - approved_at
+      title: OnDeviceModelOut
+      description: What the apps need to download and verify the approved on-device model.
     OnDeviceQualityScores:
       properties:
         ok:
@@ -16965,6 +18569,138 @@ components:
       - phone
       - code
       title: OtpVerifyRequest
+    OutbreakAlertOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        district:
+          type: string
+          title: District
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        crop_code:
+          type: string
+          title: Crop Code
+        crop_names:
+          additionalProperties:
+            type: string
+          type: object
+          title: Crop Names
+        problem_id:
+          type: string
+          format: uuid
+          title: Problem Id
+        problem_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Problem Code
+        problem_type:
+          type: string
+          title: Problem Type
+        problem_names:
+          additionalProperties:
+            type: string
+          type: object
+          title: Problem Names
+        week_start:
+          type: string
+          format: date
+          title: Week Start
+        iso_year:
+          type: integer
+          title: Iso Year
+        iso_week:
+          type: integer
+          title: Iso Week
+        case_count:
+          type: integer
+          title: Case Count
+        farmers_affected:
+          type: integer
+          title: Farmers Affected
+        baseline_mean:
+          type: number
+          title: Baseline Mean
+        status:
+          type: string
+          title: Status
+        grows_crop:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Grows Crop
+          description: 'Farmer callers: whether one of their plots has this crop.'
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - district
+      - crop_id
+      - crop_code
+      - crop_names
+      - problem_id
+      - problem_code
+      - problem_type
+      - problem_names
+      - week_start
+      - iso_year
+      - iso_week
+      - case_count
+      - farmers_affected
+      - baseline_mean
+      - status
+      - created_at
+      title: OutbreakAlertOut
+    OutbreakSettings:
+      properties:
+        min_cases:
+          type: integer
+          maximum: 1000.0
+          minimum: 1.0
+          title: Min Cases
+          default: 3
+        ratio:
+          type: number
+          maximum: 20.0
+          minimum: 1.0
+          title: Ratio
+          default: 2.0
+        baseline_weeks:
+          type: integer
+          maximum: 26.0
+          minimum: 1.0
+          title: Baseline Weeks
+          default: 4
+        include_answered:
+          type: boolean
+          title: Include Answered
+          default: true
+        farmer_alerts_enabled:
+          type: boolean
+          title: Farmer Alerts Enabled
+          default: true
+        active_weeks:
+          type: integer
+          maximum: 8.0
+          minimum: 1.0
+          title: Active Weeks
+          default: 2
+      type: object
+      title: OutbreakSettings
+      description: 'DX-013 / FM-009 outbreak rule, the same as ``mart_crop_health_weekly``: a district
+        x
+
+        crop x problem x ISO week with ``>= min_cases`` confirmed cases and ``>= ratio`` times the
+
+        mean of the ``baseline_weeks`` weeks before it.'
     OverdueBucketsOut:
       properties:
         '0_30':
@@ -18795,6 +20531,97 @@ components:
       - branding
       title: PublicSettings
       description: What the field and farmer apps read (no finance, credit or invoicing keys).
+    QualityOut:
+      properties:
+        days:
+          type: integer
+          title: Days
+        from_date:
+          type: string
+          format: date
+          title: From Date
+        to_date:
+          type: string
+          format: date
+          title: To Date
+        requests:
+          type: integer
+          title: Requests
+        answered_by_corpus:
+          type: integer
+          title: Answered By Corpus
+        corpus_share:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Corpus Share
+        escalated:
+          type: integer
+          title: Escalated
+        escalation_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Escalation Rate
+        llm_share:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Llm Share
+        by_source:
+          additionalProperties:
+            type: integer
+          type: object
+          title: By Source
+        by_status:
+          additionalProperties:
+            type: integer
+          type: object
+          title: By Status
+        review:
+          $ref: '#/components/schemas/ReviewSlaOut'
+        top_unknowns:
+          items:
+            $ref: '#/components/schemas/UnknownOut'
+          type: array
+          title: Top Unknowns
+        latest_evaluation:
+          anyOf:
+          - $ref: '#/components/schemas/EvaluationSummaryOut'
+          - type: 'null'
+      type: object
+      required:
+      - days
+      - from_date
+      - to_date
+      - requests
+      - answered_by_corpus
+      - corpus_share
+      - escalated
+      - escalation_rate
+      - llm_share
+      - by_source
+      - by_status
+      - review
+      - top_unknowns
+      - latest_evaluation
+      title: QualityOut
+      description: AN-007 diagnosis quality over the last ``days`` IST days.
+    QuietHours:
+      properties:
+        start:
+          type: string
+          pattern: ^([01]\d|2[0-3]):[0-5]\d$
+          title: Start
+          default: '21:00'
+        end:
+          type: string
+          pattern: ^([01]\d|2[0-3]):[0-5]\d$
+          title: End
+          default: 07:00
+      type: object
+      title: QuietHours
+      description: 'FM-007: farmer reminders are not written inside this IST window (may wrap midnight).'
     ReceiptIn:
       properties:
         reference:
@@ -18993,6 +20820,34 @@ components:
       - index
       - reason
       title: RejectedPoint
+    ReleaseDecisionIn:
+      properties:
+        decision:
+          type: string
+          enum:
+          - approve
+          - reject
+          - retire
+          title: Decision
+        note:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Note
+      additionalProperties: false
+      type: object
+      required:
+      - decision
+      title: ReleaseDecisionIn
+    ReleaseStatus:
+      type: string
+      enum:
+      - candidate
+      - approved
+      - rejected
+      - retired
+      title: ReleaseStatus
     ReplayPoint:
       properties:
         ts:
@@ -19424,6 +21279,50 @@ components:
       - items
       - counts
       title: ReviewQueuePage
+    ReviewSlaOut:
+      properties:
+        sla_hours:
+          type: integer
+          title: Sla Hours
+        reviewed:
+          type: integer
+          title: Reviewed
+        reviewed_within_sla:
+          type: integer
+          title: Reviewed Within Sla
+        sla_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Sla Rate
+          description: Reviewed within the SLA / escalations.
+        avg_review_hours:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Avg Review Hours
+        median_review_hours:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Median Review Hours
+        open_queue:
+          type: integer
+          title: Open Queue
+        open_overdue:
+          type: integer
+          title: Open Overdue
+      type: object
+      required:
+      - sla_hours
+      - reviewed
+      - reviewed_within_sla
+      - sla_rate
+      - avg_review_hours
+      - median_review_hours
+      - open_queue
+      - open_overdue
+      title: ReviewSlaOut
     RuleEnableIn:
       properties:
         reason:
@@ -19962,6 +21861,31 @@ components:
           - type: 'null'
           title: Incentive Cutoff Day
           description: VA-E09 day 1-28.
+        quiet_hours:
+          anyOf:
+          - $ref: '#/components/schemas/QuietHours'
+          - type: 'null'
+          description: FM-007 (whole object).
+        calendar_reminders:
+          anyOf:
+          - $ref: '#/components/schemas/CalendarReminderSettings'
+          - type: 'null'
+          description: FM-007 reminder time and lookback (whole object).
+        weather:
+          anyOf:
+          - $ref: '#/components/schemas/WeatherSettings'
+          - type: 'null'
+          description: FM-008 spray thresholds (whole object).
+        outbreak:
+          anyOf:
+          - $ref: '#/components/schemas/OutbreakSettings'
+          - type: 'null'
+          description: DX-013 / FM-009 outbreak rule and alerts (whole object).
+        diagnosis_evaluation:
+          anyOf:
+          - $ref: '#/components/schemas/EvaluationSettings'
+          - type: 'null'
+          description: DX-011 alert threshold (whole object).
       additionalProperties: false
       type: object
       title: SettingsPatch
@@ -20227,6 +22151,137 @@ components:
       - alluvial
       - laterite
       title: SoilType
+    SprayAdviceOut:
+      properties:
+        windows:
+          items:
+            $ref: '#/components/schemas/SprayWindowOut'
+          type: array
+          title: Windows
+          description: 'Good 3-hour windows only: windows with rain or wind at or above the thresholds
+            are hidden (listed in `avoided`).'
+        avoided:
+          items:
+            $ref: '#/components/schemas/SprayWindowOut'
+          type: array
+          title: Avoided
+        thresholds:
+          $ref: '#/components/schemas/SprayThresholdsOut'
+      type: object
+      required:
+      - windows
+      - avoided
+      - thresholds
+      title: SprayAdviceOut
+    SprayThresholdsOut:
+      properties:
+        max_rain_probability_pct:
+          type: integer
+          title: Max Rain Probability Pct
+        max_rain_mm:
+          type: number
+          title: Max Rain Mm
+        max_wind_kmh:
+          type: number
+          title: Max Wind Kmh
+        caution_max_temperature_c:
+          type: number
+          title: Caution Max Temperature C
+        caution_max_humidity_pct:
+          type: integer
+          title: Caution Max Humidity Pct
+        caution_min_humidity_pct:
+          type: integer
+          title: Caution Min Humidity Pct
+      type: object
+      required:
+      - max_rain_probability_pct
+      - max_rain_mm
+      - max_wind_kmh
+      - caution_max_temperature_c
+      - caution_max_humidity_pct
+      - caution_min_humidity_pct
+      title: SprayThresholdsOut
+    SprayWindowOut:
+      properties:
+        start:
+          type: string
+          format: date-time
+          title: Start
+        end:
+          type: string
+          format: date-time
+          title: End
+        advice:
+          type: string
+          enum:
+          - good
+          - avoid
+          title: Advice
+        reasons:
+          items:
+            type: string
+            enum:
+            - rain_likely
+            - rain
+            - wind_high
+          type: array
+          title: Reasons
+          description: Why the window is hidden (avoid).
+        cautions:
+          items:
+            type: string
+            enum:
+            - heat
+            - humidity_high
+            - humidity_low
+          type: array
+          title: Cautions
+          description: Spraying is possible, with care.
+        max_precipitation_probability_pct:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Precipitation Probability Pct
+        precipitation_mm:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Precipitation Mm
+        max_wind_kmh:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Max Wind Kmh
+        max_temperature_c:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Max Temperature C
+        min_relative_humidity_pct:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Min Relative Humidity Pct
+        max_relative_humidity_pct:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Relative Humidity Pct
+      type: object
+      required:
+      - start
+      - end
+      - advice
+      - reasons
+      - cautions
+      - max_precipitation_probability_pct
+      - precipitation_mm
+      - max_wind_kmh
+      - max_temperature_c
+      - min_relative_humidity_pct
+      - max_relative_humidity_pct
+      title: SprayWindowOut
     StepUpTokenResponse:
       properties:
         step_up_token:
@@ -21043,6 +23098,7 @@ components:
           - khata_entry
           - credit_approval_request
           - diagnosis
+          - crop_plot_task
           title: Entity
         action:
           type: string
@@ -21128,6 +23184,7 @@ components:
           - khata_entry
           - credit_approval_request
           - diagnosis
+          - crop_plot_task
           title: Entity
         action:
           type: string
@@ -21252,6 +23309,263 @@ components:
       - status
       - entity_id
       title: SyncResult
+    TaskStatus:
+      type: string
+      enum:
+      - pending
+      - done
+      title: TaskStatus
+    TaskType:
+      type: string
+      enum:
+      - sow
+      - irrigate
+      - fertilise
+      - spray
+      - harvest
+      title: TaskType
+    TaskUpdateIn:
+      properties:
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/TaskStatus'
+          - type: 'null'
+        reminder_enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Reminder Enabled
+        version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Version
+          description: Optimistic lock (409 on mismatch).
+      additionalProperties: false
+      type: object
+      title: TaskUpdateIn
+      description: Mark a task done (or undo it) and / or switch its reminder.
+    TemplateCreate:
+      properties:
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        season:
+          anyOf:
+          - $ref: '#/components/schemas/Season'
+          - type: 'null'
+        task_key:
+          type: string
+          pattern: ^[a-z0-9_.-]{2,64}$
+          title: Task Key
+        task_type:
+          $ref: '#/components/schemas/TaskType'
+        day_offset:
+          type: integer
+          maximum: 400.0
+          minimum: -60.0
+          title: Day Offset
+          description: Days from sowing / transplanting.
+        duration_days:
+          type: integer
+          maximum: 60.0
+          minimum: 1.0
+          title: Duration Days
+          default: 1
+        stage:
+          anyOf:
+          - $ref: '#/components/schemas/CropStage'
+          - type: 'null'
+        titles:
+          additionalProperties:
+            type: string
+          type: object
+          title: Titles
+        instructions:
+          additionalProperties:
+            type: string
+          type: object
+          title: Instructions
+        product_category:
+          anyOf:
+          - $ref: '#/components/schemas/ProductCategory'
+          - type: 'null'
+        sort_order:
+          type: integer
+          maximum: 10000.0
+          minimum: 0.0
+          title: Sort Order
+          default: 0
+        active:
+          type: boolean
+          title: Active
+          default: true
+      additionalProperties: false
+      type: object
+      required:
+      - crop_id
+      - task_key
+      - task_type
+      - day_offset
+      - titles
+      title: TemplateCreate
+    TemplateListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/TemplateOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: TemplateListOut
+    TemplateOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        season:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Season
+        task_key:
+          type: string
+          title: Task Key
+        task_type:
+          $ref: '#/components/schemas/TaskType'
+        day_offset:
+          type: integer
+          title: Day Offset
+        duration_days:
+          type: integer
+          title: Duration Days
+        stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Stage
+        titles:
+          additionalProperties:
+            type: string
+          type: object
+          title: Titles
+        instructions:
+          additionalProperties:
+            type: string
+          type: object
+          title: Instructions
+        product_category:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Product Category
+        sort_order:
+          type: integer
+          title: Sort Order
+        active:
+          type: boolean
+          title: Active
+        source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source
+        version:
+          type: integer
+          title: Version
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - id
+      - crop_id
+      - season
+      - task_key
+      - task_type
+      - day_offset
+      - duration_days
+      - stage
+      - titles
+      - instructions
+      - product_category
+      - sort_order
+      - active
+      - source
+      - version
+      - updated_at
+      title: TemplateOut
+    TemplateUpdate:
+      properties:
+        task_type:
+          anyOf:
+          - $ref: '#/components/schemas/TaskType'
+          - type: 'null'
+        day_offset:
+          anyOf:
+          - type: integer
+            maximum: 400.0
+            minimum: -60.0
+          - type: 'null'
+          title: Day Offset
+        duration_days:
+          anyOf:
+          - type: integer
+            maximum: 60.0
+            minimum: 1.0
+          - type: 'null'
+          title: Duration Days
+        stage:
+          anyOf:
+          - $ref: '#/components/schemas/CropStage'
+          - type: 'null'
+        titles:
+          anyOf:
+          - additionalProperties:
+              type: string
+            type: object
+          - type: 'null'
+          title: Titles
+        instructions:
+          anyOf:
+          - additionalProperties:
+              type: string
+            type: object
+          - type: 'null'
+          title: Instructions
+        product_category:
+          anyOf:
+          - $ref: '#/components/schemas/ProductCategory'
+          - type: 'null'
+        sort_order:
+          anyOf:
+          - type: integer
+            maximum: 10000.0
+            minimum: 0.0
+          - type: 'null'
+          title: Sort Order
+        active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Active
+        version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Version
+      additionalProperties: false
+      type: object
+      title: TemplateUpdate
     TenantSettings:
       properties:
         consent_version:
@@ -21407,6 +23721,16 @@ components:
           minimum: 1.0
           title: Incentive Cutoff Day
           default: 25
+        quiet_hours:
+          $ref: '#/components/schemas/QuietHours'
+        calendar_reminders:
+          $ref: '#/components/schemas/CalendarReminderSettings'
+        weather:
+          $ref: '#/components/schemas/WeatherSettings'
+        outbreak:
+          $ref: '#/components/schemas/OutbreakSettings'
+        diagnosis_evaluation:
+          $ref: '#/components/schemas/EvaluationSettings'
         branding:
           $ref: '#/components/schemas/Branding'
       type: object
@@ -21706,6 +24030,32 @@ components:
       required:
       - to
       title: TransitionIn
+    UnknownOut:
+      properties:
+        crop_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+        crop_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Crop Code
+        reason:
+          type: string
+          title: Reason
+        cases:
+          type: integer
+          title: Cases
+      type: object
+      required:
+      - crop_id
+      - crop_code
+      - reason
+      - cases
+      title: UnknownOut
     UploadCompleteOut:
       properties:
         upload_id:
@@ -22762,6 +25112,107 @@ components:
       - unverified
       - open
       title: VisitStatus
+    WeatherOut:
+      properties:
+        farm_id:
+          type: string
+          format: uuid
+          title: Farm Id
+        latitude:
+          type: number
+          title: Latitude
+          description: The 0.1-degree grid cell sent to the provider.
+        longitude:
+          type: number
+          title: Longitude
+        location_source:
+          type: string
+          enum:
+          - farm
+          - village
+          title: Location Source
+        provider:
+          type: string
+          title: Provider
+        fetched_at:
+          type: string
+          format: date-time
+          title: Fetched At
+        cached:
+          type: boolean
+          title: Cached
+        timezone:
+          type: string
+          title: Timezone
+          default: Asia/Kolkata
+        daily:
+          items:
+            $ref: '#/components/schemas/DailyForecastOut'
+          type: array
+          title: Daily
+        hourly:
+          items:
+            $ref: '#/components/schemas/HourlyForecastOut'
+          type: array
+          title: Hourly
+        spray:
+          $ref: '#/components/schemas/SprayAdviceOut'
+      type: object
+      required:
+      - farm_id
+      - latitude
+      - longitude
+      - location_source
+      - provider
+      - fetched_at
+      - cached
+      - daily
+      - hourly
+      - spray
+      title: WeatherOut
+    WeatherSettings:
+      properties:
+        spray_max_rain_probability_pct:
+          type: integer
+          maximum: 100.0
+          minimum: 0.0
+          title: Spray Max Rain Probability Pct
+          default: 30
+        spray_max_rain_mm:
+          type: number
+          maximum: 50.0
+          minimum: 0.0
+          title: Spray Max Rain Mm
+          default: 0.5
+        spray_max_wind_kmh:
+          type: number
+          maximum: 100.0
+          exclusiveMinimum: 0.0
+          title: Spray Max Wind Kmh
+          default: 15.0
+        caution_max_temperature_c:
+          type: number
+          maximum: 55.0
+          minimum: 10.0
+          title: Caution Max Temperature C
+          default: 35.0
+        caution_max_humidity_pct:
+          type: integer
+          maximum: 100.0
+          minimum: 10.0
+          title: Caution Max Humidity Pct
+          default: 90
+        caution_min_humidity_pct:
+          type: integer
+          maximum: 90.0
+          minimum: 0.0
+          title: Caution Min Humidity Pct
+          default: 30
+      type: object
+      title: WeatherSettings
+      description: 'FM-008 spray advice: a 3-hour window is hidden ("avoid") when rain or wind reach the
+
+        thresholds; heat and humidity only add cautions.'
     WebhookAck:
       properties:
         status:

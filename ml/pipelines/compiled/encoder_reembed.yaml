@@ -1,0 +1,146 @@
+# PIPELINE DEFINITION
+# Name: encoder-reembed
+# Description: DX-012: stage the corpus under a new encoder and evaluate it; a human retunes thresholds, moves the API pin and runs activate-encoder.
+# Inputs:
+#    embed_url: str
+#    encoder_name: str
+#    encoder_version: str
+#    project: str
+#    region: str
+#    tenant_id: str
+components:
+  comp-reembed-corpus:
+    executorLabel: exec-reembed-corpus
+    inputDefinitions:
+      parameters:
+        embed_url:
+          parameterType: STRING
+        encoder_name:
+          parameterType: STRING
+        encoder_version:
+          parameterType: STRING
+        job:
+          parameterType: STRING
+        project:
+          parameterType: STRING
+        region:
+          parameterType: STRING
+        tenant_id:
+          parameterType: STRING
+  comp-run-api-job:
+    executorLabel: exec-run-api-job
+    inputDefinitions:
+      parameters:
+        command:
+          parameterType: STRING
+        job:
+          parameterType: STRING
+        project:
+          parameterType: STRING
+        region:
+          parameterType: STRING
+        tenant_id:
+          parameterType: STRING
+deploymentSpec:
+  executors:
+    exec-reembed-corpus:
+      container:
+        args:
+        - '{{$.inputs.parameters[''project'']}}'
+        - '{{$.inputs.parameters[''region'']}}'
+        - '{{$.inputs.parameters[''job'']}}'
+        - '{{$.inputs.parameters[''tenant_id'']}}'
+        - '{{$.inputs.parameters[''encoder_name'']}}'
+        - '{{$.inputs.parameters[''encoder_version'']}}'
+        - '{{$.inputs.parameters[''embed_url'']}}'
+        command:
+        - bash
+        - -ceu
+        - args="reembed-corpus,--tenant-id,$3,--encoder-name,$4,--encoder-version,$5,--embed-url,$6";
+          set -- "$0" "$1" "$2" "$args"; gcloud run jobs execute "$2" --project "$0"
+          --region "$1" --wait --args="$3"
+        image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+    exec-run-api-job:
+      container:
+        args:
+        - '{{$.inputs.parameters[''project'']}}'
+        - '{{$.inputs.parameters[''region'']}}'
+        - '{{$.inputs.parameters[''job'']}}'
+        - '{{$.inputs.parameters[''command'']}}'
+        - '{{$.inputs.parameters[''tenant_id'']}}'
+        command:
+        - bash
+        - -ceu
+        - args="$3,--tenant-id,$4"; set -- "$0" "$1" "$2" "$args"; gcloud run jobs
+          execute "$2" --project "$0" --region "$1" --wait --args="$3"
+        image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+pipelineInfo:
+  description: 'DX-012: stage the corpus under a new encoder and evaluate it; a human
+    retunes thresholds, moves the API pin and runs activate-encoder.'
+  name: encoder-reembed
+root:
+  dag:
+    tasks:
+      reembed-corpus:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-reembed-corpus
+        inputs:
+          parameters:
+            embed_url:
+              componentInputParameter: embed_url
+            encoder_name:
+              componentInputParameter: encoder_name
+            encoder_version:
+              componentInputParameter: encoder_version
+            job:
+              runtimeValue:
+                constant: export-training-set
+            project:
+              componentInputParameter: project
+            region:
+              componentInputParameter: region
+            tenant_id:
+              componentInputParameter: tenant_id
+        taskInfo:
+          name: reembed-corpus (staging only)
+      run-api-job:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-run-api-job
+        dependentTasks:
+        - reembed-corpus
+        inputs:
+          parameters:
+            command:
+              runtimeValue:
+                constant: diagnosis-evaluate
+            job:
+              runtimeValue:
+                constant: diagnosis-evaluate
+            project:
+              componentInputParameter: project
+            region:
+              componentInputParameter: region
+            tenant_id:
+              componentInputParameter: tenant_id
+        taskInfo:
+          name: diagnosis-evaluate (held-out set, current pin)
+  inputDefinitions:
+    parameters:
+      embed_url:
+        parameterType: STRING
+      encoder_name:
+        parameterType: STRING
+      encoder_version:
+        parameterType: STRING
+      project:
+        parameterType: STRING
+      region:
+        parameterType: STRING
+      tenant_id:
+        parameterType: STRING
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.13.0

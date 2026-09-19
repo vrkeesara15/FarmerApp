@@ -591,6 +591,33 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
     "PATCH /v1/admin/data-requests/{id}": RouteFixture(
         path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"status": "in_progress"}
     ),
+    # M7 farmer P1 (FM-007, FM-008, DX-011, DX-012): outcomes in tests/advisory and
+    # tests/mlops. Unknown ids are 404 for every allowed role.
+    "GET /v1/farmers/{id}/calendar": RouteFixture(path_params=_target_farmer_id),
+    "PATCH /v1/calendar/tasks/{id}": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"status": "done"}
+    ),
+    "POST /v1/calendar/templates": RouteFixture(
+        body=lambda ctx: {
+            "crop_id": str(ctx.target.crop_id),
+            "task_key": f"matrix.{uuid.uuid4().hex[:8]}",
+            "task_type": "irrigate",
+            "day_offset": 10,
+            "titles": {"en": "Matrix"},
+        }
+    ),
+    "PATCH /v1/calendar/templates/{id}": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"sort_order": 1}
+    ),
+    "DELETE /v1/calendar/templates/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "GET /v1/farms/{id}/weather": RouteFixture(path_params=_target_farm_id),
+    "GET /v1/diagnoses/evaluations/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "GET /v1/models/releases/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "POST /v1/models/releases/{id}/decision": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID},
+        body=lambda _ctx: {"decision": "approve"},
+        step_up=True,
+    ),
     "POST /v1/policies/location/accept": RouteFixture(
         body=lambda _ctx: {
             "version": "2026-09-v1",

@@ -34,6 +34,7 @@ locals {
     "order.created",
     "location.batch",
     "notify.send",
+    "flag.created", # M7 VA-004 review agent: flags raised on the API path -> worker summary
   ]
 
   # ---------------------------------------------------------------------------------------
@@ -111,12 +112,18 @@ locals {
       DB_USER         = local.db_users.worker
       DB_POOL_SIZE    = module.db_budget.env.worker.DB_POOL_SIZE
       DB_MAX_OVERFLOW = module.db_budget.env.worker.DB_MAX_OVERFLOW
+      # M7 VA-004 review agent on flag.created (off in dev by default; claude in stg / prd).
+      FLAG_SUMMARY_LLM = var.flag_summary_llm
     }
     jobs = {
       SERVICE_NAME    = "jobs"
       DB_USER         = local.db_users.jobs
       DB_POOL_SIZE    = module.db_budget.env.jobs.DB_POOL_SIZE
       DB_MAX_OVERFLOW = module.db_budget.env.jobs.DB_MAX_OVERFLOW
+      # M7: flags-summarise (VA-004); DX-011 held-out manifest, DX-012 training exports and
+      # candidate models live in the corpus bucket.
+      FLAG_SUMMARY_LLM = var.flag_summary_llm
+      CORPUS_BUCKET    = module.storage.bucket_names.corpus
     }
     migrate = {
       SERVICE_NAME = "migrate"
@@ -158,6 +165,8 @@ locals {
     }
     jobs = {
       PII_HASH_PEPPER = "pii-hash-pepper"
+      # VA-004 flags-summarise (FLAG_SUMMARY_LLM=claude), read by the Anthropic SDK.
+      ANTHROPIC_API_KEY = "anthropic-api-key"
     }
     migrate = {}
   }
@@ -203,6 +212,7 @@ locals {
       "DIAGNOSIS_ENCODER", "DIAGNOSIS_ENCODER_NAME", "DIAGNOSIS_ENCODER_VERSION",
       "DIAGNOSIS_EMBED_URL", "DIAGNOSIS_LLM", "DIAGNOSIS_LLM_MODEL", "DIAGNOSIS_DELIVERY",
       "PAYMENT_PROVIDER", "PAYMENT_WEBHOOK_DELIVERY", "RAZORPAY_BASE_URL",
+      "ANTHROPIC_API_KEY", "CORPUS_BUCKET",
     ]
     migrate = [
       "APP_ENV", "SERVICE_NAME", "LOG_JSON", "GCP_PROJECT", "OTEL_EXPORTER",
@@ -314,6 +324,38 @@ locals {
       schedule    = "", tenants = true, owner = "platform-lead"
       args        = concat(["backfill-farm-photo-phash"], local.tenant_args)
       description = "VA-F08 one-off perceptual-hash backfill, manual"
+    }
+    # M7 rules follow-ups (docs/prs/M7-rules.md).
+    flags-summarise = {
+      schedule    = "*/10 * * * *", tenants = true, owner = "product-owner"
+      args        = concat(["flags-summarise"], local.tenant_args)
+      description = "VA-004 review-agent summaries of flags raised on the API path, every 10 min"
+    }
+    rules-quality-report = {
+      schedule    = "0 3 * * 1", tenants = true, owner = "product-owner"
+      args        = concat(["rules-quality-report"], local.tenant_args)
+      description = "VA-006 weekly rule precision report and auto-disable, Monday 03:00 IST"
+    }
+    # M7 farmer P1 (docs/prs/M7-farmer-p1-api.md).
+    calendar-reminders = {
+      schedule    = "0 7 * * *", tenants = true, owner = "agronomist-lead"
+      args        = concat(["calendar-reminders"], local.tenant_args)
+      description = "FM-007 crop calendar generation and due-task reminders, daily 07:00 IST"
+    }
+    outbreak-detection = {
+      schedule    = "30 6 * * *", tenants = true, owner = "agronomist-lead"
+      args        = concat(["outbreak-detection"], local.tenant_args)
+      description = "DX-013 / FM-009 outbreak clusters by district and week, alerts, daily 06:30 IST"
+    }
+    diagnosis-evaluate = {
+      schedule    = "0 1 * * *", tenants = true, owner = "agronomist-lead"
+      args        = concat(["diagnosis-evaluate"], local.tenant_args)
+      description = "DX-011 nightly evaluation on the held-out field set, drop > 5 points alerts, 01:00 IST"
+    }
+    export-training-set = {
+      schedule    = "0 2 * * 0", tenants = true, owner = "agronomist-lead"
+      args        = concat(["export-training-set"], local.tenant_args)
+      description = "DX-012 approved corpus field images -> training manifest in the corpus bucket, Sunday 02:00 IST"
     }
   }
 }
@@ -465,6 +507,8 @@ module "storage" {
         "serviceAccount:${module.iam.emails.worker}" = "roles/storage.objectViewer"
         "serviceAccount:${module.iam.emails.jobs}"   = "roles/storage.objectUser"
         "serviceAccount:${module.iam.emails.embed}"  = "roles/storage.objectViewer"
+        # DX-012: the api signs download URLs of approved on-device models (models/ prefix).
+        "serviceAccount:${module.iam.emails.api}" = "roles/storage.objectViewer"
       }
     }
   }
