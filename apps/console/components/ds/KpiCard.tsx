@@ -9,6 +9,8 @@ import { trendColorClass, type Trend } from "./StatTile";
 
 export interface KpiCardProps {
   title: string;
+  /** Slot after the title (e.g. an InfoTip with the KPI definition). */
+  titleAddon?: React.ReactNode;
   /** Formatted headline value (use lib/format). */
   value: string;
   /** Formatted target, e.g. "₹12 L". Shown with progress when `progress` is given. */
@@ -29,6 +31,7 @@ export interface KpiCardProps {
 
 export function KpiCard({
   title,
+  titleAddon,
   value,
   target,
   progress,
@@ -61,7 +64,10 @@ export function KpiCard({
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="text-small font-semibold text-text-secondary">{title}</span>
+        <span className="inline-flex items-center gap-1 text-small font-semibold text-text-secondary">
+          {title}
+          {titleAddon}
+        </span>
         {trend && !loading && !error ? (
           <span
             className={cn(

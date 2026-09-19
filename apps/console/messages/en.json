@@ -21,7 +21,9 @@
     "none": "—",
     "back": "Back",
     "next": "Next",
-    "seconds": "{n}s"
+    "seconds": "{n}s",
+    "yes": "Yes",
+    "no": "No"
   },
   "theme": {
     "toggle": "Toggle theme",
@@ -93,19 +95,183 @@
   },
   "home": {
     "title": "Home",
-    "empty": "KPIs, trends and alerts will appear here once data flows in."
+    "empty": "KPIs, trends and alerts will appear here once data flows in.",
+    "kpiRow": "Key figures",
+    "revenueTrend": "Revenue and own-brand share",
+    "thisPeriod": "This period",
+    "lastYear": "Last year",
+    "ownBrandDonut": "Own-brand share of sales",
+    "storeMap": "Stores by performance",
+    "bandLegend": "Performance bands",
+    "band": {
+      "green": "On track (80+)",
+      "amber": "Watch (50–79)",
+      "red": "Behind (under 50)",
+      "none": "No sales"
+    },
+    "storeTooltip": "{name}\nRevenue {revenue} · own brand {share}\n{band}",
+    "showStoreTable": "Show stores as a table",
+    "storeTable": {
+      "revenue": "Revenue",
+      "ownBrandShare": "Own-brand share",
+      "overdue": "Overdue",
+      "score": "Score",
+      "band": "Band"
+    },
+    "noStoresTitle": "No stores in view",
+    "noStoresHelp": "Change the filters to see stores.",
+    "creditAgeing": "Credit overdue by age",
+    "topOfficers": "Top 5 officers",
+    "bottomOfficers": "Bottom 5 officers",
+    "perDutyDay": "{visits} verified in {days} duty days",
+    "highFlags": "Open high-severity flags",
+    "noFlagsTitle": "No open high-severity flags",
+    "noFlagsHelp": "New high-severity flags will appear here.",
+    "cropHealth": "Crop health alerts",
+    "cropHealthEmptyTitle": "No crop health alerts yet",
+    "cropHealthEmptyHelp": "Outbreak alerts arrive with the crop health map (AN-006).",
+    "noSalesTitle": "No sales in this period",
+    "noSalesHelp": "Try a longer date range or fewer filters."
   },
   "fieldTeam": {
     "title": "Field team",
-    "empty": "Officer scorecards will appear here."
+    "empty": "Officer scorecards will appear here.",
+    "emptyTitle": "No officers in view",
+    "emptyHelp": "Change the filters to see officer scorecards.",
+    "noLocation": "Distances and tracks are not shown for your role.",
+    "columns": {
+      "rank": "Rank",
+      "officer": "Officer",
+      "store": "Store",
+      "dutyDays": "Duty days",
+      "verifiedVisits": "Verified visits",
+      "verifiedPerDay": "Verified visits / day",
+      "uniqueFarmers": "Unique farmers",
+      "newRegistrations": "New farmers",
+      "confirmationRate": "Confirmation rate",
+      "timeOnFarm": "Avg time on farm",
+      "timeOnFarmMinutes": "Avg time on farm (min)",
+      "kmPerDay": "Km / day",
+      "conversion": "Conversion",
+      "collections": "Collections",
+      "collectionsRupees": "Collections (₹)",
+      "flags": "Flags",
+      "trend": "Weekly trend"
+    },
+    "trendLabel": "Weekly verified visits of {name}: {values}",
+    "backToList": "Field team",
+    "profileTitle": "Officer",
+    "onDuty": "On duty",
+    "offDuty": "Off duty",
+    "summary": "Scorecard",
+    "weeklyTrend": "Verified visits per week",
+    "visitsPerDay": "Visits per duty day",
+    "dutyDays": "Duty days",
+    "recentVisits": "Recent visits",
+    "noDutyTitle": "No duty days in this period",
+    "noDutyHelp": "Try a longer date range.",
+    "noVisitsTitle": "No visits in this period",
+    "noVisitsHelp": "Visits appear here once the officer syncs.",
+    "replayDate": "Day to replay",
+    "openReplay": "Open day replay",
+    "replayOn": "Replay the day {date}",
+    "duty": {
+      "day": "Day",
+      "start": "Start",
+      "end": "End",
+      "km": "Km",
+      "visits": "Visits",
+      "verified": "Verified",
+      "timeOnFarm": "Time on farm",
+      "replay": "Replay"
+    },
+    "visits": {
+      "when": "When",
+      "farmer": "Farmer",
+      "purpose": "Purpose",
+      "score": "Score"
+    }
   },
   "farmers": {
     "title": "Farmers",
-    "empty": "The farmer directory will appear here."
+    "empty": "The farmer directory will appear here.",
+    "total": "{n} farmers",
+    "searchLabel": "Search farmers",
+    "searchPlaceholder": "Name, last 4 digits of phone, or village",
+    "never": "Never",
+    "loadMore": "Load more ({shown} of {total})",
+    "emptyTitle": "No farmers yet",
+    "emptyHelp": "Farmers appear here once officers register them.",
+    "emptyFilteredTitle": "No farmers match",
+    "emptyFilteredHelp": "Try a different search or fewer filters.",
+    "backToList": "Farmers",
+    "filters": {
+      "district": "District",
+      "stage": "Crop stage",
+      "risk": "Credit risk",
+      "lastVisit": "Last visit"
+    },
+    "lastVisitWindow": {
+      "7d": "In the last 7 days",
+      "30d": "In the last 30 days",
+      "90d": "In the last 90 days",
+      "over_90d": "Over 90 days ago",
+      "never": "Never visited"
+    },
+    "risk": {
+      "low": "Low risk",
+      "medium": "Medium risk",
+      "high": "High risk"
+    },
+    "columns": {
+      "name": "Farmer",
+      "phone": "Phone",
+      "village": "Village",
+      "district": "District",
+      "crops": "Crops and stage",
+      "stage": "Stage",
+      "acres": "Acres",
+      "lastVisit": "Last visit",
+      "lastPurchase": "Last purchase",
+      "balance": "Balance",
+      "balanceRupees": "Balance (₹)",
+      "overdue": "Overdue",
+      "overdueRupees": "Overdue (₹)",
+      "risk": "Credit risk",
+      "ltv": "LTV",
+      "ltvRupees": "LTV (₹)",
+      "app": "App user"
+    }
   },
   "stores": {
     "title": "Stores",
-    "empty": "Store performance will appear here."
+    "empty": "Store performance will appear here.",
+    "emptyTitle": "No stores in view",
+    "emptyHelp": "Change the filters to see stores.",
+    "salesComparison": "Net sales and gross margin by store",
+    "noDayClose": "No day close",
+    "backToList": "Stores",
+    "columns": {
+      "store": "Store",
+      "code": "Code",
+      "district": "District",
+      "netSales": "Net sales",
+      "netSalesRupees": "Net sales (₹)",
+      "cogsRupees": "Cost of goods (₹)",
+      "grossMargin": "Gross margin",
+      "grossMarginRupees": "Gross margin (₹)",
+      "marginPct": "Margin %",
+      "ownBrandShare": "Own-brand share",
+      "orders": "Orders",
+      "stockValue": "Stock value",
+      "stockValueRupees": "Stock value (₹)",
+      "creditOutstanding": "Credit outstanding",
+      "creditOutstandingRupees": "Credit outstanding (₹)",
+      "creditOverdue": "Credit overdue",
+      "creditOverdueRupees": "Credit overdue (₹)",
+      "lastVariance": "Last day-close variance",
+      "lastVarianceRupees": "Last day-close variance (₹)"
+    }
   },
   "products": {
     "title": "Products",
@@ -259,7 +425,11 @@
     "target": "Target {value}",
     "trendUp": "Up {value} vs previous period",
     "trendDown": "Down {value} vs previous period",
-    "trendFlat": "No change vs previous period"
+    "trendFlat": "No change vs previous period",
+    "points": "{value} pts",
+    "lastYear": "Last year {value}",
+    "lastYearDelta": "Last year {value} ({delta})",
+    "noLastYear": "No last-year figure"
   },
   "dialog": {
     "close": "Close dialog"
@@ -444,5 +614,336 @@
     "claimCategory": "Only pesticides, fungicides, herbicides and growth promoters can carry a pest or disease claim",
     "date": "Enter a date",
     "dateOrder": "The end date is before the start date"
+  },
+  "analytics": {
+    "aboutKpi": "About {name}",
+    "clusterOption": "{name} cluster ({n} stores)",
+    "definitions": "Definitions:",
+    "errorTitle": "This data could not be loaded",
+    "filtersCorrected": "Some filters in the link were not valid and have been corrected.",
+    "forbiddenTitle": "You do not have access to this view",
+    "forbiddenHelp": "Your role cannot see this data. Ask an owner or tenant admin if you need it.",
+    "invalidFiltersTitle": "These filters do not fit together",
+    "invalidCombination": "The store is not in the selected cluster, or the officer is not in the selected store or cluster.",
+    "invalidRange": "Choose a range of at most 366 days that starts before it ends.",
+    "notFoundTitle": "Not found",
+    "notFoundHelp": "It may be outside your cluster or store, or it no longer exists.",
+    "resetFilters": "Reset filters",
+    "scope": {
+      "tenant": "All stores",
+      "cluster": "Your cluster",
+      "store": "Your store",
+      "own": "Your own work"
+    },
+    "trendOf": "Trend of {name}",
+    "updating": "Updating…"
+  },
+  "kpis": {
+    "revenue": "Revenue",
+    "ownBrandShare": "Own-brand share",
+    "creditOutstanding": "Credit outstanding",
+    "creditOverdue": "Credit overdue",
+    "verifiedVisits": "Verified visits",
+    "activeFarmers": "Active farmers",
+    "openFlags": "Open flags"
+  },
+  "kpiNames": {
+    "verifiedVisit": "Verified visit",
+    "uniqueFarmers": "Unique farmers reached",
+    "confirmationRate": "Confirmation rate",
+    "conversion": "Visit conversion",
+    "ownBrandShare": "Own-brand share",
+    "activeFarmer": "Active farmer",
+    "creditOverdue": "Credit overdue",
+    "ltv": "Farmer LTV",
+    "timeOnFarm": "Time on farm"
+  },
+  "kpiDefinitions": {
+    "revenue": "Net sales (after discounts, before GST) of orders handed over or delivered in the period.",
+    "ownBrandShare": "Own-brand net sales ÷ total net sales.",
+    "creditOutstanding": "Khata balance farmers owe at the end of the period.",
+    "creditOverdue": "Khata balance past its due date; buckets 0–30, 31–60, 61–90 and 90+ days.",
+    "verifiedVisit": "A visit with a score of 70 or more.",
+    "activeFarmer": "A purchase, a verified visit or an app session in the last 60 days.",
+    "openFlags": "Validation flags not yet resolved at the end of the period.",
+    "uniqueFarmers": "Distinct farmers with at least one verified visit in the period.",
+    "confirmationRate": "Visits confirmed by the farmer ÷ all visits.",
+    "conversion": "Farmers with a purchase within 30 days after a verified visit ÷ farmers visited.",
+    "ltv": "Cumulative gross margin from the farmer.",
+    "timeOnFarm": "Sum of visit durations (check-in to check-out) for verified visits."
+  },
+  "brand": {
+    "own": "Own brand",
+    "multi": "Multi-brand"
+  },
+  "buckets": {
+    "0_30": "0–30 days",
+    "31_60": "31–60 days",
+    "61_90": "61–90 days",
+    "90_plus": "90+ days"
+  },
+  "categories": {
+    "seed": "Seed",
+    "fertiliser": "Fertiliser",
+    "pesticide": "Pesticide",
+    "fungicide": "Fungicide",
+    "herbicide": "Herbicide",
+    "growth": "Growth regulator",
+    "tool": "Tools",
+    "other": "Other"
+  },
+  "map": {
+    "attribution": "© OpenStreetMap contributors"
+  },
+  "proof": {
+    "geofence": "At the farm",
+    "photo": "Photo",
+    "confirmation": "Farmer confirmed",
+    "duration": "Time on farm",
+    "integrity": "Device checks",
+    "done": "Done",
+    "missing": "Missing",
+    "points": "{points}/{max}",
+    "integrityIssue": "Some device checks reported issues during this visit."
+  },
+  "purpose": {
+    "advisory": "Advisory",
+    "follow_up": "Follow-up",
+    "collection": "Collection",
+    "demo": "Demo",
+    "registration": "Registration",
+    "delivery": "Delivery",
+    "other": "Other"
+  },
+  "visitStatus": {
+    "verified": "Verified",
+    "partial": "Partial",
+    "unverified": "Unverified",
+    "open": "Open"
+  },
+  "stage": {
+    "sown": "Sown",
+    "vegetative": "Vegetative",
+    "flowering": "Flowering",
+    "fruiting": "Fruiting",
+    "maturity": "Maturity",
+    "harvested": "Harvested"
+  },
+  "orderChannel": {
+    "pos": "Store counter",
+    "field": "Field officer",
+    "app": "Farmer app",
+    "whatsapp": "WhatsApp",
+    "call": "Phone call",
+    "other": "Other"
+  },
+  "orderStatus": {
+    "draft": "Draft",
+    "placed": "Placed",
+    "confirmed": "Confirmed",
+    "handed_over": "Handed over",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "returned": "Returned",
+    "other": "Other"
+  },
+  "replay": {
+    "title": "Day replay",
+    "titleFor": "Day replay · {name}",
+    "backToOfficer": "Officer profile",
+    "date": "Day",
+    "forbiddenHelp": "Location tracks are never shown to store managers or to other officers.",
+    "emptyTitle": "No duty on this day",
+    "emptyHelp": "Pick another day; replays exist only for days the officer was on duty.",
+    "summary": "Day summary",
+    "km": "Km travelled",
+    "visits": "Visits",
+    "verified": "Verified",
+    "stops": "Stops",
+    "gaps": "Gaps",
+    "mapLabel": "Map of the officer's day",
+    "play": "Play",
+    "pause": "Pause",
+    "slider": "Playback time",
+    "inGap": "No location recorded",
+    "gapsTitle": "Gaps in the track",
+    "noReason": "No reason given",
+    "gapReasonNote": "Officers will be able to give a reason for each gap (VV-008).",
+    "gapTooltip": "Gap of {duration}: {reason}",
+    "visitTooltip": "{farmer} · {status} · {time}",
+    "timeline": "Timeline",
+    "visitDetail": "Visit details",
+    "pickVisit": "Select a visit on the map or in the timeline.",
+    "purpose": "Purpose",
+    "checkin": "Check-in",
+    "checkout": "Check-out",
+    "duration": "Duration",
+    "geofence": "Location check",
+    "geofenceInside": "Inside the farm boundary",
+    "geofenceOutside": "Outside the farm boundary",
+    "photos": "Photos",
+    "event": {
+      "dutyStart": "Duty started",
+      "dutyEnd": "Duty ended",
+      "checkin": "Checked in at {farmer}",
+      "checkout": "Checked out from {farmer}",
+      "stop": "Stopped for {duration}",
+      "gapStart": "Location gap of {duration}",
+      "gapEnd": "Location resumed"
+    },
+    "legend": {
+      "title": "Map legend",
+      "stop": "Stop",
+      "track": "Track",
+      "gap": "Gap",
+      "position": "Playback position"
+    },
+    "csv": {
+      "time": "Time",
+      "event": "Event",
+      "detail": "Detail"
+    }
+  },
+  "farmer360": {
+    "title": "Farmer",
+    "active": "Active",
+    "inactive": "Inactive",
+    "registeredBy": "Registered by {name} on {date}",
+    "updatedAt": "Updated {date}",
+    "summary": "Farmer summary",
+    "ltv": "Lifetime value",
+    "balance": "Khata balance",
+    "overdue": "Overdue",
+    "lastVisit": "Last visit",
+    "lastPurchase": "Last purchase",
+    "appSessions": "App sessions (60 days)",
+    "tabsLabel": "Farmer details",
+    "tabs": {
+      "farms": "Farms and crops",
+      "visits": "Visits",
+      "orders": "Orders",
+      "khata": "Khata",
+      "consent": "Consent",
+      "app": "App usage"
+    },
+    "farms": {
+      "mapLabel": "Map of the farmer's farms",
+      "tooltip": "{name} · {acres} acres",
+      "crops": "Crops",
+      "farm": "Farm",
+      "crop": "Crop",
+      "variety": "Variety",
+      "stage": "Stage",
+      "sown": "Sown",
+      "harvest": "Expected harvest",
+      "acres": "Acres",
+      "soilIrrigation": "Soil · irrigation",
+      "emptyTitle": "No farms recorded",
+      "emptyHelp": "Farms appear here once an officer maps them."
+    },
+    "visits": {
+      "officer": "Officer",
+      "cropStage": "Crop stage",
+      "status": "Status",
+      "confirmed": "Confirmed",
+      "photos": "Photos",
+      "emptyTitle": "No visits yet",
+      "emptyHelp": "Visits appear here once an officer syncs them."
+    },
+    "diagnoses": {
+      "title": "Diagnoses with photos",
+      "emptyTitle": "No diagnoses yet",
+      "emptyHelp": "Crop doctor diagnoses with their photos arrive with the diagnosis engine (M6)."
+    },
+    "orders": {
+      "placed": "Placed",
+      "invoice": "Invoice",
+      "store": "Store",
+      "channel": "Channel",
+      "status": "Status",
+      "lines": "Lines",
+      "total": "Total",
+      "totalRupees": "Total (₹)",
+      "emptyTitle": "No orders yet",
+      "emptyHelp": "Orders from the store, officers and the app appear here."
+    },
+    "khata": {
+      "nextDue": "Next due date",
+      "lastPayment": "Last payment",
+      "limit": "Credit limit at {store}: {amount}",
+      "buckets": "Overdue by age",
+      "bucket": "Age",
+      "amountRupees": "Amount (₹)",
+      "entriesNote": "Entry-by-entry khata lines are on the store's khata screen; this view shows the balance and its age."
+    },
+    "consent": {
+      "dataGranted": "Data consent given",
+      "dataWithdrawn": "Data consent withdrawn",
+      "marketingGranted": "Marketing allowed",
+      "marketingWithdrawn": "No marketing",
+      "when": "When",
+      "purpose": "Purpose",
+      "data": "Use of data",
+      "marketing": "Marketing messages",
+      "state": "State",
+      "granted": "Given",
+      "withdrawn": "Withdrawn",
+      "version": "Policy version",
+      "channel": "Channel"
+    },
+    "app": {
+      "hasLogin": "Has an app login",
+      "lastSession": "Last app session",
+      "sessions": "Sessions in 60 days",
+      "proxyNote": "App sessions are counted from sign-in refreshes until app analytics events arrive."
+    }
+  },
+  "storeDetail": {
+    "title": "Store",
+    "summary": "Store summary",
+    "cogs": "Cost of goods",
+    "salesByCategory": "Sales by category",
+    "brandSplit": "Own brand vs multi-brand",
+    "creditAgeing": "Credit book ageing",
+    "creditSummary": "{outstanding} outstanding, {overdue} overdue across {accounts} accounts",
+    "stock": "Stock",
+    "stockValue": "Stock value at cost",
+    "skusInStock": "SKUs in stock",
+    "turns": "Stock turns in period",
+    "turnsAnnualised": "Stock turns (annualised)",
+    "stockouts": "Stockouts ({n})",
+    "noStockouts": "No stockouts.",
+    "dayCloses": "Day-close variance",
+    "variance": "Variance",
+    "noDayClosesTitle": "No day closes in this period",
+    "noDayClosesHelp": "Day closes appear here once the store closes the day.",
+    "noSalesTitle": "No sales in this period",
+    "noSalesHelp": "Try a longer date range.",
+    "dayClose": {
+      "showTable": "Show day closes as a table",
+      "date": "Business date",
+      "expected": "Cash expected",
+      "counted": "Cash counted",
+      "flagged": "Flagged",
+      "status": "Status",
+      "closed": "Closed"
+    },
+    "pnl": {
+      "title": "P&L by month",
+      "window": "12 months: {range}",
+      "line": "Line",
+      "month": "Month",
+      "grossSales": "Gross sales",
+      "discounts": "Discounts",
+      "netSales": "Net sales",
+      "cogs": "Cost of goods sold",
+      "grossMargin": "Gross margin",
+      "marginPct": "Gross margin %",
+      "writeOffs": "Write-offs",
+      "contribution": "Contribution",
+      "partial": "Partial month",
+      "partialShort": "partial",
+      "opexNote": "Operating expenses (rent, salaries, power) are not included: contribution is gross margin less write-offs."
+    }
   }
 }

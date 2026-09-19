@@ -28,17 +28,14 @@ test.describe("console smoke (mock API)", () => {
   });
 
   test("shell routes render EmptyState and theme toggles", async ({ page }) => {
-    for (const path of [
-      "/home",
-      "/field-team",
-      "/farmers",
-      "/stores",
-      "/agronomist",
-      "/flags",
-      "/settings",
-    ]) {
+    for (const path of ["/agronomist", "/flags", "/settings"]) {
       await page.goto(path);
       await expect(page.getByTestId("empty-state")).toBeVisible();
+    }
+    // M4 dashboards (C10, C20, C30, C40) are real data screens: signed out they ask to sign in.
+    for (const path of ["/home", "/field-team", "/farmers", "/stores"]) {
+      await page.goto(path);
+      await expect(page.getByTestId("session-signed-out")).toBeVisible();
     }
     // C50 is a real data screen (WC-005): without a session it asks to sign in again.
     await page.goto("/products");
