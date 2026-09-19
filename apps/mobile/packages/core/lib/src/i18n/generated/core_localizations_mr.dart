@@ -3191,4 +3191,58 @@ class CoreLocalizationsMr extends CoreLocalizations {
 
   @override
   String get storeFlagged => 'ऑडिटसाठी चिन्हांकित';
+
+  @override
+  String get storePreviewEstimate => 'अंदाज';
+
+  @override
+  String get storePreviewLoading => 'पूर्वावलोकन अद्ययावत होत आहे…';
+
+  @override
+  String get storePreviewServerNote =>
+      'बीजकाप्रमाणेच सर्व्हरने किंमत ठरवली आहे. पुष्टी केल्यावर बीजक क्रमांक मिळतो.';
+
+  @override
+  String get storePreviewOffline =>
+      'ऑफलाइन पूर्वावलोकन उपलब्ध नाही. रक्कम अंदाजे आहे; पुष्टी केल्यावर सर्व्हर बीजकाची किंमत ठरवतो.';
+
+  @override
+  String get storePreviewUnavailable =>
+      'पूर्वावलोकन उपलब्ध नाही. रक्कम अंदाजे आहे; पुष्टी केल्यावर सर्व्हर बीजकाची किंमत ठरवतो.';
+
+  @override
+  String get storeCheckApproval => 'मंजुरी तपासा';
+
+  @override
+  String get storeApprovalPending =>
+      'अजून मंजुरी मिळाली नाही. कार्ट जपून ठेवले आहे; नंतर पुन्हा तपासा.';
+
+  @override
+  String get storeApprovalRejected =>
+      'क्लस्टर हेडने ही उधारी विक्री नाकारली. दुसरी पद्धत निवडा.';
+
+  @override
+  String get storeApprovalCheckOffline =>
+      'मंजुरी तपासता आली नाही. इंटरनेटशी जोडा आणि पुन्हा प्रयत्न करा.';
+
+  @override
+  String get storeTransferSourceNotAllowed =>
+      'तुम्ही फक्त तुमच्या स्वतःच्या स्टोअरमधून स्टॉक पाठवू शकता.';
+
+  @override
+  String get storeTransferDestinationNotAllowed =>
+      'तुम्ही त्या स्टोअरला स्टॉक पाठवू शकत नाही. यादीतून स्टोअर निवडा.';
+
+  @override
+  String storeDistanceKm(String km) {
+    return '$km किमी दूर';
+  }
+
+  @override
+  String get creditApprovedSending =>
+      'क्लस्टर हेडने मंजुरी दिली. विक्री पाठवत आहे…';
+
+  @override
+  String get creditRejectedByClusterHead =>
+      'क्लस्टर हेडने ही उधारी विक्री नाकारली. त्याऐवजी रोख घ्या.';
 }

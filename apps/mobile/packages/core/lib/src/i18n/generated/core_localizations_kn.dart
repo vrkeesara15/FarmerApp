@@ -3214,4 +3214,58 @@ class CoreLocalizationsKn extends CoreLocalizations {
 
   @override
   String get storeFlagged => 'ಲೆಕ್ಕಪರಿಶೋಧನೆಗೆ ಗುರುತಿಸಲಾಗಿದೆ';
+
+  @override
+  String get storePreviewEstimate => 'ಅಂದಾಜು';
+
+  @override
+  String get storePreviewLoading => 'ಮುನ್ನೋಟ ನವೀಕರಿಸಲಾಗುತ್ತಿದೆ…';
+
+  @override
+  String get storePreviewServerNote =>
+      'ಇನ್‌ವಾಯ್ಸ್‌ನಂತೆಯೇ ಸರ್ವರ್ ಬೆಲೆ ನಿಗದಿಪಡಿಸಿದೆ. ನೀವು ದೃಢೀಕರಿಸಿದಾಗ ಇನ್‌ವಾಯ್ಸ್ ಸಂಖ್ಯೆ ಬರುತ್ತದೆ.';
+
+  @override
+  String get storePreviewOffline =>
+      'ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ಮುನ್ನೋಟ ಲಭ್ಯವಿಲ್ಲ. ಮೊತ್ತಗಳು ಅಂದಾಜು ಮಾತ್ರ; ನೀವು ದೃಢೀಕರಿಸಿದಾಗ ಸರ್ವರ್ ಇನ್‌ವಾಯ್ಸ್ ಬೆಲೆ ನಿಗದಿಪಡಿಸುತ್ತದೆ.';
+
+  @override
+  String get storePreviewUnavailable =>
+      'ಮುನ್ನೋಟ ಲಭ್ಯವಿಲ್ಲ. ಮೊತ್ತಗಳು ಅಂದಾಜು ಮಾತ್ರ; ನೀವು ದೃಢೀಕರಿಸಿದಾಗ ಸರ್ವರ್ ಇನ್‌ವಾಯ್ಸ್ ಬೆಲೆ ನಿಗದಿಪಡಿಸುತ್ತದೆ.';
+
+  @override
+  String get storeCheckApproval => 'ಅನುಮೋದನೆ ಪರಿಶೀಲಿಸಿ';
+
+  @override
+  String get storeApprovalPending =>
+      'ಇನ್ನೂ ಅನುಮೋದನೆ ಸಿಕ್ಕಿಲ್ಲ. ಕಾರ್ಟ್ ಹಾಗೆಯೇ ಇದೆ; ನಂತರ ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ.';
+
+  @override
+  String get storeApprovalRejected =>
+      'ಕ್ಲಸ್ಟರ್ ಮುಖ್ಯಸ್ಥರು ಈ ಸಾಲದ ಮಾರಾಟವನ್ನು ತಿರಸ್ಕರಿಸಿದ್ದಾರೆ. ಬೇರೆ ವಿಧಾನ ಆಯ್ಕೆಮಾಡಿ.';
+
+  @override
+  String get storeApprovalCheckOffline =>
+      'ಅನುಮೋದನೆ ಪರಿಶೀಲಿಸಲಾಗಲಿಲ್ಲ. ಇಂಟರ್ನೆಟ್‌ಗೆ ಸಂಪರ್ಕಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.';
+
+  @override
+  String get storeTransferSourceNotAllowed =>
+      'ನೀವು ನಿಮ್ಮ ಸ್ವಂತ ಸ್ಟೋರ್‌ನಿಂದ ಮಾತ್ರ ಸ್ಟಾಕ್ ಕಳುಹಿಸಬಹುದು.';
+
+  @override
+  String get storeTransferDestinationNotAllowed =>
+      'ಆ ಸ್ಟೋರ್‌ಗೆ ನೀವು ಸ್ಟಾಕ್ ಕಳುಹಿಸಲಾಗದು. ಪಟ್ಟಿಯಿಂದ ಸ್ಟೋರ್ ಆಯ್ಕೆಮಾಡಿ.';
+
+  @override
+  String storeDistanceKm(String km) {
+    return '$km ಕಿ.ಮೀ. ದೂರ';
+  }
+
+  @override
+  String get creditApprovedSending =>
+      'ಕ್ಲಸ್ಟರ್ ಮುಖ್ಯಸ್ಥರು ಅನುಮೋದಿಸಿದ್ದಾರೆ. ಮಾರಾಟ ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ…';
+
+  @override
+  String get creditRejectedByClusterHead =>
+      'ಕ್ಲಸ್ಟರ್ ಮುಖ್ಯಸ್ಥರು ಈ ಸಾಲದ ಮಾರಾಟವನ್ನು ತಿರಸ್ಕರಿಸಿದ್ದಾರೆ. ಬದಲಿಗೆ ನಗದು ಪಡೆಯಿರಿ.';
 }

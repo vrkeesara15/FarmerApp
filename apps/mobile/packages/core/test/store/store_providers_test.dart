@@ -246,6 +246,107 @@ void main() {
     expect(w.state.mode, isNull);
   });
 
+  Future<void> knownBuyer() async {
+    await LocalEntities(w.db).write(
+      SyncEntities.farmer,
+      'f-ramesh',
+      <String, Object?>{'name': 'Ramesh Reddy', 'phone': '+919876543210'},
+      version: 1,
+      dirty: false,
+      now: DateTime.utc(2026, 9, 2),
+    );
+    await w.pos.lookupBuyer('9876543210');
+  }
+
+  group('server preview (S03)', () {
+    test(
+      'debounced: one preview call after cart changes; server wins',
+      () async {
+        w.pos
+          ..add(demoCatalog[0])
+          ..add(demoCatalog[1])
+          ..add(demoCatalog[0]);
+        expect(w.state.previewStatus, PreviewStatus.loading);
+        expect(w.state.preview.estimate, isTrue);
+        await Future<void>.delayed(posPreviewDebounce * 2);
+        expect(w.api.calls.where((c) => c == 'posPreview'), hasLength(1));
+        expect(w.state.previewStatus, PreviewStatus.ready);
+        expect(w.state.preview.estimate, isFalse);
+        expect(w.state.preview.amountInWords, startsWith('Rupees'));
+        expect(w.api.lastPreview!.lines, hasLength(2));
+        // Walk-in / no mode: previewed as cash; a buyer change asks again.
+        expect(w.api.lastPreview!.mode, SaleMode.cash);
+        await knownBuyer();
+        expect(w.state.previewStatus, PreviewStatus.loading);
+        await Future<void>.delayed(posPreviewDebounce * 2);
+        expect(w.api.lastPreview!.farmerId, 'f-ramesh');
+        expect(w.state.previewStatus, PreviewStatus.ready);
+      },
+    );
+
+    test('offline: preview unavailable, labelled local estimate', () async {
+      w.pos.add(demoCatalog[0]);
+      w.net.online = false;
+      expect(await w.pos.refreshPreview(), PreviewStatus.offline);
+      expect(w.state.serverPreview, isNull);
+      expect(w.state.preview.estimate, isTrue);
+      expect(w.api.calls, isNot(contains('posPreview')));
+    });
+
+    test('refused preview falls back to the estimate', () async {
+      w.pos.add(demoCatalog[0]);
+      w.api.previewRefusal = 'unknown_sku';
+      expect(await w.pos.refreshPreview(), PreviewStatus.unavailable);
+      expect(w.state.preview.estimate, isTrue);
+      w.pos.setQty(demoCatalog[0].skuId, 0);
+      expect(w.state.previewStatus, PreviewStatus.idle);
+    });
+  });
+
+  group('credit approval retry (ST-007)', () {
+    test('402 keeps the request; approved -> retried with it once', () async {
+      await knownBuyer();
+      w.pos
+        ..add(demoCatalog[6])
+        ..setMode(SaleMode.credit);
+      w.api.creditExceeded = true;
+      expect(await w.pos.confirm(), CheckoutPhase.approvalNeeded);
+      final id = w.state.approvalRequestId!;
+      expect(w.api.lastSale!.creditApprovalRequestId, isNull);
+      // Still pending: the check says so, nothing is resent.
+      expect(await w.pos.checkApproval(), ApprovalCheck.pending);
+      expect(w.api.calls.where((c) => c == 'posSale:credit'), hasLength(1));
+      // A retry before the decision names the same request (no pile-up).
+      expect(await w.pos.confirm(), CheckoutPhase.approvalNeeded);
+      expect(w.api.lastSale!.creditApprovalRequestId, id);
+      expect(w.state.approvalRequestId, id);
+      await w.api.decideCredit(id, approve: true);
+      await w.pos.checkApproval();
+      expect(w.state.phase, CheckoutPhase.done);
+      expect(w.api.lastSale!.toJson()['credit_approval_request_id'], id);
+      expect(w.api.approvals.firstWhere((a) => a.id == id).status, 'consumed');
+    });
+
+    test('rejected and offline checks are reported, cart kept', () async {
+      await knownBuyer();
+      w.pos
+        ..add(demoCatalog[6])
+        ..setMode(SaleMode.credit);
+      w.api.creditExceeded = true;
+      await w.pos.confirm();
+      final id = w.state.approvalRequestId!;
+      w.api.offline = true;
+      expect(await w.pos.checkApproval(), ApprovalCheck.offline);
+      w.api.offline = false;
+      await w.api.decideCredit(id, approve: false);
+      expect(await w.pos.checkApproval(), ApprovalCheck.rejected);
+      expect(w.state.phase, CheckoutPhase.approvalNeeded);
+      expect(w.state.lines, hasLength(1));
+      w.pos.newSale();
+      expect(w.state.approvalRequestId, isNull);
+    });
+  });
+
   group('day close', () {
     DayCloseNotifier close() => w.container.read(dayCloseProvider.notifier);
     DayCloseState state() => w.container.read(dayCloseProvider);

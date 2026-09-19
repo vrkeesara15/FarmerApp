@@ -23,7 +23,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Annotated
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 
@@ -52,6 +52,8 @@ from farmerapp.orders.schemas import (
 )
 from farmerapp.stock.ledger import reserved_by_sku, stock_on_hand_by_sku
 from farmerapp.stock.router import STOCK_ROLES, visible_store
+from farmerapp.uploads.blobstore import BlobStore
+from farmerapp.uploads.router import get_blob_store
 
 router = APIRouter(tags=["orders"])
 
@@ -197,10 +199,12 @@ async def change_order_status(
     actor: Annotated[User, require_roles(*QUEUE_ROLES)],
     session: DbSession,
     services: Services,
+    blobs: Annotated[BlobStore, Depends(get_blob_store)],
 ) -> OrderDetailOut:
     order = await visible_order(session, actor, id)
+    now = services.clock.now()
     return await service.change_status(
-        session, actor, order, body, today=services.clock.now().date()
+        session, actor, order, body, today=now.date(), blobs=blobs, now=now
     )
 
 

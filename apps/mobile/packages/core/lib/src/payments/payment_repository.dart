@@ -269,15 +269,43 @@ class PaymentRepository {
     );
   }
 
-  /// A56 "Check again": requeues the rejected credit op (the approved
-  /// request lets the same order through once). Returns false when there
-  /// is nothing to recheck.
+  /// A56 "Check approval" (manual fallback of the change-feed update):
+  /// requeues the rejected credit op with `credit_approval_request_id` =
+  /// the blocked sale's approval request, so an approved request lets the
+  /// sale through once (a pending one is refreshed, not duplicated).
+  /// Returns false when there is nothing to recheck.
   Future<bool> recheckCredit(String paymentId) async {
     final op = await _store.firstOpenOp(paymentId);
     if (op == null || op.state != OutboxState.rejected.name) return false;
-    await _store.requeue(op.opId);
+    final approvalId = SyncStore.errorOf(op)?.approvalRequestId;
+    await _store.requeue(
+      op.opId,
+      payload: approvalId == null
+          ? null
+          : <String, Object?>{
+              ...SyncStore.payloadOf(op),
+              creditApprovalRequestIdKey: approvalId,
+            },
+    );
     return true;
   }
+
+  /// The pulled state of a credit approval request (ST-007; the change feed
+  /// brings it to the officer who asked), or null before the first pull.
+  Future<CreditApprovalState?> creditApproval(String approvalRequestId) async {
+    final data = await _store.entities.readRef(
+      SyncEntities.creditApprovalRequest,
+      approvalRequestId,
+    );
+    return data == null ? null : CreditApprovalState.fromJson(data);
+  }
+
+  /// [creditApproval] now and after every pull.
+  Stream<CreditApprovalState?> watchCreditApproval(String approvalRequestId) =>
+      _watchTables(
+        () => creditApproval(approvalRequestId),
+        <TableInfo<Table, Object?>>[db.syncedRefs],
+      );
 
   /// Drops a rejected payment op (e.g. the officer switched to cash).
   Future<void> discard(String paymentId) async {
@@ -346,13 +374,18 @@ class PaymentRepository {
     return <PaymentView>[for (final r in rows) await _view(r)];
   }
 
-  Stream<T> _watch<T>(Future<T> Function() load) async* {
+  Stream<T> _watch<T>(Future<T> Function() load) => _watchTables(
+    load,
+    <TableInfo<Table, Object?>>[db.payments, db.outboxTable],
+  );
+
+  Stream<T> _watchTables<T>(
+    Future<T> Function() load,
+    List<TableInfo<Table, Object?>> tables,
+  ) async* {
     yield await load();
     await for (final _ in db.tableUpdates(
-      TableUpdateQuery.onAllTables(<TableInfo<Table, Object?>>[
-        db.payments,
-        db.outboxTable,
-      ]),
+      TableUpdateQuery.onAllTables(tables),
     )) {
       yield await load();
     }

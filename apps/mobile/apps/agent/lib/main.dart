@@ -121,20 +121,21 @@ Future<void> main() async {
       paymentsApiProvider.overrideWithValue(HttpPaymentsApi(rest)),
       khataApiProvider.overrideWithValue(HttpKhataApi(rest)),
       invoiceSharerProvider.overrideWithValue(const SharePlusInvoiceSharer()),
-      // ST-001 .. ST-007 store mode: online API, barcode camera, PDF viewer,
-      // share sheet.
+      // ST-001 .. ST-007 store mode: online API (catalogue through the
+      // officer client), barcode camera, PDF viewer; invoices are shared
+      // through the same `invoiceSharerProvider` as A57.
       storeApiProvider.overrideWithValue(
         HttpStoreApi(
           store: store,
           refreshSession: auth.refresh,
           onServerDate: drift.record,
+          catalogApi: HttpCatalogApi(rest),
         ),
       ),
       barcodeScannerProvider.overrideWithValue(
         const MobileScannerBarcodeScanner(),
       ),
       urlOpenerProvider.overrideWithValue(const LauncherUrlOpener()),
-      textSharerProvider.overrideWithValue(const SharePlusTextSharer()),
       // FA-016: confirmation request / officer-side OTP (online only).
       visitConfirmApiProvider.overrideWithValue(
         HttpVisitConfirmApi(

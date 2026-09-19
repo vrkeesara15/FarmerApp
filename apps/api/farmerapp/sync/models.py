@@ -35,7 +35,9 @@ from farmerapp.db.base import Base, TenantRow
 #: visits, their photos and confirmations (FA-014 .. FA-017, ``farmerapp.visits.sync_ops``),
 #: duty sessions and policy acceptances (writes land with FA-010 / FA-011). M3 adds the
 #: money-bearing entities (orders, lines, payments, khata entries): in the feed now, server
-#: wins on conflict, device writes land with FA-020 / FA-021 / FA-022.
+#: wins on conflict, device writes land with FA-020 / FA-021 / FA-022. Credit approval
+#: requests (ST-007) reach the officer who asked and the store's staff so A56 learns about the
+#: decision without polling; devices never write them (``unsupported_action``).
 SYNC_ENTITIES: tuple[str, ...] = (
     "farmer",
     "farm",
@@ -51,6 +53,7 @@ SYNC_ENTITIES: tuple[str, ...] = (
     "order_line",
     "payment",
     "khata_entry",
+    "credit_approval_request",  # ST-007 / FA-020 A56: read-only on devices, never written
 )
 #: Never in the change feed, whatever hook sees them: raw location points are high-volume
 #: telemetry the device already has (VV-001) and other officers must never receive (SPEC 2.6).

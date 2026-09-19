@@ -53,13 +53,13 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ValidationError
-from sqlalchemy import and_, or_, select
+from sqlalchemy import ColumnElement, and_, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.api.errors import AppError, ForbiddenError, NotFoundError
 from farmerapp.api.pagination import InvalidCursorError
-from farmerapp.auth.models import User
+from farmerapp.auth.models import User, UserRole
 from farmerapp.auth.scope import (
     duty_session_filters,
     farmer_filters,
@@ -88,8 +88,8 @@ from farmerapp.farmers.schemas import (
     FarmUpdate,
 )
 from farmerapp.khata.credit import CreditDecision, CreditLimitExceededError, decision_extra
-from farmerapp.khata.models import KhataEntry
-from farmerapp.khata.schemas import KhataEntryOut
+from farmerapp.khata.models import CreditApprovalRequest, KhataEntry
+from farmerapp.khata.schemas import CreditApprovalOut, KhataEntryOut
 from farmerapp.location.ingest import LocationBatchIn, ingest_batch
 from farmerapp.location.models import DutySession, PolicyAcceptance
 from farmerapp.location.schemas import DutySessionOut, PolicyAcceptanceOut
@@ -141,6 +141,7 @@ CONFLICT_RULES: dict[str, Strategy] = {
     "order_line": Strategy.SERVER_WINS,
     "payment": Strategy.SERVER_WINS,
     "khata_entry": Strategy.SERVER_WINS,  # append-only ledger (FA-022)
+    "credit_approval_request": Strategy.SERVER_WINS,  # decided by a cluster head (ST-007)
 }
 
 #: ``merge_fields`` entities: fields a device may never overwrite.
@@ -168,7 +169,11 @@ _DUTY_END_FIELDS = frozenset({"end_at", "end_reason"})
 #: Synced entities whose device write path has not landed yet: order lines (they travel
 #: inside the ``order`` create, FA-020), payments and khata entries (FA-021 / FA-022). Ops on
 #: them are rejected with ``unsupported_action``; they are already in the changes feed.
-_ENTITIES_WITHOUT_WRITE_PATH: frozenset[str] = frozenset({"order_line", "payment", "khata_entry"})
+#: Credit approval requests are read-only on devices: they come from the credit gate and are
+#: decided through ``/v1/credit-approvals`` (ST-007).
+_ENTITIES_WITHOUT_WRITE_PATH: frozenset[str] = frozenset(
+    {"order_line", "payment", "khata_entry", "credit_approval_request"}
+)
 
 
 def server_owned_fields(entity: str, row: Any) -> frozenset[str]:
@@ -619,7 +624,26 @@ def _scope(actor: User) -> Any:
             SyncChange.entity == "khata_entry",
             SyncChange.entity_id.in_(select(KhataEntry.id).where(*khata_entry_filters(actor))),
         ),
+        and_(
+            SyncChange.entity == "credit_approval_request",
+            SyncChange.entity_id.in_(
+                select(CreditApprovalRequest.id).where(*credit_approval_feed_filters(actor))
+            ),
+        ),
     )
+
+
+def credit_approval_feed_filters(actor: User) -> list[ColumnElement[bool]]:
+    """Who receives a credit approval request in the feed (ST-007, FA-020 A56): the user who
+    asked for it (the officer whose credit sale was blocked) and the staff of the store the
+    sale is at (store manager / accountant). Other officers never see it; approvers use
+    ``GET /v1/credit-approvals``."""
+    mine = CreditApprovalRequest.requested_by == actor.id
+    if UserRole(actor.role) in (UserRole.STORE_MANAGER, UserRole.ACCOUNTANT) and (
+        actor.store_id is not None
+    ):
+        mine = or_(mine, CreditApprovalRequest.store_id == actor.store_id)
+    return [CreditApprovalRequest.tenant_id == actor.tenant_id, mine]
 
 
 async def _current_state(
@@ -682,6 +706,7 @@ async def _current_state(
         ("order_line", OrderLine, OrderLineOut.model_validate),
         ("payment", Payment, PaymentOut.model_validate),
         ("khata_entry", KhataEntry, KhataEntryOut.from_row),
+        ("credit_approval_request", CreditApprovalRequest, CreditApprovalOut.model_validate),
     )
     for entity, model, to_out in money:
         if ids.get(entity):

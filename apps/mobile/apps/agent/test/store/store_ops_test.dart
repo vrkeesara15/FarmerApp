@@ -274,14 +274,91 @@ void main() {
   });
 
   group('S08 stock transfer', () {
+    const sangareddy = 'Sangareddy FCC · Sangareddy · 38.4 km away';
+
+    Future<void> pickDestination(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('transfer-to')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(sangareddy).last);
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> fillLine(WidgetTester tester, String qty) async {
+      await tester.tap(find.byKey(const Key('transfer-sku-0')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Imidacloprid 17.8% SL 250 ml').last);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('transfer-qty-0')), qty);
+    }
+
+    testWidgets('destinations come from the transfer-destinations endpoint', (
+      tester,
+    ) async {
+      deps.api.storeList = <StoreBrief>[demoStores.first]; // own store only
+      await open(tester, '/store/stock/transfer');
+      expect(deps.api.calls, contains('transferDestinations:store-knd'));
+      await tester.tap(find.byKey(const Key('transfer-to')));
+      await tester.pumpAndSettle();
+      expect(find.text(sangareddy), findsWidgets);
+    });
+
+    testWidgets('no destination in the cluster says so', (tester) async {
+      deps.api.destinations = const <TransferDestination>[];
+      await open(tester, '/store/stock/transfer');
+      expect(
+        find.text('No other store is available to you. Ask your cluster head.'),
+        findsOneWidget,
+      );
+      expect(button(tester, 'transfer-submit').onPressed, isNull);
+    });
+
+    testWidgets('403 transfer_source_not_allowed on the list is explained', (
+      tester,
+    ) async {
+      deps.api.destinationsRefusal = 'transfer_source_not_allowed';
+      await open(tester, '/store/stock/transfer');
+      expect(
+        find.text('You can send stock only from your own store.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('403 on submit is explained and the list reloaded', (
+      tester,
+    ) async {
+      await open(tester, '/store/stock/transfer');
+      await pickDestination(tester);
+      await fillLine(tester, '2');
+      deps.api.transferRefusal = 'transfer_destination_not_allowed';
+      await tapVisible(tester, find.byKey(const Key('transfer-submit')));
+      expect(
+        find.text(
+          'You cannot send stock to that store. Pick a store from the list.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('transfer-done')), findsNothing);
+      expect(
+        deps.api.calls
+            .where((c) => c.startsWith('transferDestinations'))
+            .length,
+        greaterThanOrEqualTo(2),
+      );
+
+      deps.api.transferRefusal = 'transfer_source_not_allowed';
+      await pickDestination(tester);
+      await tapVisible(tester, find.byKey(const Key('transfer-submit')));
+      expect(
+        find.text('You can send stock only from your own store.'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('FEFO batch suggested; qty must be <= available', (
       tester,
     ) async {
       await open(tester, '/store/stock/transfer');
-      await tester.tap(find.byKey(const Key('transfer-to')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Sangareddy FCC').last);
-      await tester.pumpAndSettle();
+      await pickDestination(tester);
       await tester.tap(find.byKey(const Key('transfer-sku-0')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Imidacloprid 17.8% SL 250 ml').last);

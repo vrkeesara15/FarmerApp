@@ -649,6 +649,12 @@ class SyncEngine {
           version: change.version,
           now: now,
         );
+        // ST-007 / FA-020 A56: the cluster head approved a blocked credit
+        // sale -> resend it with the approval (pushed in this same run).
+        if (change.entity == SyncEntities.creditApprovalRequest &&
+            change.data['status'] == 'approved') {
+          await store.requeueApprovedCredit(change.entityId);
+        }
       }
     }
     return changes.length;

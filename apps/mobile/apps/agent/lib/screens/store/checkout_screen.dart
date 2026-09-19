@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:farmerapp_core/farmerapp_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,16 +13,39 @@ import 'store_shell.dart';
 
 /// S03 Checkout: payment method (UPI QR with polling, card on the store
 /// terminal with a reference, cash with change, credit within the limit),
-/// the GST invoice preview, and the sale. The network is required to
-/// finalise; offline and refused sales keep the cart.
-class CheckoutScreen extends ConsumerWidget {
+/// the GST invoice preview from the server (`POST /v1/stores/{id}/pos/preview`,
+/// asked again after cart / buyer changes; offline or refused it falls back
+/// to the local estimate, labelled "Estimate"), and the sale. The network is
+/// required to finalise; offline and refused sales keep the cart. A credit
+/// sale beyond the limit keeps its approval request; "Check approval"
+/// retries it with `credit_approval_request_id` once approved.
+class CheckoutScreen extends ConsumerStatefulWidget {
   /// Creates the screen.
   const CheckoutScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CheckoutScreen> createState() => _CheckoutScreenState();
+}
+
+class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final pos = ref.read(posProvider);
+      if (pos.lines.isNotEmpty && pos.serverPreview == null) {
+        unawaited(ref.read(posProvider.notifier).refreshPreview());
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = CoreLocalizations.of(context);
+    final app = context.app;
     final pos = ref.watch(posProvider);
+    final shown = pos.preview;
     ref.listen<CheckoutPhase>(posProvider.select((s) => s.phase), (_, next) {
       final sale = ref.read(posProvider).sale;
       if (next == CheckoutPhase.done && sale != null) {
@@ -28,18 +53,38 @@ class CheckoutScreen extends ConsumerWidget {
       }
     });
     final twoPane = isStoreTwoPane(context);
+    final note = switch (pos.previewStatus) {
+      PreviewStatus.ready => l10n.storePreviewServerNote,
+      PreviewStatus.loading => l10n.storePreviewLoading,
+      PreviewStatus.offline => l10n.storePreviewOffline,
+      PreviewStatus.unavailable => l10n.storePreviewUnavailable,
+      PreviewStatus.idle => l10n.storeInvoicePreviewNote,
+    };
     final preview = StoreCard(
       key: const Key('checkout-preview'),
       title: l10n.storeInvoicePreview,
+      trailing: shown.estimate && pos.lines.isNotEmpty
+          ? StoreChip(
+              key: const Key('checkout-preview-estimate'),
+              label: l10n.storePreviewEstimate,
+              color: app.palette.statusWarning,
+              icon: Icons.calculate_outlined,
+            )
+          : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          GstInvoiceView.preview(pos.preview),
+          GstInvoiceView.preview(shown),
           const SizedBox(height: Tokens.space2),
           Text(
-            l10n.storeInvoicePreviewNote,
-            style: context.app.text.caption.copyWith(
-              color: context.app.palette.textSecondary,
+            note,
+            key: Key('checkout-preview-${pos.previewStatus.name}'),
+            style: app.text.caption.copyWith(
+              color:
+                  pos.previewStatus == PreviewStatus.offline ||
+                      pos.previewStatus == PreviewStatus.unavailable
+                  ? app.palette.statusWarning
+                  : app.palette.textSecondary,
             ),
           ),
         ],
@@ -305,7 +350,34 @@ class _PhasePanel extends ConsumerWidget {
               label: l10n.storeCreditLimit,
               value: formatInr(f.intExtra('limit_paise')),
             ),
+            if (state.approvalCheck != null) ...<Widget>[
+              const SizedBox(height: Tokens.space2),
+              Text(
+                switch (state.approvalCheck!) {
+                  ApprovalCheck.pending => l10n.storeApprovalPending,
+                  ApprovalCheck.rejected => l10n.storeApprovalRejected,
+                  ApprovalCheck.offline => l10n.storeApprovalCheckOffline,
+                },
+                key: Key('checkout-approval-${state.approvalCheck!.name}'),
+                style: app.text.body.copyWith(
+                  color: state.approvalCheck == ApprovalCheck.rejected
+                      ? p.statusDanger
+                      : p.statusWarning,
+                ),
+              ),
+            ],
             const SizedBox(height: Tokens.space2),
+            if (state.approvalRequestId != null &&
+                state.approvalCheck != ApprovalCheck.rejected) ...<Widget>[
+              AppButton(
+                key: const Key('checkout-check-approval'),
+                label: l10n.storeCheckApproval,
+                icon: Icons.refresh,
+                size: AppButtonSize.medium,
+                onPressed: notifier.checkApproval,
+              ),
+              const SizedBox(height: Tokens.space2),
+            ],
             AppButton(
               key: const Key('checkout-other-mode'),
               label: l10n.storeChooseAnotherMode,

@@ -3197,4 +3197,58 @@ class CoreLocalizationsHi extends CoreLocalizations {
 
   @override
   String get storeFlagged => 'ऑडिट के लिए चिह्नित';
+
+  @override
+  String get storePreviewEstimate => 'अनुमान';
+
+  @override
+  String get storePreviewLoading => 'पूर्वावलोकन अपडेट हो रहा है…';
+
+  @override
+  String get storePreviewServerNote =>
+      'इनवॉइस की तरह सर्वर ने कीमत तय की है। पुष्टि करने पर इनवॉइस नंबर मिलता है।';
+
+  @override
+  String get storePreviewOffline =>
+      'ऑफ़लाइन पूर्वावलोकन उपलब्ध नहीं। राशियाँ अनुमान हैं; पुष्टि करने पर सर्वर इनवॉइस की कीमत तय करता है।';
+
+  @override
+  String get storePreviewUnavailable =>
+      'पूर्वावलोकन उपलब्ध नहीं। राशियाँ अनुमान हैं; पुष्टि करने पर सर्वर इनवॉइस की कीमत तय करता है।';
+
+  @override
+  String get storeCheckApproval => 'मंज़ूरी जाँचें';
+
+  @override
+  String get storeApprovalPending =>
+      'अभी मंज़ूरी नहीं मिली। कार्ट सुरक्षित है; बाद में फिर जाँचें।';
+
+  @override
+  String get storeApprovalRejected =>
+      'क्लस्टर हेड ने यह उधार बिक्री अस्वीकार कर दी। दूसरा तरीका चुनें।';
+
+  @override
+  String get storeApprovalCheckOffline =>
+      'मंज़ूरी जाँच नहीं सकी। इंटरनेट से जुड़ें और फिर कोशिश करें।';
+
+  @override
+  String get storeTransferSourceNotAllowed =>
+      'आप केवल अपने स्टोर से स्टॉक भेज सकते हैं।';
+
+  @override
+  String get storeTransferDestinationNotAllowed =>
+      'आप उस स्टोर को स्टॉक नहीं भेज सकते। सूची से स्टोर चुनें।';
+
+  @override
+  String storeDistanceKm(String km) {
+    return '$km किमी दूर';
+  }
+
+  @override
+  String get creditApprovedSending =>
+      'क्लस्टर हेड ने मंज़ूरी दी। बिक्री भेजी जा रही है…';
+
+  @override
+  String get creditRejectedByClusterHead =>
+      'क्लस्टर हेड ने यह उधार बिक्री अस्वीकार कर दी। इसके बजाय नकद लें।';
 }

@@ -11,9 +11,12 @@ class _Line {
   final TextEditingController qty = TextEditingController();
 }
 
-/// S08 Stock transfer: destination store, lines with batch selection (FEFO
+/// S08 Stock transfer: destination store from
+/// `GET /v1/stock/transfer-destinations` (the cluster's other stores,
+/// nearest first, with the distance), lines with batch selection (FEFO
 /// suggested: earliest unexpired batch first), qty <= available; submit to
-/// `POST /v1/stock/transfers`.
+/// `POST /v1/stock/transfers`. The 403s `transfer_source_not_allowed` /
+/// `transfer_destination_not_allowed` are explained.
 class StockTransferScreen extends ConsumerStatefulWidget {
   /// Creates the screen.
   const StockTransferScreen({super.key});
@@ -73,11 +76,21 @@ class _StockTransferScreenState extends ConsumerState<StockTransferScreen> {
         _done = result.value;
         ref.invalidate(stockRowsProvider);
       } else {
-        _error = result.failure!.isOffline
+        final f = result.failure!;
+        _error = f.isOffline
             ? l10n.storeOfflineTitle
-            : result.failure!.code == 'negative_stock'
-            ? l10n.storeNegativeStock
-            : l10n.storeErrorHelp;
+            : switch (f.code) {
+                'negative_stock' => l10n.storeNegativeStock,
+                'transfer_source_not_allowed' =>
+                  l10n.storeTransferSourceNotAllowed,
+                'transfer_destination_not_allowed' =>
+                  l10n.storeTransferDestinationNotAllowed,
+                _ => l10n.storeErrorHelp,
+              };
+        if (f.code == 'transfer_destination_not_allowed') {
+          _toStore = null;
+          ref.invalidate(transferDestinationsProvider);
+        }
       }
     });
   }
@@ -88,11 +101,18 @@ class _StockTransferScreenState extends ConsumerState<StockTransferScreen> {
     final l10n = CoreLocalizations.of(context);
     final role = ref.watch(storeRoleProvider);
     final active = ref.watch(activeStoreProvider);
-    final stores = <StoreBrief>[
-      for (final s
-          in ref.watch(storesProvider).value?.value ?? const <StoreBrief>[])
+    final destinations = ref.watch(transferDestinationsProvider).value;
+    final stores = <TransferDestination>[
+      for (final s in destinations?.value ?? const <TransferDestination>[])
         if (s.id != active?.id) s,
     ];
+    final destinationsFailure = destinations?.failure;
+    final String noStores =
+        destinationsFailure?.code == 'transfer_source_not_allowed'
+        ? l10n.storeTransferSourceNotAllowed
+        : destinationsFailure?.isOffline ?? false
+        ? l10n.storeOfflineTitle
+        : l10n.storeNoOtherStores;
     final rows =
         ref.watch(stockRowsProvider).value?.value ?? const <StockRow>[];
     final problems = _tried
@@ -139,9 +159,11 @@ class _StockTransferScreenState extends ConsumerState<StockTransferScreen> {
           : ListView(
               padding: const EdgeInsets.all(Tokens.spaceScreenPadding),
               children: <Widget>[
-                if (stores.isEmpty)
+                if (destinations == null)
+                  const LinearProgressIndicator(key: Key('transfer-to-loading'))
+                else if (stores.isEmpty)
                   Text(
-                    l10n.storeNoOtherStores,
+                    noStores,
                     key: const Key('transfer-no-stores'),
                     style: app.text.body.copyWith(
                       color: app.palette.statusWarning,
@@ -157,11 +179,22 @@ class _StockTransferScreenState extends ConsumerState<StockTransferScreen> {
                           ? l10n.storeToStoreRequired
                           : null,
                     ),
+                    isExpanded: true,
                     items: <DropdownMenuItem<String>>[
                       for (final s in stores)
                         DropdownMenuItem<String>(
                           value: s.id,
-                          child: Text(s.name),
+                          child: Text(
+                            <String>[
+                              s.name,
+                              if (s.district.isNotEmpty) s.district,
+                              if (s.distanceM != null)
+                                l10n.storeDistanceKm(
+                                  (s.distanceM! / 1000).toStringAsFixed(1),
+                                ),
+                            ].join(' · '),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                     ],
                     onChanged: (v) => setState(() => _toStore = v),

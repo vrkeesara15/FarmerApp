@@ -22,7 +22,7 @@ the route answers 402 ``credit_limit_exceeded`` without raising so the request c
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 
 from sqlalchemy import select
@@ -53,7 +53,7 @@ from farmerapp.invoices.schemas import (
 )
 from farmerapp.invoices.words import amount_in_words
 from farmerapp.logging import get_logger
-from farmerapp.orders.models import Order
+from farmerapp.orders.models import Order, OrderLine
 from farmerapp.payments.config import IST, payment_settings, state_code
 from farmerapp.payments.day_close import visible_store
 from farmerapp.payments.models import PaymentMode
@@ -228,9 +228,94 @@ async def issue_invoice(
     )
     session.add(invoice)
     order.invoice_no = invoice.invoice_no
+    order.invoice_id = invoice.id
     await session.flush()
     await ensure_pdf(invoice, blobs)
     await session.flush()
+    return invoice
+
+
+async def issue_order_invoice(
+    session: AsyncSession, actor: User, order: Order, *, blobs: BlobStore, now: datetime
+) -> Invoice:
+    """The GST invoice of an officer / farmer-app / queued order that reached ``handed_over``
+    or ``delivered`` (ST-001: the GST format applies to every sale; FA-020 A57 shares it).
+
+    Idempotent: an order that already has an invoice (the POS sale, an earlier transition, a
+    retried request) gets that one back; ``uq_invoice_order_id`` backs this up. Otherwise it
+    runs the POS path — ``issue_invoice``: gapless per-store number, CGST / SGST vs IGST,
+    snapshot and PDF — from the order's own lines (prices and GST rates as placed). The
+    order's total is what was charged (payment, khata debit), so the invoice total is kept
+    equal to it: the round-off line absorbs the paisa the separate CGST / SGST halves may
+    differ by, instead of rounding to the rupee after the money was taken."""
+    existing = (
+        await session.execute(
+            select(Invoice).where(
+                Invoice.tenant_id == order.tenant_id,
+                Invoice.order_id == order.id,
+                Invoice.deleted_at.is_(None),
+            )
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        order.invoice_no, order.invoice_id = existing.invoice_no, existing.id
+        return existing
+    store = await session.get_one(Store, order.store_id)
+    tenant = await session.get_one(Tenant, order.tenant_id)
+    farmer = await session.get(Farmer, order.farmer_id) if order.farmer_id is not None else None
+    state: str | None = None
+    if farmer is not None:
+        village = await session.get(Village, farmer.village_id)
+        state = village.state if village is not None else None
+    buyer = Buyer(
+        farmer=farmer,
+        name=farmer.name if farmer is not None else WALK_IN_BUYER,
+        phone=farmer.phone if farmer is not None else None,
+        state=state or store.state,
+        gstin=None,
+    )
+    rows = (
+        await session.execute(
+            select(OrderLine, Sku, Product)
+            .join(Sku, Sku.id == OrderLine.sku_id)
+            .join(Product, Product.id == Sku.product_id)
+            .where(OrderLine.order_id == order.id, OrderLine.deleted_at.is_(None))
+            .order_by(OrderLine.created_at, OrderLine.id)
+        )
+    ).all()
+    lines = [
+        LineInput(
+            sku_id=sku.id,
+            description=f"{product.name} {sku.pack_size_value.normalize():f} {sku.pack_size_unit}",
+            hsn=product.hsn,
+            qty=line.qty,
+            unit="pc",
+            unit_price_paise=line.unit_price_paise,
+            gst_rate_bp=line.gst_rate_bp,
+        )
+        for line, sku, product in rows
+    ]
+    totals = compute_invoice(lines, supply_type(store.state, buyer.state))
+    charged = order.total_paise
+    round_off = charged - totals.exact_total_paise
+    totals = replace(totals, round_off_paise=round_off, total_paise=charged)
+    invoice = await issue_invoice(
+        session,
+        tenant=tenant,
+        store=store,
+        order=order,
+        buyer=buyer,
+        totals=totals,
+        actor=actor,
+        blobs=blobs,
+        now=now,
+    )
+    log.info(
+        "order_invoice_issued",
+        order_id=str(order.id),
+        invoice_no=invoice.invoice_no,
+        total_paise=invoice.total_paise,
+    )
     return invoice
 
 
@@ -459,6 +544,7 @@ __all__ = [
     "draft_sale",
     "ensure_pdf",
     "issue_invoice",
+    "issue_order_invoice",
     "pdf_url",
     "pos_preview",
     "pos_sale",

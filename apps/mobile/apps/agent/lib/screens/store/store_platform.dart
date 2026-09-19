@@ -1,7 +1,6 @@
 import 'package:farmerapp_core/farmerapp_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// [BarcodeScanner] over `mobile_scanner`: a full-screen camera page that
@@ -77,15 +76,4 @@ class LauncherUrlOpener implements UrlOpener {
   @override
   Future<bool> open(String url) =>
       launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-}
-
-/// [TextSharer] over `share_plus` (WhatsApp and any other target).
-class SharePlusTextSharer implements TextSharer {
-  /// Creates the sharer.
-  const SharePlusTextSharer();
-
-  @override
-  Future<void> share(String text, {String? subject}) async {
-    await SharePlus.instance.share(ShareParams(text: text, subject: subject));
-  }
 }

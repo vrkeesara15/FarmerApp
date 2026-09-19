@@ -52,6 +52,10 @@ abstract final class SyncEntities {
   /// FA-022 khata entry (pull only; `synced_refs`, append-only).
   static const String khataEntry = 'khata_entry';
 
+  /// ST-007 credit approval request (pull only; `synced_refs`): reaches the
+  /// officer who asked, so A56 learns about the decision without polling.
+  static const String creditApprovalRequest = 'credit_approval_request';
+
   /// Entities whose create payload must not repeat the id (the server
   /// validates the body strictly and takes the id from `entity_id`).
   static const Set<String> createPayloadWithoutId = <String>{payment};
@@ -81,6 +85,10 @@ const String phoneVerificationTokenKey = 'phone_verification_token';
 /// of the token. The engine drops an expired token before sending (the
 /// farmer then syncs as unverified instead of being rejected).
 const String phoneVerificationExpiresKey = 'phone_verification_expires_at';
+
+/// `order` / `payment` create payload key naming an approved credit request
+/// (ST-007 retry; `OrderCreate` / `PaymentCreate`).
+const String creditApprovalRequestIdKey = 'credit_approval_request_id';
 
 /// Maximum ops per `/v1/sync` call (contract).
 const int maxOpsPerSync = 200;
@@ -227,6 +235,13 @@ class SyncError {
   final List<Map<String, Object?>> errors;
 
   static final RegExp _metresInDetail = RegExp(r'(\d+(?:\.\d+)?)\s*m\b');
+
+  /// `approval_request_id` of a `credit_limit_exceeded` rejection (ST-007).
+  String? get approvalRequestId => code == 'credit_limit_exceeded'
+      ? (extra['approval_request_id'] ??
+                errors.firstOrNull?['approval_request_id'])
+            as String?
+      : null;
 
   /// `distance_m` of an `outside_geofence` rejection, from the extra fields
   /// or, failing that, the first `<n> m` in the detail text.

@@ -163,6 +163,54 @@ class CreditBlock {
   }
 }
 
+/// A credit approval request as pulled from the change feed (ST-007,
+/// `CreditApprovalOut`): `pending`, `approved`, `rejected` or `consumed`.
+@immutable
+class CreditApprovalState {
+  /// Creates the state.
+  const CreditApprovalState({
+    required this.id,
+    required this.status,
+    this.decisionNote,
+  });
+
+  /// Parses the pulled row.
+  factory CreditApprovalState.fromJson(Map<String, Object?> j) =>
+      CreditApprovalState(
+        id: '${j['id']}',
+        status: (j['status'] as String?) ?? 'pending',
+        decisionNote: j['decision_note'] as String?,
+      );
+
+  /// Request id.
+  final String id;
+
+  /// Wire status.
+  final String status;
+
+  /// The cluster head's note.
+  final String? decisionNote;
+
+  /// Approved (and not yet used by the sale).
+  bool get approved => status == 'approved';
+
+  /// Rejected by the cluster head.
+  bool get rejected => status == 'rejected';
+
+  /// Used by the sale it was approved for.
+  bool get consumed => status == 'consumed';
+
+  @override
+  bool operator ==(Object other) =>
+      other is CreditApprovalState &&
+      other.id == id &&
+      other.status == status &&
+      other.decisionNote == decisionNote;
+
+  @override
+  int get hashCode => Object.hash(id, status, decisionNote);
+}
+
 /// A payment with its outbox state (A53–A56, A59).
 @immutable
 class PaymentView {

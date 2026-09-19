@@ -3201,4 +3201,58 @@ class CoreLocalizationsEn extends CoreLocalizations {
 
   @override
   String get storeFlagged => 'Flagged for audit';
+
+  @override
+  String get storePreviewEstimate => 'Estimate';
+
+  @override
+  String get storePreviewLoading => 'Updating the preview…';
+
+  @override
+  String get storePreviewServerNote =>
+      'Priced by the server, as the invoice will be. The invoice number is taken when you confirm.';
+
+  @override
+  String get storePreviewOffline =>
+      'Preview unavailable offline. The amounts are an estimate; the server prices the invoice when you confirm.';
+
+  @override
+  String get storePreviewUnavailable =>
+      'Preview unavailable. The amounts are an estimate; the server prices the invoice when you confirm.';
+
+  @override
+  String get storeCheckApproval => 'Check approval';
+
+  @override
+  String get storeApprovalPending =>
+      'Not approved yet. The cart is kept; check again later.';
+
+  @override
+  String get storeApprovalRejected =>
+      'The cluster head rejected this credit sale. Choose another method.';
+
+  @override
+  String get storeApprovalCheckOffline =>
+      'Could not check the approval. Connect to the internet and try again.';
+
+  @override
+  String get storeTransferSourceNotAllowed =>
+      'You can send stock only from your own store.';
+
+  @override
+  String get storeTransferDestinationNotAllowed =>
+      'You cannot send stock to that store. Pick a store from the list.';
+
+  @override
+  String storeDistanceKm(String km) {
+    return '$km km away';
+  }
+
+  @override
+  String get creditApprovedSending =>
+      'Approved by the cluster head. Sending the sale…';
+
+  @override
+  String get creditRejectedByClusterHead =>
+      'The cluster head rejected this credit sale. Collect cash instead.';
 }

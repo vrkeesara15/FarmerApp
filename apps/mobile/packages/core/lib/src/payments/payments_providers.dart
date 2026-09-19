@@ -44,6 +44,13 @@ final StreamProviderFamily<PaymentView?, String> paymentViewProvider =
       (ref, id) => ref.watch(paymentRepositoryProvider).watchPayment(id),
     );
 
+/// A56: the pulled state of a credit approval request, live (ST-007).
+final StreamProviderFamily<CreditApprovalState?, String>
+creditApprovalStateProvider =
+    StreamProvider.family<CreditApprovalState?, String>(
+      (ref, id) => ref.watch(paymentRepositoryProvider).watchCreditApproval(id),
+    );
+
 /// Payments of an order, live (A57).
 final StreamProviderFamily<List<PaymentView>, String> orderPaymentsProvider =
     StreamProvider.family<List<PaymentView>, String>(

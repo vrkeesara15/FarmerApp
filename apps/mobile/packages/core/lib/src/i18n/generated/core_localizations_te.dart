@@ -3215,4 +3215,58 @@ class CoreLocalizationsTe extends CoreLocalizations {
 
   @override
   String get storeFlagged => 'ఆడిట్ కోసం గుర్తించారు';
+
+  @override
+  String get storePreviewEstimate => 'అంచనా';
+
+  @override
+  String get storePreviewLoading => 'ప్రివ్యూ నవీకరిస్తోంది…';
+
+  @override
+  String get storePreviewServerNote =>
+      'ఇన్‌వాయిస్ లాగే సర్వర్ ధర నిర్ణయించింది. మీరు నిర్ధారించినప్పుడు ఇన్‌వాయిస్ నంబర్ వస్తుంది.';
+
+  @override
+  String get storePreviewOffline =>
+      'ఆఫ్‌లైన్‌లో ప్రివ్యూ అందుబాటులో లేదు. మొత్తాలు అంచనా మాత్రమే; మీరు నిర్ధారించినప్పుడు సర్వర్ ఇన్‌వాయిస్ ధర నిర్ణయిస్తుంది.';
+
+  @override
+  String get storePreviewUnavailable =>
+      'ప్రివ్యూ అందుబాటులో లేదు. మొత్తాలు అంచనా మాత్రమే; మీరు నిర్ధారించినప్పుడు సర్వర్ ఇన్‌వాయిస్ ధర నిర్ణయిస్తుంది.';
+
+  @override
+  String get storeCheckApproval => 'ఆమోదం చూడండి';
+
+  @override
+  String get storeApprovalPending =>
+      'ఇంకా ఆమోదం రాలేదు. కార్ట్ అలాగే ఉంది; తర్వాత మళ్లీ చూడండి.';
+
+  @override
+  String get storeApprovalRejected =>
+      'క్లస్టర్ హెడ్ ఈ అరువు అమ్మకాన్ని తిరస్కరించారు. వేరే పద్ధతి ఎంచుకోండి.';
+
+  @override
+  String get storeApprovalCheckOffline =>
+      'ఆమోదాన్ని చూడలేకపోయాం. ఇంటర్నెట్‌కు కనెక్ట్ అయి మళ్లీ ప్రయత్నించండి.';
+
+  @override
+  String get storeTransferSourceNotAllowed =>
+      'మీరు మీ స్వంత స్టోర్ నుండే స్టాక్ పంపగలరు.';
+
+  @override
+  String get storeTransferDestinationNotAllowed =>
+      'ఆ స్టోర్‌కు మీరు స్టాక్ పంపలేరు. జాబితా నుండి స్టోర్ ఎంచుకోండి.';
+
+  @override
+  String storeDistanceKm(String km) {
+    return '$km కి.మీ. దూరం';
+  }
+
+  @override
+  String get creditApprovedSending =>
+      'క్లస్టర్ హెడ్ ఆమోదించారు. అమ్మకాన్ని పంపుతోంది…';
+
+  @override
+  String get creditRejectedByClusterHead =>
+      'క్లస్టర్ హెడ్ ఈ అరువు అమ్మకాన్ని తిరస్కరించారు. బదులుగా నగదు తీసుకోండి.';
 }

@@ -5875,6 +5875,90 @@ abstract class CoreLocalizations {
   /// In en, this message translates to:
   /// **'Flagged for audit'**
   String get storeFlagged;
+
+  /// No description provided for @storePreviewEstimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimate'**
+  String get storePreviewEstimate;
+
+  /// No description provided for @storePreviewLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating the preview…'**
+  String get storePreviewLoading;
+
+  /// No description provided for @storePreviewServerNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Priced by the server, as the invoice will be. The invoice number is taken when you confirm.'**
+  String get storePreviewServerNote;
+
+  /// No description provided for @storePreviewOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview unavailable offline. The amounts are an estimate; the server prices the invoice when you confirm.'**
+  String get storePreviewOffline;
+
+  /// No description provided for @storePreviewUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview unavailable. The amounts are an estimate; the server prices the invoice when you confirm.'**
+  String get storePreviewUnavailable;
+
+  /// No description provided for @storeCheckApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Check approval'**
+  String get storeCheckApproval;
+
+  /// No description provided for @storeApprovalPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Not approved yet. The cart is kept; check again later.'**
+  String get storeApprovalPending;
+
+  /// No description provided for @storeApprovalRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The cluster head rejected this credit sale. Choose another method.'**
+  String get storeApprovalRejected;
+
+  /// No description provided for @storeApprovalCheckOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check the approval. Connect to the internet and try again.'**
+  String get storeApprovalCheckOffline;
+
+  /// No description provided for @storeTransferSourceNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'You can send stock only from your own store.'**
+  String get storeTransferSourceNotAllowed;
+
+  /// No description provided for @storeTransferDestinationNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot send stock to that store. Pick a store from the list.'**
+  String get storeTransferDestinationNotAllowed;
+
+  /// No description provided for @storeDistanceKm.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km away'**
+  String storeDistanceKm(String km);
+
+  /// No description provided for @creditApprovedSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved by the cluster head. Sending the sale…'**
+  String get creditApprovedSending;
+
+  /// No description provided for @creditRejectedByClusterHead.
+  ///
+  /// In en, this message translates to:
+  /// **'The cluster head rejected this credit sale. Collect cash instead.'**
+  String get creditRejectedByClusterHead;
 }
 
 class _CoreLocalizationsDelegate

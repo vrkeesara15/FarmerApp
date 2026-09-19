@@ -488,6 +488,68 @@ void main() {
     expect(find.text('Added to the farmer’s khata'), findsOneWidget);
   });
 
+  Future<void> blockedCredit(WidgetTester tester) async {
+    await setUpWorld();
+    server
+      ..creditLimitPaise = 50000
+      ..balancePaise = 20000;
+    await preloadCatalog(deps);
+    await open(tester, '/orders/new?farmerId=f-1');
+    await addToCart(tester, 'sku-neem-500');
+    await tapCart(tester);
+    await tapCart(tester);
+    await tapIt(tester, find.byKey(const Key('payment-method-credit')));
+    await tapIt(tester, find.byKey(const Key('checkout-submit')));
+    expect(
+      find.byKey(const Key('credit-state-approvalNeeded')),
+      findsOneWidget,
+    );
+  }
+
+  testWidgets('A56 approval from the change feed flips to on khata by itself', (
+    tester,
+  ) async {
+    await blockedCredit(tester);
+    expect(find.byKey(const Key('credit-sent')), findsOneWidget);
+    final orderId = server.orders.keys.single;
+    server.approve(orderId);
+    // A background sync (no tap): pulls the approval, resends with it.
+    await containerOf(tester).read(syncEngineProvider).syncNow();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('credit-state-onKhata')), findsOneWidget);
+    final sent = deps.api.requests
+        .expand((r) => r.ops)
+        .lastWhere((o) => o.entity == SyncEntities.payment);
+    expect(
+      sent.payload[creditApprovalRequestIdKey],
+      FakeCommerceServer.approvalIdFor(orderId),
+    );
+  });
+
+  testWidgets('A56 rejection from the change feed is shown', (tester) async {
+    await blockedCredit(tester);
+    final approvalId = FakeCommerceServer.approvalIdFor(
+      server.orders.keys.single,
+    );
+    deps.api.addChange(
+      entity: SyncEntities.creditApprovalRequest,
+      action: SyncAction.update,
+      entityId: approvalId,
+      version: 2,
+      data: <String, Object?>{'id': approvalId, 'status': 'rejected'},
+    );
+    await containerOf(tester).read(syncEngineProvider).syncNow();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('credit-rejected')), findsOneWidget);
+    expect(
+      find.text(
+        'The cluster head rejected this credit sale. Collect cash instead.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('credit-cash-instead')), findsOneWidget);
+  });
+
   group('A57 invoice share', () {
     Future<String> syncedOrder() async {
       await preloadCatalog(deps);
@@ -537,6 +599,46 @@ void main() {
       await tapIt(tester, find.byKey(const Key('order-share')));
       expect(deps.sharer.shared.single, contains('inv-42.pdf?sig=test'));
       expect(deps.sharer.shared.single, startsWith('Invoice KDP/2026-27/0042'));
+    });
+
+    testWidgets('invoice_id from a pull (handover) enables the share', (
+      tester,
+    ) async {
+      await setUpWorld();
+      await preloadCatalog(deps);
+      final outbox = Outbox(deps.db, clock: () => deps.now, ids: deps.ids.call);
+      final item = (await CatalogCache(
+        deps.db,
+        deps.catalogApi,
+      ).item('sku-dap-50', storeId: storeId))!;
+      final id = await OrderRepository(deps.db, outbox, ids: deps.ids.call)
+          .place(
+            farmerId: 'f-1',
+            storeId: storeId,
+            fulfilment: Fulfilment.pickup,
+            lines: <CartLine>[CartLine(item: item, qty: 1)],
+          );
+      await open(tester, '/orders/$id');
+      await containerOf(tester).read(syncEngineProvider).syncNow();
+      await tester.pumpAndSettle();
+      expect(server.orders.keys, contains(id));
+      expect(
+        tester
+            .widget<AppButton>(find.byKey(const Key('order-share')))
+            .onPressed,
+        isNull,
+      );
+      server.handOver(
+        id,
+        invoiceId: 'inv-77',
+        invoiceNo: 'FCC/KND/2026-27/000077',
+      );
+      deps.payApi.invoices.add('inv-77');
+      await containerOf(tester).read(syncEngineProvider).syncNow();
+      await tester.pumpAndSettle();
+      expect(find.text('Invoice FCC/KND/2026-27/000077'), findsOneWidget);
+      await tapIt(tester, find.byKey(const Key('order-share')));
+      expect(deps.sharer.shared.single, contains('inv-77.pdf?sig=test'));
     });
 
     testWidgets('offline: share disabled with the reason', (tester) async {

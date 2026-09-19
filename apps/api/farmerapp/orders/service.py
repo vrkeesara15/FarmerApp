@@ -33,9 +33,10 @@ Queue (``change_status``)
 ``TRANSITIONS`` in ``orders.models``; anything else is a 409 ``invalid_transition``.
 ``placed -> reserved`` reserves stock (orders from before FA-020), ``cancelled`` releases
 the reservation and reverses a credit debit, ``handed_over`` / ``delivered`` turn the
-reservation into ``sale`` movements. Every change writes an append-only
-``order_status_event`` and a ``notification`` (kind ``order_status``) for the farmer's user
-and the placing user, never for the actor.
+reservation into ``sale`` movements and issue the order's GST invoice
+(``invoices.service.issue_order_invoice``: the POS numbering / GST / PDF path, once per order).
+Every change writes an append-only ``order_status_event`` and a ``notification`` (kind
+``order_status``) for the farmer's user and the placing user, never for the actor.
 """
 
 from __future__ import annotations
@@ -62,6 +63,7 @@ from farmerapp.khata.ledger import post_credit
 from farmerapp.khata.models import EntryRef, EntryType, KhataEntry
 from farmerapp.notifications.models import Notification
 from farmerapp.orders.models import (
+    FULFILLED_STATUSES,
     TRANSITIONS,
     Order,
     OrderChannel,
@@ -93,6 +95,7 @@ from farmerapp.stock.service import (
     release_order,
 )
 from farmerapp.tenants.models import Store, Village
+from farmerapp.uploads.blobstore import BlobStore
 
 NOTIFICATION_KIND = "order_status"
 NOTIFICATION_TITLE_KEY = "order.status.title"
@@ -647,7 +650,14 @@ async def advance_paid_order(
 
 
 async def change_status(
-    session: AsyncSession, actor: User, order: Order, body: OrderStatusIn, *, today: date
+    session: AsyncSession,
+    actor: User,
+    order: Order,
+    body: OrderStatusIn,
+    *,
+    today: date,
+    blobs: BlobStore,
+    now: datetime,
 ) -> OrderDetailOut:
     current = order.status
     target = body.status
@@ -677,6 +687,11 @@ async def change_status(
         )
     order.status = target
     await session.flush()
+    if target in FULFILLED_STATUSES:
+        # ST-001 / FA-020: the sale is complete -> its GST invoice (idempotent per order).
+        from farmerapp.invoices.service import issue_order_invoice
+
+        await issue_order_invoice(session, actor, order, blobs=blobs, now=now)
     await _record_status(
         session,
         actor.id,

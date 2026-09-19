@@ -50,6 +50,22 @@ class FakeStoreApi implements StoreApi {
   /// Stores.
   List<StoreBrief> storeList = <StoreBrief>[];
 
+  /// Transfer destinations of the active store (the cluster's other stores).
+  List<TransferDestination> destinations = <TransferDestination>[];
+
+  /// `POST /v1/stock/transfers` answers 403 with this code while set
+  /// (`transfer_source_not_allowed` / `transfer_destination_not_allowed`).
+  String? transferRefusal;
+
+  /// `GET /v1/stock/transfer-destinations` answers 403 with this code.
+  String? destinationsRefusal;
+
+  /// The POS preview answers 422 with this code while set.
+  String? previewRefusal;
+
+  /// The last POS preview request.
+  PosSaleRequest? lastPreview;
+
   /// Catalogue.
   List<StoreItem> items = <StoreItem>[];
 
@@ -80,6 +96,10 @@ class FakeStoreApi implements StoreApi {
     calls.clear();
     upiPolls.clear();
     storeList = demoStores;
+    destinations = demoDestinations;
+    transferRefusal = null;
+    destinationsRefusal = null;
+    previewRefusal = null;
     items = demoCatalog;
     batches = demoStock;
     orders = demoQueue;
@@ -134,6 +154,36 @@ class FakeStoreApi implements StoreApi {
     return StoreResult.ok(batches);
   }
 
+  /// The server's preview: the same numbers the sale would invoice.
+  static GstPreview _serverPreview(PosSaleRequest request) {
+    final local = GstPreview.of(request.lines);
+    return GstPreview(
+      lines: local.lines,
+      inter: local.inter,
+      taxablePaise: local.taxablePaise,
+      cgstPaise: local.cgstPaise,
+      sgstPaise: local.sgstPaise,
+      igstPaise: local.igstPaise,
+      roundOffPaise: local.roundOffPaise,
+      totalPaise: local.totalPaise,
+      estimate: false,
+      amountInWords: 'Rupees ${local.totalPaise ~/ 100} only',
+    );
+  }
+
+  @override
+  Future<StoreResult<GstPreview>> posPreview(
+    String storeId,
+    PosSaleRequest request,
+  ) async {
+    calls.add('posPreview');
+    lastPreview = request;
+    if (offline) return _offline();
+    final refusal = previewRefusal;
+    if (refusal != null) return _problem(422, refusal);
+    return StoreResult.ok(_serverPreview(request));
+  }
+
   @override
   Future<StoreResult<PosSaleResult>> posSale(
     String storeId,
@@ -148,12 +198,39 @@ class FakeStoreApi implements StoreApi {
       return _problem(422, 'reference_required');
     }
     if (request.mode == SaleMode.credit && creditExceeded) {
-      return _problem(402, 'credit_limit_exceeded', <String, Object?>{
-        'shortfall_paise': preview.totalPaise - 200000,
-        'approval_request_id': 'apr-new',
-        'balance_paise': 1800000,
-        'limit_paise': 2000000,
-      });
+      // ST-007: an approved request named by the retry lets the sale through
+      // once (then `consumed`); a pending one is returned again.
+      final named = request.creditApprovalRequestId;
+      final i = approvals.indexWhere((a) => a.id == named);
+      if (i >= 0 && approvals[i].status == 'approved') {
+        approvals = <CreditApproval>[...approvals]
+          ..[i] = approvals[i].decided('consumed', approvals[i].decisionNote);
+      } else {
+        final id = i >= 0 && approvals[i].status == 'pending'
+            ? named!
+            : 'apr-new-${approvals.length + 1}';
+        if (i < 0 || approvals[i].status != 'pending') {
+          approvals = <CreditApproval>[
+            ...approvals,
+            CreditApproval(
+              id: id,
+              farmerId: request.farmerId ?? '',
+              storeId: storeId,
+              amountPaise: preview.totalPaise,
+              balancePaise: 1800000,
+              limitPaise: 2000000,
+              shortfallPaise: preview.totalPaise - 200000,
+              status: 'pending',
+            ),
+          ];
+        }
+        return _problem(402, 'credit_limit_exceeded', <String, Object?>{
+          'shortfall_paise': preview.totalPaise - 200000,
+          'approval_request_id': id,
+          'balance_paise': 1800000,
+          'limit_paise': 2000000,
+        });
+      }
     }
     final orderId = 'order-pos-${++_paymentSeq}';
     final invoice = Invoice(
@@ -317,6 +394,17 @@ class FakeStoreApi implements StoreApi {
   }
 
   @override
+  Future<StoreResult<List<TransferDestination>>> transferDestinations({
+    String? fromStoreId,
+  }) async {
+    calls.add('transferDestinations:${fromStoreId ?? '-'}');
+    if (offline) return _offline();
+    final refusal = destinationsRefusal;
+    if (refusal != null) return _problem(403, refusal);
+    return StoreResult.ok(destinations);
+  }
+
+  @override
   Future<StoreResult<StockWriteResult>> transferStock({
     required String fromStoreId,
     required String toStoreId,
@@ -326,6 +414,8 @@ class FakeStoreApi implements StoreApi {
     calls.add('transferStock:$toStoreId');
     lastTransfer = lines;
     if (offline) return _offline();
+    final refusal = transferRefusal;
+    if (refusal != null) return _problem(403, refusal);
     final problem = _checkAvailable(lines);
     if (problem != null) return problem;
     return StoreResult.ok(
@@ -367,12 +457,14 @@ class FakeStoreApi implements StoreApi {
   @override
   Future<StoreResult<List<CreditApproval>>> creditApprovals({
     String status = 'pending',
+    String? farmerId,
   }) async {
     calls.add('creditApprovals');
     if (offline) return _offline();
     return StoreResult.ok(<CreditApproval>[
       for (final a in approvals)
-        if (a.status == status) a,
+        if (a.status == status && (farmerId == null || a.farmerId == farmerId))
+          a,
     ]);
   }
 
@@ -478,6 +570,17 @@ class FakeStoreApi implements StoreApi {
 const List<StoreBrief> demoStores = <StoreBrief>[
   StoreBrief(id: 'store-knd', code: 'KND', name: 'Kondapur FCC'),
   StoreBrief(id: 'store-sgr', code: 'SGR', name: 'Sangareddy FCC'),
+];
+
+/// Demo transfer destinations of Kondapur (its cluster, nearest first).
+const List<TransferDestination> demoDestinations = <TransferDestination>[
+  TransferDestination(
+    id: 'store-sgr',
+    code: 'SGR',
+    name: 'Sangareddy FCC',
+    district: 'Sangareddy',
+    distanceM: 38400,
+  ),
 ];
 
 /// Demo catalogue (store prices, pre-tax).

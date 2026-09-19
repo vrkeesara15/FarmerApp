@@ -9,7 +9,11 @@ import '../sync/sync_models.dart';
 /// `payment` creates are echoed as `PaymentOut` (cash →
 /// `pending_reconciliation`, credit → `paid` on the khata) or rejected:
 /// UPI / link → `requires_network`, credit over [creditLimitPaise] →
-/// `credit_limit_exceeded` (402) until [approve] is called.
+/// `credit_limit_exceeded` (402) until [approve] is called. Like the API,
+/// the approval request is in the change feed (`credit_approval_request`:
+/// pending when blocked, approved by [approve]); a retry naming an approved
+/// request (`credit_approval_request_id`) goes through. [handOver] issues
+/// the order's invoice (`invoice_id` in the order change).
 class FakeCommerceServer {
   /// Creates the server.
   FakeCommerceServer({
@@ -64,8 +68,56 @@ class FakeCommerceServer {
   /// Order ids whose credit sale the cluster head approved.
   final Set<String> approved = <String>{};
 
-  /// Approves the pending credit request of [orderId].
-  void approve(String orderId) => approved.add(orderId);
+  /// Approves the pending credit request of [orderId] and puts the decision
+  /// in the change feed.
+  void approve(String orderId) {
+    approved.add(orderId);
+    final id = approvalIdFor(orderId);
+    api.addChange(
+      entity: SyncEntities.creditApprovalRequest,
+      action: SyncAction.update,
+      entityId: id,
+      version: 2,
+      data: _approvalRow(orderId, 'approved'),
+    );
+  }
+
+  /// The approval request id of [orderId]'s blocked credit sale.
+  static String approvalIdFor(String? orderId) => 'approval-$orderId';
+
+  Map<String, Object?> _approvalRow(String? orderId, String status) =>
+      <String, Object?>{
+        'id': approvalIdFor(orderId),
+        'order_id': orderId,
+        'store_id': storeId,
+        'requested_by': officerId,
+        'status': status,
+        'version': status == 'pending' ? 1 : 2,
+      };
+
+  /// The store hands the order over: status `handed_over` and its GST
+  /// invoice ([invoiceId], [invoiceNo]) in the order's change.
+  void handOver(
+    String orderId, {
+    required String invoiceId,
+    required String invoiceNo,
+  }) {
+    final row = <String, Object?>{
+      ...orders[orderId]!,
+      'status': 'handed_over',
+      'invoice_id': invoiceId,
+      'invoice_no': invoiceNo,
+      'version': 3,
+    }..remove('lines');
+    orders[orderId] = row;
+    api.addChange(
+      entity: SyncEntities.order,
+      action: SyncAction.update,
+      entityId: orderId,
+      version: 3,
+      data: row,
+    );
+  }
 
   static int _halfUp(num v) => (v + 0.5).floor();
 
@@ -211,9 +263,19 @@ class FakeCommerceServer {
         : (order['total_paise']! as num).toInt();
     if (mode == 'credit') {
       final limit = creditLimitPaise;
+      // The API lets an approved sale through when the retry names the
+      // request (or, as before, for the same order id).
       if (limit != null &&
           balancePaise + amount > limit &&
           !approved.contains(orderId)) {
+        if (!approved.contains(orderId)) {
+          api.addChange(
+            entity: SyncEntities.creditApprovalRequest,
+            action: SyncAction.create,
+            entityId: approvalIdFor(orderId),
+            data: _approvalRow(orderId, 'pending'),
+          );
+        }
         return _rejected(
           op,
           SyncError(
@@ -223,7 +285,7 @@ class FakeCommerceServer {
             <Map<String, Object?>>[
               <String, Object?>{
                 'shortfall_paise': balancePaise + amount - limit,
-                'approval_request_id': 'approval-$orderId',
+                'approval_request_id': approvalIdFor(orderId),
                 'balance_paise': balancePaise,
                 'limit_paise': limit,
               },

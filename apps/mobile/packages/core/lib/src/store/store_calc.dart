@@ -11,11 +11,13 @@ import 'store_models.dart';
 /// `a / b` rounded half-up for non-negative integers.
 int halfUpDiv(int a, int b) => (2 * a + b) ~/ (2 * b);
 
-/// Local GST preview of a cart (S03). Intra-state (walk-in buyers and
-/// farmers of the store's state) splits each line's tax into CGST + SGST at
-/// half the rate, rounded half-up per component; inter-state is IGST. The
-/// total is rounded half-up to the rupee. The server's invoice is the
-/// authority; this preview uses the same rule.
+/// GST preview of a cart (S03): the server's `POST /v1/stores/{id}/pos/preview`
+/// ([GstPreview.fromJson], the authority: same computation as the sale), or
+/// the local offline fallback ([GstPreview.of], [estimate] = true, labelled
+/// "estimate"). The local rule mirrors `invoices/gst.py`: intra-state
+/// (walk-in buyers and farmers of the store's state) splits each line's tax
+/// into CGST + SGST at half the rate, rounded half-up per component;
+/// inter-state is IGST; the total is rounded half-up to the rupee.
 @immutable
 class GstPreview {
   /// Creates the preview.
@@ -28,9 +30,31 @@ class GstPreview {
     required this.igstPaise,
     required this.roundOffPaise,
     required this.totalPaise,
+    this.estimate = true,
+    this.amountInWords,
   });
 
-  /// Computes the preview of [cart].
+  /// Parses the server's `PosPreviewOut`.
+  factory GstPreview.fromJson(Map<String, Object?> j) {
+    int n(String k) => (j[k] as num?)?.toInt() ?? 0;
+    return GstPreview(
+      lines: <InvoiceLine>[
+        for (final l in (j['lines'] as List?) ?? const <Object?>[])
+          if (l is Map) InvoiceLine.fromJson(Map<String, Object?>.from(l)),
+      ],
+      inter: j['supply_type'] == 'inter',
+      taxablePaise: n('taxable_paise'),
+      cgstPaise: n('cgst_paise'),
+      sgstPaise: n('sgst_paise'),
+      igstPaise: n('igst_paise'),
+      roundOffPaise: n('round_off_paise'),
+      totalPaise: n('total_paise'),
+      estimate: false,
+      amountInWords: j['amount_in_words'] as String?,
+    );
+  }
+
+  /// Computes the local estimate of [cart] (offline fallback).
   factory GstPreview.of(List<StoreCartLine> cart, {bool inter = false}) {
     final lines = <InvoiceLine>[];
     var sl = 0;
@@ -95,6 +119,12 @@ class GstPreview {
 
   /// Total payable.
   final int totalPaise;
+
+  /// Computed on the device (offline fallback), not by the server.
+  final bool estimate;
+
+  /// Amount in words (server preview only).
+  final String? amountInWords;
 
   /// Tax total.
   int get taxPaise => cgstPaise + sgstPaise + igstPaise;

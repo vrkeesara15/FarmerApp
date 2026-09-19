@@ -9,8 +9,12 @@ import 'package:http/http.dart' as http;
 import '../auth/api_config.dart';
 import '../auth/auth_api.dart';
 import '../auth/token_store.dart';
+import '../catalog/catalog_api.dart';
+import '../catalog/catalog_models.dart';
+import '../catalog/rest_json_client.dart';
 import '../photo/chunked_upload_planner.dart';
 import '../sync/http_sync_api.dart' show ServerDateObserver, reportServerDate;
+import 'store_calc.dart';
 import 'store_models.dart';
 
 /// A failed store call: HTTP status (0 = no network / timeout), the RFC 9457
@@ -117,6 +121,13 @@ abstract interface class StoreApi {
     PosSaleRequest request,
   );
 
+  /// `POST /v1/stores/{id}/pos/preview`: the invoice the sale would issue
+  /// (nothing is written, no number taken).
+  Future<StoreResult<GstPreview>> posPreview(
+    String storeId,
+    PosSaleRequest request,
+  );
+
   /// `GET /v1/payments/{id}`.
   Future<StoreResult<PaymentStatus>> payment(String paymentId);
 
@@ -154,7 +165,15 @@ abstract interface class StoreApi {
     String? reference,
   });
 
-  /// `POST /v1/stock/transfers`.
+  /// `GET /v1/stock/transfer-destinations?from_store_id=`: where stock of
+  /// [fromStoreId] may go (403 `transfer_source_not_allowed` for another
+  /// store of a manager).
+  Future<StoreResult<List<TransferDestination>>> transferDestinations({
+    String? fromStoreId,
+  });
+
+  /// `POST /v1/stock/transfers`; a store manager's destination outside the
+  /// list is 403 `transfer_destination_not_allowed`.
   Future<StoreResult<StockWriteResult>> transferStock({
     required String fromStoreId,
     required String toStoreId,
@@ -179,9 +198,10 @@ abstract interface class StoreApi {
     required String reason,
   });
 
-  /// `GET /v1/credit-approvals?status=`.
+  /// `GET /v1/credit-approvals?status=&farmer_id=`.
   Future<StoreResult<List<CreditApproval>>> creditApprovals({
     String status = 'pending',
+    String? farmerId,
   });
 
   /// `POST /v1/credit-approvals/{id}/approve|reject`.
@@ -213,7 +233,9 @@ abstract interface class StoreApi {
 }
 
 /// [StoreApi] over HTTP with the bearer token from the [TokenStore]; a 401
-/// refreshes once and retries.
+/// refreshes once and retries. The catalogue is read through the officer
+/// app's [CatalogApi] (`GET /v1/catalog/products` paging lives there once);
+/// pass the app's [HttpCatalogApi], else one is built on the same session.
 class HttpStoreApi implements StoreApi {
   /// Creates the client.
   HttpStoreApi({
@@ -224,13 +246,31 @@ class HttpStoreApi implements StoreApi {
     this.timeout = const Duration(seconds: 20),
     this.onServerDate,
     String Function()? ids,
+    CatalogApi? catalogApi,
   }) : _store = store, // ignore: prefer_initializing_formals
        _client = client ?? http.Client(),
-       _ids = ids ?? generateUuidV4;
+       _ids = ids ?? generateUuidV4 {
+    _catalog =
+        catalogApi ??
+        HttpCatalogApi(
+          RestJsonClient(
+            store: store,
+            config: config,
+            client: _client,
+            refreshSession: refreshSession,
+            timeout: timeout,
+            onServerDate: onServerDate,
+          ),
+        );
+  }
 
   final TokenStore _store;
   final http.Client _client;
   final String Function() _ids;
+  late final CatalogApi _catalog;
+
+  /// Pages of the catalogue client read by [catalog] (at most).
+  static const int maxCatalogPages = 10;
 
   /// API location.
   final ApiConfig config;
@@ -391,18 +431,24 @@ class HttpStoreApi implements StoreApi {
 
   @override
   Future<StoreResult<List<StoreItem>>> catalog(String storeId) async {
-    final pages = await _pages(
-      '/v1/catalog/products',
-      query: <String, Object?>{'store_id': storeId},
-    );
-    return pages.map(
-      (products) => <StoreItem>[
-        for (final p in products)
-          for (final s in (p['skus'] as List?) ?? const <Object?>[])
-            if (s is Map && s['active'] != false)
-              StoreItem.fromProductSku(p, Map<String, Object?>.from(s)),
-      ],
-    );
+    final products = <Map<String, Object?>>[];
+    String? cursor;
+    try {
+      for (var i = 0; i < maxCatalogPages; i++) {
+        final page = await _catalog.products(storeId: storeId, cursor: cursor);
+        products.addAll(page.items);
+        cursor = page.nextCursor;
+        if (cursor == null) break;
+      }
+    } on CatalogUnavailableException catch (e) {
+      return StoreResult.fail(_failure(e.status, null));
+    }
+    return StoreResult.ok(<StoreItem>[
+      for (final p in products)
+        for (final s in (p['skus'] as List?) ?? const <Object?>[])
+          if (s is Map && s['active'] != false)
+            StoreItem.fromProductSku(p, Map<String, Object?>.from(s)),
+    ]);
   }
 
   @override
@@ -431,6 +477,17 @@ class HttpStoreApi implements StoreApi {
     PosSaleResult.fromJson,
     body: request.toJson(),
     idempotent: true,
+  );
+
+  @override
+  Future<StoreResult<GstPreview>> posPreview(
+    String storeId,
+    PosSaleRequest request,
+  ) => _json(
+    'POST',
+    '/v1/stores/$storeId/pos/preview',
+    GstPreview.fromJson,
+    body: request.toJson(),
   );
 
   @override
@@ -514,6 +571,20 @@ class HttpStoreApi implements StoreApi {
   );
 
   @override
+  Future<StoreResult<List<TransferDestination>>> transferDestinations({
+    String? fromStoreId,
+  }) => _json(
+    'GET',
+    '/v1/stock/transfer-destinations',
+    (j) => <TransferDestination>[
+      for (final e in (j['items'] as List?) ?? const <Object?>[])
+        if (e is Map)
+          TransferDestination.fromJson(Map<String, Object?>.from(e)),
+    ],
+    query: <String, Object?>{'from_store_id': ?fromStoreId},
+  );
+
+  @override
   Future<StoreResult<StockWriteResult>> transferStock({
     required String fromStoreId,
     required String toStoreId,
@@ -585,10 +656,11 @@ class HttpStoreApi implements StoreApi {
   @override
   Future<StoreResult<List<CreditApproval>>> creditApprovals({
     String status = 'pending',
+    String? farmerId,
   }) async {
     final pages = await _pages(
       '/v1/credit-approvals',
-      query: <String, Object?>{'status': status},
+      query: <String, Object?>{'status': status, 'farmer_id': ?farmerId},
     );
     return pages.map(
       (rows) => <CreditApproval>[

@@ -1840,5 +1840,26 @@
   "storeCloseDay": "Close day",
   "storeDayClosedTitle": "Day closed",
   "storeDayAlreadyClosed": "Today is already closed. A cluster head can reopen it.",
-  "storeFlagged": "Flagged for audit"
+  "storeFlagged": "Flagged for audit",
+  "storePreviewEstimate": "Estimate",
+  "storePreviewLoading": "Updating the preview…",
+  "storePreviewServerNote": "Priced by the server, as the invoice will be. The invoice number is taken when you confirm.",
+  "storePreviewOffline": "Preview unavailable offline. The amounts are an estimate; the server prices the invoice when you confirm.",
+  "storePreviewUnavailable": "Preview unavailable. The amounts are an estimate; the server prices the invoice when you confirm.",
+  "storeCheckApproval": "Check approval",
+  "storeApprovalPending": "Not approved yet. The cart is kept; check again later.",
+  "storeApprovalRejected": "The cluster head rejected this credit sale. Choose another method.",
+  "storeApprovalCheckOffline": "Could not check the approval. Connect to the internet and try again.",
+  "storeTransferSourceNotAllowed": "You can send stock only from your own store.",
+  "storeTransferDestinationNotAllowed": "You cannot send stock to that store. Pick a store from the list.",
+  "storeDistanceKm": "{km} km away",
+  "@storeDistanceKm": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "creditApprovedSending": "Approved by the cluster head. Sending the sale…",
+  "creditRejectedByClusterHead": "The cluster head rejected this credit sale. Collect cash instead."
 }

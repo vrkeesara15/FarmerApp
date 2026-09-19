@@ -19,7 +19,7 @@ class GstInvoiceView extends StatelessWidget {
     super.key,
   });
 
-  /// From the local preview.
+  /// From an invoice preview (the server's, or the local estimate).
   factory GstInvoiceView.preview(GstPreview p, {Key? key}) => GstInvoiceView(
     key: key,
     lines: p.lines,
@@ -30,6 +30,7 @@ class GstInvoiceView extends StatelessWidget {
     igstPaise: p.igstPaise,
     roundOffPaise: p.roundOffPaise,
     totalPaise: p.totalPaise,
+    amountInWords: p.amountInWords,
   );
 
   /// From the server invoice.

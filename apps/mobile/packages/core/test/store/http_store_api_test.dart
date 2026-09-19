@@ -188,6 +188,112 @@ void main() {
     expect(body(seen.single)['farmer_id'], 'f-1');
   });
 
+  test('POS preview posts the sale body and parses PosPreviewOut', () async {
+    final client = api(
+      (r) => json(<String, Object?>{
+        'store_id': 'store-knd',
+        'supply_type': 'intra',
+        'taxable_paise': 84000,
+        'cgst_paise': 7560,
+        'sgst_paise': 7560,
+        'igst_paise': 0,
+        'tax_paise': 15120,
+        'round_off_paise': -20,
+        'total_paise': 99100,
+        'amount_in_words': 'Rupees Nine Hundred Ninety One Only',
+        'lines': <Object?>[
+          <String, Object?>{
+            'sl': 1,
+            'description': 'Imidacloprid 250 ml',
+            'hsn': '38089199',
+            'qty': '2',
+            'unit_price_paise': 42000,
+            'taxable_paise': 84000,
+            'gst_rate_bp': 1800,
+            'cgst_paise': 7560,
+            'sgst_paise': 7560,
+            'igst_paise': 0,
+          },
+        ],
+      }),
+    );
+    final result = await client.posPreview(
+      'store-knd',
+      PosSaleRequest(
+        lines: <StoreCartLine>[StoreCartLine(item: demoCatalog.first, qty: 2)],
+        mode: SaleMode.credit,
+        farmerId: 'f-1',
+        creditApprovalRequestId: 'apr-9',
+      ),
+    );
+    final r = seen.single;
+    expect(r.method, 'POST');
+    expect(r.url.path, '/v1/stores/store-knd/pos/preview');
+    expect(body(r)['credit_approval_request_id'], 'apr-9');
+    expect(body(r)['payment'], <String, Object?>{'mode': 'credit'});
+    final p = result.value!;
+    expect(p.estimate, isFalse);
+    expect(p.totalPaise, 99100);
+    expect(p.roundOffPaise, -20);
+    expect(p.lines.single.hsn, '38089199');
+    expect(p.amountInWords, startsWith('Rupees'));
+    // A non-credit sale never sends the approval key.
+    expect(
+      const PosSaleRequest(
+        lines: <StoreCartLine>[],
+        mode: SaleMode.cash,
+        creditApprovalRequestId: 'apr-9',
+      ).toJson().containsKey('credit_approval_request_id'),
+      isFalse,
+    );
+  });
+
+  test(
+    'transfer destinations: from_store_id, nearest first; 403 codes',
+    () async {
+      final client = api((r) {
+        if (r.url.queryParameters['from_store_id'] == 'store-x') {
+          return json(<String, Object?>{
+            'code': 'transfer_source_not_allowed',
+            'status': 403,
+          }, 403);
+        }
+        return json(<String, Object?>{
+          'from_store_id': 'store-knd',
+          'items': <Object?>[
+            <String, Object?>{
+              'id': 'store-sgr',
+              'code': 'SGR',
+              'name': 'Sangareddy FCC',
+              'district': 'Sangareddy',
+              'cluster_id': 'c-1',
+              'distance_m': 38400.5,
+            },
+          ],
+        });
+      });
+      final list = await client.transferDestinations(fromStoreId: 'store-knd');
+      expect(seen.single.url.path, '/v1/stock/transfer-destinations');
+      expect(seen.single.url.queryParameters, <String, String>{
+        'from_store_id': 'store-knd',
+      });
+      expect(list.value!.single.name, 'Sangareddy FCC');
+      expect(list.value!.single.distanceM, 38400.5);
+      final refused = await client.transferDestinations(fromStoreId: 'store-x');
+      expect(refused.failure!.status, 403);
+      expect(refused.failure!.code, 'transfer_source_not_allowed');
+    },
+  );
+
+  test('credit approvals filter by status and farmer', () async {
+    final client = api(
+      (r) => json(<String, Object?>{'items': <Object?>[], 'next_cursor': null}),
+    );
+    await client.creditApprovals(status: 'approved', farmerId: 'f-1');
+    expect(seen.single.url.queryParameters['status'], 'approved');
+    expect(seen.single.url.queryParameters['farmer_id'], 'f-1');
+  });
+
   test('transport errors and gateway 503 are offline', () async {
     final down = HttpStoreApi(
       store: InMemoryTokenStore(deviceId: 'd', session: session),

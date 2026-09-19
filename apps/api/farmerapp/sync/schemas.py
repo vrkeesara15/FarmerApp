@@ -25,6 +25,7 @@ Entity = Literal[
     "order_line",
     "payment",
     "khata_entry",
+    "credit_approval_request",
 ]
 Action = Literal["create", "update", "delete"]
 ResultStatus = Literal["applied", "duplicate", "conflict", "rejected"]

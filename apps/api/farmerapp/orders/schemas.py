@@ -50,6 +50,11 @@ class OrderOut(BaseModel):
     placed_at: datetime | None
     notes: str | None
     invoice_no: str | None
+    invoice_id: uuid.UUID | None = Field(
+        default=None,
+        description="The GST invoice (``GET /v1/invoices/{id}``, ``/pdf``, ``/share``): issued "
+        "by the POS sale, or when the order reached ``handed_over`` / ``delivered``.",
+    )
     client_order_id: uuid.UUID | None
     created_at: datetime
     updated_at: datetime

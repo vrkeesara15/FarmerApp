@@ -59,6 +59,46 @@ class StoreBrief {
   final String name;
 }
 
+/// A store stock can be sent to (`GET /v1/stock/transfer-destinations`):
+/// the other stores of the origin's cluster for a store manager, nearest
+/// first.
+@immutable
+class TransferDestination {
+  /// Creates the destination.
+  const TransferDestination({
+    required this.id,
+    required this.code,
+    required this.name,
+    this.district = '',
+    this.distanceM,
+  });
+
+  /// Parses one `items[]` entry.
+  factory TransferDestination.fromJson(Map<String, Object?> j) =>
+      TransferDestination(
+        id: j['id']! as String,
+        code: (j['code'] as String?) ?? '',
+        name: (j['name'] as String?) ?? '',
+        district: (j['district'] as String?) ?? '',
+        distanceM: (j['distance_m'] as num?)?.toDouble(),
+      );
+
+  /// Store id.
+  final String id;
+
+  /// Short code.
+  final String code;
+
+  /// Display name.
+  final String name;
+
+  /// District.
+  final String district;
+
+  /// Straight-line metres from the origin store; null without an origin.
+  final double? distanceM;
+}
+
 /// One sellable SKU with its product and the store's price.
 @immutable
 class StoreItem {
@@ -429,6 +469,7 @@ class PosSaleRequest {
     this.farmerId,
     this.farmerPhone,
     this.referenceNote,
+    this.creditApprovalRequestId,
   });
 
   /// Cart lines.
@@ -446,6 +487,20 @@ class PosSaleRequest {
   /// Card terminal reference.
   final String? referenceNote;
 
+  /// ST-007 retry key: the `approval_request_id` of an earlier 402
+  /// `credit_limit_exceeded` (credit sales only).
+  final String? creditApprovalRequestId;
+
+  /// Copy for another payment mode (the POS preview prices the same cart).
+  PosSaleRequest withMode(SaleMode mode) => PosSaleRequest(
+    lines: lines,
+    mode: mode,
+    farmerId: farmerId,
+    farmerPhone: farmerPhone,
+    referenceNote: referenceNote,
+    creditApprovalRequestId: creditApprovalRequestId,
+  );
+
   /// JSON body.
   Map<String, Object?> toJson() => <String, Object?>{
     'farmer_id': ?farmerId,
@@ -459,6 +514,8 @@ class PosSaleRequest {
       if (referenceNote != null && referenceNote!.isNotEmpty)
         'reference_note': referenceNote,
     },
+    if (mode == SaleMode.credit && creditApprovalRequestId != null)
+      'credit_approval_request_id': creditApprovalRequestId,
   };
 }
 

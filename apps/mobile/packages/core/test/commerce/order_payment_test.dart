@@ -421,6 +421,74 @@ void main() {
       },
     );
 
+    test(
+      'approval in the change feed resends the credit sale by itself',
+      () async {
+        w.server
+          ..creditLimitPaise = 200000
+          ..balancePaise = 150000;
+        final id = await w.place(<CartLine>[CartLine(item: coragen, qty: 1)]);
+        final payId = await w.payments.collectCredit(
+          PaymentTarget.order(orderId: id, farmerId: 'f-1', storeId: storeId),
+          expectedPaise: 139240,
+        );
+        await w.engine.syncNow();
+        final approvalId = FakeCommerceServer.approvalIdFor(id);
+        expect((await w.payments.payment(payId))!.creditBlock, isNotNull);
+        // The pending request reached the officer through the feed.
+        expect(
+          (await w.payments.creditApproval(approvalId))!.status,
+          'pending',
+        );
+
+        w.server.approve(id);
+        await w.engine.syncNow(); // pull the approval -> requeue -> push
+        final view = (await w.payments.payment(payId))!;
+        expect(view.rejection, isNull);
+        expect(view.state, CollectionState.onKhata);
+        final sent = w.api.requests
+            .expand((r) => r.ops)
+            .lastWhere((o) => o.entityId == payId);
+        expect(sent.payload[creditApprovalRequestIdKey], approvalId);
+        expect(sent.payload['mode'], 'credit');
+        final pulled = await w.payments.watchCreditApproval(approvalId).first;
+        expect(pulled!.approved, isTrue);
+      },
+    );
+
+    test(
+      'a rejected request is not resent; manual check sends the id',
+      () async {
+        w.server
+          ..creditLimitPaise = 200000
+          ..balancePaise = 150000;
+        final id = await w.place(<CartLine>[CartLine(item: coragen, qty: 1)]);
+        final payId = await w.payments.collectCredit(
+          PaymentTarget.order(orderId: id, farmerId: 'f-1', storeId: storeId),
+          expectedPaise: 139240,
+        );
+        await w.engine.syncNow();
+        final approvalId = FakeCommerceServer.approvalIdFor(id);
+        w.api.addChange(
+          entity: SyncEntities.creditApprovalRequest,
+          action: SyncAction.update,
+          entityId: approvalId,
+          version: 2,
+          data: <String, Object?>{'id': approvalId, 'status': 'rejected'},
+        );
+        final before = w.api.appliedOps.length;
+        await w.engine.syncNow();
+        expect(w.api.requests.last.ops, isEmpty);
+        expect(w.api.appliedOps.length, before);
+        expect((await w.payments.creditApproval(approvalId))!.rejected, isTrue);
+        expect((await w.payments.payment(payId))!.creditBlock, isNotNull);
+        // "Check approval" (manual fallback) requeues with the approval id.
+        expect(await w.payments.recheckCredit(payId), isTrue);
+        final op = await w.opFor(payId);
+        expect(op.payload[creditApprovalRequestIdKey], approvalId);
+      },
+    );
+
     test('credit is only for orders', () async {
       expect(
         () => w.payments.collectCredit(

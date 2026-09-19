@@ -1138,5 +1138,19 @@
   "storeCloseDay": "दिन बंद करें",
   "storeDayClosedTitle": "दिन बंद हुआ",
   "storeDayAlreadyClosed": "आज पहले ही बंद हो चुका है। क्लस्टर हेड इसे फिर से खोल सकते हैं।",
-  "storeFlagged": "ऑडिट के लिए चिह्नित"
+  "storeFlagged": "ऑडिट के लिए चिह्नित",
+  "storePreviewEstimate": "अनुमान",
+  "storePreviewLoading": "पूर्वावलोकन अपडेट हो रहा है…",
+  "storePreviewServerNote": "इनवॉइस की तरह सर्वर ने कीमत तय की है। पुष्टि करने पर इनवॉइस नंबर मिलता है।",
+  "storePreviewOffline": "ऑफ़लाइन पूर्वावलोकन उपलब्ध नहीं। राशियाँ अनुमान हैं; पुष्टि करने पर सर्वर इनवॉइस की कीमत तय करता है।",
+  "storePreviewUnavailable": "पूर्वावलोकन उपलब्ध नहीं। राशियाँ अनुमान हैं; पुष्टि करने पर सर्वर इनवॉइस की कीमत तय करता है।",
+  "storeCheckApproval": "मंज़ूरी जाँचें",
+  "storeApprovalPending": "अभी मंज़ूरी नहीं मिली। कार्ट सुरक्षित है; बाद में फिर जाँचें।",
+  "storeApprovalRejected": "क्लस्टर हेड ने यह उधार बिक्री अस्वीकार कर दी। दूसरा तरीका चुनें।",
+  "storeApprovalCheckOffline": "मंज़ूरी जाँच नहीं सकी। इंटरनेट से जुड़ें और फिर कोशिश करें।",
+  "storeTransferSourceNotAllowed": "आप केवल अपने स्टोर से स्टॉक भेज सकते हैं।",
+  "storeTransferDestinationNotAllowed": "आप उस स्टोर को स्टॉक नहीं भेज सकते। सूची से स्टोर चुनें।",
+  "storeDistanceKm": "{km} किमी दूर",
+  "creditApprovedSending": "क्लस्टर हेड ने मंज़ूरी दी। बिक्री भेजी जा रही है…",
+  "creditRejectedByClusterHead": "क्लस्टर हेड ने यह उधार बिक्री अस्वीकार कर दी। इसके बजाय नकद लें।"
 }

@@ -8,9 +8,12 @@ import '../orders/commerce_copy.dart';
 /// A56 Credit sale (FA-021 / ST-007): the `payment` credit op's outcome.
 /// Queued offline → "checked when online"; applied → on the khata;
 /// `credit_limit_exceeded` → approval-needed state with the limit, the
-/// balance, the shortfall and "sent to cluster head". "Check approval"
-/// resends the same op: once the cluster head approved the request for this
-/// order the server lets it through.
+/// balance, the shortfall and "sent to cluster head". The approval request
+/// comes back through the change feed (`credit_approval_request`): once it
+/// is approved the sync engine resends the op with
+/// `credit_approval_request_id` by itself and the screen flips to "on
+/// khata"; a rejection is shown. "Check approval" stays as the manual
+/// fallback (resend now with the approval id).
 class CreditScreen extends ConsumerStatefulWidget {
   /// Creates the screen.
   const CreditScreen({required this.paymentId, super.key});
@@ -57,6 +60,10 @@ class _CreditScreenState extends ConsumerState<CreditScreen> {
     final view = ref.watch(paymentViewProvider(widget.paymentId)).value;
     final p = view?.payment;
     final block = view?.creditBlock;
+    final approvalId = block?.approvalRequestId;
+    final approval = approvalId == null
+        ? null
+        : ref.watch(creditApprovalStateProvider(approvalId)).value;
     final state = view?.state;
     final onKhata = state == CollectionState.onKhata;
     final (
@@ -206,11 +213,24 @@ class _CreditScreenState extends ConsumerState<CreditScreen> {
                                   strong: true,
                                 ),
                                 const SizedBox(height: Tokens.space3),
-                                StatusPill(
-                                  key: const Key('credit-sent'),
-                                  text: l10n.creditSentToClusterHead,
-                                  color: pal.statusWarning,
-                                ),
+                                if (approval?.approved ?? false)
+                                  StatusPill(
+                                    key: const Key('credit-approved-sending'),
+                                    text: l10n.creditApprovedSending,
+                                    color: pal.statusSuccess,
+                                  )
+                                else if (approval?.rejected ?? false)
+                                  StatusPill(
+                                    key: const Key('credit-rejected'),
+                                    text: l10n.creditRejectedByClusterHead,
+                                    color: pal.statusDanger,
+                                  )
+                                else
+                                  StatusPill(
+                                    key: const Key('credit-sent'),
+                                    text: l10n.creditSentToClusterHead,
+                                    color: pal.statusWarning,
+                                  ),
                               ],
                               if (onKhata) ...<Widget>[
                                 const SizedBox(height: Tokens.space2),

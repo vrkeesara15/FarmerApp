@@ -8,7 +8,8 @@
   status). Totals are integer paise with ``total = subtotal - discount + tax`` enforced by
   a CHECK (SEC-023: amounts are recomputed server-side, never trusted from a client).
   ``placed_by`` is the user who placed it (officer, store staff or the farmer's own login);
-  ``invoice_no`` is assigned at handover (ST-001 GST invoice; unique per tenant);
+  ``invoice_no`` / ``invoice_id`` are set when the GST invoice is issued (the POS sale, or an
+  officer / farmer-app order reaching ``handed_over`` / ``delivered``; ST-001, 0017);
   ``client_order_id`` is the id the device generated offline (unique per tenant, sync).
 * ``order_line`` — one SKU on an order: quantity, the unit price the price list resolved
   (``farmerapp.catalog.pricing``), the product's GST rate at the time, the line total and,
@@ -90,6 +91,7 @@ class Order(Base, BaseColumns):
         Index("ix_order_store_status", "tenant_id", "store_id", "status"),
         Index("ix_order_farmer_id", "farmer_id"),
         Index("ix_order_placed_by", "placed_by"),
+        Index("uq_order_invoice_id", "tenant_id", "invoice_id", unique=True),
     )
 
     farmer_id: Mapped[uuid.UUID | None] = mapped_column(  # NULL = walk-in
@@ -111,6 +113,8 @@ class Order(Base, BaseColumns):
     placed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     invoice_no: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    #: The GST invoice (migration 0017; no FK, ``invoice.order_id`` references the order).
+    invoice_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
     client_order_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, nullable=True)
 
 

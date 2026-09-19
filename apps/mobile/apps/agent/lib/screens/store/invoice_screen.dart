@@ -62,7 +62,7 @@ class _InvoiceScreenState extends ConsumerState<InvoiceScreen> {
       return;
     }
     await ref
-        .read(textSharerProvider)
+        .read(invoiceSharerProvider)
         .share(
           l10n.storeShareText(
             invoice.invoiceNo,

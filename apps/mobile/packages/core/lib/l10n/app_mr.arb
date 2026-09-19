@@ -1138,5 +1138,19 @@
   "storeCloseDay": "दिवस बंद करा",
   "storeDayClosedTitle": "दिवस बंद झाला",
   "storeDayAlreadyClosed": "आजचा दिवस आधीच बंद आहे. क्लस्टर हेड तो पुन्हा उघडू शकतात.",
-  "storeFlagged": "ऑडिटसाठी चिन्हांकित"
+  "storeFlagged": "ऑडिटसाठी चिन्हांकित",
+  "storePreviewEstimate": "अंदाज",
+  "storePreviewLoading": "पूर्वावलोकन अद्ययावत होत आहे…",
+  "storePreviewServerNote": "बीजकाप्रमाणेच सर्व्हरने किंमत ठरवली आहे. पुष्टी केल्यावर बीजक क्रमांक मिळतो.",
+  "storePreviewOffline": "ऑफलाइन पूर्वावलोकन उपलब्ध नाही. रक्कम अंदाजे आहे; पुष्टी केल्यावर सर्व्हर बीजकाची किंमत ठरवतो.",
+  "storePreviewUnavailable": "पूर्वावलोकन उपलब्ध नाही. रक्कम अंदाजे आहे; पुष्टी केल्यावर सर्व्हर बीजकाची किंमत ठरवतो.",
+  "storeCheckApproval": "मंजुरी तपासा",
+  "storeApprovalPending": "अजून मंजुरी मिळाली नाही. कार्ट जपून ठेवले आहे; नंतर पुन्हा तपासा.",
+  "storeApprovalRejected": "क्लस्टर हेडने ही उधारी विक्री नाकारली. दुसरी पद्धत निवडा.",
+  "storeApprovalCheckOffline": "मंजुरी तपासता आली नाही. इंटरनेटशी जोडा आणि पुन्हा प्रयत्न करा.",
+  "storeTransferSourceNotAllowed": "तुम्ही फक्त तुमच्या स्वतःच्या स्टोअरमधून स्टॉक पाठवू शकता.",
+  "storeTransferDestinationNotAllowed": "तुम्ही त्या स्टोअरला स्टॉक पाठवू शकत नाही. यादीतून स्टोअर निवडा.",
+  "storeDistanceKm": "{km} किमी दूर",
+  "creditApprovedSending": "क्लस्टर हेडने मंजुरी दिली. विक्री पाठवत आहे…",
+  "creditRejectedByClusterHead": "क्लस्टर हेडने ही उधारी विक्री नाकारली. त्याऐवजी रोख घ्या."
 }

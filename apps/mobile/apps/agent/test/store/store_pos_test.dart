@@ -292,9 +292,85 @@ void main() {
     expect(find.text('Credit approval needed'), findsOneWidget);
     expect(find.text('₹20,000.00'), findsOneWidget);
     expect(find.byKey(const Key('invoice-line-1')), findsOneWidget);
+    // Not decided yet: "Check approval" says so; the cart stays.
+    await tester.ensureVisible(
+      find.byKey(const Key('checkout-check-approval')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('checkout-check-approval')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('checkout-approval-pending')), findsOneWidget);
+    // The cluster head approves; the check retries the sale with the request.
+    final id = deps.api.approvals.last.id;
+    await deps.api.decideCredit(id, approve: true);
+    await tester.tap(find.byKey(const Key('checkout-check-approval')));
+    await tester.pumpAndSettle();
+    expect(deps.api.lastSale!.creditApprovalRequestId, id);
+    expect(find.byKey(const Key('invoice-number')), findsOneWidget);
+  });
+
+  testWidgets('credit rejected: said so, another method still possible', (
+    tester,
+  ) async {
+    await seedVillage(deps.agent.db);
+    await seedSyncedFarmer(deps.agent.db, id: 'f-1', phone: '+919876543210');
+    deps.api.creditExceeded = true;
+    await openPos(tester);
+    await addProduct(tester, 'sku-spr-16');
+    await tester.enterText(
+      find.byKey(const Key('pos-buyer-phone')),
+      '9876543210',
+    );
+    await tester.tap(find.byKey(const Key('pos-buyer-find')));
+    await tester.pumpAndSettle();
+    await toCheckout(tester);
+    await tester.tap(find.byKey(const Key('mode-credit')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('checkout-confirm')));
+    await tester.pumpAndSettle();
+    await deps.api.decideCredit(deps.api.approvals.last.id, approve: false);
+    await tester.ensureVisible(
+      find.byKey(const Key('checkout-check-approval')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('checkout-check-approval')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('checkout-approval-rejected')), findsOneWidget);
+    expect(find.byKey(const Key('checkout-check-approval')), findsNothing);
     await tester.tap(find.byKey(const Key('checkout-other-mode')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('checkout-approval')), findsNothing);
+  });
+
+  testWidgets('S03 shows the server preview; offline an estimate, labelled', (
+    tester,
+  ) async {
+    await openPos(tester);
+    await addProduct(tester, 'sku-imd-250');
+    await tester.pump(posPreviewDebounce * 2);
+    await tester.pumpAndSettle();
+    await toCheckout(tester);
+    expect(deps.api.calls, contains('posPreview'));
+    expect(find.byKey(const Key('checkout-preview-ready')), findsOneWidget);
+    expect(find.byKey(const Key('checkout-preview-estimate')), findsNothing);
+    expect(find.textContaining('Rupees'), findsOneWidget); // words: server
+  });
+
+  testWidgets('S03 offline: preview unavailable, estimate labelled', (
+    tester,
+  ) async {
+    await openPos(tester);
+    deps.agent.connectivity.online = false;
+    await tester.pumpAndSettle();
+    await addProduct(tester, 'sku-imd-250');
+    await tester.pump(posPreviewDebounce * 2);
+    await tester.pumpAndSettle();
+    await toCheckout(tester);
+    expect(deps.api.calls, isNot(contains('posPreview')));
+    expect(find.byKey(const Key('checkout-preview-offline')), findsOneWidget);
+    expect(find.byKey(const Key('checkout-preview-estimate')), findsOneWidget);
+    expect(find.text('Estimate'), findsOneWidget);
+    expect(find.textContaining('Rupees'), findsNothing);
   });
 
   testWidgets('credit needs a known farmer (mode disabled for walk-ins)', (

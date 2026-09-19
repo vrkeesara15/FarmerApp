@@ -32,8 +32,7 @@ class StoreDeps {
     : agent = AgentDeps(online: online),
       api = FakeStoreApi(),
       scanner = FakeBarcodeScanner(),
-      opener = RecordingUrlOpener(),
-      sharer = RecordingTextSharer();
+      opener = RecordingUrlOpener();
 
   /// Agent fakes (db, connectivity, camera, clock 2026-09-20 06:00 IST).
   final AgentDeps agent;
@@ -47,8 +46,8 @@ class StoreDeps {
   /// PDF viewer.
   final RecordingUrlOpener opener;
 
-  /// Share sheet.
-  final RecordingTextSharer sharer;
+  /// Share sheet (the officer app's invoice sharer, shared with A57).
+  FakeInvoiceSharer get sharer => agent.sharer;
 
   /// Signs [role] in (token store).
   Future<void> signIn(String role, {String? storeId = 'store-knd'}) =>
@@ -68,7 +67,6 @@ class StoreDeps {
     storeApiProvider.overrideWithValue(api),
     barcodeScannerProvider.overrideWithValue(scanner),
     urlOpenerProvider.overrideWithValue(opener),
-    textSharerProvider.overrideWithValue(sharer),
     storePhotoProcessorProvider.overrideWithValue((raw) async => raw),
   ];
 

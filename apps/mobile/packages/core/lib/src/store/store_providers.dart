@@ -25,12 +25,6 @@ abstract interface class UrlOpener {
   Future<bool> open(String url);
 }
 
-/// Shares text through the system share sheet (WhatsApp and others).
-abstract interface class TextSharer {
-  /// Shares [text].
-  Future<void> share(String text, {String? subject});
-}
-
 /// Reads a barcode with the camera.
 abstract interface class BarcodeScanner {
   /// Opens the scanner; the code, or null when cancelled.
@@ -47,15 +41,6 @@ class RecordingUrlOpener implements UrlOpener {
     opened.add(url);
     return true;
   }
-}
-
-/// Records what it was asked to share (tests, previews).
-class RecordingTextSharer implements TextSharer {
-  /// Texts shared.
-  final List<String> shared = <String>[];
-
-  @override
-  Future<void> share(String text, {String? subject}) async => shared.add(text);
 }
 
 /// Returns queued codes, then null (tests, previews).
@@ -77,11 +62,6 @@ class FakeBarcodeScanner implements BarcodeScanner {
 /// Opens URLs; apps override it with a `url_launcher` implementation.
 final Provider<UrlOpener> urlOpenerProvider = Provider<UrlOpener>(
   (ref) => RecordingUrlOpener(),
-);
-
-/// Shares text; apps override it with a `share_plus` implementation.
-final Provider<TextSharer> textSharerProvider = Provider<TextSharer>(
-  (ref) => RecordingTextSharer(),
 );
 
 /// Barcode camera; apps override it with a `mobile_scanner` screen.
@@ -183,6 +163,24 @@ final FutureProvider<StoreResult<List<StockRow>>> stockRowsProvider =
       return StoreResult.ok(stockRows(batches.value!, index));
     });
 
+/// S08 destinations for stock of the active store
+/// (`GET /v1/stock/transfer-destinations`): a store manager's cluster,
+/// nearest first. Nothing is fetched for roles that cannot move stock.
+final FutureProvider<StoreResult<List<TransferDestination>>>
+transferDestinationsProvider =
+    FutureProvider.autoDispose<StoreResult<List<TransferDestination>>>((
+      ref,
+    ) async {
+      if (!ref.watch(storeRoleProvider).canMoveStock) {
+        return const StoreResult.fail(StoreFailure(403, code: 'forbidden'));
+      }
+      final store = ref.watch(activeStoreProvider);
+      if (store == null) return const StoreResult.fail(_noStore);
+      return ref
+          .watch(storeApiProvider)
+          .transferDestinations(fromStoreId: store.id);
+    });
+
 /// S09 pending approvals.
 final FutureProvider<StoreResult<List<CreditApproval>>>
 creditApprovalsProvider =
@@ -267,6 +265,37 @@ enum CheckoutPhase {
   done,
 }
 
+/// Where the S03 server preview (`POST /v1/stores/{id}/pos/preview`) is.
+enum PreviewStatus {
+  /// Nothing to preview (empty cart).
+  idle,
+
+  /// Waiting for the debounce / the request.
+  loading,
+
+  /// The server's preview is shown.
+  ready,
+
+  /// No network: the local estimate is shown, labelled.
+  offline,
+
+  /// The server refused the preview (e.g. unknown buyer): the local
+  /// estimate is shown, labelled.
+  unavailable,
+}
+
+/// The last "check approval" of a blocked credit sale (ST-007).
+enum ApprovalCheck {
+  /// Still waiting for the cluster head.
+  pending,
+
+  /// The cluster head rejected the request.
+  rejected,
+
+  /// Could not reach the server.
+  offline,
+}
+
 /// POS state.
 class PosState {
   /// Creates the state.
@@ -284,6 +313,10 @@ class PosState {
     this.sale,
     this.upiPayment,
     this.failure,
+    this.serverPreview,
+    this.previewStatus = PreviewStatus.idle,
+    this.approvalRequestId,
+    this.approvalCheck,
   });
 
   /// Cart.
@@ -325,11 +358,28 @@ class PosState {
   /// The last failure.
   final StoreFailure? failure;
 
+  /// The server's invoice preview of the current cart and buyer.
+  final GstPreview? serverPreview;
+
+  /// Where the server preview is.
+  final PreviewStatus previewStatus;
+
+  /// ST-007: the approval request of the last blocked credit sale, kept with
+  /// the cart; a credit retry sends it as `credit_approval_request_id`.
+  final String? approvalRequestId;
+
+  /// Result of the last [PosNotifier.checkApproval].
+  final ApprovalCheck? approvalCheck;
+
   /// Items in the cart.
   int get itemCount => lines.fold(0, (a, l) => a + l.qty);
 
-  /// GST preview of the cart.
-  GstPreview get preview => GstPreview.of(lines);
+  /// Local GST estimate of the cart (offline fallback only).
+  GstPreview get estimate => GstPreview.of(lines);
+
+  /// What S03 shows and cash is checked against: the server's preview when
+  /// it is ready, else the local estimate ([GstPreview.estimate] = true).
+  GstPreview get preview => serverPreview ?? estimate;
 
   /// Change for a cash sale (against the invoice once issued).
   int? get changePaise {
@@ -361,6 +411,12 @@ class PosState {
     PaymentCreated? upiPayment,
     StoreFailure? failure,
     bool clearFailure = false,
+    GstPreview? serverPreview,
+    bool clearServerPreview = false,
+    PreviewStatus? previewStatus,
+    String? approvalRequestId,
+    ApprovalCheck? approvalCheck,
+    bool clearApprovalCheck = false,
   }) => PosState(
     lines: lines ?? this.lines,
     query: query ?? this.query,
@@ -375,23 +431,126 @@ class PosState {
     sale: sale ?? this.sale,
     upiPayment: upiPayment ?? this.upiPayment,
     failure: clearFailure ? null : (failure ?? this.failure),
+    serverPreview: clearServerPreview
+        ? null
+        : (serverPreview ?? this.serverPreview),
+    previewStatus: previewStatus ?? this.previewStatus,
+    approvalRequestId: approvalRequestId ?? this.approvalRequestId,
+    approvalCheck: clearApprovalCheck
+        ? null
+        : (approvalCheck ?? this.approvalCheck),
   );
 }
 
 /// How often S03 polls a UPI payment.
 const Duration upiPollInterval = Duration(seconds: 3);
 
+/// Quiet time after a cart / buyer change before the server preview is
+/// asked for.
+const Duration posPreviewDebounce = Duration(milliseconds: 400);
+
 /// S02 / S03 cart and checkout.
 class PosNotifier extends Notifier<PosState> {
   Timer? _poll;
+  Timer? _previewTimer;
+  int _previewSeq = 0;
 
   @override
   PosState build() {
-    ref.onDispose(() => _poll?.cancel());
+    ref.onDispose(() {
+      _poll?.cancel();
+      _previewTimer?.cancel();
+    });
     return const PosState();
   }
 
   StoreApi get _api => ref.read(storeApiProvider);
+
+  PosSaleRequest _request(SaleMode mode) {
+    final buyer = state.buyer;
+    return PosSaleRequest(
+      lines: state.lines,
+      mode: mode,
+      farmerId: buyer?.farmerId,
+      farmerPhone: buyer == null ? null : '+91${buyer.phone}',
+      referenceNote: mode == SaleMode.card ? state.cardReference.trim() : null,
+      creditApprovalRequestId: mode == SaleMode.credit
+          ? state.approvalRequestId
+          : null,
+    );
+  }
+
+  /// The cart or the buyer changed: the server preview is stale; ask again
+  /// after [posPreviewDebounce].
+  void _cartChanged() {
+    _previewTimer?.cancel();
+    _previewSeq += 1;
+    if (state.lines.isEmpty) {
+      state = state.copyWith(
+        clearServerPreview: true,
+        previewStatus: PreviewStatus.idle,
+      );
+      return;
+    }
+    state = state.copyWith(
+      clearServerPreview: true,
+      previewStatus: PreviewStatus.loading,
+    );
+    _previewTimer = Timer(posPreviewDebounce, refreshPreview);
+  }
+
+  /// Asks the server for the invoice preview of the cart now (S03 opens it,
+  /// the debounce calls it). Offline or refused: the local estimate stays,
+  /// labelled; the sale itself is always priced by the server.
+  Future<PreviewStatus> refreshPreview() async {
+    _previewTimer?.cancel();
+    final seq = ++_previewSeq;
+    if (state.lines.isEmpty) {
+      state = state.copyWith(
+        clearServerPreview: true,
+        previewStatus: PreviewStatus.idle,
+      );
+      return PreviewStatus.idle;
+    }
+    final store = ref.read(activeStoreProvider);
+    if (store == null) return _previewDone(seq, PreviewStatus.unavailable);
+    if (state.previewStatus != PreviewStatus.loading) {
+      state = state.copyWith(previewStatus: PreviewStatus.loading);
+    }
+    if (!await ref.read(connectivityMonitorProvider).isOnline()) {
+      return _previewDone(seq, PreviewStatus.offline);
+    }
+    if (!ref.mounted || seq != _previewSeq) return PreviewStatus.loading;
+    // Totals do not depend on the payment mode; a mode the server would
+    // refuse for this buyer (credit for a walk-in) is previewed as cash.
+    final mode = state.mode;
+    final previewMode =
+        mode == null || (mode == SaleMode.credit && state.buyer?.known != true)
+        ? SaleMode.cash
+        : mode;
+    final result = await _api.posPreview(store.id, _request(previewMode));
+    if (!ref.mounted || seq != _previewSeq) return PreviewStatus.loading;
+    if (!result.ok) {
+      return _previewDone(
+        seq,
+        result.failure!.isOffline
+            ? PreviewStatus.offline
+            : PreviewStatus.unavailable,
+      );
+    }
+    state = state.copyWith(
+      serverPreview: result.value,
+      previewStatus: PreviewStatus.ready,
+    );
+    return PreviewStatus.ready;
+  }
+
+  PreviewStatus _previewDone(int seq, PreviewStatus status) {
+    if (ref.mounted && seq == _previewSeq) {
+      state = state.copyWith(clearServerPreview: true, previewStatus: status);
+    }
+    return status;
+  }
 
   /// Adds one pack of [item].
   void add(StoreItem item) {
@@ -403,6 +562,7 @@ class PosNotifier extends Notifier<PosState> {
       lines[i] = lines[i].withQty(lines[i].qty + 1);
     }
     state = state.copyWith(lines: lines, phase: CheckoutPhase.editing);
+    _cartChanged();
   }
 
   /// Sets the quantity of [skuId]; 0 removes the line.
@@ -412,6 +572,7 @@ class PosNotifier extends Notifier<PosState> {
         if (l.item.skuId != skuId) l else if (qty > 0) l.withQty(qty),
     ];
     state = state.copyWith(lines: lines, phase: CheckoutPhase.editing);
+    _cartChanged();
   }
 
   /// Search text.
@@ -459,11 +620,15 @@ class PosNotifier extends Notifier<PosState> {
       name: farmer?.name,
     );
     state = state.copyWith(buyer: buyer);
+    _cartChanged();
     return buyer;
   }
 
   /// Walk-in buyer.
-  void clearBuyer() => state = state.copyWith(clearBuyer: true);
+  void clearBuyer() {
+    state = state.copyWith(clearBuyer: true);
+    _cartChanged();
+  }
 
   /// Payment mode.
   void setMode(SaleMode mode) => state = state.copyWith(
@@ -511,25 +676,21 @@ class PosNotifier extends Notifier<PosState> {
       if (!ref.mounted) return CheckoutPhase.offline;
       return _set(CheckoutPhase.offline, StoreFailure.offline);
     }
-    state = state.copyWith(phase: CheckoutPhase.submitting, clearFailure: true);
-    final buyer = state.buyer;
-    final result = await _api.posSale(
-      store.id,
-      PosSaleRequest(
-        lines: state.lines,
-        mode: mode,
-        farmerId: buyer?.farmerId,
-        farmerPhone: buyer == null ? null : '+91${buyer.phone}',
-        referenceNote: mode == SaleMode.card
-            ? state.cardReference.trim()
-            : null,
-      ),
+    state = state.copyWith(
+      phase: CheckoutPhase.submitting,
+      clearFailure: true,
+      clearApprovalCheck: true,
     );
+    final result = await _api.posSale(store.id, _request(mode));
     if (!ref.mounted) return CheckoutPhase.failed;
     if (!result.ok) {
       final f = result.failure!;
       if (f.isOffline) return _set(CheckoutPhase.offline, f);
       if (f.code == 'credit_limit_exceeded') {
+        // Keep the request with the cart: once approved, the retry names it.
+        state = state.copyWith(
+          approvalRequestId: f.body['approval_request_id'] as String?,
+        );
         return _set(CheckoutPhase.approvalNeeded, f);
       }
       if (f.code == 'reference_required') {
@@ -605,13 +766,51 @@ class PosNotifier extends Notifier<PosState> {
     _startPolling();
   }
 
+  /// ST-007 "Check approval": when the cluster head approved the kept
+  /// request, the credit sale is retried with it (`credit_approval_request_id`);
+  /// otherwise the check says pending / rejected. The cart is kept.
+  Future<ApprovalCheck?> checkApproval() async {
+    final id = state.approvalRequestId;
+    if (id == null || state.phase != CheckoutPhase.approvalNeeded) return null;
+    final farmerId = state.buyer?.farmerId;
+    final approved = await _api.creditApprovals(
+      status: 'approved',
+      farmerId: farmerId,
+    );
+    if (!ref.mounted) return null;
+    if (approved.ok && approved.value!.any((a) => a.id == id)) {
+      await confirm();
+      return null;
+    }
+    var check = ApprovalCheck.offline;
+    if (approved.ok) {
+      final rejected = await _api.creditApprovals(
+        status: 'rejected',
+        farmerId: farmerId,
+      );
+      if (!ref.mounted) return null;
+      check = !rejected.ok
+          ? ApprovalCheck.offline
+          : rejected.value!.any((a) => a.id == id)
+          ? ApprovalCheck.rejected
+          : ApprovalCheck.pending;
+    }
+    state = state.copyWith(approvalCheck: check);
+    return check;
+  }
+
   /// Back to editing (after offline / approval / failure), cart kept.
-  void backToEditing() =>
-      state = state.copyWith(phase: CheckoutPhase.editing, clearFailure: true);
+  void backToEditing() => state = state.copyWith(
+    phase: CheckoutPhase.editing,
+    clearFailure: true,
+    clearApprovalCheck: true,
+  );
 
   /// Starts the next sale.
   void newSale() {
     _poll?.cancel();
+    _previewTimer?.cancel();
+    _previewSeq += 1;
     state = const PosState();
   }
 }

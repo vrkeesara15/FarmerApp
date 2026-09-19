@@ -206,6 +206,26 @@ class SyncStore {
     );
   }
 
+  /// ST-007: requeues every op rejected with `credit_limit_exceeded` for
+  /// [approvalRequestId] (an `order` or `payment` credit create), adding
+  /// `credit_approval_request_id` to its payload so the server lets the
+  /// approved sale through once. Returns how many ops were requeued.
+  Future<int> requeueApprovedCredit(String approvalRequestId) async {
+    var n = 0;
+    for (final row in await opsIn(<String>[OutboxState.rejected.name])) {
+      if (errorOf(row)?.approvalRequestId != approvalRequestId) continue;
+      await requeue(
+        row.opId,
+        payload: <String, Object?>{
+          ...payloadOf(row),
+          creditApprovalRequestIdKey: approvalRequestId,
+        },
+      );
+      n += 1;
+    }
+    return n;
+  }
+
   /// Requeues everything left in `sending` (crash / kill mid-request).
   Future<int> requeueSending() {
     return (db.update(db.outboxTable)..where((t) => t.state.equals('sending')))
