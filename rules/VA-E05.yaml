@@ -2,7 +2,7 @@
 # several farmers, or one farmer-side device (app push / QR) confirms visits for several
 # farmers, within `window_days`.
 id: VA-E05
-version: 1
+version: 2
 title: Confirmation anomalies
 subject: employee
 mode: batch

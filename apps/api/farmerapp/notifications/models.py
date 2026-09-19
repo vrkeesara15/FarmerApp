@@ -30,6 +30,9 @@ class NotificationKind(StrEnum):
     OFFICER_SYNC_SILENCE = "officer_sync_silence"  # OPS-006
     FLAG_ASSIGNED = "flag_assigned"  # VA-003: a validation flag is yours (owner / watcher)
     FLAG_ESCALATED = "flag_escalated"  # OPS-010 / SPEC 6.1: a flag moved up to you
+    STORE_ZERO_SALES = "store_zero_sales"  # OPS-007: no sale on a working day
+    STORE_DAY_NOT_CLOSED = "store_day_not_closed"  # OPS-007: not closed by 22:00 IST
+    PAYMENT_RECONCILIATION = "payment_reconciliation"  # OPS-008: finance ticket
 
 
 class Notification(Base, TenantRow):

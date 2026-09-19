@@ -11,6 +11,9 @@
 * ``add_comment`` / ``assign`` — the review thread and manual reassignment.
 * ``escalate_overdue`` — OPS-010: every unresolved flag past its SLA moves one rung up the
   ladder (store manager -> cluster head -> auditor -> owner) with a fresh SLA.
+* ``raise_system_flag`` — a flag raised by an OPS monitor rather than a validation rule
+  (rule id ``OPS-008`` for the payment reconciliation finance ticket): same dedupe, routing,
+  SLA, history and notifications, plus extra ``watchers`` (the tenant's accountants).
 * ``flag_filters`` — SPEC 2.6-style row scope of the inbox.
 """
 
@@ -43,11 +46,19 @@ from farmerapp.flags.models import (
     FlagEventKind,
     FlagStatus,
 )
-from farmerapp.flags.routing import LADDER, Scope, first_holder, ladder_level, next_level, route
+from farmerapp.flags.routing import (
+    LADDER,
+    Route,
+    Scope,
+    first_holder,
+    ladder_level,
+    next_level,
+    route,
+)
 from farmerapp.logging import get_logger
 from farmerapp.notifications.models import Notification, NotificationKind
 from farmerapp.rules.registry import Finding
-from farmerapp.rules.schema import Mode, RuleConfig, Subject
+from farmerapp.rules.schema import Mode, OwnerRole, RuleConfig, Severity, Subject
 
 log = get_logger("farmerapp.flags")
 
@@ -66,6 +77,9 @@ TENANT_WIDE = frozenset(
     {UserRole.OWNER, UserRole.DIRECTOR, UserRole.AUDITOR, UserRole.TENANT_ADMIN}
 )
 DEFAULT_SLA_HOURS = 24
+#: OPS monitors that raise flags (``raise_system_flag``); version 1 until their logic changes.
+FINANCE_RULES = frozenset({"OPS-008"})
+SYSTEM_RULE_VERSION = 1
 
 
 def dedupe_key(rule_id: str, finding: Finding) -> str:
@@ -150,36 +164,102 @@ async def raise_flag(
     now: datetime,
 ) -> Flag | None:
     """Create the flag for ``finding`` unless it is already known; ``None`` when deduped."""
-    key = dedupe_key(rule.id, finding)
-    if await _already_known(session, tenant_id, key, rule.version):
+    return await _raise(
+        session,
+        tenant_id=tenant_id,
+        rule_id=rule.id,
+        rule_version=rule.version,
+        severity=rule.severity,
+        owner_role=rule.owner_role,
+        sla_hours=rule.sla_hours,
+        finding=finding,
+        mode=mode,
+        now=now,
+    )
+
+
+async def raise_system_flag(
+    session: AsyncSession,
+    *,
+    tenant_id: uuid.UUID,
+    rule_id: str,
+    finding: Finding,
+    severity: Severity,
+    owner_role: OwnerRole,
+    sla_hours: int,
+    now: datetime,
+    watchers: list[uuid.UUID] | None = None,
+) -> Flag | None:
+    """A flag raised by an OPS monitor job (``rule_id`` like ``OPS-008``), batch mode."""
+    return await _raise(
+        session,
+        tenant_id=tenant_id,
+        rule_id=rule_id,
+        rule_version=SYSTEM_RULE_VERSION,
+        severity=severity,
+        owner_role=owner_role,
+        sla_hours=sla_hours,
+        finding=finding,
+        mode=Mode.BATCH,
+        now=now,
+        extra_watchers=watchers or [],
+    )
+
+
+async def _raise(
+    session: AsyncSession,
+    *,
+    tenant_id: uuid.UUID,
+    rule_id: str,
+    rule_version: int,
+    severity: Severity,
+    owner_role: OwnerRole,
+    sla_hours: int,
+    finding: Finding,
+    mode: Mode,
+    now: datetime,
+    extra_watchers: list[uuid.UUID] | None = None,
+) -> Flag | None:
+    key = dedupe_key(rule_id, finding)
+    if await _already_known(session, tenant_id, key, rule_version):
         return None
     target = await route(
         session,
         tenant_id=tenant_id,
         subject_type=finding.subject_type,
         subject_id=finding.subject_id,
-        owner_role=rule.owner_role,
-        severity=rule.severity,
+        owner_role=owner_role,
+        severity=severity,
+    )
+    watchers = list(target.watchers)
+    for extra in extra_watchers or []:
+        if extra != target.owner_id and extra not in watchers:
+            watchers.append(extra)
+    target = Route(
+        owner_id=target.owner_id,
+        owner_role=target.owner_role,
+        watchers=watchers,
+        scope=target.scope,
     )
     flag = Flag(
         id=uuid.uuid4(),
         tenant_id=tenant_id,
         created_at=now,
-        rule_id=rule.id,
-        rule_version=rule.version,
+        rule_id=rule_id,
+        rule_version=rule_version,
         subject_type=finding.subject_type.value,
         subject_id=finding.subject_id,
-        severity=rule.severity.value,
+        severity=severity.value,
         title=finding.title[:200],
         evidence=finding.evidence.as_json(),
         raised_by_mode=mode.value,
         owner_id=target.owner_id,
         owner_role=target.owner_role,
-        watchers=list(target.watchers),
+        watchers=watchers,
         scope_cluster_id=target.scope.cluster_id,
         scope_store_id=target.scope.store_id,
         status=FlagStatus.OPEN.value,
-        sla_due_at=now + timedelta(hours=rule.sla_hours),
+        sla_due_at=now + timedelta(hours=sla_hours),
         dedupe_key=key,
     )
     try:
@@ -187,17 +267,19 @@ async def raise_flag(
             session.add(flag)
             await session.flush()
     except IntegrityError:  # a concurrent run raised the same open flag first
-        log.info("flag_dedupe_race", rule_id=rule.id, dedupe_key=key)
+        log.info("flag_dedupe_race", rule_id=rule_id, dedupe_key=key)
         return None
     session.add(_event(flag, FlagEventKind.CREATED, actor_id=None, now=now))
     _notify(session, flag, target.recipients, NotificationKind.FLAG_ASSIGNED)
     await session.flush()
     log.info(
         "flag_raised",
+        tenant_id=str(tenant_id),
         flag_id=str(flag.id),
-        rule_id=rule.id,
-        rule_version=rule.version,
-        severity=flag.severity,
+        rule_id=rule_id,
+        rule_version=rule_version,
+        # not ``severity``: that key is Cloud Logging's log severity (farmerapp.logging)
+        flag_severity=flag.severity,
         subject_type=flag.subject_type,
         mode=mode.value,
         owner_role=flag.owner_role,
@@ -236,6 +318,8 @@ def flag_filters(actor: User) -> list[ColumnElement[bool]]:
             Flag.subject_type == Subject.EMPLOYEE.value,
             Flag.subject_id == actor.id,
         ]
+    if role == UserRole.ACCOUNTANT:  # OPS-008 finance tickets they watch
+        return [*filters, Flag.rule_id.in_(sorted(FINANCE_RULES)), mine]
     return [*filters, false()]
 
 
@@ -480,6 +564,7 @@ def evidence_records(flag: Flag) -> list[dict[str, Any]]:
 
 __all__ = [
     "DEFAULT_SLA_HOURS",
+    "FINANCE_RULES",
     "REVIEWER_ROLES",
     "Escalation",
     "add_comment",
@@ -491,6 +576,7 @@ __all__ = [
     "is_reviewer",
     "is_subject",
     "raise_flag",
+    "raise_system_flag",
     "transition",
     "visible_flag",
     "watched_by",

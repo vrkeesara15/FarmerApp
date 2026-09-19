@@ -94,6 +94,8 @@ async def subject_scope(
             return await _user_scope(session, officer)
         case Subject.STORE:
             return await _store_scope(session, subject_id)
+        case Subject.TENANT:
+            return Scope()  # tenant-wide: auditors and owners on the ladder
 
 
 async def _holders(

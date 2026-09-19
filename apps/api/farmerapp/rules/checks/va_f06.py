@@ -112,8 +112,9 @@ async def _shared_devices(ctx: RuleContext, since: datetime) -> list[Finding]:
     if ctx.subject_ids is not None:
         devices = select(AuditLog.device_id).where(
             AuditLog.tenant_id == ctx.tenant_id,
-            AuditLog.action == "farmer.create",
+            AuditLog.entity == "farmer",  # ix_audit_log_tenant_entity_created (NF-005)
             AuditLog.entity_id.in_(ctx.subject_ids),
+            AuditLog.action == "farmer.create",
         )
         stmt = stmt.where(AuditLog.device_id.in_(devices))
     by_device: dict[str, list[tuple[uuid.UUID, uuid.UUID, datetime]]] = {}

@@ -2,7 +2,7 @@
 # (farmerapp/logging.py: structlog JSON on stdout -> Cloud Logging jsonPayload). The message
 # is `jsonPayload.event`; the access log line is `event="request"` with `method`, `path`,
 # `status`, `duration_ms` (farmerapp/api/middleware.py). The full field contract, and which
-# events the API already emits vs which are expected, is docs/runbooks/observability.md.
+# events the API emits and their fields, is docs/runbooks/observability.md.
 #
 # Metric type in filters: logging.googleapis.com/user/<name>.
 
@@ -50,22 +50,22 @@ locals {
       labels      = { status = "status" }
     }
     visits_created = {
-      description = "Business ops: visits created (expected event=visit_created, see observability.md)."
+      description = "Business ops: visits created (event=visit_created, see observability.md)."
       filter      = "resource.type=\"cloud_run_revision\" AND jsonPayload.event=\"visit_created\""
       labels      = { tenant_id = "tenant_id" }
     }
     orders_created = {
-      description = "Business ops: orders created (expected event=order_created)."
+      description = "Business ops: orders created (event=order_created)."
       filter      = "resource.type=\"cloud_run_revision\" AND jsonPayload.event=\"order_created\""
       labels      = { tenant_id = "tenant_id" }
     }
     payments_captured = {
-      description = "Business ops: payments captured (expected event=payment_captured, field mode)."
+      description = "Business ops: payments captured (event=payment_captured, field mode)."
       filter      = "resource.type=\"cloud_run_revision\" AND jsonPayload.event=\"payment_captured\""
       labels      = { tenant_id = "tenant_id", mode = "mode" }
     }
     flags_raised = {
-      description = "Business ops: validation flags raised (expected event=flag_raised, field rule_id)."
+      description = "Business ops: validation flags raised (event=flag_raised, field rule_id)."
       filter      = "resource.type=\"cloud_run_revision\" AND jsonPayload.event=\"flag_raised\""
       labels      = { tenant_id = "tenant_id", rule_id = "rule_id" }
     }
@@ -88,21 +88,21 @@ locals {
       bounds      = [25, 50, 100, 150, 200, 250, 300, 400, 500, 600, 800, 1000, 1500, 2000, 3000, 5000, 10000, 30000]
     }
     webhook_processing = {
-      description = "SLO payment webhook processing: received_at -> processed_at in ms (expected field processing_ms on webhook_applied)."
+      description = "SLO payment webhook processing: received_at -> processed_at in ms (field processing_ms on webhook_applied)."
       filter      = "resource.type=\"cloud_run_revision\" AND jsonPayload.event=\"webhook_applied\" AND jsonPayload.processing_ms>=0"
       field       = "processing_ms"
       unit        = "ms"
       bounds      = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000, 1800000]
     }
     officers_on_duty = {
-      description = "Business ops: officers on duty now per tenant (expected event=ops_snapshot, field officers_on_duty)."
+      description = "Business ops: officers on duty now per tenant (event=ops_snapshot, field officers_on_duty)."
       filter      = "resource.type=(\"cloud_run_job\" OR \"cloud_run_revision\") AND jsonPayload.event=\"ops_snapshot\""
       field       = "officers_on_duty"
       unit        = "1"
       bounds      = [0, 1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000]
     }
     open_flags = {
-      description = "Business ops: open validation flags per tenant (expected event=ops_snapshot, field open_flags)."
+      description = "Business ops: open validation flags per tenant (event=ops_snapshot, field open_flags)."
       filter      = "resource.type=(\"cloud_run_job\" OR \"cloud_run_revision\") AND jsonPayload.event=\"ops_snapshot\""
       field       = "open_flags"
       unit        = "1"

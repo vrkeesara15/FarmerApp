@@ -61,6 +61,7 @@ APPEND_ONLY_TABLES = frozenset(
         "khata_entry",
         "order_status_event",
         "flag_event",  # VA-002 flag history (M4)
+        "tenant_data_key",  # SEC-026 wrapped data keys: a rotation is a new version
     }
 )
 

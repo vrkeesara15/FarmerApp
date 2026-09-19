@@ -341,7 +341,17 @@ async def _send_link(
 
 
 async def emit_captured(session: AsyncSession, payment: Payment, at: datetime) -> None:
-    """``PaymentCaptured`` for an order payment; writing subscribers run in ``session``."""
+    """``PaymentCaptured`` for an order payment; writing subscribers run in ``session``.
+
+    Every capture (order or dues, any mode) logs ``payment_captured`` (business metric
+    ``farmerapp_payments_captured``, docs/runbooks/observability.md)."""
+    log.info(
+        "payment_captured",
+        tenant_id=str(payment.tenant_id),
+        mode=str(payment.mode),
+        payment_id=str(payment.id),
+        amount_paise=payment.amount_paise,
+    )
     if payment.order_id is None:
         return
     await bus.dispatch(

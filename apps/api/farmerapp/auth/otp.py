@@ -41,6 +41,7 @@ from farmerapp.auth.providers import (
 )
 from farmerapp.db.session import set_tenant
 from farmerapp.logging import get_logger
+from farmerapp.pii.crypto import phone_hash
 
 if TYPE_CHECKING:
     from farmerapp.auth.deps import AuthServices
@@ -65,7 +66,10 @@ class SendResult:
     resends_left: int
 
 
-_FIND_BY_PHONE = text("SELECT user_id, tenant_id FROM auth_find_user_by_phone(:phone) LIMIT 1")
+# SEC-026: by the searchable hash (a row not yet backfilled still matches its plain phone).
+_FIND_BY_PHONE = text(
+    "SELECT user_id, tenant_id FROM auth_find_user_by_phone_hash(:hash, :phone) LIMIT 1"
+)
 
 
 LoginIds = tuple[uuid.UUID, uuid.UUID]
@@ -79,7 +83,9 @@ async def resolve_login_tenant(session: AsyncSession, phone: str) -> LoginIds | 
     then binds the tenant and reads the user under RLS like everyone else (a deleted account
     resolves its tenant but no user).
     """
-    row = (await session.execute(_FIND_BY_PHONE, {"phone": phone})).first()
+    row = (
+        await session.execute(_FIND_BY_PHONE, {"hash": phone_hash(phone), "phone": phone})
+    ).first()
     if row is None:
         return None
     # TODO(FA-008/WC-014): a phone in several tenants needs a tenant picker; oldest wins.
@@ -256,7 +262,12 @@ class OtpService:
         if status == DeliveryStatus.DELIVERED:
             challenge.delivered_at = now
             log.info(
-                "otp_delivered", phone=mask_phone(challenge.phone), challenge_id=str(challenge.id)
+                "otp_delivered",
+                phone=mask_phone(challenge.phone),
+                challenge_id=str(challenge.id),
+                channel=OtpChannel.SMS.value,
+                purpose=challenge.purpose,
+                tenant_id=str(challenge.tenant_id),
             )
         elif challenge.whatsapp_sent_at is None:
             log.warning(

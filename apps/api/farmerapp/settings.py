@@ -28,6 +28,10 @@ DEV_OTP_PEPPER = "dev-only-otp-pepper-not-a-secret"
 DEV_RAZORPAY_API_KEY_PLACEHOLDER = "dev-only-razorpay-key-secret-not-a-secret"
 #: The mockserver's default signing secret (docker/mockserver, ``MOCK_RAZORPAY_WEBHOOK_SECRET``).
 DEV_RAZORPAY_WEBHOOK_HMAC_KEY = "test_webhook_secret"
+#: SEC-026 dev / test key-encryption key (base64 of 32 bytes) and hash pepper. Never in prd:
+#: ``_prd_guard_rails`` requires Cloud KMS and a Secret Manager pepper there.
+DEV_PII_LOCAL_KEK = "ZGV2LW9ubHktcGlpLWtlay1ub3QtYS1zZWNyZXQhISE="
+DEV_PII_HASH_PEPPER = "dev-only-pii-hash-pepper-not-a-secret"
 
 
 class Settings(BaseSettings):
@@ -43,6 +47,17 @@ class Settings(BaseSettings):
     service_name: str = Field(default="api", description="api | worker | jobs; used in logs.")
     log_level: str = Field(default="INFO")
     log_json: bool = Field(default=True, description="JSON logs (Cloud Logging) vs console.")
+
+    # --- Tracing (NF-014) ------------------------------------------------------------
+    otel_exporter: Literal["none", "console", "gcp"] = Field(
+        default="none",
+        description="OpenTelemetry span exporter: 'gcp' = Cloud Trace (stg / prd), 'console' "
+        "= stdout (local debugging), 'none' = tracing off (default; tests). Trace ids are "
+        "logged and propagated to Pub/Sub either way.",
+    )
+    otel_sample_ratio: float = Field(
+        default=1.0, ge=0.0, le=1.0, description="Head sampling ratio for new traces."
+    )
 
     # --- Database ----------------------------------------------------------
     database_url: str = Field(
@@ -68,11 +83,16 @@ class Settings(BaseSettings):
     exports_bucket: str = Field(default="farmerapp-local-exports")
 
     # --- Blob store + resumable uploads (NF-003, SEC-016) ------------------------
-    blob_store: Literal["local", "fake_gcs"] = Field(
+    blob_store: Literal["local", "fake_gcs", "gcs"] = Field(
         default="local",
         description="'local' is a directory (unit tests, bare laptop); 'fake_gcs' talks to "
-        "STORAGE_EMULATOR_HOST (docker compose). The real GCS adapter with V4 signed URLs "
-        "lands with SEC-016 (M5), together with the prd guard rail that requires it.",
+        "STORAGE_EMULATOR_HOST (docker compose); 'gcs' is Cloud Storage with V4 signed URLs "
+        "signed through IAM signBlob (SEC-016; required in prd).",
+    )
+    gcs_signing_service_account: str | None = Field(
+        default=None,
+        description="Service account whose IAM signBlob signs V4 URLs (BLOB_STORE=gcs). "
+        "Default: the runtime service account from the metadata server.",
     )
     blob_local_dir: str = Field(
         default_factory=lambda: str(Path(tempfile.gettempdir()) / "farmerapp-blobs"),
@@ -100,6 +120,46 @@ class Settings(BaseSettings):
         description="Directory of the rule YAML files (VA-001). Default: the monorepo's "
         "rules/ next to apps/; containers set it to the copied rules directory.",
     )
+
+    # --- PII field encryption (SEC-026) ---------------------------------------------
+    pii_kek_backend: Literal["local", "kms"] = Field(
+        default="local",
+        description="Who wraps the per-tenant data keys: 'kms' = Cloud KMS (PII_KMS_KEY_NAME; "
+        "required in prd), 'local' = AES-256-GCM with PII_LOCAL_KEK (dev / test only).",
+    )
+    pii_kms_key_name: str | None = Field(
+        default=None,
+        description="projects/<p>/locations/asia-south1/keyRings/<r>/cryptoKeys/<k> (NF-011).",
+    )
+    pii_local_kek: str | None = Field(
+        default=None,
+        description="base64 of a 32-byte key-encryption key for PII_KEK_BACKEND=local; unset "
+        "means the built-in dev key (local / test / dev only). Refused in prd.",
+    )
+    pii_hash_pepper: str = Field(
+        default=DEV_PII_HASH_PEPPER,
+        description="HMAC-SHA256 pepper of the searchable phone hash. Secret Manager in "
+        "stg / prd; changing it needs a re-hash of every phone_hash column.",
+    )
+    pii_plaintext_writes: bool = Field(
+        default=False,
+        description="Transition switch (expand -> migrate -> contract): also write the legacy "
+        "plain phone / landmark columns, so the previous release can still read new rows "
+        "during a rollout or rollback. Off by default; must be off before the contract step.",
+    )
+
+    # --- Play Integrity (SEC-024 server side) -------------------------------------------
+    play_integrity_mode: Literal["off", "fake", "google"] = Field(
+        default="off",
+        description="'google' decodes X-Integrity-Token with the Play Integrity API "
+        "(decodeIntegrityToken, service account); 'fake' accepts test tokens; 'off' records "
+        "every token as unverified. Never blocks a request (FA-028 / VA-E01).",
+    )
+    play_integrity_package_names: list[str] = Field(
+        default=["in.farmerapp.mitra", "in.farmerapp.kisan"],
+        description="Android package names whose tokens are accepted (agent, farmer apps).",
+    )
+    play_integrity_timeout_s: float = Field(default=2.0, description="decode call timeout.")
 
     # --- Providers (base URLs only; keys come from Secret Manager) -----------
     sms_provider_url: str = Field(default="http://localhost:8090/sms")
@@ -182,9 +242,9 @@ class Settings(BaseSettings):
     def is_local(self) -> bool:
         return self.app_env in ("local", "test")
 
-    @field_validator("otp_dev_code", mode="before")
+    @field_validator("otp_dev_code", "pii_local_kek", "pii_kms_key_name", mode="before")
     @classmethod
-    def _empty_dev_code_is_none(cls, value: object) -> object:
+    def _empty_is_none(cls, value: object) -> object:
         return None if value == "" else value
 
     @model_validator(mode="after")
@@ -207,6 +267,14 @@ class Settings(BaseSettings):
             problems.append("RAZORPAY_WEBHOOK_SECRET must be set from Secret Manager in prd")
         if self.razorpay_key_secret in ("", DEV_RAZORPAY_API_KEY_PLACEHOLDER):
             problems.append("RAZORPAY_KEY_SECRET must be set from Secret Manager in prd")
+        if self.pii_kek_backend != "kms" or not self.pii_kms_key_name:
+            problems.append("PII_KEK_BACKEND=kms with PII_KMS_KEY_NAME is required in prd")
+        if self.pii_local_kek:
+            problems.append("PII_LOCAL_KEK must be unset in prd (Cloud KMS wraps data keys)")
+        if self.pii_hash_pepper == DEV_PII_HASH_PEPPER or len(self.pii_hash_pepper) < 32:
+            problems.append("PII_HASH_PEPPER must be a strong secret (>= 32 chars) in prd")
+        if self.blob_store != "gcs":
+            problems.append("BLOB_STORE=gcs is required in prd (SEC-016 signed URLs)")
         if self.migration_database_url == self.database_url:
             problems.append("MIGRATION_DATABASE_URL must use a different role than DATABASE_URL")
         if problems:

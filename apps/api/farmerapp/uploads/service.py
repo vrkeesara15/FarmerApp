@@ -246,7 +246,7 @@ async def signed_url(
     )
     if known is None or not await blobs.exists(uri):
         raise NotFoundError("Blob not found.")
-    signed = blobs.signed_url(
+    signed = await blobs.signed_url(
         uri, ttl=timedelta(seconds=settings.signed_url_ttl_seconds), now=_now()
     )
     return SignedUrlOut(uri=uri, url=signed.url, expires_at=signed.expires_at, note=signed.note)

@@ -48,6 +48,8 @@ from farmerapp.db.session import get_session
 from farmerapp.settings import get_settings
 
 API_ROOT = Path(__file__).resolve().parents[1]
+# NF-005 latency suite: only with `make perf-api` (FARMERAPP_PERF=1), never in the default run.
+collect_ignore_glob = [] if os.environ.get("FARMERAPP_PERF") == "1" else ["perf/*"]
 TEST_DB_NAME = "farmerapp_test"
 # Set by pytest-xdist in each worker process before conftest is imported ("gw0", "gw1", ...);
 # absent in a serial run.

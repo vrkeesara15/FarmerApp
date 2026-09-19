@@ -17,6 +17,7 @@ from farmerapp.notifications.models import Notification
 from farmerapp.rules.registry import Evidence, Finding
 from farmerapp.rules.schema import Mode, Subject
 from tests.flags.conftest import RULES, Flagged, make_flag
+from tests.logcontract import assert_fields, capture, json_events, one_event
 from tests.rules.harness import DEFAULT_NOW, add_user, base_world
 
 
@@ -179,3 +180,68 @@ async def test_sla_escalation_climbs_the_ladder(flagged: Flagged, db_session: As
         db_session, world.tenant_id, now=much_later + timedelta(days=9)
     )
     assert burst.id not in {m.flag_id for m in top}  # the owner is the top of the ladder
+
+
+async def test_flag_raised_log_contract(
+    db_session: AsyncSession, caplog: pytest.LogCaptureFixture
+) -> None:
+    """``farmerapp_flags_raised{rule_id}``: logged on insert, not on a deduped re-raise."""
+    capture(caplog)
+    world = await base_world(db_session)
+    flag = await make_flag(db_session, world, "officer", key="log-contract")
+    line = one_event(caplog, "flag_raised")
+    assert_fields(line, tenant_id=str, rule_id=str, flag_id=str, flag_severity=str)
+    assert line["rule_id"] == "VA-F06" and line["flag_id"] == str(flag.id)
+    assert line["tenant_id"] == str(world.tenant_id)
+    before = len(json_events(caplog, "flag_raised"))
+    rule = RULES.get("VA-F06")
+    again = await service.raise_flag(
+        db_session,
+        tenant_id=world.tenant_id,
+        rule=rule,
+        finding=Finding(
+            subject_type=Subject.EMPLOYEE,
+            subject_id=world.refs["officer"],
+            key="log-contract",
+            title="Test flag",
+        ),
+        mode=Mode.BATCH,
+        now=DEFAULT_NOW,
+    )
+    assert again is None and len(json_events(caplog, "flag_raised")) == before
+
+
+async def test_sla_escalation_notifies_the_new_owner_and_skips_resolved_or_due_flags(
+    flagged: Flagged, db_session: AsyncSession
+) -> None:
+    """OPS-010: one level up per pass, a ``flag_escalated`` notification to the new owner;
+    resolved flags and flags still inside their SLA are left alone."""
+    world = flagged.world
+    burst, shared = flagged.one("officer"), flagged.one("officer2")
+    farm = flagged.one("left")
+    shared.status = FlagStatus.RESOLVED_VALID.value
+    shared.resolved_at = DEFAULT_NOW
+    await db_session.flush()
+    later = DEFAULT_NOW + timedelta(hours=49)  # VA-F06 (48 h) overdue, VA-F03 (72 h) not
+    moved = await service.escalate_overdue(db_session, world.tenant_id, now=later)
+    assert [m.flag_id for m in moved] == [burst.id]
+    assert moved[0].to_role == "auditor" and moved[0].to_owner_id == world.refs["auditor"]
+    await db_session.refresh(farm)
+    assert farm.escalation_level == 0 and farm.owner_id == world.refs["store_manager"]
+    notes = (
+        (
+            await db_session.execute(
+                select(Notification).where(
+                    Notification.kind == "flag_escalated",
+                    Notification.data["flag_id"].astext == str(burst.id),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert [n.user_id for n in notes] == [world.refs["auditor"]]
+    assert notes[0].title_key == "notification.flag_escalated.title"
+    assert notes[0].data["rule_id"] == "VA-F06"
+    # A second pass within the fresh SLA moves nothing.
+    assert await service.escalate_overdue(db_session, world.tenant_id, now=later) == []

@@ -12,7 +12,7 @@ from collections.abc import AsyncIterator
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from farmerapp import __version__
+from farmerapp import __version__, telemetry
 from farmerapp.analytics import router as analytics_routes
 from farmerapp.api.errors import PROBLEM_MEDIA_TYPE, install_error_handlers
 from farmerapp.api.middleware import TraceMiddleware
@@ -28,6 +28,8 @@ from farmerapp.duty import router as duty_routes
 from farmerapp.farmers import router as farmer_routes
 from farmerapp.flags import router as flag_routes
 from farmerapp.flags.analytics import FLAG_TABLE_COUNTS
+from farmerapp.integrity.deps import build_verifier
+from farmerapp.integrity.verifier import PlayIntegrityVerifier
 from farmerapp.invoices import router as invoice_routes
 from farmerapp.khata import router as khata_routes
 from farmerapp.location import batch_router as location_batch_routes
@@ -103,9 +105,11 @@ def create_app(
     auth_services: AuthServices | None = None,
     blob_store: BlobStore | None = None,
     payment_services: PaymentServices | None = None,
+    integrity_verifier: PlayIntegrityVerifier | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(level=settings.log_level, json_logs=settings.log_json, service="api")
+    telemetry.configure_tracing(settings, service="api")  # NF-014 (off unless OTEL_EXPORTER)
 
     app = FastAPI(
         lifespan=_lifespan,
@@ -137,13 +141,24 @@ def create_app(
             "X-Request-Id",
             "X-Device-Id",
             "X-Chunk-Sha256",
+            # SEC-024 Play Integrity (mobile) and NF-014 W3C trace context (console).
+            "X-Integrity-Token",
+            "X-Integrity-Status",
+            "X-Integrity-Action",
+            "traceparent",
         ],
         expose_headers=["X-Request-Id"],
     )
     install_error_handlers(app)
+    telemetry.instrument_app(app)
+    from farmerapp.db.session import get_engine
+
+    telemetry.instrument_engine(get_engine())
     app.state.auth = auth_services or build_auth_services(settings)
     app.state.blobs = blob_store or build_blob_store(settings)  # NF-003 / SEC-016
     app.state.payments = payment_services or build_payment_services(settings)  # FA-021
+    # SEC-024: Play Integrity token decoding (None = verification off, verdicts "unverified").
+    app.state.integrity = integrity_verifier or build_verifier(settings)
     order_payment_events.register()  # FA-020 x FA-021: a captured payment advances its order
     app.state.flag_counts = FLAG_TABLE_COUNTS  # AN-001 / AN-002: open flags in analytics
     validate_rules()  # VA-001: invalid rules/*.yaml refuse to start

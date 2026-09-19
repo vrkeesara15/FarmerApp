@@ -41,6 +41,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    LargeBinary,
     Numeric,
     String,
     Text,
@@ -54,6 +55,7 @@ from sqlalchemy.orm import Mapped, column_property, declared_attr, mapped_column
 
 from farmerapp.db.base import Base, BaseColumns, TenantRow
 from farmerapp.db.geo import ACRE_M2, SRID
+from farmerapp.pii.fields import EncryptedField, mask_phone
 
 
 class FarmerSource(StrEnum):
@@ -136,6 +138,8 @@ class Farmer(Base, BaseColumns):
     __tablename__ = "farmer"
     __table_args__ = (
         UniqueConstraint("tenant_id", "phone"),
+        # SEC-026: FA-012 duplicate phone, by hash
+        UniqueConstraint("tenant_id", "phone_hash", name="uq_farmer_tenant_id_phone_hash"),
         CheckConstraint(f"source IN ({_in(FarmerSource)})", name="source"),
         CheckConstraint(
             f"land_ownership IS NULL OR land_ownership IN ({_in(LandOwnership)})",
@@ -155,13 +159,29 @@ class Farmer(Base, BaseColumns):
         ),
     )
 
-    phone: Mapped[str] = mapped_column(String(16), nullable=False)
+    # SEC-026: phone and landmark are encrypted (``*_enc``, tenant data key) with a
+    # searchable ``phone_hash``; the legacy plain columns (SQL ``phone`` / ``landmark``) are
+    # read only until the backfill / contract steps (farmerapp/pii).
+    phone_plain: Mapped[str | None] = mapped_column("phone", String(16), nullable=True)
+    phone_enc: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    phone_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    phone: EncryptedField[str] = EncryptedField(
+        plain="phone_plain",
+        enc="phone_enc",
+        hash_attr="phone_hash",
+        last4_attr="phone_last4",
+        mask=mask_phone,
+    )
     phone_last4: Mapped[str] = mapped_column(String(4), nullable=False)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     village_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("village.id", ondelete="RESTRICT"), nullable=False
     )
-    landmark: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    landmark_plain: Mapped[str | None] = mapped_column("landmark", String(200), nullable=True)
+    landmark_enc: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    landmark: EncryptedField[str | None] = EncryptedField(
+        plain="landmark_plain", enc="landmark_enc"
+    )
     language: Mapped[str] = mapped_column(String(8), nullable=False, server_default=text("'te'"))
     consent_marketing: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("false"), default=False

@@ -45,7 +45,9 @@ async def test_local_store_round_trip(tmp_path: Path) -> None:
     assert not await store.exists("gs://local/t/nope")
     with pytest.raises(BlobNotFoundError):
         await store.get("gs://local/t/nope")
-    signed = store.signed_url(uri, ttl=timedelta(minutes=15), now=datetime(2026, 1, 1, tzinfo=UTC))
+    signed = await store.signed_url(
+        uri, ttl=timedelta(minutes=15), now=datetime(2026, 1, 1, tzinfo=UTC)
+    )
     assert signed.url.startswith("file://") and signed.expires_at == datetime(
         2026, 1, 1, 0, 15, tzinfo=UTC
     )
@@ -87,7 +89,7 @@ async def test_fake_gcs_round_trip() -> None:
     assert uri == f"gs://photos/{key}"
     assert await store.exists(uri) and await store.get(uri) == data
     assert not await store.exists(f"gs://photos/{key}.missing")
-    signed = store.signed_url(uri, ttl=timedelta(minutes=15), now=datetime.now(UTC))
+    signed = await store.signed_url(uri, ttl=timedelta(minutes=15), now=datetime.now(UTC))
     assert signed.url.startswith(FAKE_GCS) and "alt=media" in signed.url
     async with httpx.AsyncClient(timeout=5.0) as client:
         assert (await client.get(signed.url)).content == data

@@ -12,7 +12,7 @@ UV        := uv
 UV_RUN    := cd $(API_DIR) && $(UV) run
 CORE_SERVICES := db pubsub gcs mockserver
 
-.PHONY: help up down db db-roles seed migrate openapi test-api test-api-fast test-console test-mobile \
+.PHONY: help up down db db-roles seed migrate openapi test-api test-api-fast perf-api test-console test-mobile \
         check-api check-console check-mobile check-infra check plan-dev logs
 
 help: ## Show this help
@@ -75,6 +75,13 @@ test-api: db $(API_DIR)/.venv/.synced ## pytest in parallel with coverage >= 80%
 test-api-fast: db $(API_DIR)/.venv/.synced ## pytest in parallel without coverage (local iteration)
 	$(UV_RUN) $(PYTEST_PARALLEL) --no-cov
 	$(UV_RUN) $(PYTEST_SERIAL) --no-cov
+
+# NF-005 latency suite (not in test-api / check-api): one xdist worker = a database of its own,
+# cloned from the migrated template and dropped afterwards, so the suite may commit its seed.
+# Report: apps/api/perf-report.md (PERF_SAMPLES / PERF_CONCURRENCY override the defaults).
+perf-api: db $(API_DIR)/.venv/.synced ## NF-005 API latency suite: p95 of hot reads / writes
+	cd $(API_DIR) && FARMERAPP_PERF=1 PERF_REPORT=perf-report.md $(UV) run pytest -n 1 --no-cov \
+	  -m perf tests/perf; status=$$?; cat perf-report.md 2>/dev/null; exit $$status
 
 check-api: $(API_DIR)/.venv/.synced ## ruff, mypy strict, rules, pytest, openapi diff, bandit, pip-audit
 	$(UV_RUN) ruff check .

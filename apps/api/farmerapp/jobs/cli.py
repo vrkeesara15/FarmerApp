@@ -180,6 +180,72 @@ def officer_sync_silence(
         )
 
 
+@cli.command("store-day-watch")
+def store_day_watch(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+    day: str | None = typer.Option(
+        None, "--date", help="Business date (YYYY-MM-DD, IST); default today."
+    ),
+) -> None:
+    """OPS-007: on a working day (tenant calendar, Mon-Sat minus holidays), after 22:00 IST,
+    notify the store manager and cluster head of every store with zero sales or a day not
+    closed by the deadline (once per store, day and kind). Daily at 22:15 IST."""
+    from datetime import date
+
+    from farmerapp.ops.store_watch import run_store_day_watch
+
+    _setup()
+    when = date.fromisoformat(day) if day else None
+    for r in asyncio.run(run_store_day_watch(_tenants(tenant), day=when)):
+        state = (
+            "checked"
+            if r.working_day and r.checked
+            else ("not a working day" if not r.working_day else "before the deadline")
+        )
+        typer.echo(
+            f"store-day-watch: tenant={r.tenant_id} date={r.day} {state} stores={r.stores} "
+            f"alerts={len(r.alerts)}"
+        )
+        for a in r.alerts:
+            typer.echo(f"  {a.store_code} {a.kind.value} notified={len(a.notified)}")
+
+
+@cli.command("pii-backfill")
+def pii_backfill(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+    batch_size: int = typer.Option(500, min=1, help="Rows per batch (one transaction each)."),
+    clear_plaintext: bool = typer.Option(
+        False, "--clear-plaintext", help="NULL the plain columns of rows already encrypted."
+    ),
+    restore_plaintext: bool = typer.Option(
+        False, "--restore-plaintext", help="Rollback aid: decrypt into empty plain columns."
+    ),
+) -> None:
+    """SEC-026 step 2 (after Alembic 0025): encrypt user / farmer phones and farmer landmarks
+    written before, with their searchable hash. Idempotent and resumable (docs/runbooks/
+    pii-encryption.md)."""
+    from farmerapp.pii.backfill import Mode, run_backfill
+
+    _setup()
+    if clear_plaintext and restore_plaintext:
+        raise typer.BadParameter("choose one of --clear-plaintext / --restore-plaintext")
+    mode: Mode = "clear" if clear_plaintext else "restore" if restore_plaintext else "encrypt"
+    for r in asyncio.run(run_backfill(_tenants(tenant), mode=mode, batch_size=batch_size)):
+        typer.echo(
+            f"pii-backfill ({r.mode}): tenant={r.tenant_id} changed={r.changed} "
+            f"remaining={r.remaining}"
+        )
+        for name, t in r.tables.items():
+            typer.echo(
+                f"  {name} scanned={t.scanned} changed={t.changed} conflicts={t.conflicts} "
+                f"remaining={t.remaining}"
+            )
+
+
 @cli.command("reconcile-payments")
 def reconcile_payments(
     tenant_id: list[uuid.UUID] = typer.Option(  # noqa: B008
@@ -208,7 +274,7 @@ def reconcile_payments(
         typer.echo(
             f"reconcile-payments (dry-run): tenant={r.tenant_id} date={r.day} "
             f"settlements={r.settlements} paid={r.paid_payments} matched={r.matched} "
-            f"mismatches={len(r.mismatches)} notified={r.notified}"
+            f"mismatches={len(r.mismatches)} notified={r.notified} flag={r.flag_id}"
         )
         for m in r.mismatches:
             typer.echo(

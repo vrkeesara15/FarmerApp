@@ -4,6 +4,7 @@ flags branch registers the real adapter on ``app.state.flag_counts``)."""
 from __future__ import annotations
 
 import uuid
+from dataclasses import replace
 from datetime import UTC, datetime
 
 from fastapi import FastAPI
@@ -30,6 +31,12 @@ class FakeFlags:
     async def counts(self, session: AsyncSession, query: FlagQuery) -> FlagCounts:
         self.queries.append(query)
         return FlagCounts(open_total=4, open_high=1, by_officer={self.officer: 3})
+
+    async def open_totals(
+        self, session: AsyncSession, query: FlagQuery, instants: list[datetime]
+    ) -> list[int]:
+        self.queries.extend(replace(query, opened_before=at) for at in instants)
+        return [4 for _ in instants]
 
     async def open_high_severity(
         self, session: AsyncSession, query: FlagQuery, limit: int

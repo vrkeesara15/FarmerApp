@@ -15,13 +15,20 @@ Three runners share ``run_rules``:
 Every rule runs in its own savepoint: a failing rule is logged (``rule_failed``) and rolled
 back while the others — and the caller's write — carry on. A validation agent never blocks
 the business transaction it observes.
+
+``deferred(session)`` (NF-005): inside the block, ``run_inline`` / ``emit`` calls are
+collected and run once per (tenant, mode, subject / topic) with the union of their subject
+ids when the block ends — still in the same transaction. ``POST /v1/sync`` wraps a batch in
+it, so 40 registrations run VA-F01 / F02 / F03 / F06 once, not 40 times.
 """
 
 from __future__ import annotations
 
+import contextvars
 import uuid
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import AsyncIterator, Iterable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
@@ -54,8 +61,59 @@ class RunReport:
         return sum(self.raised.values())
 
 
+_SLUGS = "rules_tenant_slugs"
+
+
 async def _tenant_slug(session: AsyncSession, tenant_id: uuid.UUID) -> str | None:
-    return await session.scalar(select(Tenant.slug).where(Tenant.id == tenant_id))
+    """The tenant's slug (per-tenant rule overrides), once per session."""
+    cache: dict[uuid.UUID, str | None] = session.info.setdefault(_SLUGS, {})
+    if tenant_id not in cache:
+        cache[tenant_id] = await session.scalar(select(Tenant.slug).where(Tenant.id == tenant_id))
+    return cache[tenant_id]
+
+
+@dataclass(frozen=True)
+class _Deferred:
+    tenant_id: uuid.UUID
+    mode: Mode
+    subject: Subject | None
+    trigger: str | None
+
+
+_pending: contextvars.ContextVar[dict[_Deferred, list[uuid.UUID]] | None] = contextvars.ContextVar(
+    "rules_deferred", default=None
+)
+
+
+@asynccontextmanager
+async def deferred(session: AsyncSession) -> AsyncIterator[None]:
+    """Collect inline / event rule runs of the block and run them once at its end."""
+    if _pending.get() is not None:  # already deferring (nested): the outer block runs them
+        yield
+        return
+    token = _pending.set({})
+    try:
+        yield
+        collected = _pending.get() or {}
+    finally:
+        _pending.reset(token)
+    for key, ids in collected.items():
+        await run_rules(
+            session,
+            key.tenant_id,
+            key.mode,
+            subject=key.subject,
+            trigger=key.trigger,
+            subject_ids=list(dict.fromkeys(ids)),
+        )
+
+
+def _defer(key: _Deferred, ids: Iterable[uuid.UUID]) -> RunReport | None:
+    bucket = _pending.get()
+    if bucket is None:
+        return None
+    bucket.setdefault(key, []).extend(ids)
+    return RunReport(tenant_id=key.tenant_id, mode=key.mode)
 
 
 async def run_rules(
@@ -148,6 +206,10 @@ async def run_inline(
     now: datetime | None = None,
 ) -> RunReport:
     """Inline rules for records a write path just flushed (same transaction)."""
+    if now is None:
+        later = _defer(_Deferred(tenant_id, Mode.INLINE, subject, None), subject_ids)
+        if later is not None:
+            return later
     return await run_rules(
         session, tenant_id, Mode.INLINE, subject=subject, subject_ids=subject_ids, now=now
     )
@@ -164,6 +226,10 @@ async def emit(
 ) -> RunReport:
     """Event rules subscribed to ``topic``; ``subject_ids`` are the records the event is
     about (a farmer for ``farmer.registered``, a visit for ``visit.created``)."""
+    if payload is None and now is None:
+        later = _defer(_Deferred(tenant_id, Mode.EVENT, None, topic), subject_ids)
+        if later is not None:
+            return later
     return await run_rules(
         session,
         tenant_id,
@@ -188,4 +254,4 @@ async def run_batch(
     )
 
 
-__all__ = ["RunReport", "emit", "run_batch", "run_inline", "run_rules"]
+__all__ = ["RunReport", "deferred", "emit", "run_batch", "run_inline", "run_rules"]

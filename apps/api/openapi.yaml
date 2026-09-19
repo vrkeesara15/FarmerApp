@@ -72,12 +72,45 @@ paths:
       - auth
       summary: Verify the code; returns access + refresh tokens and the user profile
       operationId: verifyOtp
+      parameters:
+      - name: X-Integrity-Token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'SEC-024: Play Integrity standard token bound to this request (requestHash). Verified
+            server-side; never blocks.'
+          title: X-Integrity-Token
+        description: 'SEC-024: Play Integrity standard token bound to this request (requestHash). Verified
+          server-side; never blocks.'
+      - name: X-Integrity-Status
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: '`unavailable` when the app could not get a token (never blocks).'
+          title: X-Integrity-Status
+        description: '`unavailable` when the app could not get a token (never blocks).'
+      - name: X-Integrity-Action
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'Comma list of sensitive actions: login, credit_sale, payment_collection, day_close.'
+          title: X-Integrity-Action
+        description: 'Comma list of sensitive actions: login, credit_sale, payment_collection, day_close.'
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/OtpVerifyRequest'
-        required: true
       responses:
         '200':
           description: Successful Response
@@ -2682,12 +2715,45 @@ paths:
       - sync
       summary: Apply a batch of outbox operations and return server changes since a cursor
       operationId: sync
+      parameters:
+      - name: X-Integrity-Token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'SEC-024: Play Integrity standard token bound to this request (requestHash). Verified
+            server-side; never blocks.'
+          title: X-Integrity-Token
+        description: 'SEC-024: Play Integrity standard token bound to this request (requestHash). Verified
+          server-side; never blocks.'
+      - name: X-Integrity-Status
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: '`unavailable` when the app could not get a token (never blocks).'
+          title: X-Integrity-Status
+        description: '`unavailable` when the app could not get a token (never blocks).'
+      - name: X-Integrity-Action
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'Comma list of sensitive actions: login, credit_sale, payment_collection, day_close.'
+          title: X-Integrity-Action
+        description: 'Comma list of sensitive actions: login, credit_sale, payment_collection, day_close.'
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/SyncRequest'
-        required: true
       responses:
         '200':
           description: Successful Response
@@ -5528,6 +5594,39 @@ paths:
       - payments
       summary: Collect a payment for an order or khata dues (UPI QR, link, cash, card, credit)
       operationId: createPayment
+      parameters:
+      - name: X-Integrity-Token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'SEC-024: Play Integrity standard token bound to this request (requestHash). Verified
+            server-side; never blocks.'
+          title: X-Integrity-Token
+        description: 'SEC-024: Play Integrity standard token bound to this request (requestHash). Verified
+          server-side; never blocks.'
+      - name: X-Integrity-Status
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: '`unavailable` when the app could not get a token (never blocks).'
+          title: X-Integrity-Status
+        description: '`unavailable` when the app could not get a token (never blocks).'
+      - name: X-Integrity-Action
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'Comma list of sensitive actions: login, credit_sale, payment_collection, day_close.'
+          title: X-Integrity-Action
+        description: 'Comma list of sensitive actions: login, credit_sale, payment_collection, day_close.'
       requestBody:
         required: true
         content:
@@ -6065,6 +6164,38 @@ paths:
           type: string
           format: uuid
           title: Id
+      - name: X-Integrity-Token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'SEC-024: Play Integrity standard token bound to this request (requestHash). Verified
+            server-side; never blocks.'
+          title: X-Integrity-Token
+        description: 'SEC-024: Play Integrity standard token bound to this request (requestHash). Verified
+          server-side; never blocks.'
+      - name: X-Integrity-Status
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: '`unavailable` when the app could not get a token (never blocks).'
+          title: X-Integrity-Status
+        description: '`unavailable` when the app could not get a token (never blocks).'
+      - name: X-Integrity-Action
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'Comma list of sensitive actions: login, credit_sale, payment_collection, day_close.'
+          title: X-Integrity-Action
+        description: 'Comma list of sensitive actions: login, credit_sale, payment_collection, day_close.'
       requestBody:
         required: true
         content:
@@ -6394,6 +6525,38 @@ paths:
           type: string
           format: uuid
           title: Id
+      - name: X-Integrity-Token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'SEC-024: Play Integrity standard token bound to this request (requestHash). Verified
+            server-side; never blocks.'
+          title: X-Integrity-Token
+        description: 'SEC-024: Play Integrity standard token bound to this request (requestHash). Verified
+          server-side; never blocks.'
+      - name: X-Integrity-Status
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: '`unavailable` when the app could not get a token (never blocks).'
+          title: X-Integrity-Status
+        description: '`unavailable` when the app could not get a token (never blocks).'
+      - name: X-Integrity-Action
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: 'Comma list of sensitive actions: login, credit_sale, payment_collection, day_close.'
+          title: X-Integrity-Action
+        description: 'Comma list of sensitive actions: login, credit_sale, payment_collection, day_close.'
       requestBody:
         required: true
         content:
@@ -6610,6 +6773,7 @@ paths:
           content:
             application/problem+json: {}
       x-roles:
+      - accountant
       - auditor
       - cluster_head
       - director
@@ -6657,6 +6821,7 @@ paths:
           content:
             application/problem+json: {}
       x-roles:
+      - accountant
       - auditor
       - cluster_head
       - director
@@ -6770,6 +6935,7 @@ paths:
           content:
             application/problem+json: {}
       x-roles:
+      - accountant
       - auditor
       - cluster_head
       - director
@@ -7996,6 +8162,12 @@ components:
           - type: string
           - type: 'null'
           title: Trace Id
+        integrity:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Integrity
         created_at:
           type: string
           format: date-time
@@ -16043,6 +16215,29 @@ components:
           - type: string
           - type: 'null'
           title: Invoice Prefix
+        working_days:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Working Days
+          description: OPS-007 ISO weekdays 1 (Mon) - 7 (Sun).
+        holidays:
+          anyOf:
+          - items:
+              type: string
+              format: date
+            type: array
+          - type: 'null'
+          title: Holidays
+          description: OPS-007 YYYY-MM-DD dates.
+        day_close_deadline_local_time:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Day Close Deadline Local Time
+          description: OPS-007 HH:MM (IST).
         languages_enabled:
           anyOf:
           - items:
@@ -16964,6 +17159,7 @@ components:
       - employee
       - visit
       - store
+      - tenant
       title: Subject
     SyncChangeOut:
       properties:
@@ -17289,6 +17485,27 @@ components:
             pattern: ^[A-Z0-9]+$
           - type: 'null'
           title: Invoice Prefix
+        working_days:
+          items:
+            type: integer
+            maximum: 7.0
+            minimum: 1.0
+          type: array
+          maxItems: 7
+          minItems: 1
+          title: Working Days
+        holidays:
+          items:
+            type: string
+            format: date
+          type: array
+          maxItems: 366
+          title: Holidays
+        day_close_deadline_local_time:
+          type: string
+          pattern: ^([01]\d|2[0-3]):[0-5]\d$
+          title: Day Close Deadline Local Time
+          default: '22:00'
         languages_enabled:
           items:
             type: string

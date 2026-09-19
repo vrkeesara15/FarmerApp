@@ -1,7 +1,7 @@
 # VA-F02 (SPEC 6.2): duplicate farmer — same phone (last ten digits), or a similar name in the
 # same village with farm centroids within centroid_distance_m.
 id: VA-F02
-version: 1
+version: 2
 title: Duplicate farmer
 subject: farmer
 mode: [inline, batch]

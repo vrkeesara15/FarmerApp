@@ -66,6 +66,11 @@ async def set_tenant(session: AsyncSession, tenant_id: uuid.UUID | None) -> None
     if tenant_id is None:
         return
     await session.execute(_SET_TENANT, {"tid": str(tenant_id)})
+    # SEC-026: the tenant's data key is loaded (or created) once per process, so PII fields
+    # of this tenant encrypt / decrypt synchronously for the rest of the work.
+    from farmerapp.pii.keys import ensure_tenant_key
+
+    await ensure_tenant_key(session, tenant_id)
 
 
 async def clear_tenant(session: AsyncSession) -> None:

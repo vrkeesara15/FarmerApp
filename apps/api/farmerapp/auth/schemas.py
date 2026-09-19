@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 import uuid
 from datetime import datetime
 from typing import Annotated, Literal
@@ -10,22 +9,10 @@ from typing import Annotated, Literal
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 from farmerapp.auth.models import User
+from farmerapp.pii.crypto import normalise_phone as _normalise_phone
 
-_INDIAN_MOBILE = re.compile(r"^\+91[6-9]\d{9}$")
-
-
-def normalise_phone(value: str) -> str:
-    """Accept ``9876543210`` / ``+91 98765 43210`` / ``+919876543210``; return E.164."""
-    digits = re.sub(r"[\s\-()]", "", value)
-    if re.fullmatch(r"[6-9]\d{9}", digits):
-        digits = "+91" + digits
-    elif re.fullmatch(r"0[6-9]\d{9}", digits):
-        digits = "+91" + digits[1:]
-    elif re.fullmatch(r"91[6-9]\d{9}", digits):
-        digits = "+" + digits
-    if not _INDIAN_MOBILE.fullmatch(digits):
-        raise ValueError("must be an Indian mobile number (+91 and 10 digits starting 6-9)")
-    return digits
+# One normalisation for validation and the SEC-026 phone hash (farmerapp.pii.crypto).
+normalise_phone = _normalise_phone
 
 
 Phone = Annotated[str, AfterValidator(normalise_phone)]

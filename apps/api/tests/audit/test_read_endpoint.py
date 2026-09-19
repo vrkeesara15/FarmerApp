@@ -80,8 +80,10 @@ async def test_list_is_newest_first_with_full_rows(
         "device_id",
         "user_agent",
         "trace_id",
+        "integrity",
         "created_at",
     }
+    assert newest["integrity"] is None  # no Play Integrity header on that write
 
 
 async def test_filters(

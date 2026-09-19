@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Request, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 
 from farmerapp.api.errors import problem_responses
 from farmerapp.auth.deps import DbSession, Services
@@ -28,6 +28,7 @@ from farmerapp.auth.schemas import (
 from farmerapp.auth.stepup import issue_step_up_token
 from farmerapp.db import audit
 from farmerapp.db.session import set_tenant
+from farmerapp.integrity.deps import integrity_for
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 me_router = APIRouter(tags=["me"])
@@ -65,7 +66,7 @@ async def send_otp(body: OtpSendRequest, session: DbSession, services: Services)
 @router.post(
     "/otp/verify",
     operation_id="verifyOtp",
-    dependencies=[PUBLIC],
+    dependencies=[PUBLIC, Depends(integrity_for("login"))],  # SEC-024: never blocks
     summary="Verify the code; returns access + refresh tokens and the user profile",
     response_model=TokenResponse,
     responses=problem_responses(

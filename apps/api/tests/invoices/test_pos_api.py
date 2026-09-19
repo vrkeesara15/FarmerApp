@@ -151,7 +151,7 @@ async def test_inter_state_buyer_pays_igst(client: AsyncClient, pw: PayWorld) ->
     assert resp.json()["payment"]["status"] == "pending_reconciliation"
     row = await pw.session.get_one(Invoice, uuid.UUID(invoice["id"]))
     assert row.pdf_uri is not None
-    signed = pw.blobs.signed_url(row.pdf_uri, ttl=timedelta(minutes=1), now=datetime.now(UTC))
+    signed = await pw.blobs.signed_url(row.pdf_uri, ttl=timedelta(minutes=1), now=datetime.now(UTC))
     text = _pdf_text(signed.url)
     assert "IGST" in text and "29ABCDE1234F1Z5" in text and "Inter-state" in text
 

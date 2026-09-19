@@ -60,13 +60,14 @@ async def m2(world: World, db_session: AsyncSession) -> M2World:  # noqa: F811
     tid = world.a.tenant.id
     async with tenant_scope(db_session, tid):
         officers = tuple(
-            (
-                await db_session.execute(
-                    select(User).where(User.role == UserRole.FIELD_OFFICER).order_by(User.phone)
-                )
+            sorted(  # SEC-026: phones are encrypted, so order in Python
+                (
+                    await db_session.execute(
+                        select(User).where(User.role == UserRole.FIELD_OFFICER)
+                    )
+                ).scalars(),
+                key=lambda u: u.phone,
             )
-            .scalars()
-            .all()
         )
         stores = {s.id: s for s in (await db_session.execute(select(Store))).scalars()}
         visits: dict[uuid.UUID, list[Visit]] = {o.id: [] for o in officers}

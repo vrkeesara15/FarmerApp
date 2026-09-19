@@ -15,7 +15,14 @@ One Python package, `farmerapp`, with three entrypoints:
 ```
 farmerapp/
   settings.py     pydantic-settings (env vars, see /.env.example)
-  logging.py      structlog JSON logging, trace id per request
+  logging.py      structlog JSON logging, `severity`, trace id per request (= the OTel trace id)
+  telemetry.py    NF-014 OpenTelemetry: exporter config, FastAPI / SQLAlchemy instrumentation,
+                  W3C traceparent into Pub/Sub attributes and back in the worker
+  gcp.py          Google access tokens (ADC) for the REST calls (IAM signBlob, KMS, Play Integrity)
+  pii/            SEC-026 field encryption: per-tenant data keys (KMS envelope), EncryptedField,
+                  phone_hash lookups, the pii-backfill job
+  integrity/      SEC-024 Play Integrity verdicts (X-Integrity-* headers), never blocking
+  ops/            SPEC 12.2 monitor jobs (OPS-007 store-day-watch)
   api/            FastAPI app factory, /v1/health, RFC 9457 errors, CORS, scheduler ticker
   auth/           FA-001 phone + OTP login, JWT access/refresh (SEC-020/021), get_current_user,
                   SMS/WhatsApp provider adapters (fake, mockserver), delayed-task scheduler seam;
@@ -60,6 +67,7 @@ make seed        # demo tenants, as the app role under RLS (DATABASE_URL)
 make test-api    # pytest in parallel (pytest-xdist) with coverage >= 80%
 make test-api-fast  # the same without coverage, for quick local iteration
 make check-api   # ruff, mypy strict, pytest, openapi diff, bandit, pip-audit (prints wall clock)
+make perf-api    # NF-005 latency suite (FULL seed, p50 / p95 per hot endpoint; not in check-api)
 make openapi     # regenerate apps/api/openapi.yaml (commit it)
 ```
 
@@ -732,11 +740,89 @@ sha256 and returns `{blob_uri, sha256, size_bytes, content_type}`. Chunks are st
 `bytea` in `upload_chunk` (15-minute TTL, `python -m farmerapp.jobs purge-expired
 --tenant-id …` also drops expired idempotency keys). Blobs land in a `BlobStore`
 (`farmerapp/uploads/blobstore.py`) under `gs://<bucket>/<tenant>/<purpose>/<sha256>`:
-`BLOB_STORE=local` (directory; unit tests) or `BLOB_STORE=fake_gcs` (compose
-`gcs` service, bucket `photos`; `pytest -m integration` covers it). `GET
-/v1/blobs/signed-url?uri=` returns a 15-minute URL — a plain media URL for the fake / local
-stores; real V4 signing is the `GcsBlobStore` seam for SEC-016 (M5). `farm_photo` rows
-reference completed uploads (`photos: [blob_uri]` on a farm).
+`BLOB_STORE=local` (directory; unit tests), `BLOB_STORE=fake_gcs` (compose
+`gcs` service, bucket `photos`; `pytest -m integration` covers it) or `BLOB_STORE=gcs`
+(Cloud Storage, required in prd). `GET /v1/blobs/signed-url?uri=` returns a 15-minute URL — a
+plain media URL for the fake / local stores, a **V4 signed URL** (`GOOG4-RSA-SHA256`) from
+`GcsBlobStore`, signed through IAM `signBlob` by the runtime service account
+(`GCS_SIGNING_SERVICE_ACCOUNT` overrides; SEC-016, no key file). `BlobStore.signed_url` is
+`async`. `farm_photo` rows reference completed uploads (`photos: [blob_uri]` on a farm).
+
+## Observability: log events and traces (NF-014)
+
+Every log line is one JSON object with `event`, `level`, `severity`, `timestamp`, `service`,
+`logger` and, in a request, `trace_id` / `method` / `path`. The events the log-based metrics
+and dashboards read (`request`, `otp_sent`, `otp_delivered`, `webhook_applied` with
+`processing_ms`, `visit_created`, `order_created`, `payment_captured`, `flag_raised`,
+`ops_snapshot`, `sync_batch`, ...) and their fields are listed in
+docs/runbooks/observability.md; each has a test through `tests/logcontract.py`:
+
+```python
+from tests.logcontract import assert_fields, capture, one_event
+
+capture(caplog)
+...  # drive the flow
+line = one_event(caplog, "order_created")  # the JSON object Cloud Logging stores
+assert_fields(line, tenant_id=str, order_id=str, total_paise=int)
+```
+
+Do not log a field called `severity` (Cloud Logging's; a flag's severity is `flag_severity`).
+Tracing: `OTEL_EXPORTER=gcp|console|none` (default `none`, and in tests),
+`OTEL_SAMPLE_RATIO`. With tracing on, FastAPI and SQLAlchemy spans are recorded and the log
+`trace_id` is the OTel trace id; `traceparent` travels into Pub/Sub attributes
+(`payments/publisher.py::message_attributes`) and the worker continues the trace
+(`telemetry.consumer_span`). Tests switch tracing on with an in-memory exporter
+(`tests/test_telemetry.py`).
+
+## PII field encryption (SEC-026)
+
+`user.phone`, `farmer.phone` and `farmer.landmark` are stored as AES-256-GCM ciphertext
+(`*_enc`) under a per-tenant data key (`tenant_data_key`, wrapped by Cloud KMS in GCP, a local
+key in dev / test; prd refuses to start without KMS), associated data `tenant | table | column`.
+The attributes read and write plaintext as before; queries **never** compare them:
+
+```python
+from farmerapp.pii.lookup import phone_match
+
+select(Farmer).where(Farmer.tenant_id == t, phone_match(Farmer, "+919876543210"))  # by hash
+Farmer.phone == "+91…"  # TypeError: encrypted
+```
+
+`phone_hash` = HMAC-SHA256(`PII_HASH_PEPPER`, normalised E.164), unique per tenant; login uses
+`auth_find_user_by_phone_hash`. The data key is loaded by `set_tenant` (once per process per
+tenant), so bind the tenant before touching a row. Rows written before Alembic 0025 still read
+their plain column until `python -m farmerapp.jobs pii-backfill --tenant …` encrypts them
+(idempotent, resumable; `--clear-plaintext`, `--restore-plaintext`); the contract migration is
+manual (`alembic/manual/pii_contract.py`, docs/runbooks/pii-encryption.md). Audit rows show
+`+91******3210` / `[encrypted]`. New PII columns: add an `EncryptedField` the same way.
+
+## Play Integrity (SEC-024 server side)
+
+`farmerapp/integrity/`: routes with a sensitive action declare
+`dependencies=[Depends(integrity_for("payment_collection"))]` (login, payments, POS sales,
+day close; `/v1/sync` with `integrity_for(None)`: only when the app sends the headers). The
+dependency recomputes the request hash, decodes `X-Integrity-Token` through
+`app.state.integrity` (`PLAY_INTEGRITY_MODE` `google` / `fake` / `off`), evaluates it and
+records the verdict on `request.state.integrity` and in `audit_log.integrity` of every audit
+row of the request. It never blocks; `failed` / `absent` verdicts log `integrity_signal` and
+VA-E01 flags failed ones.
+
+## Ops monitor jobs (SPEC 12.2)
+
+| Job | Schedule (IaC) | What |
+|---|---|---|
+| `officer-sync-silence --tenant-id …` | every 15 min | OPS-006 cluster heads of officers on duty with no sync for 2 h; `ops_snapshot` line |
+| `store-day-watch --tenant … [--date]` | 22:15 IST | OPS-007 zero sales on a working day / day not closed by 22:00 (tenant `working_days`, `holidays`, `day_close_deadline_local_time`) -> store managers + cluster heads |
+| `reconcile-payments --tenant-id … [--date]` | 06:00 IST | OPS-008 settlements vs paid payments; mismatches open an `OPS-008` flag (finance ticket, accountants watch it) |
+| `flags-sla-escalation --tenant …` | hourly | OPS-010 overdue flags one rung up, `flag_escalated` notification |
+
+## Latency suite (NF-005)
+
+`make perf-api` seeds the FULL demo data into its own database (one xdist worker), analyses
+it, drives 13 hot endpoints through the real app at `PERF_CONCURRENCY` (4) and writes p50 / p95
+to `perf-report.md`; it fails over budget (reads 300 ms, writes 600 ms, a 50-op sync backlog
+1,500 ms). Results: docs/perf/NF-005.md. Inside a `POST /v1/sync` batch the inline and event
+rules run once for the whole batch (`rules.engine.deferred`).
 
 ## Auth (FA-001)
 

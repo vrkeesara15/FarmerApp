@@ -54,30 +54,39 @@ hold tokens (Slack, PagerDuty) and Firebase Crashlytics.
 
 The API, worker and jobs log one JSON object per line (structlog, `farmerapp/logging.py`);
 Cloud Logging stores it as `jsonPayload`. Always present: `event` (the message), `level`,
-`timestamp`, `service`, `logger`; inside a request also `trace_id`, `method`, `path`.
+`severity` (upper-case `level`, so Cloud Logging severity filters and Error Reporting work
+natively), `timestamp`, `service`, `logger`; inside a request also `trace_id`, `method`,
+`path`, and in GCP `logging.googleapis.com/trace` (links the line to its Cloud Trace span).
+Each event below has a test asserting its JSON fields (`apps/api/tests/logcontract.py`).
+`severity` is reserved for the log level: a flag's severity is logged as `flag_severity`.
 
-### Emitted today
-
-| `event` | Fields used | Metric |
-|---|---|---|
-| `request` (access log, `farmerapp/api/middleware.py`) | `method`, `path`, `status` (int), `duration_ms` (float) | `farmerapp_api_read_latency`, `farmerapp_api_write_latency`, `farmerapp_sync_requests`, `farmerapp_sync_success` |
-| `otp_sent` (`auth/otp.py`) | `channel` (`sms` / `whatsapp`), `purpose`, `tenant_id` | `farmerapp_otp_sent` |
-| `otp_delivered` | — | `farmerapp_otp_delivered` |
-| `otp_fallback_whatsapp` | — | `farmerapp_otp_whatsapp_fallback` |
-| `webhook_applied` (`payments/webhooks.py`) | `status`, `event_type`, `event_id` | `farmerapp_webhook_applied` |
-| any line with `level` = `error` / `critical` (e.g. `unhandled_error`) | `event` | `farmerapp_app_errors` |
-
-### Expected (API follow-up; charts / SLO stay empty until emitted)
-
-| `event` | Required fields | Metric | Where to emit |
+| `event` | Fields used | Metric | Emitted by |
 |---|---|---|---|
-| `webhook_applied` | **`processing_ms`** = `processed_at - received_at` in ms (int) | `farmerapp_webhook_processing` (webhook SLO) | `apply_webhook_event` |
-| `visit_created` | `tenant_id` | `farmerapp_visits_created` | visit service (API and sync paths) |
-| `order_created` | `tenant_id` | `farmerapp_orders_created` | order service |
-| `payment_captured` | `tenant_id`, `mode` (`upi_qr`, `payment_link`, `cash`, `card_terminal`, `credit`) | `farmerapp_payments_captured` | payment state change to paid |
-| `flag_raised` | `tenant_id`, `rule_id` | `farmerapp_flags_raised` | flags service on insert (not on dedupe) |
-| `ops_snapshot` | `tenant_id`, `officers_on_duty` (int), `open_flags` (int) | `farmerapp_officers_on_duty`, `farmerapp_open_flags` | one line per tenant from a scheduled job (e.g. `officer-sync-silence`, every 15 min) |
+| `request` (access log) | `method`, `path`, `status` (int), `duration_ms` (float), `trace_id` | `farmerapp_api_read_latency`, `farmerapp_api_write_latency`, `farmerapp_sync_requests`, `farmerapp_sync_success` | `api/middleware.py` |
+| `otp_sent` | `channel` (`sms` / `whatsapp`), `purpose`, `tenant_id` | `farmerapp_otp_sent` | `auth/otp.py` |
+| `otp_delivered` | `channel`, `purpose`, `tenant_id`, `challenge_id` | `farmerapp_otp_delivered` | `auth/otp.py` (delivery check) |
+| `otp_fallback_whatsapp` | `challenge_id` | `farmerapp_otp_whatsapp_fallback` | `auth/otp.py` |
+| `webhook_applied` | `status`, `event_type`, `event_id`, `tenant_id`, **`processing_ms`** = `processed_at - received_at` in ms (int; includes the Pub/Sub queue time) | `farmerapp_webhook_applied`, `farmerapp_webhook_processing` (webhook SLO) | `payments/webhooks.py::apply_webhook_event` |
+| `visit_created` | `tenant_id`, `visit_id`, `officer_id`, `geofence_result` | `farmerapp_visits_created` | visit service (REST and sync; not on replays) |
+| `order_created` | `tenant_id`, `order_id`, `channel`, `total_paise` | `farmerapp_orders_created` | order service and POS port |
+| `payment_captured` | `tenant_id`, `mode` (`upi_qr`, `payment_link`, `cash`, `card_terminal`, `credit`), `payment_id`, `amount_paise` | `farmerapp_payments_captured` | `payments/service.py::emit_captured` (every capture) |
+| `flag_raised` | `tenant_id`, `rule_id`, `flag_id`, `flag_severity` | `farmerapp_flags_raised` | flags service on insert (not on dedupe) |
+| `ops_snapshot` | `tenant_id`, `officers_on_duty` (int), `open_flags` (int) | `farmerapp_officers_on_duty`, `farmerapp_open_flags` | `officer-sync-silence` job, one line per tenant per run (every 15 min) |
+| `sync_batch` | `tenant_id`, `status` (`ok` / `partial` / `failed` / `empty`), `ops`, `applied`, `rejected`, `conflicts`, `duplicates`, `changes` (ints), `has_more` | (dashboards; `farmerapp_sync_*` still count the access log) | `sync/router.py`, one per `POST /v1/sync` |
+| `store_day_alert` (WARNING) | `tenant_id`, `store_id`, `store_code`, `day`, `kind` (`store_zero_sales` / `store_day_not_closed`) | (log-based alert candidate, OPS-007) | `store-day-watch` job |
+| `integrity_signal` (WARNING) / `integrity_verdict` | `status` (`failed` / `absent` for the signal), `actions`, `reasons`, `device_id` | (VA-E01 reads the audit rows) | `integrity/deps.py` (login and sensitive actions) |
+| any line with `level` = `error` / `critical` | `event` | `farmerapp_app_errors` | everywhere |
 
-Also recommended: add a `severity` key mirroring `level` (upper-case) in the structlog
-renderer, so Cloud Logging severity filters and Error Reporting pick errors up natively.
 Never log raw phone numbers, OTP codes, tokens or payment secrets (use `mask_phone`).
+
+## Traces (NF-014)
+
+OpenTelemetry, configured by `farmerapp/telemetry.py`: `OTEL_EXPORTER=gcp` (Cloud Trace; the
+api / worker service accounts need `roles/cloudtrace.agent` — human gate with the env apply),
+`console` (stdout) or `none` (default; tests). FastAPI (server spans, `/v1/health` excluded)
+and SQLAlchemy (one span per statement) are instrumented; `OTEL_SAMPLE_RATIO` sets head
+sampling. W3C `traceparent` is accepted from clients (console, apps), injected into Pub/Sub
+message attributes by the publisher and continued by the worker (`pubsub.process <topic>`
+consumer span), so one trace covers app -> API -> worker. The log `trace_id` **is** the OTel
+trace id; with tracing off it is still carried from `traceparent` / `X-Cloud-Trace-Context`
+into the Pub/Sub attributes, so API and worker log lines correlate.

@@ -13,6 +13,7 @@ from datetime import timedelta
 from decimal import Decimal
 from typing import Any
 
+import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,6 +28,7 @@ from farmerapp.stock.models import StockReservation
 from farmerapp.tenants.models import Village
 from tests.authz.conftest import Bearer, World
 from tests.farmers.write_fixtures import WriteCtx
+from tests.logcontract import assert_fields, capture, one_event
 from tests.orders.helpers import (
     available,
     demo_farmer,
@@ -422,3 +424,20 @@ async def test_order_of_other_tenant_is_invisible(
     resp = await client.get(f"/v1/orders/{order['id']}", headers=bearer(world.b.owner))
     assert resp.status_code == 404
     assert str(world.a.tenant.id) not in resp.text
+
+
+# --------------------------------------------------------------------------- NF-014 logs
+async def test_order_created_log_contract(
+    client: AsyncClient,
+    world: World,
+    bearer: Bearer,
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """``farmerapp_orders_created`` counts ``order_created`` (API, sync and POS paths)."""
+    capture(caplog)
+    await receive(client, bearer, world, qty=5)
+    order = await place(client, bearer, world)
+    line = one_event(caplog, "order_created")
+    assert_fields(line, tenant_id=str, order_id=str, channel=str, total_paise=int)
+    assert line["order_id"] == order["id"] and line["tenant_id"] == str(world.a.tenant.id)

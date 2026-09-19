@@ -41,7 +41,7 @@ locals {
   ]
 
   business_note = <<-EOT
-    Business ops (SPEC 12.4) from log-based metrics. `visits_created`, `orders_created`, `payments_captured`, `flag_raised` and the `ops_snapshot` gauges (officers on duty, open flags) are **expected** API log events: until the API emits them these charts stay empty. Field contract: docs/runbooks/observability.md. The console owner home (WC-001) remains the source of truth for tenant figures.
+    Business ops (SPEC 12.4) from log-based metrics. `visits_created`, `orders_created`, `payments_captured`, `flag_raised` and the `ops_snapshot` gauges (officers on duty, open flags) are API log events (emitted since M5 API: visits, orders, payments, flags on write; ops_snapshot every 15 min from officer-sync-silence). Field contract: docs/runbooks/observability.md. The console owner home (WC-001) remains the source of truth for tenant figures.
   EOT
 
   cost_note = <<-EOT

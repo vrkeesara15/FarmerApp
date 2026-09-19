@@ -28,6 +28,7 @@ class AuditLogOut(BaseModel):
     device_id: str | None
     user_agent: str | None
     trace_id: str | None
+    integrity: dict[str, Any] | None = None  # SEC-024 Play Integrity verdict
     created_at: datetime
 
     @classmethod

@@ -6,7 +6,12 @@ Three sources, all only ever recorded on duty (FA-010):
 * the duty start (``duty_session.device_integrity``),
 * every location point (``location_point.is_mock / is_rooted / clock_drift_s``; the drift is
   the server-computed ``sent_at - received_at`` of the batch),
-* the visit check-in (``visit.device_integrity``).
+* the visit check-in (``visit.device_integrity``),
+* SEC-024 Play Integrity: audit rows the officer's requests wrote that day whose
+  ``audit_log.integrity.status`` is ``failed`` (login, payment collection, credit sale,
+  day close; ``farmerapp.integrity``) -> reason ``play_integrity_failed``. ``absent`` /
+  ``unavailable`` verdicts are recorded on the audit rows but not flagged (background
+  syncs never have a token).
 
 Event mode on ``duty.started`` / ``location.batch`` (``ctx.subject_ids`` = duty sessions)
 and ``visit.created`` (= visits). The event only tells *which officer-days* to look at: the
@@ -26,6 +31,7 @@ from typing import Any
 
 from sqlalchemy import func, or_, select
 
+from farmerapp.db.models import AuditLog
 from farmerapp.location.models import DutySession, LocationPoint
 from farmerapp.rules.checks.common import geo_point, ist_day, ist_day_bounds
 from farmerapp.rules.registry import Evidence, Finding, RuleContext, record, rule
@@ -35,6 +41,7 @@ from farmerapp.visits.models import Visit
 MOCK = "mock_location"
 ROOTED = "rooted_device"
 DRIFT = "clock_drift"
+PLAY_INTEGRITY = "play_integrity_failed"
 
 
 @dataclass
@@ -43,7 +50,9 @@ class _Day:
     points: list[dict[str, Any]] = field(default_factory=list)
     reasons: set[str] = field(default_factory=set)
     max_drift_s: int = 0
-    counts: dict[str, int] = field(default_factory=lambda: {"duty": 0, "points": 0, "visits": 0})
+    counts: dict[str, int] = field(
+        default_factory=lambda: {"duty": 0, "points": 0, "visits": 0, "play_integrity": 0}
+    )
 
 
 def _issues(integrity: dict[str, Any] | None, max_drift: int) -> tuple[set[str], int]:
@@ -168,6 +177,22 @@ async def _collect(
             out.records.append(record("visit", visit_id))
             out.points.append(geo_point(lon, lat))
             out.counts["visits"] += 1
+    failed = await ctx.session.execute(
+        select(AuditLog.id)
+        .where(
+            AuditLog.tenant_id == ctx.tenant_id,
+            AuditLog.actor_id == officer,
+            AuditLog.created_at >= start,
+            AuditLog.created_at < end,
+            AuditLog.integrity["status"].astext == "failed",
+        )
+        .order_by(AuditLog.created_at, AuditLog.id)
+    )
+    for (audit_id,) in failed.tuples():
+        out.reasons.add(PLAY_INTEGRITY)
+        out.counts["play_integrity"] += 1
+        if out.counts["play_integrity"] <= max_points:
+            out.records.append(record("audit_log", audit_id))
     return out
 
 
@@ -201,6 +226,7 @@ async def check(ctx: RuleContext) -> list[Finding]:
                         "duty_sessions": found.counts["duty"],
                         "location_points": found.counts["points"],
                         "visits": found.counts["visits"],
+                        "play_integrity_failed": found.counts["play_integrity"],
                     },
                 ),
             )

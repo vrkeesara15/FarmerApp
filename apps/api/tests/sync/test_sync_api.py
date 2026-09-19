@@ -16,9 +16,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.db.session import tenant_scope
 from farmerapp.farmers.models import ConsentRecord, Farm, Farmer
+from farmerapp.pii.lookup import phone_match
 from farmerapp.sync import service as sync_service
 from farmerapp.sync.models import SyncChange, SyncOp
 from tests.farmers.write_fixtures import BASE_LAT, BASE_LON, WriteCtx, bowtie
+from tests.logcontract import assert_fields, capture, one_event
 from tests.sync.conftest import DEVICE, T_CLIENT, op, sync
 
 
@@ -122,7 +124,7 @@ async def test_replayed_op_id_is_duplicate_with_identical_result(
     assert again["results"][1]["status"] == "applied"
     async with tenant_scope(db_session, ctx.tenant_id):
         rows = (
-            await db_session.execute(select(Farmer).where(Farmer.phone == "+919000199001"))
+            await db_session.execute(select(Farmer).where(phone_match(Farmer, "+919000199001")))
         ).all()
         assert len(rows) == 1
     # A rejected result replays as duplicate too, still carrying the original error.
@@ -392,3 +394,43 @@ async def test_sync_change_rows_are_appended_by_every_write_path(
         and by_entity[("farmer", fid)].actor_id == ctx.officer.id
     )
     assert {e for e, _ in by_entity} >= {"farmer", "farm", "crop_plot", "consent_record"}
+
+
+# ------------------------------------------------------------------ NF-014 log contract
+async def test_sync_batch_log_contract(
+    client: AsyncClient, ctx: WriteCtx, caplog: pytest.LogCaptureFixture
+) -> None:
+    """One ``sync_batch`` line per ``POST /v1/sync`` with status and counts."""
+    capture(caplog)
+    payload = ctx.farmer(farms=[ctx.farm(plots=1)])
+    await sync(client, ctx, [op("farmer", "create", payload, entity_id=uuid.uuid4())])
+    line = one_event(caplog, "sync_batch")
+    assert_fields(
+        line,
+        tenant_id=str,
+        status=str,
+        ops=int,
+        applied=int,
+        rejected=int,
+        conflicts=int,
+        duplicates=int,
+        changes=int,
+        has_more=bool,
+    )
+    assert line["status"] == "ok" and line["ops"] == 1 and line["applied"] == 1
+    # The same phone again: rejected -> "failed" batch; an empty batch is a pull ("empty").
+    await sync(client, ctx, [op("farmer", "create", payload, entity_id=uuid.uuid4())])
+    assert one_event(caplog, "sync_batch")["status"] == "failed"
+    await sync(client, ctx, [])
+    assert one_event(caplog, "sync_batch")["status"] == "empty"
+
+
+def test_batch_status_partial() -> None:
+    from farmerapp.sync.schemas import SyncResult
+    from farmerapp.sync.service import batch_status
+
+    ok = SyncResult.model_validate(
+        {"op_id": str(uuid.uuid4()), "status": "applied", "entity_id": str(uuid.uuid4())}
+    )
+    bad = ok.model_copy(update={"status": "rejected"})
+    assert batch_status([ok, bad]) == "partial"
