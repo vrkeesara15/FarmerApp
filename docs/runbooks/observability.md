@@ -41,7 +41,7 @@ hold tokens (Slack, PagerDuty) and Firebase Crashlytics.
 | sync-success | 99% | `farmerapp_sync_success` / `farmerapp_sync_requests` |
 | payment-webhook-2min | 99.9% < 120 000 ms | `farmerapp_webhook_processing` |
 | otp-delivery-30s | 98% | `farmerapp_otp_delivered` / `farmerapp_otp_sent{channel="sms"}` |
-| diagnosis turnaround | p95 < 5 s | M6 (DX-*) |
+| diagnosis turnaround | p95 < 5 s | `diagnosis_answered.turnaround_ms` (M6; log metric + SLO still to add in infra) |
 
 ## Dashboards (SPEC 12.4)
 
@@ -75,6 +75,11 @@ Each event below has a test asserting its JSON fields (`apps/api/tests/logcontra
 | `sync_batch` | `tenant_id`, `status` (`ok` / `partial` / `failed` / `empty`), `ops`, `applied`, `rejected`, `conflicts`, `duplicates`, `changes` (ints), `has_more` | (dashboards; `farmerapp_sync_*` still count the access log) | `sync/router.py`, one per `POST /v1/sync` |
 | `store_day_alert` (WARNING) | `tenant_id`, `store_id`, `store_code`, `day`, `kind` (`store_zero_sales` / `store_day_not_closed`) | (log-based alert candidate, OPS-007) | `store-day-watch` job |
 | `integrity_signal` (WARNING) / `integrity_verdict` | `status` (`failed` / `absent` for the signal), `actions`, `reasons`, `device_id` | (VA-E01 reads the audit rows) | `integrity/deps.py` (login and sensitive actions) |
+| `diagnosis_requested` / `diagnosis_answered` | `tenant_id`, `diagnosis_id`; answered: `status`, `source`, `confidence`, `llm_used`, `out_of_scope_reason`, `top1`, `processing_ms`, `turnaround_ms` (int) | (diagnosis turnaround SLI, M6) | `diagnosis/service.py`, `diagnosis/pipeline.py` |
+| `llm_call` / `llm_refusal` (WARNING) | `provider`, `model`, `attempt`, `outcome`, `stop_reason`, `latency_ms`, `input_tokens`, `output_tokens` (never prompts or images; those are in `llm_call_log`) | (LLM cost / error dashboards) | `diagnosis/pipeline.py`, `diagnosis/llm.py` |
+| `diagnosis_queue_snapshot` / `diagnosis_queue_aged` (WARNING) | `tenant_id`, `queue`, `overdue`, `oldest_hours`; aged: `newly_overdue`, `notified` | OPS-009 business metric / log-based alert (review queue > 18 h) | `diagnosis-queue-age` job |
+| `diagnosis_llm_fallback_rate` / `diagnosis_llm_fallback_alert` (WARNING) | `tenant_id`, `day`, `answered`, `llm_fallbacks`, `rate` (float); alert: `threshold` | OPS-009 (LLM fallback > 40 % in a day) | `diagnosis-queue-age` job |
+| `data_request_received` | `tenant_id`, `data_request_id`, `type`, `role`, `notified` | (FM-015 / NF-013 ticket volume) | `privacy/router.py` |
 | any line with `level` = `error` / `critical` | `event` | `farmerapp_app_errors` | everywhere |
 
 Never log raw phone numbers, OTP codes, tokens or payment secrets (use `mask_phone`).

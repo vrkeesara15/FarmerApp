@@ -62,6 +62,9 @@ APPEND_ONLY_TABLES = frozenset(
         "order_status_event",
         "flag_event",  # VA-002 flag history (M4)
         "tenant_data_key",  # SEC-026 wrapped data keys: a rotation is a new version
+        "corpus_version",  # M6 DX-005: monotonic corpus versions
+        "diagnosis_review",  # M6 WC-006: agronomist review history
+        "llm_call_log",  # M6 SEC-027 / SPEC 3.4: LLM prompts + outputs, kept one year
     }
 )
 

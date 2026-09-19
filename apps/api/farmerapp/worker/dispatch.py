@@ -35,8 +35,10 @@ async def on_farmer_registered(message: PubSubMessage) -> None:
 
 
 async def on_diagnosis_requested(message: PubSubMessage) -> None:
-    """M6: diagnosis pipeline (SPEC 3)."""
-    await _todo(Topic.DIAGNOSIS_REQUESTED)
+    """M6: diagnosis pipeline (SPEC 3): encode -> kNN -> decision -> LLM -> treatments."""
+    from farmerapp.diagnosis.worker import handle_diagnosis_message
+
+    await handle_diagnosis_message(message)
 
 
 async def on_payment_webhook(message: PubSubMessage) -> None:

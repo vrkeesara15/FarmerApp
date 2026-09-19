@@ -161,6 +161,58 @@ class Settings(BaseSettings):
     )
     play_integrity_timeout_s: float = Field(default=2.0, description="decode call timeout.")
 
+    # --- Diagnosis engine (M6, SPEC 3) -------------------------------------------------
+    diagnosis_encoder: Literal["fake", "remote"] = Field(
+        default="fake",
+        description="DX-002 image encoder: 'remote' = the embed Cloud Run service "
+        "(DIAGNOSIS_EMBED_URL; required in prd), 'fake' = the deterministic pixel-DCT encoder "
+        "(tests, seed, CI evaluation, local dev).",
+    )
+    diagnosis_encoder_name: str = Field(
+        default="siglip-base-patch16-224",
+        description="DX-005 pinned encoder name for DIAGNOSIS_ENCODER=remote (stored on every "
+        "corpus image and diagnosis; the embed service must answer with the same).",
+    )
+    diagnosis_encoder_version: str = Field(
+        default="2024-01", description="DX-005 pinned encoder weights version (remote)."
+    )
+    diagnosis_embed_url: str = Field(
+        default="http://localhost:8095", description="Base URL of the embed service (ml/embed)."
+    )
+    diagnosis_embed_timeout_s: float = Field(default=20.0, description="embed call timeout.")
+    diagnosis_llm: Literal["claude", "fake", "off"] = Field(
+        default="claude",
+        description="DX-004 LLM fallback: 'claude' = Anthropic Messages API (ANTHROPIC_API_KEY "
+        "from Secret Manager; the client is built on first use), 'fake' = deterministic "
+        "in-process stand-in (tests, CI evaluation), 'off' = every fallback is 'unknown'.",
+    )
+    diagnosis_llm_model: str = Field(default="claude-opus-5", description="DX-004 model id.")
+    diagnosis_llm_max_tokens: int = Field(
+        default=16_000, description="max_tokens of a fallback call (retried once 2x larger)."
+    )
+    diagnosis_llm_effort: Literal["low", "medium", "high"] = Field(
+        default="medium", description="output_config.effort of the fallback call."
+    )
+    diagnosis_delivery: Literal["inline", "pubsub"] = Field(
+        default="inline",
+        description="'pubsub' publishes diagnosis.requested for the worker (stg / prd); "
+        "'inline' runs the pipeline in the request (local / dev without the emulator).",
+    )
+    diagnosis_knn_k: int = Field(default=20, ge=1, le=100, description="DX-002 neighbours.")
+    diagnosis_hnsw_ef_search: int = Field(
+        default=40,
+        ge=10,
+        le=1000,
+        description="SET LOCAL hnsw.ef_search for the kNN (pgvector's default, >= k=20; the "
+        "iterative scan tops up filtered-out rows). docs/perf/M6-knn.md has the trade-off.",
+    )
+    diagnosis_max_attempts: int = Field(
+        default=5,
+        ge=1,
+        description="Worker deliveries of one diagnosis before a failing LLM call becomes "
+        "'unknown' (provisional + agronomist queue) instead of another Pub/Sub retry.",
+    )
+
     # --- Providers (base URLs only; keys come from Secret Manager) -----------
     sms_provider_url: str = Field(default="http://localhost:8090/sms")
     whatsapp_provider_url: str = Field(default="http://localhost:8090/whatsapp")
@@ -275,6 +327,10 @@ class Settings(BaseSettings):
             problems.append("PII_HASH_PEPPER must be a strong secret (>= 32 chars) in prd")
         if self.blob_store != "gcs":
             problems.append("BLOB_STORE=gcs is required in prd (SEC-016 signed URLs)")
+        if self.diagnosis_encoder != "remote":
+            problems.append("DIAGNOSIS_ENCODER=remote is required in prd (DX-002)")
+        if self.diagnosis_llm == "fake":
+            problems.append("DIAGNOSIS_LLM=fake is not allowed in prd")
         if self.migration_database_url == self.database_url:
             problems.append("MIGRATION_DATABASE_URL must use a different role than DATABASE_URL")
         if problems:

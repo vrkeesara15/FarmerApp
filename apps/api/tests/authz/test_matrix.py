@@ -528,6 +528,54 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
     ),
     "GET /v1/analytics/farmers/{id}/360": RouteFixture(path_params=_target_farmer_id),
     "GET /v1/analytics/stores/{id}": RouteFixture(path_params=_store_id),
+    # M6 diagnosis engine (SPEC 3): outcomes in tests/diagnosis. An unknown photo is a 422
+    # for the requesting roles, an unknown id a 404 for every allowed role.
+    "POST /v1/diagnoses": RouteFixture(
+        body=lambda ctx: {
+            "farmer_id": str(ctx.target.farmer.id),
+            "crop_id": str(ctx.target.crop_id),
+            "images": [{"blob_uri": f"gs://local/{ctx.target.tenant.id}/diagnosis/{'0' * 64}"}],
+        }
+    ),
+    "GET /v1/diagnoses/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "POST /v1/diagnoses/{id}/review": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID},
+        body=lambda _ctx: {"action": "confirm", "note": "matrix"},
+    ),
+    "PUT /v1/diagnoses/thresholds": RouteFixture(
+        body=lambda _ctx: {"t1": 0.93, "agreement": 0.6, "min_similarity": 0.8}
+    ),
+    # WC-007 corpus manager: outcomes in tests/diagnosis/test_corpus.py.
+    "POST /v1/corpus/problems": RouteFixture(
+        body=lambda ctx: {
+            "pest_or_disease_id": str(ctx.target.pest_id),
+            "crop_id": str(ctx.target.crop_id),
+            "names": {"en": "Matrix problem"},
+        }
+    ),
+    "GET /v1/corpus/problems/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "PATCH /v1/corpus/problems/{id}": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"notes": "matrix"}
+    ),
+    "POST /v1/corpus/problems/{id}/transition": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"to": "reviewed"}
+    ),
+    "GET /v1/corpus/problems/{id}/images": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}
+    ),
+    "POST /v1/corpus/problems/{id}/images": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID},
+        body=lambda ctx: {"blob_uri": f"gs://local/{ctx.target.tenant.id}/corpus/{'0' * 64}"},
+    ),
+    "POST /v1/corpus/images/{id}/transition": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"to": "reviewed"}
+    ),
+    "POST /v1/corpus/approvals": RouteFixture(body=lambda _ctx: {"problem_ids": [NO_SUCH_ID]}),
+    # FM-015 / NF-013 data-principal requests: tests/privacy.
+    "POST /v1/me/deletion-request": RouteFixture(body=lambda _ctx: {"reason": "matrix"}),
+    "PATCH /v1/admin/data-requests/{id}": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"status": "in_progress"}
+    ),
     "POST /v1/policies/location/accept": RouteFixture(
         body=lambda _ctx: {
             "version": "2026-09-v1",
