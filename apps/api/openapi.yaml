@@ -92,7 +92,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '401':
-          description: '`otp_invalid`, `otp_expired`'
+          description: '`otp_invalid`, `otp_expired`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '404':
@@ -101,6 +101,14 @@ paths:
             application/problem+json: {}
         '403':
           description: '`user_disabled`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`device_not_bound`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`device_id_required`'
           content:
             application/problem+json: {}
         '423':
@@ -134,7 +142,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '401':
-          description: '`refresh_invalid`, `refresh_expired`, `refresh_reused`, `refresh_device_mismatch`'
+          description: '`refresh_invalid`, `refresh_expired`, `refresh_reused`, `refresh_device_mismatch`,
+            `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -164,6 +173,105 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       x-public: true
+  /v1/auth/step-up/send:
+    post:
+      tags:
+      - auth
+      summary: 'SEC-028: send a re-authentication code to the caller''s own phone'
+      operationId: sendStepUpOtp
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpSendResponse'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '423':
+          description: '`otp_locked`'
+          content:
+            application/problem+json: {}
+        '429':
+          description: '`otp_rate_limited`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/auth/step-up:
+    post:
+      tags:
+      - auth
+      summary: 'SEC-028: verify the code; returns a 5-minute step-up token for admin actions'
+      operationId: verifyStepUp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StepUpVerifyRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StepUpTokenResponse'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`otp_invalid`, `otp_expired`, `unauthenticated`, `token_expired`, `user_disabled`,
+            `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`otp_not_found`'
+          content:
+            application/problem+json: {}
+        '423':
+          description: '`otp_locked`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
   /v1/me:
     get:
       tags:
@@ -184,7 +292,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -248,7 +356,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -258,6 +366,52 @@ paths:
       x-roles:
       - auditor
       - cluster_head
+      - director
+      - owner
+      - tenant_admin
+    post:
+      tags:
+      - users
+      summary: Create a staff account (WC-011; step-up required)
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`role_not_grantable`, `forbidden`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`phone_taken`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_assignment`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
       - director
       - owner
       - tenant_admin
@@ -293,7 +447,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -310,7 +464,7 @@ paths:
     patch:
       tags:
       - users
-      summary: Change name, role, status, store or cluster of a user
+      summary: Change name, role, status, store or cluster (role / status need step-up)
       operationId: updateUser
       parameters:
       - name: id
@@ -344,7 +498,141 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`role_not_grantable`, `cannot_modify_self`, `forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/users/{id}/deactivate:
+    post:
+      tags:
+      - users
+      summary: 'Disable an account: signed out everywhere, apps wipe local data (step-up)'
+      operationId: deactivateUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`role_not_grantable`, `cannot_modify_self`, `forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/users/{id}/force-logout:
+    post:
+      tags:
+      - users
+      summary: Sign a user out of every device within the revocation window (step-up)
+      operationId: forceLogoutUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForceLogoutOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`role_not_grantable`, `forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/users/{id}/devices:
+    get:
+      tags:
+      - users
+      summary: Devices a user has signed in from (pending ones await binding)
+      operationId: listUserDevices
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -352,8 +640,154 @@ paths:
           content:
             application/problem+json: {}
       x-roles:
+      - auditor
+      - cluster_head
       - director
       - owner
+      - tenant_admin
+  /v1/users/{id}/devices/{device_id}/bind:
+    post:
+      tags:
+      - users
+      summary: 'Bind a device (field officers: unbinds and signs out the previous one; step-up)'
+      operationId: bindUserDevice
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 128
+          title: Device Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`role_not_grantable`, `forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/users/{id}/devices/{device_id}/report-lost:
+    post:
+      tags:
+      - users
+      summary: 'Mark a device lost: its sessions end and its app wipes local data (step-up)'
+      operationId: reportUserDeviceLost
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: device_id
+        in: path
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 128
+          title: Device Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`role_not_grantable`, `forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/devices/me/status:
+    get:
+      tags:
+      - users
+      summary: 'SEC-025: this device''s status; the apps poll it on start and wipe when told'
+      operationId: getMyDeviceStatus
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceStatusOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
       - tenant_admin
   /v1/farmers:
     get:
@@ -421,7 +855,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -475,7 +909,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -521,7 +955,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -559,7 +993,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '401':
-          description: '`otp_invalid`, `otp_expired`, `unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`otp_invalid`, `otp_expired`, `unauthenticated`, `token_expired`, `user_disabled`,
+            `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '404':
@@ -619,7 +1054,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -670,7 +1105,8 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`otp_invalid`, `otp_expired`, `unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`otp_invalid`, `otp_expired`, `unauthenticated`, `token_expired`, `user_disabled`,
+            `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '423':
@@ -719,7 +1155,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -777,7 +1213,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -837,7 +1273,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -892,7 +1328,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -951,7 +1387,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -991,7 +1427,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1046,7 +1482,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1101,7 +1537,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1141,7 +1577,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1250,7 +1686,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1304,7 +1740,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1347,7 +1783,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1400,7 +1836,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1457,7 +1893,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1522,7 +1958,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1579,7 +2015,8 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`otp_invalid`, `otp_expired`, `unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`otp_invalid`, `otp_expired`, `unauthenticated`, `token_expired`, `user_disabled`,
+            `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '423':
@@ -1640,7 +2077,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1695,7 +2132,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1748,7 +2185,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1802,7 +2239,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1893,7 +2330,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1948,7 +2385,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -1996,7 +2433,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2040,7 +2477,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2070,7 +2507,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2100,7 +2537,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2144,7 +2581,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2173,7 +2610,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2221,7 +2658,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2273,7 +2710,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2315,7 +2752,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2364,7 +2801,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2438,7 +2875,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2502,7 +2939,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2549,7 +2986,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2573,6 +3010,149 @@ paths:
       - audit
       summary: Audit trail of the caller's tenant, newest first
       operationId: listAuditLogs
+      parameters:
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      - name: entity
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          description: Table name.
+          title: Entity
+        description: Table name.
+      - name: entity_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Entity Id
+      - name: actor_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Actor Id
+      - name: actor_role
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 32
+          - type: 'null'
+          description: e.g. `owner`.
+          title: Actor Role
+        description: e.g. `owner`.
+      - name: action
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          description: '`user.update`, or a prefix ending in `.` (`user.`).'
+          title: Action
+        description: '`user.update`, or a prefix ending in `.` (`user.`).'
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: Rows at or after this instant.
+          title: From
+        description: Rows at or after this instant.
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          description: Rows at or before this instant.
+          title: To
+        description: Rows at or before this instant.
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 36
+            pattern: ^[0-9A-Fa-f-]+$
+          - type: 'null'
+          description: 'Free text: an entity id or its first characters.'
+          title: Q
+        description: 'Free text: an entity id or its first characters.'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOut_AuditLogOut_'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - director
+      - owner
+      - tenant_admin
+  /v1/audit-logs/export:
+    get:
+      tags:
+      - audit
+      summary: CSV of the filtered audit trail (step-up required; audited)
+      operationId: exportAuditLogs
       parameters:
       - name: entity
         in: query
@@ -2603,6 +3183,17 @@ paths:
             format: uuid
           - type: 'null'
           title: Actor Id
+      - name: actor_role
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 32
+          - type: 'null'
+          description: e.g. `owner`.
+          title: Actor Role
+        description: e.g. `owner`.
       - name: action
         in: query
         required: false
@@ -2611,9 +3202,9 @@ paths:
           - type: string
             maxLength: 64
           - type: 'null'
-          description: e.g. `user.update`.
+          description: '`user.update`, or a prefix ending in `.` (`user.`).'
           title: Action
-        description: e.g. `user.update`.
+        description: '`user.update`, or a prefix ending in `.` (`user.`).'
       - name: from
         in: query
         required: false
@@ -2636,46 +3227,65 @@ paths:
           description: Rows at or before this instant.
           title: To
         description: Rows at or before this instant.
-      - name: cursor
+      - name: q
         in: query
         required: false
         schema:
           anyOf:
           - type: string
+            maxLength: 36
+            pattern: ^[0-9A-Fa-f-]+$
           - type: 'null'
-          description: Opaque cursor from `next_cursor`.
-          title: Cursor
-        description: Opaque cursor from `next_cursor`.
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 200
-          minimum: 1
-          description: Page size.
-          default: 50
-          title: Limit
-        description: Page size.
+          description: 'Free text: an entity id or its first characters.'
+          title: Q
+        description: 'Free text: an entity id or its first characters.'
       responses:
         '200':
-          description: Successful Response
+          description: CSV file.
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PageOut_AuditLogOut_'
+            text/csv: {}
         default:
           description: Error (RFC 9457 problem+json)
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-        '400':
-          description: '`invalid_cursor`'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
           content:
             application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - auditor
+      - director
+      - owner
+      - tenant_admin
+  /v1/settings:
+    get:
+      tags:
+      - settings
+      summary: Every tenant setting with its effective value (C102)
+      operationId: getSettings
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantSettings'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2683,9 +3293,87 @@ paths:
           content:
             application/problem+json: {}
       x-roles:
-      - auditor
       - director
       - owner
+      - tenant_admin
+    patch:
+      tags:
+      - settings
+      summary: Change tenant settings (step-up required; audited with before / after)
+      operationId: updateSettings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingsPatch'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantSettings'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_settings`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - owner
+      - tenant_admin
+  /v1/settings/public:
+    get:
+      tags:
+      - settings
+      summary: 'The settings the apps cache: geofence, visit time, duty, sampling, branding'
+      operationId: getPublicSettings
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicSettings'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
       - tenant_admin
   /v1/catalog/products:
     get:
@@ -2782,7 +3470,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2833,7 +3521,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2885,7 +3573,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -2944,7 +3632,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3040,7 +3728,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3095,7 +3783,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3126,7 +3814,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3174,7 +3862,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3212,7 +3900,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3269,7 +3957,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3314,7 +4002,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3367,7 +4055,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3428,7 +4116,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3479,7 +4167,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3524,7 +4212,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3567,7 +4255,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3619,7 +4307,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3691,7 +4379,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3743,7 +4431,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3784,7 +4472,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3825,7 +4513,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3861,7 +4549,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -3960,7 +4648,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -4021,7 +4709,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -4073,7 +4761,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
       x-roles:
@@ -4125,7 +4813,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
       x-roles:
@@ -4179,7 +4867,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -4237,7 +4925,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -4344,7 +5032,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -4402,7 +5090,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -4446,7 +5134,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -4505,7 +5193,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -4588,7 +5276,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -4655,7 +5343,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -4778,7 +5466,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -4845,7 +5533,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
       x-roles:
@@ -4887,7 +5575,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -4972,7 +5660,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5031,7 +5719,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5086,7 +5774,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
       x-roles:
@@ -5166,7 +5854,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5225,7 +5913,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5280,7 +5968,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5378,7 +6066,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5430,7 +6118,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5472,7 +6160,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5521,7 +6209,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5584,7 +6272,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5637,7 +6325,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5698,7 +6386,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5759,7 +6447,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5874,7 +6562,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5921,7 +6609,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -5978,7 +6666,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -6034,7 +6722,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -6095,7 +6783,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -6204,7 +6892,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -6313,7 +7001,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -6430,7 +7118,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -6556,7 +7244,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -6754,7 +7442,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -6871,7 +7559,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -6981,7 +7669,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -7098,7 +7786,7 @@ paths:
           content:
             application/problem+json: {}
         '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
             application/problem+json: {}
         '403':
@@ -7454,6 +8142,77 @@ components:
       - own_brand_margin_paise
       - multi_brand_margin_paise
       title: BrandSplitOut
+    Branding:
+      properties:
+        app_name_agent:
+          anyOf:
+          - type: string
+            maxLength: 40
+            minLength: 1
+          - type: 'null'
+          title: App Name Agent
+        app_name_farmer:
+          anyOf:
+          - type: string
+            maxLength: 40
+            minLength: 1
+          - type: 'null'
+          title: App Name Farmer
+        primary_colour:
+          type: string
+          pattern: ^#[0-9A-Fa-f]{6}$
+          title: Primary Colour
+          default: '#1F6B3A'
+        logo_blob_uri:
+          anyOf:
+          - type: string
+            maxLength: 512
+            minLength: 1
+          - type: 'null'
+          title: Logo Blob Uri
+        support_phone:
+          anyOf:
+          - type: string
+            pattern: ^\+?[0-9]{8,15}$
+          - type: 'null'
+          title: Support Phone
+      type: object
+      title: Branding
+      description: '``tenant.branding`` (C102): overrides of the app names (null: the i18n default,
+
+        "Mitra" / "Kisan"), the primary colour, the logo (a blob URI from ``/v1/uploads``) and
+
+        the support phone shown in both apps.'
+    BrandingPatch:
+      properties:
+        app_name_agent:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: App Name Agent
+        app_name_farmer:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: App Name Farmer
+        primary_colour:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Primary Colour
+        logo_blob_uri:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Logo Blob Uri
+        support_phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Support Phone
+      additionalProperties: false
+      type: object
+      title: BrandingPatch
     CatalogKind:
       type: string
       enum:
@@ -8505,6 +9264,121 @@ components:
       - is_rooted
       - clock_drift_s
       title: DeviceIntegrityOut
+    DeviceList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/DeviceOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: DeviceList
+    DeviceOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        device_id:
+          type: string
+          title: Device Id
+        platform:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Platform
+        model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model
+        app_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: App Version
+        first_seen:
+          type: string
+          format: date-time
+          title: First Seen
+        last_seen:
+          type: string
+          format: date-time
+          title: Last Seen
+        status:
+          type: string
+          enum:
+          - pending
+          - active
+          - revoked
+          - lost
+          title: Status
+        bound_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Bound At
+        revoked_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Revoked At
+      type: object
+      required:
+      - id
+      - user_id
+      - device_id
+      - platform
+      - model
+      - app_version
+      - first_seen
+      - last_seen
+      - status
+      - bound_at
+      - revoked_at
+      title: DeviceOut
+    DeviceStatusOut:
+      properties:
+        device_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Device Id
+        status:
+          type: string
+          enum:
+          - pending
+          - active
+          - revoked
+          - lost
+          - unknown
+          title: Status
+        wipe_required:
+          type: boolean
+          title: Wipe Required
+          description: Wipe local data now and return to login.
+        user_status:
+          type: string
+          enum:
+          - active
+          - disabled
+          title: User Status
+      type: object
+      required:
+      - device_id
+      - status
+      - wipe_required
+      - user_status
+      title: DeviceStatusOut
+      description: '``GET /v1/devices/me/status`` (SEC-025): polled by the apps on start.'
     DoseUnit:
       type: string
       enum:
@@ -10326,6 +11200,26 @@ components:
       - escalated
       - resolved_action
       title: FlagStatus
+    ForceLogoutOut:
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        revoked_sessions:
+          type: integer
+          title: Revoked Sessions
+          description: Refresh token families signed out.
+        tokens_valid_after:
+          type: string
+          format: date-time
+          title: Tokens Valid After
+      type: object
+      required:
+      - user_id
+      - revoked_sessions
+      - tokens_valid_after
+      title: ForceLogoutOut
     Fulfilment:
       type: string
       enum:
@@ -12622,6 +13516,25 @@ components:
             maxLength: 200
           - type: 'null'
           title: Device Name
+        platform:
+          anyOf:
+          - type: string
+            maxLength: 32
+          - type: 'null'
+          title: Platform
+          description: WC-011 device list, e.g. `android`.
+        model:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Model
+        app_version:
+          anyOf:
+          - type: string
+            maxLength: 32
+          - type: 'null'
+          title: App Version
       type: object
       required:
       - phone
@@ -14363,6 +15276,66 @@ components:
       - points
       - max_points
       title: ProofItemOut
+    PublicSettings:
+      properties:
+        geofence_radius_m:
+          type: integer
+          title: Geofence Radius M
+        meeting_point_radius_m:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Meeting Point Radius M
+        min_visit_duration_s:
+          type: integer
+          title: Min Visit Duration S
+        auto_duty_end_local_time:
+          type: string
+          title: Auto Duty End Local Time
+        idle_end_minutes:
+          type: integer
+          title: Idle End Minutes
+        location_policy_version:
+          type: string
+          title: Location Policy Version
+        sampling:
+          $ref: '#/components/schemas/SamplingSettings'
+        languages_enabled:
+          items:
+            type: string
+            enum:
+            - en
+            - te
+            - kn
+            - hi
+            - mr
+          type: array
+          title: Languages Enabled
+        default_language:
+          type: string
+          enum:
+          - en
+          - te
+          - kn
+          - hi
+          - mr
+          title: Default Language
+        branding:
+          $ref: '#/components/schemas/Branding'
+      type: object
+      required:
+      - geofence_radius_m
+      - meeting_point_radius_m
+      - min_visit_duration_s
+      - auto_duty_end_local_time
+      - idle_end_minutes
+      - location_policy_version
+      - sampling
+      - languages_enabled
+      - default_language
+      - branding
+      title: PublicSettings
+      description: What the field and farmer apps read (no finance, credit or invoicing keys).
     ReceiptIn:
       properties:
         reference:
@@ -14534,6 +15507,12 @@ components:
             minLength: 1
           - type: 'null'
           title: Device Id
+        app_version:
+          anyOf:
+          - type: string
+            maxLength: 32
+          - type: 'null'
+          title: App Version
       type: object
       required:
       - refresh_token
@@ -14672,6 +15651,48 @@ components:
       - confirmed_at
       - photos
       title: ReplayVisitOut
+    SamplingPatch:
+      properties:
+        moving_s:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Moving S
+        stationary_s:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Stationary S
+        upload_s:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Upload S
+      additionalProperties: false
+      type: object
+      title: SamplingPatch
+    SamplingSettings:
+      properties:
+        moving_s:
+          type: integer
+          maximum: 3600.0
+          minimum: 30.0
+          title: Moving S
+          default: 120
+        stationary_s:
+          type: integer
+          maximum: 7200.0
+          minimum: 60.0
+          title: Stationary S
+          default: 600
+        upload_s:
+          type: integer
+          maximum: 86400.0
+          minimum: 60.0
+          title: Upload S
+          default: 900
+      type: object
+      title: SamplingSettings
     ScorecardRow:
       properties:
         officer_id:
@@ -14812,6 +15833,129 @@ components:
       - end
       - value
       title: SeriesPoint
+    SettingsPatch:
+      properties:
+        consent_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Consent Version
+        geofence_radius_m:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Geofence Radius M
+          description: 10-2000 m.
+        meeting_point_radius_m:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Meeting Point Radius M
+          description: 10-2000 m or null.
+        min_visit_duration_s:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Min Visit Duration S
+          description: 0-86400 s.
+        auto_duty_end_local_time:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Auto Duty End Local Time
+          description: HH:MM (IST).
+        idle_end_minutes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Idle End Minutes
+          description: 5-720 min.
+        location_policy_version:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Location Policy Version
+        sampling:
+          anyOf:
+          - $ref: '#/components/schemas/SamplingPatch'
+          - type: 'null'
+        ta_rate_per_km_paise:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Ta Rate Per Km Paise
+          description: 0-10000 paise.
+        store_manager_max_credit_limit_paise:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Store Manager Max Credit Limit Paise
+        credit_due_days:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Credit Due Days
+          description: 1-730 days.
+        day_close_variance_threshold_paise:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Day Close Variance Threshold Paise
+        webhook_replay_window_s:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Webhook Replay Window S
+          description: 30-86400 s.
+        legal_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Legal Name
+        gstin_by_state:
+          anyOf:
+          - additionalProperties:
+              type: string
+            type: object
+          - type: 'null'
+          title: Gstin By State
+        invoice_prefix:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Invoice Prefix
+        languages_enabled:
+          anyOf:
+          - items:
+              type: string
+              enum:
+              - en
+              - te
+              - kn
+              - hi
+              - mr
+            type: array
+          - type: 'null'
+          title: Languages Enabled
+        default_language:
+          anyOf:
+          - type: string
+            enum:
+            - en
+            - te
+            - kn
+            - hi
+            - mr
+          - type: 'null'
+          title: Default Language
+        branding:
+          anyOf:
+          - $ref: '#/components/schemas/BrandingPatch'
+          - type: 'null'
+      additionalProperties: false
+      type: object
+      title: SettingsPatch
+      description: Partial update; ranges are those of ``TenantSettings`` (see ``GET /v1/settings``).
     Severity:
       type: string
       enum:
@@ -15080,6 +16224,31 @@ components:
       - alluvial
       - laterite
       title: SoilType
+    StepUpTokenResponse:
+      properties:
+        step_up_token:
+          type: string
+          title: Step Up Token
+          description: Send as `X-Step-Up-Token` with the admin action.
+        expires_in:
+          type: integer
+          title: Expires In
+          description: Seconds the step-up token stays valid.
+      type: object
+      required:
+      - step_up_token
+      - expires_in
+      title: StepUpTokenResponse
+    StepUpVerifyRequest:
+      properties:
+        code:
+          type: string
+          pattern: ^\d{6}$
+          title: Code
+      type: object
+      required:
+      - code
+      title: StepUpVerifyRequest
     StockBatchOut:
       properties:
         id:
@@ -15905,6 +17074,128 @@ components:
       - status
       - entity_id
       title: SyncResult
+    TenantSettings:
+      properties:
+        consent_version:
+          type: string
+          maxLength: 32
+          minLength: 1
+          title: Consent Version
+          default: 2026-09-v1
+        geofence_radius_m:
+          type: integer
+          maximum: 2000.0
+          minimum: 10.0
+          title: Geofence Radius M
+          default: 150
+        meeting_point_radius_m:
+          anyOf:
+          - type: integer
+            maximum: 2000.0
+            minimum: 10.0
+          - type: 'null'
+          title: Meeting Point Radius M
+        min_visit_duration_s:
+          type: integer
+          maximum: 86400.0
+          minimum: 0.0
+          title: Min Visit Duration S
+          default: 300
+        auto_duty_end_local_time:
+          type: string
+          pattern: ^([01]\d|2[0-3]):[0-5]\d$
+          title: Auto Duty End Local Time
+          default: '20:00'
+        idle_end_minutes:
+          type: integer
+          maximum: 720.0
+          minimum: 5.0
+          title: Idle End Minutes
+          default: 60
+        location_policy_version:
+          type: string
+          maxLength: 32
+          minLength: 1
+          title: Location Policy Version
+          default: 2026-09-v1
+        sampling:
+          $ref: '#/components/schemas/SamplingSettings'
+        ta_rate_per_km_paise:
+          type: integer
+          maximum: 10000.0
+          minimum: 0.0
+          title: Ta Rate Per Km Paise
+          default: 300
+        store_manager_max_credit_limit_paise:
+          type: integer
+          maximum: 10000000000.0
+          minimum: 0.0
+          title: Store Manager Max Credit Limit Paise
+          default: 5000000
+        credit_due_days:
+          type: integer
+          maximum: 730.0
+          minimum: 1.0
+          title: Credit Due Days
+          default: 90
+        day_close_variance_threshold_paise:
+          type: integer
+          maximum: 10000000.0
+          minimum: 0.0
+          title: Day Close Variance Threshold Paise
+          default: 50000
+        webhook_replay_window_s:
+          type: integer
+          maximum: 86400.0
+          minimum: 30.0
+          title: Webhook Replay Window S
+          default: 300
+        legal_name:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Legal Name
+        gstin_by_state:
+          additionalProperties:
+            type: string
+            pattern: ^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$
+          type: object
+          title: Gstin By State
+        invoice_prefix:
+          anyOf:
+          - type: string
+            maxLength: 8
+            pattern: ^[A-Z0-9]+$
+          - type: 'null'
+          title: Invoice Prefix
+        languages_enabled:
+          items:
+            type: string
+            enum:
+            - en
+            - te
+            - kn
+            - hi
+            - mr
+          type: array
+          minItems: 1
+          title: Languages Enabled
+        default_language:
+          type: string
+          enum:
+          - en
+          - te
+          - kn
+          - hi
+          - mr
+          title: Default Language
+          default: en
+        branding:
+          $ref: '#/components/schemas/Branding'
+      type: object
+      title: TenantSettings
     TimelineEvent:
       properties:
         ts:
@@ -16212,6 +17503,50 @@ components:
       - received_chunks
       - expires_at
       title: UploadStatusOut
+    UserCreate:
+      properties:
+        phone:
+          type: string
+          title: Phone
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+        role:
+          $ref: '#/components/schemas/UserRole'
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+        language:
+          anyOf:
+          - type: string
+            enum:
+            - en
+            - te
+            - kn
+            - hi
+            - mr
+          - type: 'null'
+          title: Language
+          description: Defaults to the tenant's `default_language`.
+      additionalProperties: false
+      type: object
+      required:
+      - phone
+      - name
+      - role
+      title: UserCreate
+      description: A staff account (farmers sign up through ``/v1/farmers``).
     UserOut:
       properties:
         id:
@@ -16319,7 +17654,12 @@ components:
       additionalProperties: false
       type: object
       title: UserUpdate
-      description: 'PATCH body: only the fields present are changed; ``null`` clears store/cluster.'
+      description: 'PATCH body: only the fields present are changed; ``null`` clears store/cluster.
+
+
+        Changing ``role`` or ``status`` needs a step-up token (SEC-028); ``status=disabled``
+
+        signs the user out everywhere and makes their apps wipe local data (SEC-025).'
     VisitCapture:
       properties:
         notes:

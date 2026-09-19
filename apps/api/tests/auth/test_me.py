@@ -91,9 +91,10 @@ async def test_me_for_disabled_user(
     await db_session.flush()
     resp = await client.get("/v1/me", headers=_bearer(session_tokens["access_token"]))
     # A disabled account is no longer a valid session: 401 so clients drop tokens and re-login
-    # (login itself answers 403 `user_disabled`).
+    # (login itself answers 403 `user_disabled`). The token is bound to the app's device, so
+    # SEC-025 tells that app to wipe its local data (console tokens get `user_disabled`).
     assert resp.status_code == 401
-    assert resp.json()["code"] == "user_disabled"
+    assert resp.json()["code"] == "device_wipe_required"
     assert resp.headers["www-authenticate"] == "Bearer"
 
 

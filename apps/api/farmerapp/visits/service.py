@@ -50,11 +50,10 @@ from farmerapp.auth.providers import mask_phone
 from farmerapp.auth.scope import visit_filters
 from farmerapp.db import audit
 from farmerapp.db.geo import haversine_m, point_wkt
-from farmerapp.db.models.tenant import Tenant
 from farmerapp.farmers.models import Farmer
 from farmerapp.logging import get_logger
 from farmerapp.settings import Settings
-from farmerapp.tenants.settings import TenantSettings, tenant_settings
+from farmerapp.tenants.settings import TenantSettings, get_tenant_settings
 from farmerapp.uploads.blobstore import BlobNotFoundError, BlobStore, parse_uri
 from farmerapp.visits import geofence
 from farmerapp.visits.errors import (
@@ -178,8 +177,7 @@ async def own_visit(session: AsyncSession, actor: User, visit_id: uuid.UUID) -> 
 
 
 async def settings_of(session: AsyncSession, tenant_id: uuid.UUID) -> TenantSettings:
-    tenant = await session.get(Tenant, tenant_id)
-    return tenant_settings(tenant.settings if tenant is not None else None)
+    return await get_tenant_settings(session, tenant_id)
 
 
 async def _farmer(session: AsyncSession, tenant_id: uuid.UUID, farmer_id: uuid.UUID) -> Farmer:
@@ -315,6 +313,7 @@ async def check_in(
         farm=farm,
         village=village,
         default_radius_m=settings.geofence_radius_m,
+        meeting_point_radius_m=settings.meeting_point_default_radius_m,
     )
     result = check.result
     if not check.allowed:

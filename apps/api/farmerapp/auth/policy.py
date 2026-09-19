@@ -36,7 +36,13 @@ _POLICY_ATTR = "__farmerapp_policy__"
 _OPENAPI_HOOK_ATTR = "__farmerapp_policy_openapi__"
 
 # Problem codes every protected route can answer with, documented once here.
-_AUTHN_CODES = ("unauthenticated", "token_expired", "user_disabled")
+_AUTHN_CODES = (
+    "unauthenticated",
+    "token_expired",
+    "user_disabled",
+    "session_revoked",
+    "device_wipe_required",
+)
 _AUTHZ_CODES = ("forbidden",)
 
 #: ``(METHOD, full path)`` -> policy, e.g. ``("GET", "/v1/users/{id}")``.

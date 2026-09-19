@@ -22,6 +22,7 @@ USER_COLUMNS = BASE_COLUMNS | {
     "status",
     "device_id",
     "home_point",  # 0008 (VV-007 idle at home)
+    "tokens_valid_after",  # 0020 (WC-011 forced logout)
 }
 OTP_COLUMNS = BASE_COLUMNS | {
     "phone",
@@ -50,6 +51,7 @@ REFRESH_COLUMNS = BASE_COLUMNS | {
     "expires_at",
     "revoked_at",
     "replaced_by",
+    "revoked_reason",  # 0020 (WC-011 admin revocation vs reuse)
 }
 
 

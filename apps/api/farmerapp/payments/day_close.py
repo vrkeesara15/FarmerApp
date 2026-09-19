@@ -33,10 +33,9 @@ from farmerapp.auth.deps import DbSession, Services
 from farmerapp.auth.models import User, UserRole, UserStatus
 from farmerapp.auth.policy import Role, require_roles
 from farmerapp.auth.scope import visible_store_filters
-from farmerapp.db.models.tenant import Tenant
 from farmerapp.logging import get_logger
 from farmerapp.notifications.models import Notification
-from farmerapp.payments.config import IST, payment_settings
+from farmerapp.payments.config import IST
 from farmerapp.payments.events import CashVarianceDetected, bus
 from farmerapp.payments.models import (
     RECEIVED_STATUSES,
@@ -56,6 +55,7 @@ from farmerapp.payments.schemas import (
 )
 from farmerapp.payments.service import validate_blob
 from farmerapp.tenants.models import Store
+from farmerapp.tenants.settings import get_tenant_settings
 from farmerapp.uploads.blobstore import BlobStore
 from farmerapp.uploads.router import get_blob_store
 
@@ -261,7 +261,7 @@ async def close_day(
 
     expected = await expected_cash(session, store.id, body.business_date)
     variance = body.cash_counted_paise - expected
-    settings = payment_settings((await session.get_one(Tenant, actor.tenant_id)).settings)
+    settings = await get_tenant_settings(session, actor.tenant_id)
     threshold = settings.day_close_variance_threshold_paise
     flagged = abs(variance) > threshold
     close = existing or DayClose(tenant_id=actor.tenant_id, store_id=store.id)

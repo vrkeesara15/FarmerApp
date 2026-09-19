@@ -48,7 +48,6 @@ from farmerapp.db import audit
 from farmerapp.db.models.tenant import Tenant
 from farmerapp.db.session import set_tenant
 from farmerapp.logging import get_logger
-from farmerapp.payments.config import payment_settings
 from farmerapp.payments.models import (
     SETTLED_STATUSES,
     Payment,
@@ -74,6 +73,7 @@ from farmerapp.payments.service import (
     settle_dues,
     utcnow,
 )
+from farmerapp.tenants.settings import settings_from_tenant
 from farmerapp.worker.topics import Topic
 
 log = get_logger("farmerapp.payments.webhooks")
@@ -304,7 +304,7 @@ async def receive_webhook(
         log.info("webhook_duplicate", provider=provider_name, event_id=event_id)
         return Received("duplicate", event_id, existing)
 
-    window = payment_settings(tenant.settings).webhook_replay_window_s
+    window = settings_from_tenant(tenant).webhook_replay_window_s
     age = abs((now - event.created_at).total_seconds())
     if age > window:
         log.warning("webhook_stale", event_id=event_id, age_s=int(age), window_s=window)

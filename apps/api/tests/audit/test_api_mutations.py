@@ -81,31 +81,35 @@ async def test_patch_with_no_effective_change_writes_no_row(
 
 
 async def test_device_falls_back_to_the_users_bound_device(
-    client: AsyncClient, world: World, bearer: Bearer, db_session: AsyncSession
+    client: AsyncClient, world: World, bearer: Bearer, step_up: Bearer, db_session: AsyncSession
 ) -> None:
     """Without an ``X-Device-Id`` header the device bound at login is recorded."""
     owner, target = world.a.owner, world.a.user(UserRole.STORE_MANAGER)
     owner.device_id = "owner-phone-1"
     await db_session.flush()
     resp = await client.patch(
-        f"/v1/users/{target.id}", json={"status": "disabled"}, headers=bearer(owner)
+        f"/v1/users/{target.id}",
+        json={"status": "disabled"},
+        headers=bearer(owner) | step_up(owner),
     )
     assert resp.status_code == 200, resp.text
     row = await one_audit_row(db_session, action="user.update", entity_id=target.id)
     assert row.device_id == "owner-phone-1"
-    assert row.before == {"id": str(target.id), "status": "active"}
-    assert row.after == {"id": str(target.id), "status": "disabled"}
+    # WC-011: disabling also moves the revocation instant (tokens issued before it die).
+    assert row.before == {"id": str(target.id), "status": "active", "tokens_valid_after": None}
+    assert row.after is not None and row.after["status"] == "disabled"
+    assert row.after["tokens_valid_after"] is not None
     assert row.ip == "127.0.0.1"  # httpx ASGI transport's client address
     assert row.trace_id  # the middleware always assigns one
 
 
 async def test_role_change_records_old_and_new_role(
-    client: AsyncClient, world: World, bearer: Bearer, db_session: AsyncSession
+    client: AsyncClient, world: World, bearer: Bearer, step_up: Bearer, db_session: AsyncSession
 ) -> None:
-    """SEC-028: admin actions (role change) are audited with the actor."""
+    """SEC-028: admin actions (role change) need a step-up and are audited with the actor."""
     admin, target = world.a.user(UserRole.TENANT_ADMIN), world.a.user(UserRole.ACCOUNTANT)
     resp = await client.patch(
-        f"/v1/users/{target.id}", json={"role": "auditor"}, headers=bearer(admin)
+        f"/v1/users/{target.id}", json={"role": "auditor"}, headers=bearer(admin) | step_up(admin)
     )
     assert resp.status_code == 200, resp.text
     row = await one_audit_row(db_session, action="user.update", entity_id=target.id)

@@ -47,11 +47,19 @@ class OtpSendResponse(BaseModel):
     resends_left: int
 
 
+Platform = Annotated[str | None, Field(default=None, max_length=32)]
+DeviceModel = Annotated[str | None, Field(default=None, max_length=200)]
+AppVersion = Annotated[str | None, Field(default=None, max_length=32)]
+
+
 class OtpVerifyRequest(BaseModel):
     phone: Phone
     code: str = Field(pattern=r"^\d{6}$")
     device_id: DeviceId = None
     device_name: str | None = Field(default=None, max_length=200)
+    platform: Platform = Field(default=None, description="WC-011 device list, e.g. `android`.")
+    model: DeviceModel = None
+    app_version: AppVersion = None
 
 
 class UserOut(BaseModel):
@@ -84,6 +92,16 @@ class TokenResponse(BaseModel):
 class RefreshRequest(BaseModel):
     refresh_token: str = Field(min_length=16, max_length=256)
     device_id: DeviceId = None
+    app_version: AppVersion = None
+
+
+class StepUpVerifyRequest(BaseModel):
+    code: str = Field(pattern=r"^\d{6}$")
+
+
+class StepUpTokenResponse(BaseModel):
+    step_up_token: str = Field(description="Send as `X-Step-Up-Token` with the admin action.")
+    expires_in: int = Field(description="Seconds the step-up token stays valid.")
 
 
 class LogoutRequest(BaseModel):

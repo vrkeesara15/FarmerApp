@@ -161,6 +161,16 @@ class Settings(BaseSettings):
     jwt_issuer: str = Field(default="farmerapp")
     access_token_ttl_seconds: int = Field(default=900, description="15 minutes.")
     refresh_token_ttl_seconds: int = Field(default=30 * 86400, description="30 days.")
+    step_up_token_ttl_seconds: int = Field(
+        default=300, ge=60, le=900, description="SEC-028 re-auth token lifetime (5 minutes)."
+    )
+    security_cache_ttl_seconds: int = Field(
+        default=30,
+        ge=0,
+        le=60,
+        description="WC-011 / SEC-025: how long an instance caches a device's status (lost / "
+        "revoked) before re-reading it. At most 60 s, so revocation lands well within 5 min.",
+    )
 
     # --- CORS (console origin) ----------------------------------------------------
     cors_origins: list[str] = Field(

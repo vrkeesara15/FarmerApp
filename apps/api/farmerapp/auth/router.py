@@ -8,6 +8,7 @@ from fastapi import APIRouter, Request, Response, status
 
 from farmerapp.api.errors import problem_responses
 from farmerapp.auth.deps import DbSession, Services
+from farmerapp.auth.devices import DeviceMeta, admit_login
 from farmerapp.auth.errors import UserDisabledError, UserNotFoundError
 from farmerapp.auth.models import OtpPurpose, User, UserStatus
 from farmerapp.auth.otp import find_user_by_phone
@@ -19,9 +20,12 @@ from farmerapp.auth.schemas import (
     OtpSendResponse,
     OtpVerifyRequest,
     RefreshRequest,
+    StepUpTokenResponse,
+    StepUpVerifyRequest,
     TokenResponse,
     UserOut,
 )
+from farmerapp.auth.stepup import issue_step_up_token
 from farmerapp.db import audit
 from farmerapp.db.session import set_tenant
 
@@ -70,6 +74,9 @@ async def send_otp(body: OtpSendRequest, session: DbSession, services: Services)
         (404, "otp_not_found"),
         (404, "user_not_found"),
         (403, "user_disabled"),
+        (401, "device_wipe_required"),
+        (409, "device_not_bound"),
+        (422, "device_id_required"),
         (423, "otp_locked"),
     ),
 )
@@ -91,6 +98,14 @@ async def verify_otp(
         raise UserDisabledError("This account is disabled.")
     # FA-006: from here on the user is the actor (device binding, refresh token, login event).
     audit.bind_actor(audit.actor_from_request(request, user, device_id=body.device_id))
+    # SEC-020: record the device; a field officer's second device is refused until bound.
+    await admit_login(
+        session,
+        user,
+        device_id=body.device_id,
+        meta=DeviceMeta(platform=body.platform, model=body.model, app_version=body.app_version),
+        now=services.clock.now(),
+    )
     if body.device_id:
         user.device_id = body.device_id
     issued = await services.tokens.issue_for_login(
@@ -124,13 +139,20 @@ async def verify_otp(
         (401, "refresh_expired"),
         (401, "refresh_reused"),
         (401, "refresh_device_mismatch"),
+        (401, "session_revoked"),
+        (401, "device_wipe_required"),
         (403, "user_disabled"),
     ),
 )
 async def refresh_token(
     body: RefreshRequest, session: DbSession, services: Services
 ) -> TokenResponse:
-    issued = await services.tokens.rotate(session, body.refresh_token, device_id=body.device_id)
+    issued = await services.tokens.rotate(
+        session,
+        body.refresh_token,
+        device_id=body.device_id,
+        meta=DeviceMeta(app_version=body.app_version),
+    )
     return TokenResponse(
         access_token=issued.access_token,
         refresh_token=issued.refresh_token,
@@ -174,3 +196,59 @@ async def logout(
 )
 async def get_me(user: Annotated[User, require_roles(*Role)]) -> UserOut:
     return UserOut.from_user(user)
+
+
+@router.post(
+    "/step-up/send",
+    operation_id="sendStepUpOtp",
+    summary="SEC-028: send a re-authentication code to the caller's own phone",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=OtpSendResponse,
+    responses=problem_responses((423, "otp_locked"), (429, "otp_rate_limited")),
+)
+async def send_step_up(
+    user: Annotated[User, require_roles(*Role)], session: DbSession, services: Services
+) -> OtpSendResponse:
+    result = await services.otp.send(
+        session, phone=user.phone, purpose=OtpPurpose.STEP_UP, tenant_id=user.tenant_id
+    )
+    settings = services.settings
+    return OtpSendResponse(
+        challenge_id=result.challenge.id,
+        phone_masked=mask_phone(user.phone),
+        channel=result.challenge.channel,
+        expires_in=settings.otp_ttl_seconds,
+        resend_after=settings.otp_resend_after_seconds,
+        resends_left=result.resends_left,
+    )
+
+
+@router.post(
+    "/step-up",
+    operation_id="verifyStepUp",
+    summary="SEC-028: verify the code; returns a 5-minute step-up token for admin actions",
+    response_model=StepUpTokenResponse,
+    responses=problem_responses(
+        (401, "otp_invalid"), (401, "otp_expired"), (404, "otp_not_found"), (423, "otp_locked")
+    ),
+)
+async def verify_step_up(
+    body: StepUpVerifyRequest,
+    user: Annotated[User, require_roles(*Role)],
+    session: DbSession,
+    services: Services,
+) -> StepUpTokenResponse:
+    await services.otp.verify(
+        session,
+        phone=user.phone,
+        code=body.code,
+        purpose=OtpPurpose.STEP_UP,
+        tenant_id=user.tenant_id,
+    )
+    audit.record(session, action="auth.step_up", entity="user", entity_id=user.id)
+    await session.flush()
+    settings = services.settings
+    return StepUpTokenResponse(
+        step_up_token=issue_step_up_token(settings, user, services.clock.now()),
+        expires_in=settings.step_up_token_ttl_seconds,
+    )

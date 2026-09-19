@@ -154,8 +154,9 @@ async def test_refresh_rejected_for_disabled_user(
     officer.status = "disabled"
     await db_session.flush()
     resp = await _refresh(client, session_tokens["refresh_token"])
-    assert resp.status_code == 403
-    assert resp.json()["code"] == "user_disabled"
+    # SEC-025: a device-bound session of a disabled account is told to wipe the device.
+    assert resp.status_code == 401
+    assert resp.json()["code"] == "device_wipe_required"
 
 
 async def test_access_token_with_bad_subject_is_rejected(client: AsyncClient) -> None:
