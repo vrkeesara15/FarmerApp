@@ -1,0 +1,17 @@
+# VA-F08 (SPEC 6.2): photo reuse — the perceptual hash of a visit photo is within
+# `max_hamming_distance` bits of another farmer's photo, or a farm photo has the same bytes
+# (sha256) as another farmer's farm or visit photo (farm_photo stores no pHash yet).
+id: VA-F08
+version: 1
+title: Photo reuse across farmers
+subject: farmer
+mode: event
+triggers: [visit.photo, visit.created, farm.photo]
+severity: high
+owner_role: store_manager
+sla_hours: 48
+enabled: true
+params:
+  max_hamming_distance: 6     # bits of the 64-bit pHash; 0 = the same image
+  max_matches_per_photo: 5    # closest matches raised per new photo
+tenant_overrides: {}

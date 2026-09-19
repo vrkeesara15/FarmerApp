@@ -1,0 +1,24 @@
+description: >
+  The photo on visit1 carries an EXIF time outside the visit window, and the photo on visit2
+  has the same bytes as a photo attached to an earlier visit of the officer. One high
+  severity flag per visit for the cluster head, watched by the auditor.
+mode: event
+trigger: visit.photo
+subjects: [visit1, visit2]
+now: "2026-09-18T06:30:00Z"
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+    - {ref: f2, at: -30d}
+  visits:
+    - {ref: visit0, farmer: f2, at: -3d, minutes: 20}
+    - {ref: visit1, farmer: f1, at: -3h, minutes: 20}
+    - {ref: visit2, farmer: f2, at: -1h, minutes: 20}
+  photos:
+    - {ref: p0, visit: visit0, sha256: "4444444444444444444444444444444444444444444444444444444444444444", phash: "0f0f0f0f0f0f0f0f"}
+    - {ref: p1, visit: visit1, sha256: "5555555555555555555555555555555555555555555555555555555555555555", phash: "1234123412341234", flags: [exif_time_mismatch]}
+    - {ref: p2, visit: visit2, sha256: "4444444444444444444444444444444444444444444444444444444444444444", phash: "0f0f0f0f0f0f0f0f"}
+expect:
+  flags:
+    - {subject: officer, severity: high, owner: cluster_head, watchers: [auditor], reasons: [exif_time_mismatch]}
+    - {subject: officer, severity: high, owner: cluster_head, watchers: [auditor], reasons: [duplicate_photo]}

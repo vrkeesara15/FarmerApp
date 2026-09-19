@@ -1,0 +1,33 @@
+description: >
+  This week the SMS codes confirming the officer's visits to three different farmers all went
+  to one phone, and one farmer-side device confirmed (QR / app push) the other officer's
+  visits to three different farmers. Two high severity flags for the cluster head, watched
+  by the auditor.
+mode: batch
+now: "2026-09-18T06:30:00Z"
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+    - {ref: f2, at: -30d}
+    - {ref: f3, at: -30d}
+    - {ref: f4, at: -30d}
+    - {ref: f5, at: -30d}
+    - {ref: f6, at: -30d}
+  visits:
+    - {ref: visit1, farmer: f1, at: -3d, minutes: 20}
+    - {ref: visit2, farmer: f2, at: -2d, minutes: 20}
+    - {ref: visit3, farmer: f3, at: -1d, minutes: 20}
+    - {ref: visit4, officer: officer2, farmer: f4, at: -3d, minutes: 20}
+    - {ref: visit5, officer: officer2, farmer: f5, at: -2d, minutes: 20}
+    - {ref: visit6, officer: officer2, farmer: f6, at: -1d, minutes: 20}
+  confirmations:
+    - {ref: c1, visit: visit1, channel: sms_otp, at: -71h, phone: "+919876500001", device: OFFICER-PHONE}
+    - {ref: c2, visit: visit2, channel: sms_otp, at: -47h, phone: "+919876500001", device: OFFICER-PHONE}
+    - {ref: c3, visit: visit3, channel: sms_otp, at: -23h, phone: "+919876500001", device: OFFICER-PHONE}
+    - {ref: c4, visit: visit4, channel: qr, at: -71h, device: FARMER-TABLET}
+    - {ref: c5, visit: visit5, channel: app_push, at: -47h, device: FARMER-TABLET}
+    - {ref: c6, visit: visit6, channel: qr, at: -23h, device: FARMER-TABLET}
+expect:
+  flags:
+    - {subject: officer, severity: high, owner: cluster_head, watchers: [auditor], reasons: [same_otp_phone]}
+    - {subject: officer2, severity: high, owner: cluster_head, watchers: [auditor], reasons: [same_confirm_device]}

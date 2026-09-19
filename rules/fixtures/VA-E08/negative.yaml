@@ -1,0 +1,19 @@
+description: >
+  A photo without EXIF time or GPS (flag_missing_exif is off by default) and two different
+  shots on the same visit; no hash is reused on another visit. No flag.
+mode: event
+trigger: visit.photo
+subjects: [visit1]
+now: "2026-09-18T06:30:00Z"
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+  visits:
+    - {ref: visit0, farmer: f1, at: -3d, minutes: 20}
+    - {ref: visit1, farmer: f1, at: -1h, minutes: 20}
+  photos:
+    - {ref: p0, visit: visit0, sha256: "6666666666666666666666666666666666666666666666666666666666666666", phash: "0f0f0f0f0f0f0f0f"}
+    - {ref: p1, visit: visit1, sha256: "7777777777777777777777777777777777777777777777777777777777777777", phash: "0f0f0f0f0f0f0f1f", flags: [exif_time_missing, exif_gps_missing]}
+    - {ref: p2, visit: visit1, sha256: "8888888888888888888888888888888888888888888888888888888888888888", phash: "f0f0f0f0f0f0f0f0"}
+expect:
+  flags: []

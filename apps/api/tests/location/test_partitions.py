@@ -89,7 +89,7 @@ async def test_migration_created_the_parent_and_the_current_window(
     )
     assert strategy == "r"  # RANGE (ts)
     names = await _partitions(db_session)
-    today = date.today()
+    today = datetime.now(UTC).date()
     assert partitions.partition_name(today) in names
     assert partitions.partition_name(today + timedelta(days=7)) in names
     assert partitions.partition_name(today - timedelta(days=1)) in names
@@ -116,7 +116,7 @@ async def test_ensure_creates_missing_daily_partitions_idempotently(
 async def test_ensure_ahead_covers_yesterday_to_today_plus_days(db_session: AsyncSession) -> None:
     await db_session.execute(text("SELECT ensure_location_partitions(9)"))
     names = await _partitions(db_session)
-    today = date.today()
+    today = datetime.now(UTC).date()
     for delta in range(-1, 10):
         assert partitions.partition_name(today + timedelta(days=delta)) in names
 
@@ -321,7 +321,7 @@ async def test_purge_dry_run_reports_and_drops_nothing(db_session: AsyncSession)
     async with tenant_scope(db_session, tid):
         assert await db_session.scalar(select(func.count()).select_from(LocationDailyAgg)) == 0
     # Recent partitions are never listed.
-    assert not any(r.day >= date.today() - timedelta(days=180) for r in report)
+    assert not any(r.day >= datetime.now(UTC).date() - timedelta(days=180) for r in report)
 
 
 async def test_purge_apply_aggregates_then_drops(db_session: AsyncSession) -> None:

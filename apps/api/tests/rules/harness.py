@@ -18,12 +18,27 @@ reviewing role (``owner``, ``auditor``, ``cluster_head`` of ``c1``, ``store_mana
       farmers: [{ref, name, village?, registered_by?, phone?, phone_verified?, at?, device?}]
       farms:   [{ref, farmer, area_acres, square: {east_m, north_m, side_m}}
                 | {ref, farmer, area_acres, ring: [[east_m, north_m], ...]}]
+      villages: [{ref, meeting_point: {east_m, north_m}, radius_m?}]   # edits v1 / v2
+      farm_photos: [{ref, farm, sha256, blob?}]
+      duty:    [{ref, officer?, start, end?, integrity?: {is_mock, is_rooted, clock_drift_s}}]
+      points:  [{duty, at, east_m, north_m, accuracy_m?, is_mock?, is_rooted?, clock_drift_s?}]
+      visits:  [{ref, officer?, farmer, farm?, at, minutes?, east_m?, north_m?, geofence?,
+                 purpose?, integrity?}]
+      photos:  [{ref, visit, sha256?, phash?, flags?, exif?: {east_m, north_m}, blob?}]
+      confirmations: [{ref, visit, channel, at, phone?, device?}]
     expect:
       flags: [{subject, owner?, watchers?, severity?, reasons?}]   # [] for a negative case
 
-Times (``at``) are ``-<n>m`` / ``-<n>h`` / ``-<n>d`` relative to ``now``. Positions are
+Times (``at``) are ``-<n>s`` / ``-<n>m`` / ``-<n>h`` / ``-<n>d`` relative to ``now``. Positions are
 metres east / north of the village centre. ``device`` records the farmer's creation in the
 audit trail with that ``X-Device-Id`` and the registering officer as the actor.
+
+Field data (M4 employee rules): ``duty`` sessions and their location ``points`` (the daily
+``location_point`` partitions of the UTC days touched are created first), ``visits``
+(``minutes`` = duration until check-out; omitted = still open), visit ``photos`` (hashes and
+``photo_flags`` given directly), confirmations (``phone`` creates the OTP challenge the
+code went to; ``device`` is ``confirmed_via_device_id``). Everything is relative to the
+fixture's fixed ``now``: fixtures never depend on the wall clock.
 """
 
 from __future__ import annotations
@@ -40,25 +55,52 @@ import yaml
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from farmerapp.auth.models import User, UserRole
+from farmerapp.auth.models import OtpChallenge, OtpPurpose, User, UserRole
 from farmerapp.db import audit
 from farmerapp.db.geo import offset, point_wkt, polygon_wkt
 from farmerapp.db.models import Tenant
 from farmerapp.db.session import set_tenant
-from farmerapp.farmers.models import Farm, Farmer
+from farmerapp.farmers.models import Farm, Farmer, FarmPhoto
 from farmerapp.flags.models import Flag
+from farmerapp.location.models import DutySession, LocationPoint
+from farmerapp.location.partitions import ensure_partitions
 from farmerapp.rules.engine import RunReport, run_rules
 from farmerapp.rules.loader import DEFAULT_RULES_DIR, RuleSet, load_rules
 from farmerapp.rules.schema import Mode
 from farmerapp.tenants.models import Cluster, Store, Village
+from farmerapp.visits.models import (
+    ConfirmationStatus,
+    GeofenceResult,
+    Visit,
+    VisitConfirmation,
+    VisitPhoto,
+    VisitPurpose,
+    VisitStatus,
+)
 
 FIXTURES_DIR = DEFAULT_RULES_DIR / "fixtures"
+#: The eleven P0 rules of SPEC 6.2 / 6.3 (M4); VA-007 enforces a fixture pair for each.
+P0_RULES = frozenset(
+    {
+        "VA-F01",
+        "VA-F02",
+        "VA-F03",
+        "VA-F06",
+        "VA-F08",
+        "VA-E01",
+        "VA-E02",
+        "VA-E03",
+        "VA-E04",
+        "VA-E05",
+        "VA-E08",
+    }
+)
 CASES = ("positive", "negative")
 VILLAGE_LON, VILLAGE_LAT = 79.55, 18.02
 DEFAULT_NOW = datetime(2026, 9, 18, 6, 30, tzinfo=UTC)  # 12:00 IST
 
-_RELATIVE = re.compile(r"^-(\d+(?:\.\d+)?)([mhd])$")
-_UNITS = {"m": "minutes", "h": "hours", "d": "days"}
+_RELATIVE = re.compile(r"^-(\d+(?:\.\d+)?)([smhd])$")
+_UNITS = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}
 
 
 def fixture_path(rule_id: str, case: str) -> Path:
@@ -234,6 +276,187 @@ async def add_farm(session: AsyncSession, world: BaseWorld, spec: dict[str, Any]
     return farm
 
 
+def _point(spec: dict[str, Any]) -> str:
+    return point_wkt(*_lonlat(spec.get("east_m", 0), spec.get("north_m", 0)))
+
+
+async def edit_village(session: AsyncSession, world: BaseWorld, spec: dict[str, Any]) -> None:
+    village = await session.get_one(Village, world.refs[spec["ref"]])
+    meeting = spec.get("meeting_point")
+    village.meeting_point = _point(meeting) if meeting else None
+    village.meeting_point_radius_m = spec.get("radius_m")
+    await session.flush()
+
+
+async def add_farm_photo(session: AsyncSession, world: BaseWorld, spec: dict[str, Any]) -> None:
+    photo = FarmPhoto(
+        tenant_id=world.tenant_id,
+        farm_id=world.refs[spec["farm"]],
+        blob_uri=spec.get("blob") or f"gs://fixtures/{world.tenant_id}/farm/{spec['ref']}.jpg",
+        sha256=spec.get("sha256"),
+    )
+    session.add(photo)
+    await session.flush()
+    world.refs[spec["ref"]] = photo.id
+
+
+def _integrity(spec: dict[str, Any] | None) -> dict[str, Any]:
+    spec = spec or {}
+    return {
+        "is_mock": bool(spec.get("is_mock", False)),
+        "is_rooted": bool(spec.get("is_rooted", False)),
+        "clock_drift_s": int(spec.get("clock_drift_s", 0)),
+    }
+
+
+async def add_duty(
+    session: AsyncSession, world: BaseWorld, spec: dict[str, Any], now: datetime
+) -> None:
+    end = when(spec["end"], now) if spec.get("end") else None
+    duty = DutySession(
+        tenant_id=world.tenant_id,
+        officer_id=world.refs[spec.get("officer", "officer")],
+        start_at=when(spec.get("start"), now),
+        end_at=end,
+        end_reason="manual" if end is not None else None,
+        start_point=_point(spec),
+        policy_version="1",
+        device_integrity=_integrity(spec.get("integrity")),
+    )
+    session.add(duty)
+    await session.flush()
+    world.refs[spec["ref"]] = duty.id
+
+
+async def add_points(
+    session: AsyncSession, world: BaseWorld, specs: list[dict[str, Any]], now: datetime
+) -> None:
+    """Location points; the UTC-day partitions they fall in are created first."""
+    stamps = [when(s.get("at"), now) for s in specs]
+    await ensure_partitions(
+        session,
+        from_day=min(stamps).astimezone(UTC).date(),
+        to_day=max(stamps).astimezone(UTC).date(),
+    )
+    for spec, ts in zip(specs, stamps, strict=True):
+        duty = await session.get_one(DutySession, world.refs[spec["duty"]])
+        session.add(
+            LocationPoint(
+                tenant_id=world.tenant_id,
+                officer_id=duty.officer_id,
+                duty_session_id=duty.id,
+                ts=ts,
+                point=_point(spec),
+                accuracy_m=float(spec.get("accuracy_m", 10)),
+                is_mock=bool(spec.get("is_mock", False)),
+                is_rooted=bool(spec.get("is_rooted", False)),
+                clock_drift_s=int(spec.get("clock_drift_s", 0)),
+                received_at=ts,
+            )
+        )
+    await session.flush()
+
+
+async def add_visit(
+    session: AsyncSession, world: BaseWorld, spec: dict[str, Any], now: datetime
+) -> None:
+    checkin = when(spec.get("at"), now)
+    minutes = spec.get("minutes")
+    integrity = _integrity(spec.get("integrity"))
+    issues = [
+        name
+        for name, bad in (
+            ("mock_location", integrity["is_mock"]),
+            ("rooted_device", integrity["is_rooted"]),
+            ("clock_drift", abs(integrity["clock_drift_s"]) > 300),
+        )
+        if bad
+    ]
+    farm = spec.get("farm")
+    visit = Visit(
+        tenant_id=world.tenant_id,
+        created_at=checkin,
+        officer_id=world.refs[spec.get("officer", "officer")],
+        farmer_id=world.refs[spec["farmer"]],
+        farm_id=world.refs[farm] if farm else None,
+        village_id=world.refs[spec.get("village", "v1")],
+        purpose=VisitPurpose(spec.get("purpose", "advisory")).value,
+        checkin_at=checkin,
+        checkout_at=checkin + timedelta(minutes=float(minutes)) if minutes is not None else None,
+        checkin_point=_point(spec),
+        checkin_accuracy_m=8.0,
+        geofence_result=GeofenceResult(spec.get("geofence", "inside")).value,
+        override_note="fixture" if spec.get("geofence") == "override" else None,
+        status=VisitStatus.OPEN.value,
+        device_integrity={**integrity, "issues": issues},
+        flags=[],
+    )
+    session.add(visit)
+    await session.flush()
+    world.refs[spec["ref"]] = visit.id
+
+
+async def add_visit_photo(session: AsyncSession, world: BaseWorld, spec: dict[str, Any]) -> None:
+    visit = await session.get_one(Visit, world.refs[spec["visit"]])
+    exif = spec.get("exif")
+    taken = visit.checkin_at + timedelta(minutes=2)
+    photo = VisitPhoto(
+        tenant_id=world.tenant_id,
+        created_at=taken,
+        visit_id=visit.id,
+        blob_uri=spec.get("blob") or f"gs://fixtures/{world.tenant_id}/visit/{spec['ref']}.jpg",
+        sha256=spec.get("sha256"),
+        phash=str(spec["phash"]) if spec.get("phash") is not None else None,
+        exif_time=taken,
+        exif_point=_point(exif) if exif else None,
+        taken_in_app=True,
+        server_time=taken,
+        photo_flags=list(spec.get("flags") or []),
+    )
+    session.add(photo)
+    await session.flush()
+    world.refs[spec["ref"]] = photo.id
+
+
+async def add_confirmation(
+    session: AsyncSession, world: BaseWorld, spec: dict[str, Any], now: datetime
+) -> None:
+    at = when(spec.get("at"), now)
+    visit = await session.get_one(Visit, world.refs[spec["visit"]])
+    phone = spec.get("phone")
+    challenge_id = None
+    if phone:
+        challenge = OtpChallenge(
+            tenant_id=world.tenant_id,
+            phone=str(phone),
+            purpose=OtpPurpose.FARMER_CONFIRM.value,
+            code_hash="0" * 64,
+            expires_at=at + timedelta(minutes=5),
+            window_started_at=at,
+            consumed_at=at,
+        )
+        session.add(challenge)
+        await session.flush()
+        challenge_id = challenge.id
+    row = VisitConfirmation(
+        tenant_id=world.tenant_id,
+        created_at=at,
+        visit_id=visit.id,
+        channel=str(spec.get("channel", "sms_otp")),
+        otp_challenge_id=challenge_id,
+        farmer_phone_last4=str(phone)[-4:] if phone else None,
+        status=ConfirmationStatus.CONFIRMED.value,
+        requested_at=at,
+        confirmed_at=at,
+        confirmed_via_device_id=spec.get("device"),
+    )
+    session.add(row)
+    visit.confirmation_channel = row.channel
+    visit.confirmed_at = at
+    await session.flush()
+    world.refs[spec["ref"]] = row.id
+
+
 async def seed(
     session: AsyncSession, world: BaseWorld, data: dict[str, Any], now: datetime
 ) -> None:
@@ -252,6 +475,20 @@ async def seed(
         await add_farmer(session, world, spec, now)
     for spec in records.get("farms") or []:
         await add_farm(session, world, spec)
+    for spec in records.get("villages") or []:
+        await edit_village(session, world, spec)
+    for spec in records.get("farm_photos") or []:
+        await add_farm_photo(session, world, spec)
+    for spec in records.get("duty") or []:
+        await add_duty(session, world, spec, now)
+    if records.get("points"):
+        await add_points(session, world, records["points"], now)
+    for spec in records.get("visits") or []:
+        await add_visit(session, world, spec, now)
+    for spec in records.get("photos") or []:
+        await add_visit_photo(session, world, spec)
+    for spec in records.get("confirmations") or []:
+        await add_confirmation(session, world, spec, now)
 
 
 @dataclass(frozen=True)
@@ -298,19 +535,30 @@ async def run_fixture(
     return world, Outcome(report=report, flags=list(flags))
 
 
+def _reasons(flag: Flag) -> list[str]:
+    metrics = flag.evidence["metrics"]
+    return sorted(metrics.get("reasons") or [metrics.get("reason")])
+
+
 def assert_expected(world: BaseWorld, data: dict[str, Any], outcome: Outcome) -> None:
     expected = (data.get("expect") or {}).get("flags")
     assert expected is not None, "fixture needs expect.flags ([] for a negative case)"
     assert not outcome.report.failed, f"rule failed: {outcome.report.failed}"
-    got = sorted((str(f.subject_id), f) for f in outcome.flags)
     assert len(outcome.flags) == len(expected), [f.title for f in outcome.flags]
     by_subject: dict[str, list[Flag]] = {}
-    for key, flag in got:
-        by_subject.setdefault(key, []).append(flag)
+    for flag in outcome.flags:
+        by_subject.setdefault(str(flag.subject_id), []).append(flag)
     for spec in expected:
         subject = str(world.refs[spec["subject"]])
-        assert by_subject.get(subject), f"no flag about {spec['subject']}"
-        flag = by_subject[subject].pop(0)
+        candidates = by_subject.get(subject) or []
+        assert candidates, f"no flag about {spec['subject']}"
+        if "reasons" in spec:  # several flags about one subject: match them by reason
+            matching = [f for f in candidates if _reasons(f) == sorted(spec["reasons"])]
+            assert matching, [_reasons(f) for f in candidates]
+            flag = matching[0]
+        else:
+            flag = candidates[0]
+        candidates.remove(flag)
         if "owner" in spec:
             assert flag.owner_id == world.refs[spec["owner"]], (flag.owner_role, spec["owner"])
         if "watchers" in spec:
@@ -319,7 +567,3 @@ def assert_expected(world: BaseWorld, data: dict[str, Any], outcome: Outcome) ->
             )
         if "severity" in spec:
             assert flag.severity == spec["severity"]
-        if "reasons" in spec:
-            metrics = flag.evidence["metrics"]
-            reasons = metrics.get("reasons") or [metrics.get("reason")]
-            assert sorted(reasons) == sorted(spec["reasons"]), reasons

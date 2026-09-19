@@ -1,0 +1,22 @@
+description: >
+  Three of the officer's five checked-out visits today lasted 2-4 minutes, under the tenant
+  minimum of 5 minutes (60 % > 40 %). A medium severity flag for the cluster head; no
+  auditor watches a medium flag.
+mode: batch
+now: "2026-09-18T06:30:00Z"
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+    - {ref: f2, at: -30d}
+    - {ref: f3, at: -30d}
+    - {ref: f4, at: -30d}
+    - {ref: f5, at: -30d}
+  visits:
+    - {ref: visit1, farmer: f1, at: -5h, minutes: 2, east_m: 0}
+    - {ref: visit2, farmer: f2, at: -4h, minutes: 3, east_m: 500}
+    - {ref: visit3, farmer: f3, at: -3h, minutes: 4, east_m: 1000}
+    - {ref: visit4, farmer: f4, at: -2h, minutes: 20, east_m: 1500}
+    - {ref: visit5, farmer: f5, at: -1h, minutes: 30, east_m: 2000}
+expect:
+  flags:
+    - {subject: officer, severity: medium, owner: cluster_head, watchers: [], reasons: [short_visits]}

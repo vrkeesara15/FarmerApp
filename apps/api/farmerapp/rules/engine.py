@@ -7,7 +7,7 @@ Three runners share ``run_rules``:
 * **event** — ``emit(session, tenant_id, topic, subject, id)`` for rules whose ``triggers``
   include the topic: called in-process (write paths and bus subscribers,
   ``farmerapp.rules.events``) and by the Pub/Sub worker for ``visit.created`` /
-  ``farmer.registered`` / ``payment.webhook``.
+  ``location.batch`` / ``farmer.registered`` / ``payment.webhook``.
 * **batch** — ``run_batch(session, tenant_id)`` over the whole tenant; the nightly job
   (``python -m farmerapp.jobs run-rules --mode batch``) calls it per tenant at 02:00 IST.
   Idempotent: an unresolved flag with the same dedupe key is never raised twice.
@@ -75,12 +75,14 @@ async def run_rules(
     subset of ``rule_ids``) and raise their findings as flags."""
     now = now or datetime.now(UTC)
     rule_set = rule_set or get_rule_set()
+    report = RunReport(tenant_id=tenant_id, mode=mode)
+    candidates: list[RuleConfig] = rule_set.for_mode(mode, trigger=trigger)
+    if not candidates:
+        return report  # nothing subscribed (e.g. an event topic no rule listens to): no DB work
     impls = implementations()
     slug = await _tenant_slug(session, tenant_id)
     wanted = set(rule_ids) if rule_ids is not None else None
     ids = tuple(subject_ids) if subject_ids is not None else None
-    report = RunReport(tenant_id=tenant_id, mode=mode)
-    candidates: list[RuleConfig] = rule_set.for_mode(mode, trigger=trigger)
     for config in candidates:
         if wanted is not None and config.id not in wanted:
             continue

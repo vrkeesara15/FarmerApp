@@ -1,0 +1,17 @@
+# VA-E04 (SPEC 6.3): short visits — more than `max_short_share` of an officer's checked-out
+# visits of one IST day last less than the tenant's minimum visit duration (tenant setting
+# `min_visit_duration_s`, FA-017).
+id: VA-E04
+version: 1
+title: Short visits
+subject: employee
+mode: batch
+severity: medium
+owner_role: cluster_head
+sla_hours: 72
+enabled: true
+params:
+  max_short_share: 0.4        # share of the day's visits under the minimum
+  min_visits: 3               # days with fewer checked-out visits are not judged
+  lookback_hours: 26          # nightly batch overlaps the previous run by two hours
+tenant_overrides: {}

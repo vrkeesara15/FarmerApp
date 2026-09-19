@@ -25,7 +25,7 @@ async def _rules(topic: Topic, message: PubSubMessage) -> None:
 
 
 async def on_visit_created(message: PubSubMessage) -> None:
-    """M4: event validation agents for a new visit (VA-E*)."""
+    """M4: event validation agents for a new visit (VA-E01, VA-E08, VA-F08)."""
     await _rules(Topic.VISIT_CREATED, message)
 
 
@@ -56,8 +56,10 @@ async def on_order_created(message: PubSubMessage) -> None:
 
 
 async def on_location_batch(message: PubSubMessage) -> None:
-    """M2: track processing (VV-*)."""
-    await _todo(Topic.LOCATION_BATCH)
+    """M4: device integrity (VA-E01) and impossible travel (VA-E02) on a duty session's new
+    points (payload ``tenant_id`` + ``duty_session_id``). Track processing (VV-*) runs at
+    duty end in the API."""
+    await _rules(Topic.LOCATION_BATCH, message)
 
 
 async def on_notify_send(message: PubSubMessage) -> None:

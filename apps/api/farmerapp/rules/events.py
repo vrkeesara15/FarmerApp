@@ -1,15 +1,33 @@
 """Event-mode entry points (SPEC 6.1 "Event agents").
 
 * **Pub/Sub** — ``handle_event_message(topic, message)`` is called by the worker dispatch for
-  ``visit.created``, ``farmer.registered`` and ``payment.webhook``. The payload carries
-  ``tenant_id`` and the id of the record the event is about (``visit_id`` / ``farmer_id`` /
-  ``payment_id``); the event rules subscribed to the topic run in one transaction bound to
-  the tenant, as the system actor. No rule on the topic -> no database work at all. A
-  malformed payload can never succeed: it is logged and acknowledged.
-* **In-process** — ``register()`` subscribes to the payments bus (``PaymentCaptured``) with a
-  writing subscriber, so event rules on ``payment.captured`` run in the payment's
-  transaction. Write paths that own a session (FA-012 registration) call
-  ``engine.emit`` directly.
+  ``visit.created``, ``location.batch``, ``farmer.registered`` and ``payment.webhook``. The
+  payload carries ``tenant_id`` and the id of the record the event is about (``visit_id`` /
+  ``duty_session_id`` / ``farmer_id`` / ``payment_id``, see ``SUBJECT_KEYS``); the event
+  rules subscribed to the topic run in one transaction bound to the tenant, as the system
+  actor. No rule on the topic -> no database work at all. A malformed payload can never
+  succeed: it is logged and acknowledged.
+* **In-process** — ``register()`` subscribes writing (``subscribe_async``) handlers to the
+  in-process buses, so event rules run in the write path's own transaction, each bus
+  subscriber in a savepoint (a failing rule never rolls back the business write):
+
+  ==============================  =====================  ==========================
+  event (bus)                      topic                  subject ids
+  ==============================  =====================  ==========================
+  ``VisitCheckedIn`` (visits)      ``visit.created``      the visit
+  ``VisitPhotoAdded`` (visits)     ``visit.photo``        the visit
+  ``VisitConfirmed`` (visits)      ``visit.confirmed``    the visit
+  ``VisitCheckedOut`` (visits)     ``visit.checked_out``  the visit
+  ``DutyStarted`` (location)       ``duty.started``       the duty session
+  ``LocationBatchIngested``        ``location.batch``     the duty session
+  ``PaymentCaptured`` (payments)   ``payment.captured``   the payment
+  ==============================  =====================  ==========================
+
+  Write paths that own a session without a bus (FA-012 registration, farm photos) call
+  ``engine.emit`` directly (``farmer.registered``, ``farm.photo``).
+
+The in-process run and a later Pub/Sub delivery of the same event are both safe: the dedupe
+key never raises an unresolved flag twice.
 """
 
 from __future__ import annotations
@@ -23,11 +41,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.db import audit
 from farmerapp.db.session import job_session
+from farmerapp.location import events as location_events
 from farmerapp.logging import get_logger
 from farmerapp.payments import events as payment_events
 from farmerapp.rules.engine import RunReport, emit
 from farmerapp.rules.loader import RuleSet, get_rule_set
 from farmerapp.rules.schema import Mode
+from farmerapp.visits import events as visit_events
 from farmerapp.worker.messages import PubSubMessage
 
 log = get_logger("farmerapp.rules.events")
@@ -37,7 +57,13 @@ SessionProvider = Callable[[uuid.UUID], contextlib.AbstractAsyncContextManager[A
 #: Topic -> payload key of the record id the event is about.
 SUBJECT_KEYS: dict[str, str] = {
     "visit.created": "visit_id",
+    "visit.photo": "visit_id",
+    "visit.confirmed": "visit_id",
+    "visit.checked_out": "visit_id",
+    "duty.started": "duty_session_id",
+    "location.batch": "duty_session_id",
     "farmer.registered": "farmer_id",
+    "farm.photo": "farm_id",
     "payment.webhook": "payment_id",
     "payment.captured": "payment_id",
 }
@@ -67,24 +93,105 @@ async def handle_event_message(
             return await emit(session, tenant_id, topic, [subject_id], payload=body, now=now)
 
 
+async def _run_subscribed(
+    session: AsyncSession,
+    tenant_id: uuid.UUID,
+    topic: str,
+    subject_id: uuid.UUID,
+    *,
+    payload: dict[str, str],
+    at: datetime,
+) -> None:
+    if not get_rule_set().for_mode(Mode.EVENT, trigger=topic):
+        return
+    await emit(session, tenant_id, topic, [subject_id], payload=payload, now=at)
+
+
 async def _on_payment_captured(
     session: AsyncSession, event: payment_events.PaymentCaptured
 ) -> None:
-    if not get_rule_set().for_mode(Mode.EVENT, trigger="payment.captured"):
-        return
-    await emit(
+    await _run_subscribed(
         session,
         event.tenant_id,
         "payment.captured",
-        [event.payment_id],
+        event.payment_id,
         payload={"order_id": str(event.order_id), "store_id": str(event.store_id)},
-        now=event.at,
+        at=event.at,
+    )
+
+
+async def _on_visit_checked_in(session: AsyncSession, event: visit_events.VisitCheckedIn) -> None:
+    await _run_subscribed(
+        session,
+        event.tenant_id,
+        "visit.created",
+        event.visit_id,
+        payload={"officer_id": str(event.officer_id)},
+        at=event.at,
+    )
+
+
+async def _on_visit_photo(session: AsyncSession, event: visit_events.VisitPhotoAdded) -> None:
+    await _run_subscribed(
+        session,
+        event.tenant_id,
+        "visit.photo",
+        event.visit_id,
+        payload={"photo_id": str(event.photo_id)},
+        at=event.at,
+    )
+
+
+async def _on_visit_confirmed(session: AsyncSession, event: visit_events.VisitConfirmed) -> None:
+    await _run_subscribed(
+        session,
+        event.tenant_id,
+        "visit.confirmed",
+        event.visit_id,
+        payload={"confirmation_id": str(event.confirmation_id), "channel": event.channel},
+        at=event.at,
+    )
+
+
+async def _on_visit_checked_out(session: AsyncSession, event: visit_events.VisitCheckedOut) -> None:
+    await _run_subscribed(
+        session, event.tenant_id, "visit.checked_out", event.visit_id, payload={}, at=event.at
+    )
+
+
+async def _on_duty_started(session: AsyncSession, event: location_events.DutyStarted) -> None:
+    await _run_subscribed(
+        session,
+        event.tenant_id,
+        "duty.started",
+        event.duty_session_id,
+        payload={"officer_id": str(event.officer_id)},
+        at=event.at,
+    )
+
+
+async def _on_location_batch(
+    session: AsyncSession, event: location_events.LocationBatchIngested
+) -> None:
+    await _run_subscribed(
+        session,
+        event.tenant_id,
+        "location.batch",
+        event.duty_session_id,
+        payload={"officer_id": str(event.officer_id), "accepted": str(event.accepted)},
+        at=event.at,
     )
 
 
 def register() -> None:
     """Subscribe the event runner to the in-process buses (idempotent)."""
     payment_events.bus.subscribe_async(payment_events.PaymentCaptured, _on_payment_captured)
+    visit_events.bus.subscribe_async(visit_events.VisitCheckedIn, _on_visit_checked_in)
+    visit_events.bus.subscribe_async(visit_events.VisitPhotoAdded, _on_visit_photo)
+    visit_events.bus.subscribe_async(visit_events.VisitConfirmed, _on_visit_confirmed)
+    visit_events.bus.subscribe_async(visit_events.VisitCheckedOut, _on_visit_checked_out)
+    location_events.bus.subscribe_async(location_events.DutyStarted, _on_duty_started)
+    location_events.bus.subscribe_async(location_events.LocationBatchIngested, _on_location_batch)
 
 
 __all__ = ["SUBJECT_KEYS", "handle_event_message", "register"]

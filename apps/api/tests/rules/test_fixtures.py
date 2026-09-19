@@ -18,6 +18,7 @@ from farmerapp.rules.schema import Mode
 from tests.rules.harness import (
     CASES,
     FIXTURES_DIR,
+    P0_RULES,
     assert_expected,
     fixture_path,
     load_fixture,
@@ -30,7 +31,9 @@ PAIRS = [(rule_id, case) for rule_id in RULE_IDS for case in CASES]
 
 
 def test_rules_exist() -> None:
-    assert {"VA-F01", "VA-F02", "VA-F03", "VA-F06"} <= set(RULE_IDS)
+    """All eleven P0 rules of SPEC 6.2 / 6.3 (M4) are configured and implemented."""
+    assert set(RULE_SET.rules) >= P0_RULES
+    assert set(implementations()) >= P0_RULES
 
 
 @pytest.mark.parametrize("rule_id", RULE_IDS)

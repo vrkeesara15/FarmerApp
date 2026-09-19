@@ -1,0 +1,17 @@
+# VA-E05 (SPEC 6.3): confirmation anomalies — one OTP-receiving phone confirms visits for
+# several farmers, or one farmer-side device (app push / QR) confirms visits for several
+# farmers, within `window_days`.
+id: VA-E05
+version: 1
+title: Confirmation anomalies
+subject: employee
+mode: batch
+severity: high
+owner_role: cluster_head
+sla_hours: 48
+enabled: true
+params:
+  min_farmers_per_phone: 3    # distinct farmers confirmed through one OTP phone
+  min_farmers_per_device: 3   # distinct farmers confirmed from one farmer-side device
+  window_days: 7
+tenant_overrides: {}

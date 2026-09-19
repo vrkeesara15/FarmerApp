@@ -25,6 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from farmerapp.auth.models import User
 from farmerapp.db.geo import point_wkt
 from farmerapp.duty.service import own_session, session_window
+from farmerapp.location import events as location_events
 from farmerapp.location.models import LocationPoint
 from farmerapp.logging import get_logger
 
@@ -147,6 +148,18 @@ async def ingest_batch(
         rejected=len(rejected),
         clock_drift_s=drift,
     )
+    if accepted:  # M4: VA-E01 / VA-E02 on the new points (a replay stores nothing)
+        await location_events.bus.dispatch(
+            session,
+            location_events.LocationBatchIngested(
+                tenant_id=actor.tenant_id,
+                duty_session_id=duty.id,
+                officer_id=actor.id,
+                accepted=accepted,
+                clock_drift_s=drift,
+                at=received_at,
+            ),
+        )
     return LocationBatchOut(
         duty_session_id=duty.id,
         accepted=accepted,

@@ -15,21 +15,37 @@ events are the seams for later milestones:
 * ``ConfirmationRequested`` — FA-016 ``app_push``: the farmer's app should show the
   confirm prompt (FM-011); the event carries the signed token the farmer app must post to
   ``POST /v1/visits/{id}/farmer-confirm``. Delivery is FA-007.
+* ``VisitCheckedIn`` / ``VisitPhotoAdded`` / ``VisitConfirmed`` / ``VisitCheckedOut`` — the
+  steps of the visit flow (M4): the validation agents' event rules (SPEC 6.1) subscribe
+  (``farmerapp.rules.events``: VA-E01, VA-E08, VA-F08).
 
 Handlers must not raise: an exception in a subscriber is logged and swallowed so a
 notification failure never rolls back a check-in.
+
+Two kinds of subscribers:
+
+* ``subscribe`` — plain synchronous callables, no database access (``publish``).
+* ``subscribe_async`` — writing subscribers that need the database (the rules engine reads
+  the visit and raises flags). The write path calls ``await bus.dispatch(session, event)``:
+  each async subscriber runs **in the write path's transaction inside its own savepoint**,
+  so a failing one is logged and only its own writes roll back, then the plain subscribers
+  run. The synchronous ``publish`` can never await, which is why database work cannot hang
+  off it.
 """
 
 from __future__ import annotations
 
 import uuid
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from farmerapp.logging import get_logger
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 log = get_logger("farmerapp.visits.events")
 
@@ -78,8 +94,59 @@ class ConfirmationRequested:
     expires_at: datetime
 
 
-Event = IntegrityEvent | OverrideRequested | ConfirmationRequested
+@dataclass(frozen=True)
+class VisitCheckedIn:
+    """FA-014: a visit was created (not on a replay of the same check-in)."""
+
+    tenant_id: uuid.UUID
+    visit_id: uuid.UUID
+    officer_id: uuid.UUID
+    at: datetime
+
+
+@dataclass(frozen=True)
+class VisitPhotoAdded:
+    """FA-015: an in-app photo was attached (not on a replay)."""
+
+    tenant_id: uuid.UUID
+    visit_id: uuid.UUID
+    photo_id: uuid.UUID
+    photo_flags: tuple[str, ...]
+    at: datetime
+
+
+@dataclass(frozen=True)
+class VisitConfirmed:
+    """FA-016: one confirmation channel succeeded."""
+
+    tenant_id: uuid.UUID
+    visit_id: uuid.UUID
+    confirmation_id: uuid.UUID
+    channel: str
+    at: datetime
+
+
+@dataclass(frozen=True)
+class VisitCheckedOut:
+    """FA-017: the visit was closed and scored (not on a replay)."""
+
+    tenant_id: uuid.UUID
+    visit_id: uuid.UUID
+    at: datetime
+
+
+Event = (
+    IntegrityEvent
+    | OverrideRequested
+    | ConfirmationRequested
+    | VisitCheckedIn
+    | VisitPhotoAdded
+    | VisitConfirmed
+    | VisitCheckedOut
+)
 Handler = Callable[[Any], None]
+#: A subscriber that needs the database: runs in the publisher's transaction (savepoint).
+AsyncHandler = Callable[["AsyncSession", Any], Awaitable[None]]
 
 
 @dataclass
@@ -87,21 +154,46 @@ class EventBus:
     """Handlers per event type; ``publish`` calls each in registration order."""
 
     _handlers: dict[type[Any], list[Handler]] = field(default_factory=lambda: defaultdict(list))
+    _async: dict[type[Any], list[AsyncHandler]] = field(default_factory=lambda: defaultdict(list))
 
-    def subscribe(self, event_type: type[Event], handler: Handler) -> Handler:
+    def subscribe(self, event_type: type[Any], handler: Handler) -> Handler:
         if handler not in self._handlers[event_type]:
             self._handlers[event_type].append(handler)
         return handler
 
-    def unsubscribe(self, event_type: type[Event], handler: Handler) -> None:
+    def unsubscribe(self, event_type: type[Any], handler: Handler) -> None:
         handlers = self._handlers.get(event_type, [])
         if handler in handlers:
             handlers.remove(handler)
 
-    def handlers(self, event_type: type[Event]) -> tuple[Handler, ...]:
+    def handlers(self, event_type: type[Any]) -> tuple[Handler, ...]:
         return tuple(self._handlers.get(event_type, ()))
 
-    def publish(self, event: Event) -> int:
+    def subscribe_async(self, event_type: type[Any], handler: AsyncHandler) -> AsyncHandler:
+        if handler not in self._async[event_type]:
+            self._async[event_type].append(handler)
+        return handler
+
+    def unsubscribe_async(self, event_type: type[Any], handler: AsyncHandler) -> None:
+        handlers = self._async.get(event_type, [])
+        if handler in handlers:
+            handlers.remove(handler)
+
+    async def dispatch(self, session: AsyncSession, event: Any) -> int:
+        """Run the async subscribers (each in a savepoint of ``session``), then the plain
+        ones. A failure is logged and swallowed; only that subscriber's writes roll back."""
+        delivered = 0
+        for handler in tuple(self._async.get(type(event), ())):
+            try:
+                async with session.begin_nested():
+                    await handler(session, event)
+            except Exception:
+                log.exception("visit_event_handler_failed", event_type=type(event).__name__)
+            else:
+                delivered += 1
+        return delivered + self.publish(event)
+
+    def publish(self, event: Any) -> int:
         """Deliver ``event``; returns how many handlers ran. Handler errors are logged."""
         delivered = 0
         for handler in self.handlers(type(event)):
@@ -119,11 +211,16 @@ bus = EventBus()
 
 
 __all__ = [
+    "AsyncHandler",
     "ConfirmationRequested",
     "Event",
     "EventBus",
     "Handler",
     "IntegrityEvent",
     "OverrideRequested",
+    "VisitCheckedIn",
+    "VisitCheckedOut",
+    "VisitConfirmed",
+    "VisitPhotoAdded",
     "bus",
 ]

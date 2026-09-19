@@ -72,6 +72,10 @@ from farmerapp.visits.events import (
     ConfirmationRequested,
     IntegrityEvent,
     OverrideRequested,
+    VisitCheckedIn,
+    VisitCheckedOut,
+    VisitConfirmed,
+    VisitPhotoAdded,
     bus,
 )
 from farmerapp.visits.models import (
@@ -388,7 +392,8 @@ async def check_in(
             is_rooted=bool(integrity["is_rooted"]),
             clock_drift_s=int(integrity["clock_drift_s"]),
         )
-        bus.publish(
+        await bus.dispatch(
+            session,
             IntegrityEvent(
                 tenant_id=tenant_id,
                 officer_id=actor.id,
@@ -398,7 +403,7 @@ async def check_in(
                 is_rooted=bool(integrity["is_rooted"]),
                 clock_drift_s=int(integrity["clock_drift_s"]),
                 at=now,
-            )
+            ),
         )
     if result == GeofenceResult.OVERRIDE:
         request = OverrideRequest(
@@ -439,6 +444,11 @@ async def check_in(
         officer_id=str(actor.id),
         geofence_result=result.value,
         distance_m=check.distance_m,
+    )
+    # M4 event rules (VA-E01 integrity of the check-in, VA-E08 / VA-F08 photos synced early).
+    await bus.dispatch(
+        session,
+        VisitCheckedIn(tenant_id=tenant_id, visit_id=visit.id, officer_id=actor.id, at=now),
     )
     return visit
 
@@ -591,6 +601,16 @@ async def add_photo(
             photo_id=str(photo.id),
             flags=flags,
         )
+    await bus.dispatch(  # M4: VA-E08 photo integrity, VA-F08 reuse across farmers
+        session,
+        VisitPhotoAdded(
+            tenant_id=visit.tenant_id,
+            visit_id=visit.id,
+            photo_id=photo.id,
+            photo_flags=tuple(flags),
+            at=now,
+        ),
+    )
     return photo
 
 
@@ -756,6 +776,16 @@ async def _mark_confirmed(
         visit_id=str(visit.id),
         channel=row.channel,
     )
+    await bus.dispatch(
+        session,
+        VisitConfirmed(
+            tenant_id=visit.tenant_id,
+            visit_id=visit.id,
+            confirmation_id=row.id,
+            channel=row.channel,
+            at=now,
+        ),
+    )
 
 
 async def confirm_with_otp(
@@ -852,6 +882,9 @@ async def check_out(
         score=visit.score,
         status=visit.status,
         flags=list(visit.flags or []),
+    )
+    await bus.dispatch(  # M4: VA-E08 re-checks the photos against the final visit window
+        session, VisitCheckedOut(tenant_id=visit.tenant_id, visit_id=visit.id, at=now or _now())
     )
     return visit
 

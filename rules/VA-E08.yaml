@@ -1,0 +1,16 @@
+# VA-E08 (SPEC 6.3): photo integrity — an in-app visit photo whose EXIF time or GPS is
+# inconsistent with the check-in (`visit_photo.photo_flags`, FA-015), or the same photo
+# (sha256 or pHash) used on another visit. One flag per visit.
+id: VA-E08
+version: 1
+title: Photo integrity
+subject: employee
+mode: event
+triggers: [visit.photo, visit.checked_out, visit.created]
+severity: high
+owner_role: cluster_head
+sla_hours: 48
+enabled: true
+params:
+  flag_missing_exif: false    # true: a photo without EXIF time / GPS also flags
+tenant_overrides: {}
