@@ -1,0 +1,21 @@
+description: >
+  The checked-in visit reports a clock drift of exactly 300 s (the limit, not above it) from
+  a clean phone, and the officer's duty session and points are clean. Another officer's mock
+  point is not part of this event. No flag.
+mode: event
+trigger: visit.created
+subjects: [visit1]
+now: "2026-09-18T06:30:00Z"
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+  duty:
+    - {ref: d1, officer: officer, start: -4h, integrity: {clock_drift_s: -120}}
+    - {ref: d2, officer: officer2, start: -4h}
+  points:
+    - {duty: d1, at: -3h, east_m: 0, north_m: 0, clock_drift_s: 300}
+    - {duty: d2, at: -3h, east_m: 0, north_m: 0, is_mock: true}
+  visits:
+    - {ref: visit1, farmer: f1, at: -2h, integrity: {clock_drift_s: 300}}
+expect:
+  flags: []

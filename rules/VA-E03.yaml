@@ -1,0 +1,17 @@
+# VA-E03 (SPEC 6.3): visits clustered at one spot — an officer checks in visits to at least
+# `min_farms` different farms within `radius_m` of each other on one IST day, away from any
+# registered village meeting point.
+id: VA-E03
+version: 1
+title: Visits clustered at one spot
+subject: employee
+mode: batch
+severity: high
+owner_role: cluster_head
+sla_hours: 48
+enabled: true
+params:
+  min_farms: 5                # distinct farms (the farmer when a visit has no farm)
+  radius_m: 200               # every pair of clustered check-ins is at most this far apart
+  lookback_hours: 26          # nightly batch overlaps the previous run by two hours
+tenant_overrides: {}

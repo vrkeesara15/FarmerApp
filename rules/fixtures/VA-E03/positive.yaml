@@ -1,0 +1,30 @@
+description: >
+  The officer checks in visits to five different farms within about 60 m of each other in
+  one morning, 1 km from the village meeting point. A high severity flag for the cluster
+  head with the cluster centroid and the visits on the map.
+mode: batch
+now: "2026-09-18T06:30:00Z"
+seed:
+  villages:
+    - {ref: v1, meeting_point: {east_m: 0, north_m: 0}, radius_m: 150}
+  farmers:
+    - {ref: f1, at: -30d}
+    - {ref: f2, at: -30d}
+    - {ref: f3, at: -30d}
+    - {ref: f4, at: -30d}
+    - {ref: f5, at: -30d}
+  farms:
+    - {ref: farm1, farmer: f1, area_acres: 1.0}
+    - {ref: farm2, farmer: f2, area_acres: 1.0}
+    - {ref: farm3, farmer: f3, area_acres: 1.0}
+    - {ref: farm4, farmer: f4, area_acres: 1.0}
+    - {ref: farm5, farmer: f5, area_acres: 1.0}
+  visits:
+    - {ref: visit1, farmer: f1, farm: farm1, at: -5h, minutes: 15, east_m: 1000, north_m: 0}
+    - {ref: visit2, farmer: f2, farm: farm2, at: -4h, minutes: 15, east_m: 1020, north_m: 10}
+    - {ref: visit3, farmer: f3, farm: farm3, at: -3h, minutes: 15, east_m: 1040, north_m: 30}
+    - {ref: visit4, farmer: f4, farm: farm4, at: -2h, minutes: 15, east_m: 1010, north_m: 50}
+    - {ref: visit5, farmer: f5, farm: farm5, at: -1h, minutes: 15, east_m: 1050, north_m: 0}
+expect:
+  flags:
+    - {subject: officer, severity: high, owner: cluster_head, watchers: [auditor], reasons: [clustered_visits]}

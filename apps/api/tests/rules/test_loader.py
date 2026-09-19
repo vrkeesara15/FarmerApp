@@ -24,7 +24,7 @@ from farmerapp.rules.loader import (
 from farmerapp.rules.registry import implementations, rule
 from farmerapp.rules.schema import Mode, RuleConfig
 from farmerapp.settings import get_settings
-from tests.rules.harness import assert_expected, load_fixture, run_fixture
+from tests.rules.harness import P0_RULES, assert_expected, load_fixture, run_fixture
 
 VALID: dict[str, Any] = {
     "id": "VA-F99",
@@ -159,7 +159,7 @@ def test_rule_registered_twice_is_refused() -> None:
 
 def test_startup_validation(rules_dir_env: Any, tmp_path: Path, rules_copy: Path) -> None:
     rules_dir_env(rules_copy)
-    assert set(validate_rules().rules) == {"VA-F01", "VA-F02", "VA-F03", "VA-F06"}
+    assert set(validate_rules().rules) == P0_RULES
 
     _write(rules_copy, VALID)  # a YAML without implementation
     rules_dir_env(rules_copy)
@@ -185,7 +185,7 @@ def test_validate_rules_command(tmp_path: Path, rules_copy: Path) -> None:
     runner = CliRunner()
     ok = runner.invoke(cli, ["validate-rules", "--rules-dir", str(DEFAULT_RULES_DIR)])
     assert ok.exit_code == 0, ok.output
-    assert "4 rules OK" in ok.output
+    assert f"{len(P0_RULES)} rules OK" in ok.output
 
     no_fixtures = runner.invoke(cli, ["validate-rules", "--rules-dir", str(rules_copy)])
     assert no_fixtures.exit_code == 1

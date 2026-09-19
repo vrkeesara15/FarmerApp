@@ -1,0 +1,32 @@
+description: >
+  Five farms' visits at the registered village meeting point are a farmer meeting, not a
+  cluster; the other officer's four clustered visits are below the five-farm minimum, and
+  five visits to one farmer's farm are one farm. No flag.
+mode: batch
+now: "2026-09-18T06:30:00Z"
+seed:
+  villages:
+    - {ref: v1, meeting_point: {east_m: 0, north_m: 0}, radius_m: 150}
+  farmers:
+    - {ref: f1, at: -30d}
+    - {ref: f2, at: -30d}
+    - {ref: f3, at: -30d}
+    - {ref: f4, at: -30d}
+    - {ref: f5, at: -30d}
+  visits:
+    - {ref: m1, farmer: f1, at: -5h, minutes: 15, east_m: 10, north_m: 0, geofence: meeting_point, purpose: meeting}
+    - {ref: m2, farmer: f2, at: -5h, minutes: 15, east_m: 20, north_m: 10}
+    - {ref: m3, farmer: f3, at: -5h, minutes: 15, east_m: 30, north_m: 20}
+    - {ref: m4, farmer: f4, at: -5h, minutes: 15, east_m: 40, north_m: 30}
+    - {ref: m5, farmer: f5, at: -5h, minutes: 15, east_m: 50, north_m: 40}
+    - {ref: c1, officer: officer2, farmer: f1, at: -4h, minutes: 15, east_m: 2000}
+    - {ref: c2, officer: officer2, farmer: f2, at: -3h, minutes: 15, east_m: 2010}
+    - {ref: c3, officer: officer2, farmer: f3, at: -2h, minutes: 15, east_m: 2020}
+    - {ref: c4, officer: officer2, farmer: f4, at: -1h, minutes: 15, east_m: 2030}
+    - {ref: s1, officer: officer2, farmer: f5, at: -9h, minutes: 15, east_m: 3000}
+    - {ref: s2, officer: officer2, farmer: f5, at: -8h, minutes: 15, east_m: 3010}
+    - {ref: s3, officer: officer2, farmer: f5, at: -7h, minutes: 15, east_m: 3020}
+    - {ref: s4, officer: officer2, farmer: f5, at: -6.5h, minutes: 15, east_m: 3030}
+    - {ref: s5, officer: officer2, farmer: f5, at: -6h, minutes: 15, east_m: 3040}
+expect:
+  flags: []

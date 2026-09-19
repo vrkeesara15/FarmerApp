@@ -1,0 +1,18 @@
+# VA-E02 (SPEC 6.3): impossible travel — the speed between consecutive on-duty points is
+# above `max_speed_kmh`. Points less accurate than `max_accuracy_m` are ignored, and a jump
+# no longer than the two points' combined accuracy is GPS jitter, not travel.
+# One flag per officer and IST day (the fastest leg is the evidence).
+id: VA-E02
+version: 1
+title: Impossible travel
+subject: employee
+mode: event
+triggers: [location.batch]
+severity: high
+owner_role: cluster_head
+sla_hours: 48
+enabled: true
+params:
+  max_speed_kmh: 90           # rural roads
+  max_accuracy_m: 100         # ignore points with a worse reported accuracy
+tenant_overrides: {}

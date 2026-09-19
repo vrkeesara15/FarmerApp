@@ -1,0 +1,24 @@
+description: >
+  Two of the officer's five visits are short (40 %, not above it), an open visit is not
+  judged, and the other officer's two short visits are fewer than the three-visit minimum
+  for a day. No flag.
+mode: batch
+now: "2026-09-18T06:30:00Z"
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+    - {ref: f2, at: -30d}
+    - {ref: f3, at: -30d}
+    - {ref: f4, at: -30d}
+    - {ref: f5, at: -30d}
+  visits:
+    - {ref: visit1, farmer: f1, at: -5h, minutes: 2}
+    - {ref: visit2, farmer: f2, at: -4h, minutes: 4.5}
+    - {ref: visit3, farmer: f3, at: -3h, minutes: 5}
+    - {ref: visit4, farmer: f4, at: -2h, minutes: 20}
+    - {ref: visit5, farmer: f5, at: -1h, minutes: 30}
+    - {ref: visit6, farmer: f5, at: -20m}
+    - {ref: o1, officer: officer2, farmer: f1, at: -3h, minutes: 1}
+    - {ref: o2, officer: officer2, farmer: f2, at: -2h, minutes: 2}
+expect:
+  flags: []

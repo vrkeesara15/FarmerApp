@@ -1,0 +1,19 @@
+description: >
+  A 10 km jump reported with 500 m accuracy is ignored (> 100 m), a 150 m jump in ten
+  seconds is within the two points' combined accuracy (GPS jitter), and 6 km in six minutes
+  (60 km/h) is a plausible ride. No flag.
+mode: event
+trigger: location.batch
+subjects: [d1]
+now: "2026-09-18T06:30:00Z"
+seed:
+  duty:
+    - {ref: d1, officer: officer, start: -2h}
+  points:
+    - {duty: d1, at: -60m, east_m: 0, north_m: 0, accuracy_m: 8}
+    - {duty: d1, at: -58m, east_m: 10000, north_m: 0, accuracy_m: 500}
+    - {duty: d1, at: -55m, east_m: 100, north_m: 0, accuracy_m: 80}
+    - {duty: d1, at: -3290s, east_m: 250, north_m: 0, accuracy_m: 80}
+    - {duty: d1, at: -48m, east_m: 6250, north_m: 0, accuracy_m: 10}
+expect:
+  flags: []

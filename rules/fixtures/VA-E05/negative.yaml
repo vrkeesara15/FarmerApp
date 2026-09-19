@@ -1,0 +1,33 @@
+description: >
+  Every farmer receives their own SMS code (the officer's phone typing the codes is the
+  normal sms_otp flow); one phone confirmed three farmers but one of them eight days ago,
+  outside the 7-day window; one farmer-side device confirmed only two farmers. No flag.
+mode: batch
+now: "2026-09-18T06:30:00Z"
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+    - {ref: f2, at: -30d}
+    - {ref: f3, at: -30d}
+    - {ref: f4, at: -30d}
+    - {ref: f5, at: -30d}
+  visits:
+    - {ref: visit1, farmer: f1, at: -3d, minutes: 20}
+    - {ref: visit2, farmer: f2, at: -2d, minutes: 20}
+    - {ref: visit3, farmer: f3, at: -1d, minutes: 20}
+    - {ref: old1, farmer: f1, at: -8d, minutes: 20}
+    - {ref: shared2, farmer: f2, at: -2d, minutes: 20}
+    - {ref: shared3, farmer: f3, at: -1d, minutes: 20}
+    - {ref: visit4, officer: officer2, farmer: f4, at: -2d, minutes: 20}
+    - {ref: visit5, officer: officer2, farmer: f5, at: -1d, minutes: 20}
+  confirmations:
+    - {ref: c1, visit: visit1, channel: sms_otp, at: -71h, phone: "+919876500011", device: OFFICER-PHONE}
+    - {ref: c2, visit: visit2, channel: sms_otp, at: -47h, phone: "+919876500012", device: OFFICER-PHONE}
+    - {ref: c3, visit: visit3, channel: sms_otp, at: -23h, phone: "+919876500013", device: OFFICER-PHONE}
+    - {ref: o1, visit: old1, channel: sms_otp, at: -8d, phone: "+919876500099", device: OFFICER-PHONE}
+    - {ref: o2, visit: shared2, channel: sms_otp, at: -47h, phone: "+919876500099", device: OFFICER-PHONE}
+    - {ref: o3, visit: shared3, channel: sms_otp, at: -23h, phone: "+919876500099", device: OFFICER-PHONE}
+    - {ref: c4, visit: visit4, channel: qr, at: -47h, device: FARMER-TABLET}
+    - {ref: c5, visit: visit5, channel: app_push, at: -23h, device: FARMER-TABLET}
+expect:
+  flags: []

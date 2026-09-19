@@ -31,6 +31,7 @@ from farmerapp.db.geo import point_wkt
 from farmerapp.duty.errors import DutyAlreadyActiveError, NoActiveDutyError
 from farmerapp.duty.schemas import DutyEndIn, DutyPolicyOut, DutyStartIn, DutyStatusOut
 from farmerapp.duty.track import TrackPoint, summarise
+from farmerapp.location import events as location_events
 from farmerapp.location.models import DutyEndReason, DutySession, LocationPoint
 from farmerapp.location.schemas import DutySessionOut
 from farmerapp.logging import get_logger
@@ -184,6 +185,12 @@ async def start_duty(
         is_mock=body.integrity.is_mock,
         is_rooted=body.integrity.is_rooted,
         clock_drift_s=body.integrity.clock_drift_s,
+    )
+    await location_events.bus.dispatch(  # M4: VA-E01 on the start's integrity flags
+        session,
+        location_events.DutyStarted(
+            tenant_id=actor.tenant_id, duty_session_id=duty.id, officer_id=actor.id, at=now
+        ),
     )
     return DutySessionOut.from_row(duty)
 

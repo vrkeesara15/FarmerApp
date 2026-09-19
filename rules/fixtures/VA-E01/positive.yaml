@@ -1,0 +1,23 @@
+description: >
+  A location batch of the officer's duty session carries a mock-location point and a clock
+  drift of 400 s (> 5 min); earlier the same IST day the officer checked in a visit from a
+  rooted phone. One high severity flag for the officer-day citing all three signals, for the
+  cluster head, watched by the auditor.
+mode: event
+trigger: location.batch
+subjects: [d1]
+now: "2026-09-18T06:30:00Z"
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+  duty:
+    - {ref: d1, officer: officer, start: -4h}
+  points:
+    - {duty: d1, at: -3h, east_m: 0, north_m: 0}
+    - {duty: d1, at: -170m, east_m: 50, north_m: 0, is_mock: true}
+    - {duty: d1, at: -160m, east_m: 100, north_m: 0, clock_drift_s: 400}
+  visits:
+    - {ref: visit1, farmer: f1, at: -2h, minutes: 20, integrity: {is_rooted: true}}
+expect:
+  flags:
+    - {subject: officer, severity: high, owner: cluster_head, watchers: [auditor], reasons: [clock_drift, mock_location, rooted_device]}

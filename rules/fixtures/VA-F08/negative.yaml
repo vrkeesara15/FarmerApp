@@ -1,0 +1,22 @@
+description: >
+  The new photo on f2's visit is 16 bits away from f1's photo (a different field), and the
+  identical photo on another visit belongs to the same farmer f2 (VA-E08's business, not a
+  farmer-data problem). No flag.
+mode: event
+trigger: visit.photo
+subjects: [visit2]
+now: "2026-09-18T06:30:00Z"
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+    - {ref: f2, at: -30d}
+  visits:
+    - {ref: visit1, farmer: f1, at: -2d, minutes: 20, east_m: 100}
+    - {ref: visit0, farmer: f2, at: -3d, minutes: 20, east_m: 400}
+    - {ref: visit2, farmer: f2, at: -1h, minutes: 20, east_m: 400}
+  photos:
+    - {ref: p1, visit: visit1, sha256: "1111111111111111111111111111111111111111111111111111111111111111", phash: "c3a5f00f12345678"}
+    - {ref: p0, visit: visit0, sha256: "3333333333333333333333333333333333333333333333333333333333333333", phash: "c3a5f00f1234a987"}
+    - {ref: p2, visit: visit2, sha256: "2222222222222222222222222222222222222222222222222222222222222222", phash: "c3a5f00f1234a987"}
+expect:
+  flags: []

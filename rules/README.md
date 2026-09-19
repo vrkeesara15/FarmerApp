@@ -56,8 +56,28 @@ and `tests/rules/test_loader.py`).
 | Mode   | Entry point                                                    | When                                    |
 |--------|----------------------------------------------------------------|-----------------------------------------|
 | inline | `engine.run_inline(session, tenant, subject, ids)`             | FA-012 registration / farm edits, same transaction |
-| event  | `engine.emit(session, tenant, topic, ids)`; worker `rules.events.handle_event_message` | `farmer.registered`, `visit.created`, `payment.webhook`, in-process `payment.captured` |
+| event  | `engine.emit(session, tenant, topic, ids)`; bus subscribers in `rules.events`; worker `rules.events.handle_event_message` | see the topic table below |
 | batch  | `python -m farmerapp.jobs run-rules --mode batch --tenant fcc` | nightly 02:00 IST (Cloud Scheduler)     |
+
+### Event topics
+
+| Topic                | Raised by (in-process)                                   | Pub/Sub (worker) | Subject ids        | Rules                    |
+|----------------------|----------------------------------------------------------|------------------|--------------------|--------------------------|
+| `farmer.registered`  | FA-012 registration (`engine.emit`)                      | yes              | farmer             | VA-F06                   |
+| `farm.photo`         | farm add / edit with new photos (`engine.emit`)          | —                | farm               | VA-F08                   |
+| `visit.created`      | check-in: `VisitCheckedIn` on the visits bus             | yes              | visit              | VA-E01, VA-E08, VA-F08   |
+| `visit.photo`        | photo upload: `VisitPhotoAdded`                          | —                | visit              | VA-E08, VA-F08           |
+| `visit.confirmed`    | FA-016 confirmation: `VisitConfirmed`                    | —                | visit              | (none yet)               |
+| `visit.checked_out`  | check-out: `VisitCheckedOut`                             | —                | visit              | VA-E08                   |
+| `duty.started`       | duty start: `DutyStarted` on the location bus            | —                | duty session       | VA-E01                   |
+| `location.batch`     | batch ingest (REST + sync): `LocationBatchIngested`      | yes              | duty session       | VA-E01, VA-E02           |
+| `payment.captured`   | payments bus: `PaymentCaptured`                          | —                | payment            | (none yet)               |
+| `payment.webhook`    | —                                                        | yes              | payment            | (none yet)               |
+
+The visits and location buses are synchronous for plain subscribers; database work hangs off
+`subscribe_async` + `await bus.dispatch(session, event)`, which runs each subscriber in the
+write path's transaction inside its own savepoint. A topic nobody subscribes to costs no query.
+The in-process run and a later Pub/Sub redelivery of the same event are both safe (dedupe).
 
 Each rule runs in its own savepoint: a failing rule is logged (`rule_failed`) and never breaks
 the write or the other rules. Findings become flags through `flags.service.raise_flag`:
@@ -112,9 +132,30 @@ expect:
     - {subject: f1, severity: medium, owner: store_manager, watchers: [], reasons: [area_mismatch]}
 ```
 
-Times (`at`) are `-<n>m|h|d` relative to `now`; positions are metres east / north of the
+Times (`at`) are `-<n>s|m|h|d` relative to `now`; positions are metres east / north of the
 village centre; `device` records the registration in the audit trail with that
 `X-Device-Id`.
+
+Field data for the employee rules (see `tests/rules/harness.py` for every key):
+
+```yaml
+seed:
+  villages: [{ref: v1, meeting_point: {east_m: 0, north_m: 0}, radius_m: 150}]
+  duty:     [{ref: d1, officer: officer, start: -4h, integrity: {is_rooted: true}}]
+  points:   [{duty: d1, at: -3h, east_m: 0, north_m: 0, accuracy_m: 8, is_mock: true}]
+  visits:   [{ref: visit1, officer: officer, farmer: f1, farm: farm1, at: -2h, minutes: 20,
+              east_m: 1000, geofence: inside, purpose: advisory, integrity: {clock_drift_s: 400}}]
+  photos:   [{ref: p1, visit: visit1, sha256: "...", phash: "c3a5f00f12345678",
+              flags: [exif_time_mismatch]}]
+  farm_photos: [{ref: fp1, farm: farm1, sha256: "..."}]
+  confirmations: [{ref: c1, visit: visit1, channel: sms_otp, at: -1h,
+                   phone: "+919876500001", device: OFFICER-PHONE}]
+```
+
+Fixtures never read the wall clock: `now` is fixed and every time is relative to it. Location
+points live in daily partitions keyed by the **UTC** day; the harness creates the partitions
+of the days a fixture touches before inserting its points. Quote pHash values (a hex string
+of digits only would otherwise parse as a number).
 
 ## Rules in this directory
 
@@ -124,5 +165,12 @@ village centre; `device` records the registration in the audit trail with that
 | VA-F02 | duplicate farmer: same phone digits, or similar name + village + farms within 50 m | inline, batch | store manager |
 | VA-F03 | farm polygon: area ±30 %, self-intersection, > 20 % overlap           | inline, batch  | store manager |
 | VA-F06 | > 8 registrations in < 30 min by one officer; a device shared by officers | event, batch | cluster head (+ auditors) |
+| VA-F08 | visit photo pHash within 6 bits of another farmer's photo; farm photo with the same bytes (sha256) as another farmer's | event (`visit.photo`, `visit.created`, `farm.photo`) | store manager (+ auditors) |
+| VA-E01 | mock location, rooted device or clock drift > 300 s at duty start, in a location batch or at check-in; one flag per officer-day | event (`duty.started`, `location.batch`, `visit.created`) | cluster head (+ auditors) |
+| VA-E02 | > 90 km/h between consecutive points (accuracy ≤ 100 m, jumps within the combined accuracy ignored); one flag per officer-day | event (`location.batch`) | cluster head (+ auditors) |
+| VA-E03 | ≥ 5 farms' visits pairwise within 200 m on one IST day, away from any village meeting point | batch | cluster head (+ auditors) |
+| VA-E04 | > 40 % of an officer-day's checked-out visits (≥ 3) under the tenant `min_visit_duration_s` | batch | cluster head |
+| VA-E05 | one OTP phone confirming ≥ 3 farmers, or one farmer-side device (push / QR) confirming ≥ 3 farmers, in 7 days | batch | cluster head (+ auditors) |
+| VA-E08 | photo EXIF time / GPS inconsistent with the check-in (`photo_flags`), or the same sha256 / pHash on another visit; one flag per visit | event (`visit.photo`, `visit.checked_out`, `visit.created`) | cluster head (+ auditors) |
 
-Next: VA-F08, VA-E01–E05, VA-E08 (M4 loop).
+All eleven P0 rules of M4 are in place; `tests/rules/test_fixtures.py::test_rules_exist` lists them.

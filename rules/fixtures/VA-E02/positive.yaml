@@ -1,0 +1,19 @@
+description: >
+  Two accurate consecutive points of the officer's duty session are 9.8 km apart five
+  minutes apart (about 118 km/h, above 90). A high severity flag for the cluster head with
+  both points on the map and the computed speed.
+mode: event
+trigger: location.batch
+subjects: [d1]
+now: "2026-09-18T06:30:00Z"
+seed:
+  duty:
+    - {ref: d1, officer: officer, start: -2h}
+  points:
+    - {duty: d1, at: -60m, east_m: 0, north_m: 0, accuracy_m: 8}
+    - {duty: d1, at: -55m, east_m: 200, north_m: 0, accuracy_m: 8}
+    - {duty: d1, at: -50m, east_m: 10000, north_m: 0, accuracy_m: 12}
+    - {duty: d1, at: -45m, east_m: 10300, north_m: 0, accuracy_m: 8}
+expect:
+  flags:
+    - {subject: officer, severity: high, owner: cluster_head, watchers: [auditor], reasons: [impossible_travel]}

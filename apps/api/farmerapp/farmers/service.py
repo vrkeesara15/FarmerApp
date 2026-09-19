@@ -191,6 +191,7 @@ def _check_version(row: Any, expected: int | None) -> None:
 
 # --------------------------------------------------------------------------- M4 rules
 FARMER_REGISTERED = "farmer.registered"
+FARM_PHOTO = "farm.photo"  # VA-F08: new farm photos (sha256 reuse across farmers)
 
 
 async def _validate(
@@ -559,8 +560,11 @@ async def _add_farm(
     await session.flush()
     for plot_body in body.crop_plots:
         await _add_crop_plot(session, farm, plot_body)
-    session.add_all(await _photo_rows(session, farmer.tenant_id, farm.id, body.photos))
+    photos = await _photo_rows(session, farmer.tenant_id, farm.id, body.photos)
+    session.add_all(photos)
     await session.flush()
+    if photos:
+        await rules_engine.emit(session, farmer.tenant_id, FARM_PHOTO, [farm.id])
     return farm, warnings
 
 
@@ -591,6 +595,7 @@ async def update_farm(session: AsyncSession, actor: User, farm: Farm, body: Farm
         farm.boundary = None
     for key, value in changes.items():
         setattr(farm, key, value)
+    new_uris: list[str] = []
     if body.photos is not None:
         existing = await _photos(session, [farm.id])
         for photo in existing[farm.id]:
@@ -600,6 +605,8 @@ async def update_farm(session: AsyncSession, actor: User, farm: Farm, body: Farm
         new_uris = [u for u in body.photos if u not in known]
         session.add_all(await _photo_rows(session, farm.tenant_id, farm.id, new_uris))
     await session.flush()
+    if new_uris:
+        await rules_engine.emit(session, farm.tenant_id, FARM_PHOTO, [farm.id])
     if boundary_set or "area_acres" in changes:
         await _validate(session, farm.tenant_id, farm.farmer_id)
     return await farm_out(session, farm, warnings)

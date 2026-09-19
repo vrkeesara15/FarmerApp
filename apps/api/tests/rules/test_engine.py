@@ -235,7 +235,7 @@ async def test_worker_runs_event_rules(db_session: AsyncSession, world: BaseWorl
     )
     assert (
         await events.handle_event_message(
-            "visit.created", msg, session_provider=_provider(db_session), rule_set=RULES
+            "payment.webhook", msg, session_provider=_provider(db_session), rule_set=RULES
         )
         is None  # no event rule on the topic yet: no database work
     )
@@ -300,7 +300,15 @@ async def test_batch_job_is_idempotent(db_session: AsyncSession, world: BaseWorl
         [world.tenant_id], session_provider=_provider(db_session), rule_set=RULES, now=DEFAULT_NOW
     )
     assert reports[0].mode == Mode.BATCH and reports[0].total_raised == 0
-    assert set(reports[0].rules_run) == {"VA-F01", "VA-F02", "VA-F03", "VA-F06"}
+    assert set(reports[0].rules_run) == {
+        "VA-F01",
+        "VA-F02",
+        "VA-F03",
+        "VA-F06",
+        "VA-E03",
+        "VA-E04",
+        "VA-E05",
+    }  # the nightly batch rules; event-only rules (VA-F08, VA-E01/E02/E08) never run here
     assert len(await _flags(db_session, world)) == before
 
     sla = await jobs.run_sla_escalation(
