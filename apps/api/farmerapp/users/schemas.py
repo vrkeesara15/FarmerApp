@@ -9,7 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from farmerapp.api.pagination import PageOut
-from farmerapp.auth.models import Device, UserRole, UserStatus
+from farmerapp.auth.models import Device, User, UserRole, UserStatus
 from farmerapp.auth.schemas import Phone, UserOut
 from farmerapp.tenants.settings import Language
 
@@ -97,14 +97,56 @@ class DeviceStatusOut(BaseModel):
     user_status: Literal["active", "disabled"]
 
 
-UserPage = PageOut[UserOut]
+DeviceSummary = Literal["pending", "active", "lost", "revoked", "none"]
+_SUMMARY_ORDER: tuple[DeviceSummary, ...] = ("pending", "active", "lost", "revoked")
+
+
+class DeviceBrief(BaseModel):
+    """The user's most recently seen device (``GET /v1/users`` rows)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    device_id: str
+    platform: str | None
+    model: str | None
+    status: Literal["pending", "active", "revoked", "lost"]
+    last_seen: datetime
+
+
+class UserListItem(UserOut):
+    """A ``GET /v1/users`` row: the user plus device status, so the users table (C101) needs
+    one request instead of one devices request per row."""
+
+    device_status: DeviceSummary = Field(
+        description="pending if any device waits for binding, else active if any is active, "
+        "else lost, else revoked; none when the user never signed in from a device."
+    )
+    latest_device: DeviceBrief | None = Field(description="The device seen most recently.")
+
+    @classmethod
+    def from_user_devices(cls, user: User, devices: list[Device]) -> UserListItem:
+        statuses = {d.status for d in devices}
+        summary: DeviceSummary = next((s for s in _SUMMARY_ORDER if s in statuses), "none")
+        latest = max(devices, key=lambda d: d.last_seen, default=None)
+        return cls.model_validate(
+            {
+                **UserOut.from_user(user).model_dump(),
+                "device_status": summary,
+                "latest_device": DeviceBrief.model_validate(latest) if latest else None,
+            }
+        )
+
+
+UserPage = PageOut[UserListItem]
 
 __all__ = [
+    "DeviceBrief",
     "DeviceList",
     "DeviceOut",
     "DeviceStatusOut",
     "ForceLogoutOut",
     "UserCreate",
+    "UserListItem",
     "UserOut",
     "UserPage",
     "UserUpdate",

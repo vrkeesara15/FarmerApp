@@ -7,7 +7,9 @@ import type {
   OwnerHomeOut,
   StoreDetailOut,
 } from "../analytics";
-import { handleAnalytics, MOCK_OFFICERS, MOCK_STORES } from "./analytics";
+import type { ClusterList } from "../clusters";
+import { handleAnalytics, handleClusters, MOCK_OFFICERS, MOCK_STORES } from "./analytics";
+import { MOCK_EVIDENCE_FARMER_IDS, MOCK_EVIDENCE_OFFICER_IDS } from "./flags";
 
 const as = (role: string) => ({ id: `u-${role}`, role });
 const get = (path: string, role = "owner", qs = "") =>
@@ -172,5 +174,32 @@ describe("mock /v1/analytics (shapes of apps/api/openapi.yaml)", () => {
     expect(new Set(MOCK_STORES.map((s) => s.cluster_id)).size).toBe(3);
     expect(MOCK_OFFICERS).toHaveLength(30);
     expect(new Set(MOCK_OFFICERS.map((o) => o.id)).size).toBe(30);
+  });
+});
+
+describe("mock /v1/clusters and the flag cross-links", () => {
+  const clusters = (role: string) => handleClusters("GET", ["clusters"], as(role))!;
+
+  it("names every cluster for tenant-wide roles and scopes the rest (SPEC 2.6)", () => {
+    const all = clusters("owner").json as ClusterList;
+    expect(all.items.map((c) => c.name)).toEqual(["Telangana", "Karnataka", "Maharashtra"]);
+    expect(all.items.reduce((n, c) => n + c.store_ids.length, 0)).toBe(24);
+    const head = clusters("cluster_head").json as ClusterList;
+    expect(head.items.map((c) => [c.id, c.store_ids.length])).toEqual([["cluster-tg", 8]]);
+    const manager = clusters("store_manager").json as ClusterList;
+    expect(manager.items.map((c) => c.store_ids)).toEqual([["store-wgl"]]);
+    expect((clusters("agronomist").json as ClusterList).items).toEqual([]);
+    expect(clusters("farmer").status).toBe(403);
+    expect(handleClusters("GET", ["catalog", "stores"], as("owner"))).toBeNull();
+  });
+
+  it("owner home lists the inbox's open high-severity flags; their records exist here", () => {
+    const home = get("analytics/owner-home").json as OwnerHomeOut;
+    expect(home.high_severity_flags.length).toBeGreaterThan(0);
+    for (const f of home.high_severity_flags) expect(f.id).toMatch(/^f1a90000-/);
+    for (const id of Object.values(MOCK_EVIDENCE_FARMER_IDS))
+      expect(get(`analytics/farmers/${id}/360`).status).toBe(200);
+    for (const id of Object.values(MOCK_EVIDENCE_OFFICER_IDS))
+      expect(get(`analytics/officers/${id}`).status).toBe(200);
   });
 });

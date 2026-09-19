@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import type { DeviceStatus } from "@/lib/admin";
+import type { Cluster } from "@/lib/clusters";
 import { useStores } from "@/lib/hooks/catalog";
 import { useT } from "@/lib/i18n-client";
 
@@ -46,7 +47,11 @@ export function useStoreLabels(enabled = true): Map<string, string> {
   );
 }
 
-/** Clusters have no list endpoint yet: a short, stable label from the id. */
-export function clusterLabel(t: ReturnType<typeof useT>, id: string): string {
-  return t("users.clusterShort", { id: id.slice(-4) });
+/** A cluster's name (GET /v1/clusters); ids the caller cannot see get a short label. */
+export function clusterLabel(
+  t: ReturnType<typeof useT>,
+  id: string,
+  clusters?: ReadonlyMap<string, Cluster>,
+): string {
+  return clusters?.get(id)?.name ?? t("users.clusterShort", { id: id.slice(-4) });
 }

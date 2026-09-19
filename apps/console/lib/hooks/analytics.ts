@@ -17,6 +17,7 @@ import {
 import { catalog, type Crop } from "../catalog";
 import { addDays, defaultRange } from "../analytics-filters";
 import { FIELD_TEAM_ROLES, STORE_ROLES } from "../nav";
+import { useClusters } from "./clusters";
 import { useSession } from "../session-context";
 
 export const analyticsKeys = {
@@ -145,15 +146,15 @@ export interface FilterOptionSets {
   stores: StoreRow[];
   officers: ScorecardRow[];
   crops: Crop[];
-  /** cluster id -> districts of its stores (clusters have no names in the P0 API). */
-  clusters: Array<{ id: string; districts: string[] }>;
+  /** Clusters with names from `GET /v1/clusters` and their store count. */
+  clusters: Array<{ id: string; name: string; storeCount: number }>;
   storeName: (id: string | null | undefined) => string | undefined;
   officerName: (id: string | null | undefined) => string | undefined;
   loading: boolean;
 }
 
 /**
- * Stores (+ clusters) from `/v1/analytics/stores`, officers from `/v1/analytics/field-team`,
+ * Stores from `/v1/analytics/stores`, clusters from `/v1/clusters`, officers from `/v1/analytics/field-team`,
  * crops from `/v1/catalog/crops`, each over the default range and only for roles that may read
  * them; cached for 5 minutes and fetched in parallel with the page's own data.
  */
@@ -176,6 +177,7 @@ export function useFilterOptions(): FilterOptionSets {
     enabled: ready && hasRole(role, FIELD_TEAM_ROLES) && role !== "field_officer",
     staleTime: 5 * 60_000,
   });
+  const clusters = useClusters(hasRole(role, STORE_ROLES));
   const crops = useQuery({
     queryKey: ["catalog", "crops"],
     queryFn: catalog.crops,
@@ -187,24 +189,28 @@ export function useFilterOptions(): FilterOptionSets {
     const officerList = [...(officers.data?.items ?? [])].sort((a, b) =>
       a.name.localeCompare(b.name),
     );
-    const byCluster = new Map<string, string[]>();
-    for (const s of storeList) {
-      if (!s.cluster_id) continue;
-      byCluster.set(s.cluster_id, [...(byCluster.get(s.cluster_id) ?? []), s.district]);
-    }
+    // Only clusters with a store in the analytics scope (a store count from that list).
+    const storesPerCluster = new Map<string, number>();
+    for (const s of storeList)
+      if (s.cluster_id)
+        storesPerCluster.set(s.cluster_id, (storesPerCluster.get(s.cluster_id) ?? 0) + 1);
     const storeNames = new Map(storeList.map((s) => [s.id, s.name]));
     const officerNames = new Map(officerList.map((o) => [o.officer_id, o.name]));
     return {
       stores: storeList,
       officers: officerList,
       crops: (crops.data ?? []).filter((c) => c.active),
-      clusters: [...byCluster.entries()].map(([id, districts]) => ({ id, districts })),
+      clusters: (clusters.data ?? [])
+        .filter((c) => storesPerCluster.has(c.id))
+        .map((c) => ({ id: c.id, name: c.name, storeCount: storesPerCluster.get(c.id)! })),
       storeName: (id) => (id ? storeNames.get(id) : undefined),
       officerName: (id) => (id ? officerNames.get(id) : undefined),
-      loading: stores.isLoading || officers.isLoading || crops.isLoading,
+      loading: stores.isLoading || officers.isLoading || crops.isLoading || clusters.isLoading,
     };
   }, [
     stores.data,
+    clusters.data,
+    clusters.isLoading,
     officers.data,
     crops.data,
     stores.isLoading,

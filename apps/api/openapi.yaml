@@ -314,7 +314,7 @@ paths:
     get:
       tags:
       - users
-      summary: Users of the caller's tenant (cluster heads see their own cluster)
+      summary: 'Users of the caller''s tenant with device status (cluster heads: own cluster)'
       operationId: listUsers
       parameters:
       - name: cursor
@@ -344,7 +344,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageOut_UserOut_'
+                $ref: '#/components/schemas/PageOut_UserListItem_'
         default:
           description: Error (RFC 9457 problem+json)
           content:
@@ -3372,6 +3372,43 @@ paths:
       - cluster_head
       - director
       - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/clusters:
+    get:
+      tags:
+      - tenants
+      summary: Clusters with names, district and store ids (scoped per SPEC 2.6)
+      operationId: listClusters
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClusterList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
       - field_officer
       - owner
       - store_manager
@@ -8295,6 +8332,49 @@ components:
       - retired
       - all
       title: ClaimStatusFilter
+    ClusterList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ClusterOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: ClusterList
+    ClusterOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        district:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: District
+        state:
+          type: string
+          title: State
+        store_ids:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: Store Ids
+          description: Stores of the cluster the caller may see.
+      type: object
+      required:
+      - id
+      - name
+      - district
+      - state
+      - store_ids
+      title: ClusterOut
     CommentIn:
       properties:
         body:
@@ -9250,6 +9330,42 @@ components:
       - day_close
       title: DaySummaryOut
       description: ST-002 "day-end totals by mode" for one store and business date (IST).
+    DeviceBrief:
+      properties:
+        device_id:
+          type: string
+          title: Device Id
+        platform:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Platform
+        model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model
+        status:
+          type: string
+          enum:
+          - pending
+          - active
+          - revoked
+          - lost
+          title: Status
+        last_seen:
+          type: string
+          format: date-time
+          title: Last Seen
+      type: object
+      required:
+      - device_id
+      - platform
+      - model
+      - status
+      - last_seen
+      title: DeviceBrief
+      description: The user's most recently seen device (``GET /v1/users`` rows).
     DeviceIntegrityOut:
       properties:
         is_mock:
@@ -13793,11 +13909,11 @@ components:
       required:
       - items
       title: PageOut[FarmerOut]
-    PageOut_UserOut_:
+    PageOut_UserListItem_:
       properties:
         items:
           items:
-            $ref: '#/components/schemas/UserOut'
+            $ref: '#/components/schemas/UserListItem'
           type: array
           title: Items
         next_cursor:
@@ -13808,7 +13924,7 @@ components:
       type: object
       required:
       - items
-      title: PageOut[UserOut]
+      title: PageOut[UserListItem]
     PageOut_VisitOut_:
       properties:
         items:
@@ -17550,6 +17666,81 @@ components:
       - role
       title: UserCreate
       description: A staff account (farmers sign up through ``/v1/farmers``).
+    UserListItem:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        phone:
+          type: string
+          title: Phone
+        name:
+          type: string
+          title: Name
+        role:
+          type: string
+          title: Role
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+        language:
+          type: string
+          title: Language
+        status:
+          type: string
+          title: Status
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        device_status:
+          type: string
+          enum:
+          - pending
+          - active
+          - lost
+          - revoked
+          - none
+          title: Device Status
+          description: pending if any device waits for binding, else active if any is active, else lost,
+            else revoked; none when the user never signed in from a device.
+        latest_device:
+          anyOf:
+          - $ref: '#/components/schemas/DeviceBrief'
+          - type: 'null'
+          description: The device seen most recently.
+      type: object
+      required:
+      - id
+      - tenant_id
+      - phone
+      - name
+      - role
+      - store_id
+      - cluster_id
+      - language
+      - status
+      - created_at
+      - device_status
+      - latest_device
+      title: UserListItem
+      description: 'A ``GET /v1/users`` row: the user plus device status, so the users table (C101) needs
+
+        one request instead of one devices request per row.'
     UserOut:
       properties:
         id:

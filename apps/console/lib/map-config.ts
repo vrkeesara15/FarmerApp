@@ -5,7 +5,7 @@
  * `map.attribution` ("© OpenStreetMap contributors").
  */
 export const MAP_TILE_URL =
-  process.env.NEXT_PUBLIC_MAP_TILE_URL ?? "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+  process.env.NEXT_PUBLIC_MAP_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
 /** OSM standard tiles serve zoom 0-19. */
 export const MAP_MAX_ZOOM = 19;

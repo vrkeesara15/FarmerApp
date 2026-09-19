@@ -4,13 +4,20 @@ A synthetic 50-store tenant (``tests.analytics.synthetic``: 2,000 farmers, ~36,0
 15,000 visits over 60 days) is written inside the test transaction; the owner home is then
 requested for the last 30 days (daily trends) and for the whole 60 days (weekly trends), each
 timed end to end through the ASGI app (auth, scope, every query, serialisation).
+
+The timed requests run with the coverage tracer paused: under ``make check`` (pytest-cov) line
+tracing alone adds ~1.5 s to this request, which measured the tracer rather than the endpoint
+(~1.2 s untraced, 2.9-3.3 s traced on the dev Mac). The budget is unchanged.
 """
 
 from __future__ import annotations
 
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import date, timedelta
 
+import coverage
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,6 +29,20 @@ BUDGET_S = 3.0
 END = date(2026, 9, 18)
 
 
+@contextmanager
+def _untraced() -> Iterator[None]:
+    """Pause pytest-cov's tracer (if any) so the timing is the endpoint's, not the tracer's."""
+    cov = coverage.Coverage.current()
+    if cov is None:
+        yield
+        return
+    cov.stop()
+    try:
+        yield
+    finally:
+        cov.start()
+
+
 async def test_owner_home_under_3_seconds_for_50_stores(
     client: AsyncClient, bearer: Bearer, db_session: AsyncSession
 ) -> None:
@@ -31,16 +52,17 @@ async def test_owner_home_under_3_seconds_for_50_stores(
 
     timings: dict[str, float] = {}
     for label, days in (("30d", 30), ("60d", 60)):
-        started = time.perf_counter()
-        resp = await get(
-            client,
-            bearer,
-            data.owner,
-            "/owner-home",
-            from_=END - timedelta(days=days - 1),
-            to=END,
-        )
-        timings[label] = time.perf_counter() - started
+        with _untraced():
+            started = time.perf_counter()
+            resp = await get(
+                client,
+                bearer,
+                data.owner,
+                "/owner-home",
+                from_=END - timedelta(days=days - 1),
+                to=END,
+            )
+            timings[label] = time.perf_counter() - started
         assert resp.status_code == 200, resp.text
         body = resp.json()
         assert len(body["stores"]) == 50

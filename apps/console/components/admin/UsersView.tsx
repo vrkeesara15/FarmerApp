@@ -19,13 +19,14 @@ import {
   STAFF_ROLES,
   USER_READ_ROLES,
   USER_WRITE_ROLES,
-  deviceSummary,
   type AdminUser,
   type Language,
 } from "@/lib/admin";
 import { can } from "@/lib/catalog";
 import { normaliseIndianMobile } from "@/lib/format";
-import { useCreateUser, useDevices, useUsers } from "@/lib/hooks/admin";
+import { useCreateUser, useUsers } from "@/lib/hooks/admin";
+import { useClusterMap } from "@/lib/hooks/clusters";
+import type { Cluster } from "@/lib/clusters";
 import { useT } from "@/lib/i18n-client";
 import { LOCALE_OPTIONS } from "@/lib/i18n";
 import { problemMessage } from "@/lib/problem-messages";
@@ -52,12 +53,6 @@ export function UsersView() {
   );
 }
 
-function DeviceCell({ userId }: { userId: string }) {
-  const q = useDevices(userId);
-  if (!q.data) return null;
-  return <DeviceStatusBadge status={deviceSummary(q.data.items)} />;
-}
-
 function UsersContent() {
   const t = useT();
   const { role } = useSession();
@@ -78,10 +73,8 @@ function UsersContent() {
         (!status || u.status === status),
     );
   }, [users.data, q, roleFilter, status]);
-  const clusters = React.useMemo(
-    () => [...new Set((users.data ?? []).map((u) => u.cluster_id).filter(Boolean))] as string[],
-    [users.data],
-  );
+  const clusterMap = useClusterMap();
+  const clusters = React.useMemo(() => [...clusterMap.values()], [clusterMap]);
 
   const columns: DataTableColumn<AdminUser>[] = [
     {
@@ -108,7 +101,7 @@ function UsersContent() {
       cell: (u) =>
         [
           u.store_id ? (stores.get(u.store_id) ?? u.store_id) : null,
-          u.cluster_id ? clusterLabel(t, u.cluster_id) : null,
+          u.cluster_id ? clusterLabel(t, u.cluster_id, clusterMap) : null,
         ]
           .filter(Boolean)
           .join(" · ") || t("users.tenantWide"),
@@ -123,7 +116,9 @@ function UsersContent() {
     {
       id: "device",
       header: t("users.columns.device"),
-      cell: (u) => <DeviceCell userId={u.id} />,
+      // Device status comes with the list (one request for the table).
+      accessor: (u) => u.device_status ?? "none",
+      cell: (u) => <DeviceStatusBadge status={u.device_status ?? "none"} />,
     },
   ];
 
@@ -195,7 +190,7 @@ function CreateUserDialog({
   stores,
 }: {
   onClose: () => void;
-  clusters: string[];
+  clusters: Cluster[];
   stores: Map<string, string>;
 }) {
   const t = useT();
@@ -308,7 +303,7 @@ function CreateUserDialog({
           value={clusterId}
           onChange={(e) => setClusterId(e.target.value)}
           emptyLabel={t("common.none")}
-          options={clusters.map((id) => ({ value: id, label: clusterLabel(t, id) }))}
+          options={clusters.map((c) => ({ value: c.id, label: c.name }))}
           error={errors.cluster_id}
         />
       </div>

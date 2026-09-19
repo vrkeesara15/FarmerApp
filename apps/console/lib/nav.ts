@@ -44,6 +44,13 @@ export const ROUTE_ROLES: Readonly<Record<string, readonly string[]>> = {
   "/admin/audit": AUDIT_ROLES,
 };
 
+/** Dashboards whose filters live in the URL (AN-011); the TopBar date range binds to them. */
+export const ANALYTICS_ROUTES = ["/home", "/field-team", "/farmers", "/stores"] as const;
+
+export function isAnalyticsRoute(path: string | null | undefined): boolean {
+  return !!path && ANALYTICS_ROUTES.some((r) => path === r || path.startsWith(`${r}/`));
+}
+
 /** The route entry that governs a path (`/field-team/abc` -> `/field-team`). */
 function routeFor(path: string): string | undefined {
   return Object.keys(ROUTE_ROLES)

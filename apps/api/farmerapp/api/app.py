@@ -45,6 +45,7 @@ from farmerapp.rules.loader import validate_rules
 from farmerapp.settings import Settings, get_settings
 from farmerapp.stock import router as stock_routes
 from farmerapp.sync import router as sync_routes
+from farmerapp.tenants import clusters_router as cluster_routes
 from farmerapp.tenants import settings_router as settings_routes
 from farmerapp.uploads import router as upload_routes
 from farmerapp.uploads.blobstore import BlobStore, build_blob_store
@@ -168,6 +169,7 @@ def create_app(
     v1.include_router(upload_routes.blob_router)
     v1.include_router(audit_routes.router)
     v1.include_router(settings_routes.router)
+    v1.include_router(cluster_routes.router)
     # M3: catalogue, stock, orders, payments, khata (read endpoints; writes are the loop's).
     v1.include_router(catalog_routes.router)
     v1.include_router(stock_routes.router)

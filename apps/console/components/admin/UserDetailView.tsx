@@ -32,8 +32,8 @@ import {
   useReportLost,
   useUpdateUser,
   useUser,
-  useUsers,
 } from "@/lib/hooks/admin";
+import { useClusterMap } from "@/lib/hooks/clusters";
 import { useT } from "@/lib/i18n-client";
 import { problemMessage } from "@/lib/problem-messages";
 import { useSession } from "@/lib/session-context";
@@ -97,6 +97,7 @@ function UserDetail({ user }: { user: AdminUser }) {
   const forceLogout = useForceLogout(stepUp);
   const deactivate = useDeactivateUser(stepUp);
   const stores = useStoreLabels();
+  const clusterMap = useClusterMap();
   const [pending, setPending] = React.useState<Pending | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | undefined>();
@@ -136,7 +137,7 @@ function UserDetail({ user }: { user: AdminUser }) {
           <Field label={t("users.columns.assignment")}>
             {[
               user.store_id ? (stores.get(user.store_id) ?? user.store_id) : null,
-              user.cluster_id ? clusterLabel(t, user.cluster_id) : null,
+              user.cluster_id ? clusterLabel(t, user.cluster_id, clusterMap) : null,
             ]
               .filter(Boolean)
               .join(" · ") || t("users.tenantWide")}
@@ -231,11 +232,8 @@ function EditUser({
   const { role: myRole } = useSession();
   const stepUp = useStepUp();
   const update = useUpdateUser(stepUp);
-  const all = useUsers();
-  const clusters = React.useMemo(
-    () => [...new Set((all.data ?? []).map((u) => u.cluster_id).filter(Boolean))] as string[],
-    [all.data],
-  );
+  const clusterMap = useClusterMap();
+  const clusters = React.useMemo(() => [...clusterMap.values()], [clusterMap]);
   const [name, setName] = React.useState(user.name);
   const [role, setRole] = React.useState(user.role);
   const [status, setStatus] = React.useState(user.status);
@@ -333,7 +331,7 @@ function EditUser({
           value={clusterId}
           onChange={(e) => setClusterId(e.target.value)}
           emptyLabel={t("common.none")}
-          options={clusters.map((id) => ({ value: id, label: clusterLabel(t, id) }))}
+          options={clusters.map((c) => ({ value: c.id, label: c.name }))}
           disabled={lockOwner}
         />
       </div>

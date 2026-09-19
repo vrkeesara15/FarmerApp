@@ -100,10 +100,7 @@ export function AnalyticsFilterBar({ state, onExport, exporting, hide }: Analyti
         options={{
           clusters: opts.clusters.map((c) => ({
             value: c.id,
-            label: t("analytics.clusterOption", {
-              name: [...new Set(c.districts)][0] ?? c.id,
-              n: c.districts.length,
-            }),
+            label: t("analytics.clusterOption", { name: c.name, n: c.storeCount }),
           })),
           stores: stores.map((s) => ({ value: s.id, label: s.name })),
           officers: officers.map((o) => ({ value: o.officer_id, label: o.name })),

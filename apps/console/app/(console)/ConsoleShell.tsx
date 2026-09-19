@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BadgeIndianRupee,
   ClipboardCheck,
@@ -18,11 +18,12 @@ import {
   Palette,
 } from "lucide-react";
 import { SideNav, type SideNavItem } from "@/components/ds/SideNav";
-import { TopBar } from "@/components/ds/TopBar";
+import { TopBar, type TopBarProps } from "@/components/ds/TopBar";
 import type { DateRange } from "@/components/ds/DateRangePicker";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useT } from "@/lib/i18n-client";
-import { visibleNavItems } from "@/lib/nav";
+import { useAnalyticsFilters } from "@/lib/hooks/use-analytics-filters";
+import { isAnalyticsRoute, visibleNavItems } from "@/lib/nav";
 import { SessionProvider, useSession } from "@/lib/session-context";
 
 const ROLE_KEYS = [
@@ -102,6 +103,21 @@ function Shell({ children }: { children: React.ReactNode }) {
   ];
   // Role-based nav (SPEC 2.6, lib/nav.ts ROUTE_ROLES): hide what the signed-in role cannot read.
   const items = visibleNavItems(allItems, session.user?.role);
+  const topBar: SharedTopBarProps = {
+    tenantName: t("app.tenantFallback"),
+    search,
+    onSearchChange: setSearch,
+    unreadNotifications: 0,
+    user: session.user
+      ? { name: session.user.name, role: t(`roles.${roleKey(session.user.role)}`) }
+      : { name: t("session.guest") },
+    onSignOut: session.user
+      ? () => {
+          void session.signOut().then(() => router.push("/login"));
+        }
+      : undefined,
+    actions: <ThemeToggle />,
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -117,31 +133,41 @@ function Shell({ children }: { children: React.ReactNode }) {
         }
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar
-          tenantName={t("app.tenantFallback")}
-          search={search}
-          onSearchChange={setSearch}
-          dateRange={dateRange}
-          onDateRangeChange={setDateRange}
-          unreadNotifications={0}
-          user={
-            session.user
-              ? { name: session.user.name, role: t(`roles.${roleKey(session.user.role)}`) }
-              : { name: t("session.guest") }
-          }
-          onSignOut={
-            session.user
-              ? () => {
-                  void session.signOut().then(() => router.push("/login"));
-                }
-              : undefined
-          }
-          actions={<ThemeToggle />}
-        />
+        <React.Suspense
+          fallback={<TopBar {...topBar} dateRange={dateRange} onDateRangeChange={setDateRange} />}
+        >
+          <BoundTopBar {...topBar} localRange={dateRange} onLocalRangeChange={setDateRange} />
+        </React.Suspense>
         <main id="main" className="flex-1 overflow-y-auto p-6">
           {children}
         </main>
       </div>
     </div>
   );
+}
+
+type SharedTopBarProps = Omit<TopBarProps, "dateRange" | "onDateRangeChange">;
+
+/**
+ * TopBar whose date range is the page's AN-011 `from` / `to` URL parameters on the analytics
+ * dashboards (same params as `useAnalyticsFilters()`, so the FilterBar and the TopBar always
+ * agree and a change is a history entry); elsewhere it keeps the shell's own range.
+ */
+function BoundTopBar({
+  localRange,
+  onLocalRangeChange,
+  ...props
+}: SharedTopBarProps & {
+  localRange: DateRange;
+  onLocalRangeChange: (range: DateRange) => void;
+}) {
+  const pathname = usePathname();
+  const { filters, setFilters } = useAnalyticsFilters();
+  const bound = isAnalyticsRoute(pathname);
+  const range = bound ? { start: filters.from, end: filters.to } : localRange;
+  const onChange = (next: DateRange) => {
+    onLocalRangeChange(next);
+    if (bound) setFilters({ from: next.start, to: next.end });
+  };
+  return <TopBar {...props} dateRange={range} onDateRangeChange={onChange} />;
 }

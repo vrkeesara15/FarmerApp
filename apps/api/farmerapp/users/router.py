@@ -47,6 +47,7 @@ from farmerapp.users.schemas import (
     DeviceStatusOut,
     ForceLogoutOut,
     UserCreate,
+    UserListItem,
     UserOut,
     UserPage,
     UserUpdate,
@@ -148,7 +149,7 @@ async def _check_assignment(
 @router.get(
     "",
     operation_id="listUsers",
-    summary="Users of the caller's tenant (cluster heads see their own cluster)",
+    summary="Users of the caller's tenant with device status (cluster heads: own cluster)",
     response_model=UserPage,
     responses=problem_responses((400, "invalid_cursor")),
 )
@@ -162,7 +163,22 @@ async def list_users(
     stmt = stmt.order_by(User.created_at, User.id).limit(page.fetch)
     rows = (await session.execute(stmt)).scalars().all()
     items, next_cursor = page.slice(rows)
-    return UserPage(items=[UserOut.from_user(u) for u in items], next_cursor=next_cursor)
+    # Device status for the whole page in one query (C101 shows it per row).
+    devices: dict[uuid.UUID, list[Device]] = {u.id: [] for u in items}
+    if devices:
+        found = await session.execute(
+            select(Device).where(
+                Device.tenant_id == actor.tenant_id,
+                Device.user_id.in_(list(devices)),
+                Device.deleted_at.is_(None),
+            )
+        )
+        for d in found.scalars():
+            devices[d.user_id].append(d)
+    return UserPage(
+        items=[UserListItem.from_user_devices(u, devices[u.id]) for u in items],
+        next_cursor=next_cursor,
+    )
 
 
 @router.post(

@@ -1,7 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SideNav } from "@/components/ds/SideNav";
-import { canSeeReplay, canSeeRoute, filterVisibility, visibleNavItems } from "./nav";
+import {
+  canSeeReplay,
+  canSeeRoute,
+  filterVisibility,
+  isAnalyticsRoute,
+  visibleNavItems,
+} from "./nav";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/home" }));
 
@@ -84,5 +90,12 @@ describe("role-based nav (SPEC 2.6)", () => {
     expect(screen.queryByRole("link", { name: "home" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "stores" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "products" })).toBeInTheDocument();
+  });
+
+  it("binds the TopBar date range only on the analytics dashboards", () => {
+    for (const p of ["/home", "/field-team/off-1/replay", "/farmers/f1", "/stores"])
+      expect(isAnalyticsRoute(p)).toBe(true);
+    for (const p of ["/flags", "/homework", "/admin/users", "/settings", null])
+      expect(isAnalyticsRoute(p)).toBe(false);
   });
 });

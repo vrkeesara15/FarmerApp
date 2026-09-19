@@ -10,6 +10,7 @@
  * works and reloads show the same numbers. Holds no real data.
  */
 import type { MockActor, MockResult } from "./catalog";
+import { mockOpenHighSeverityFlags } from "./flags";
 
 type Json = Record<string, unknown>;
 
@@ -694,10 +695,10 @@ function ownerHome(sc: Scope) {
     verified_visits_per_day: r.verified_visits_per_day,
   });
   const flagStores = new Set(sc.stores.map((s) => s.id));
-  const flags = HIGH_FLAGS.filter((f) => flagStores.has(f.store_id)).map((f) => ({
-    ...f,
-    opened_at: istAt(addDays(sc.to, -f.age), 10, 15),
-  }));
+  // Same flags as the inbox mock (the API reads one `flag` table), so `/flags/{id}` opens them.
+  const flags = mockOpenHighSeverityFlags().filter(
+    (f) => !f.store_id || flagStores.has(f.store_id),
+  );
   return {
     filters: sc.echo,
     granularity: weekly ? "week" : "day",
@@ -712,49 +713,6 @@ function ownerHome(sc: Scope) {
     notes: { crop_health_alerts: "pending_an006" },
   };
 }
-
-const HIGH_FLAGS = [
-  {
-    id: "flag-101",
-    rule: "VA-E02",
-    severity: "high",
-    title: "Visit far from the farm boundary",
-    officer_id: "off-wgl-1",
-    store_id: "store-wgl",
-    farmer_id: "farmer-001",
-    age: 1,
-  },
-  {
-    id: "flag-102",
-    rule: "VA-F06",
-    severity: "high",
-    title: "Registration burst: 11 farmers in 20 minutes",
-    officer_id: "off-knr-1",
-    store_id: "store-knr",
-    farmer_id: null,
-    age: 2,
-  },
-  {
-    id: "flag-103",
-    rule: "VA-F01",
-    severity: "high",
-    title: "Farmer phone matches a staff account",
-    officer_id: "off-hbl-1",
-    store_id: "store-hbl",
-    farmer_id: "farmer-025",
-    age: 3,
-  },
-  {
-    id: "flag-104",
-    rule: "VA-E01",
-    severity: "high",
-    title: "Mock location detected during duty",
-    officer_id: "off-ngp-1",
-    store_id: "store-ngp",
-    farmer_id: null,
-    age: 4,
-  },
-];
 
 function fieldTeam(sc: Scope) {
   const locationVisible = sc.role !== "store_manager";
@@ -1455,6 +1413,44 @@ function storeDetail(s: Store, sc: Scope) {
 
 // ---- router ---------------------------------------------------------------------------------
 /** `/v1/analytics/*` of the mock API; null when the path is not an analytics route. */
+const TENANT_WIDE = ["owner", "director", "tenant_admin", "auditor", "accountant"];
+
+/** `GET /v1/clusters`: names, district and visible store ids (SPEC 2.6 scope, as the API). */
+export function handleClusters(
+  method: string,
+  path: string[],
+  actor: MockActor | null,
+): MockResult | null {
+  if (path[0] !== "clusters" || path.length !== 1) return null;
+  if (!actor) return problem(401, "unauthenticated", "Bearer token required.");
+  if (method !== "GET") return problem(405, "method_not_allowed", "Read-only.");
+  if (actor.role === "farmer") return problem(403, "forbidden", "Staff only.");
+  const managerStore = MOCK_STORES.find((st) => st.id === MOCK_MANAGER_STORE_ID)!;
+  const visible = (clusterId: string): string[] | null => {
+    const ids = MOCK_STORES.filter((st) => st.cluster_id === clusterId).map((st) => st.id);
+    if (TENANT_WIDE.includes(actor.role)) return ids;
+    if (actor.role === "cluster_head") return clusterId === MOCK_HEAD_CLUSTER_ID ? ids : null;
+    if (actor.role === "store_manager" || actor.role === "field_officer")
+      return clusterId === managerStore.cluster_id ? [managerStore.id] : null;
+    return null; // agronomist: no store-scoped screens
+  };
+  const items = MOCK_CLUSTERS.flatMap((c) => {
+    const storeIds = visible(c.id);
+    if (!storeIds) return [];
+    const first = MOCK_STORES.find((st) => st.cluster_id === c.id);
+    return [
+      {
+        id: c.id,
+        name: c.name,
+        district: first?.district ?? null,
+        state: c.name,
+        store_ids: storeIds,
+      },
+    ];
+  });
+  return ok({ items });
+}
+
 export function handleAnalytics(
   method: string,
   path: string[],

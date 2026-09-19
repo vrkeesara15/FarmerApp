@@ -49,7 +49,7 @@ test("C10 owner home loads every section from the mock", async ({ page }) => {
   await expect(page.getByTestId("officers-top").getByTestId("officer-rank")).toHaveCount(5);
   await expect(page.getByTestId("officers-bottom").getByTestId("officer-rank")).toHaveCount(5);
   const flag = page.getByTestId("high-flags").getByTestId("high-flag").first();
-  await expect(flag).toHaveAttribute("href", /^\/flags\/flag-\d+$/);
+  await expect(flag).toHaveAttribute("href", /^\/flags\/[0-9a-f-]+$/);
   await expect(page.getByTestId("crop-health").getByTestId("empty-state")).toBeVisible();
   // KPI definitions (SPEC 5.2) are tooltips.
   await kpis.getByTestId("kpi-verified_visits").getByTestId("info-tip").hover();
@@ -62,7 +62,7 @@ test("AN-011: a filter change updates the URL and survives reload and back", asy
   await login(page, "9876510002");
   const bar = page.getByTestId("filter-bar");
   await expect(page.locator(".store-pin")).toHaveCount(24);
-  await bar.getByLabel("Cluster").selectOption({ label: "Warangal cluster (8 stores)" });
+  await bar.getByLabel("Cluster").selectOption({ label: "Telangana cluster (8 stores)" });
   await expect(page).toHaveURL(/[?&]cluster=cluster-tg(&|$)/);
   await expect(page.locator(".store-pin")).toHaveCount(8);
   await bar.getByLabel("Store").selectOption({ label: "FCC Warangal" });

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { handleAdmin, resetMockAdmin } from "@/lib/mock/admin";
-import { handleAnalytics } from "@/lib/mock/analytics";
+import { handleAnalytics, handleClusters } from "@/lib/mock/analytics";
 import {
   handleCatalog,
   resetMockCatalog,
@@ -17,8 +17,8 @@ import { handleFlags, resetMockFlags } from "@/lib/mock/flags";
  * Roles: any +91 mobile signs in as the owner except the numbers in MOCK_ROLE_BY_PHONE
  * (e.g. +919000000008 = agronomist). The role is carried in the mock tokens
  * (`mock-access-<role>-<ts>`, `mock-refresh-<role>-<ts>-<rand>`) so a refresh keeps it.
- * `/v1/catalog/*` (WC-005) is served by lib/mock/catalog.ts; `/v1/analytics/*` (M4) by
- * lib/mock/analytics.ts; `/v1/flags*` (WC-010) by lib/mock/flags.ts; `/v1/auth/step-up*`,
+ * `/v1/catalog/*` (WC-005) is served by lib/mock/catalog.ts; `/v1/analytics/*` and
+ * `/v1/clusters` (M4) by lib/mock/analytics.ts; `/v1/flags*` (WC-010) by lib/mock/flags.ts; `/v1/auth/step-up*`,
  * `/v1/users*`, `/v1/settings*` and `/v1/audit-logs*` (SEC-028, WC-011, WC-012, WC-103) by
  * lib/mock/admin.ts.
  */
@@ -140,6 +140,7 @@ async function handle(req: NextRequest, rawPath: string[]): Promise<NextResponse
   const moduleResult =
     catalogResult ??
     handleAnalytics(req.method, path, req.nextUrl.searchParams, actorFrom(req)) ??
+    handleClusters(req.method, path, actorFrom(req)) ??
     handleFlags(req.method, path, req.nextUrl.searchParams, body, actorFrom(req)) ??
     handleAdmin(req.method, path, req.nextUrl.searchParams, body, actorFrom(req), req.headers);
   if (moduleResult) {

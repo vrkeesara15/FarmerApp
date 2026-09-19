@@ -105,6 +105,27 @@ const square = (lng: number, lat: number, d: number): Json => ({
   ],
 });
 
+/**
+ * Evidence records point at the analytics mock's farmers and officers (lib/mock/analytics.ts),
+ * so the record links (`/farmers/{id}`, `/field-team/{id}`) open real mock screens.
+ */
+export const MOCK_EVIDENCE_FARMER_IDS: Readonly<Record<number, string>> = {
+  101: "farmer-001",
+  102: "farmer-002",
+  2: "farmer-003",
+  201: "farmer-004",
+  3: "farmer-005",
+  4: "farmer-006",
+  5: "farmer-007",
+  7: "farmer-008",
+  701: "farmer-009",
+  8: "farmer-010",
+};
+export const MOCK_EVIDENCE_OFFICER_IDS: Readonly<Record<string, string>> = {
+  "u-field_officer": "off-wgl-1",
+  "u-fo-lakshmi": "off-wgl-2",
+};
+
 function created(flag: Pick<MockFlag, "id" | "owner_id" | "created_at">, n: number): Json {
   return {
     id: `e0000000-0000-4000-8000-${String(n).padStart(12, "0")}`,
@@ -153,7 +174,7 @@ function seed(): MockFlag[] {
   };
   const farmer = (n: number, name: string, village: string) => ({
     type: "farmer",
-    id: `fa000000-0000-4000-8000-${String(n).padStart(12, "0")}`,
+    id: MOCK_EVIDENCE_FARMER_IDS[n] ?? `fa000000-0000-4000-8000-${String(n).padStart(12, "0")}`,
     summary: { name, village, phone: `+91******${String(4000 + n)}` },
   });
   return [
@@ -173,7 +194,7 @@ function seed(): MockFlag[] {
         records: [
           {
             type: "user",
-            id: "u-field_officer",
+            id: MOCK_EVIDENCE_OFFICER_IDS["u-field_officer"]!,
             summary: { name: "Ravi Kumar", role: "field_officer" },
           },
           farmer(101, "Ramesh Yadav", "Hanamkonda"),
@@ -303,12 +324,12 @@ function seed(): MockFlag[] {
         records: [
           {
             type: "user",
-            id: "u-fo-lakshmi",
+            id: MOCK_EVIDENCE_OFFICER_IDS["u-fo-lakshmi"]!,
             summary: { name: "Lakshmi Devi", role: "field_officer" },
           },
           {
             type: "user",
-            id: "u-field_officer",
+            id: MOCK_EVIDENCE_OFFICER_IDS["u-field_officer"]!,
             summary: { name: "Ravi Kumar", role: "field_officer" },
           },
         ],
@@ -351,6 +372,39 @@ function seed(): MockFlag[] {
 
 let flags: MockFlag[] = seed();
 let seq = 1000;
+
+/**
+ * Open (unresolved) high / critical flags for the C10 owner home mock — the real API reads the
+ * same `flag` table for both screens, so the ids here open in `/flags/{id}`.
+ */
+export function mockOpenHighSeverityFlags(): Array<{
+  id: string;
+  rule: string;
+  severity: string;
+  title: string;
+  opened_at: string;
+  store_id: string | null;
+  officer_id: string | null;
+  farmer_id: string | null;
+}> {
+  return flags
+    .filter(
+      (f) => !RESOLVED.includes(f.status) && (f.severity === "high" || f.severity === "critical"),
+    )
+    .map((f) => {
+      const records = (f.evidence as { records: Array<{ type: string; id: string }> }).records;
+      return {
+        id: f.id,
+        rule: f.rule_id,
+        severity: f.severity,
+        title: f.title,
+        opened_at: f.created_at,
+        store_id: f.scope_store ?? "store-wgl",
+        officer_id: records.find((r) => r.type === "user")?.id ?? null,
+        farmer_id: records.find((r) => r.type === "farmer")?.id ?? null,
+      };
+    });
+}
 
 export function resetMockFlags(): void {
   flags = seed();

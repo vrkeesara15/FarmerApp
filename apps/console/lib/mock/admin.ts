@@ -32,10 +32,8 @@ const STAFF = [
   "tenant_admin",
 ];
 const LANGS = ["en", "te", "kn", "hi", "mr"];
-export const MOCK_CLUSTERS = [
-  "c1a70000-0000-4000-8000-00000000c001",
-  "c1a70000-0000-4000-8000-00000000c002",
-];
+/** Cluster ids of the analytics mock (`GET /v1/clusters` in lib/mock/analytics.ts names them). */
+export const MOCK_CLUSTERS = ["cluster-tg", "cluster-ka"];
 const STORES = ["store-wgl", "store-knr", "store-nzb"];
 
 interface User {
@@ -403,6 +401,27 @@ function checkAssignment(body: Json): MockResult | null {
   return null;
 }
 
+const DEVICE_ORDER = ["pending", "active", "lost", "revoked"] as const;
+
+/** `GET /v1/users` rows carry the device status and the most recently seen device. */
+function withDeviceStatus(u: User): Json {
+  const devices = db.devices.filter((d) => d.user_id === u.id);
+  const latest = [...devices].sort((a, b) => b.last_seen.localeCompare(a.last_seen))[0];
+  return {
+    ...u,
+    device_status: DEVICE_ORDER.find((st) => devices.some((d) => d.status === st)) ?? "none",
+    latest_device: latest
+      ? {
+          device_id: latest.device_id,
+          platform: latest.platform,
+          model: latest.model,
+          status: latest.status,
+          last_seen: latest.last_seen,
+        }
+      : null,
+  };
+}
+
 function page<T>(items: T[], query: URLSearchParams): MockResult {
   const limit = Math.min(200, Math.max(1, Number(query.get("limit") ?? 50) || 50));
   const start = Number(query.get("cursor") ?? 0) || 0;
@@ -675,7 +694,10 @@ export function handleAdmin(
 
   // ---- users ----
   if (b === undefined) {
-    if (method === "GET") return allow(USER_READ) ? page(visibleUsers(actor), query) : forbidden();
+    if (method === "GET")
+      return allow(USER_READ)
+        ? page(visibleUsers(actor).map(withDeviceStatus), query)
+        : forbidden();
     if (method === "POST") {
       if (!allow(USER_WRITE)) return forbidden();
       const blocked = needStepUp();

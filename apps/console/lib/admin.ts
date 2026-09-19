@@ -48,6 +48,15 @@ export interface AdminUser {
   language: string;
   status: "active" | "disabled" | string;
   created_at: string;
+  /** `GET /v1/users` rows only (not `GET /v1/users/{id}`): the table needs one request. */
+  device_status?: DeviceStatus | "none";
+  latest_device?: {
+    device_id: string;
+    platform: string | null;
+    model: string | null;
+    status: DeviceStatus;
+    last_seen: string;
+  } | null;
 }
 
 export interface UserPage {
