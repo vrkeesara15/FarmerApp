@@ -217,5 +217,97 @@ def reconcile_payments(
             )
 
 
+def _tenants(values: list[str]) -> list[uuid.UUID]:
+    from farmerapp.rules.jobs import UnknownTenantError, resolve_tenant
+
+    try:
+        return [resolve_tenant(v) for v in values]
+    except UnknownTenantError as exc:
+        raise typer.BadParameter(str(exc), param_hint="--tenant") from exc
+
+
+@cli.command("run-rules")
+def run_rules(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+    mode: str = typer.Option("batch", help="Runner: batch (nightly 02:00 IST) or inline."),
+    rule: list[str] = typer.Option(  # noqa: B008
+        [], "--rule", help="Only these rule ids (repeatable; default: every enabled rule)."
+    ),
+) -> None:
+    """VA-001 / SPEC 6.1: run the validation rules of one mode over each tenant and raise
+    flags. Idempotent (dedupe key): re-running never duplicates an open flag."""
+    from farmerapp.rules.jobs import run_rules_job
+    from farmerapp.rules.schema import Mode
+
+    _setup()
+    try:
+        runner = Mode(mode)
+    except ValueError as exc:
+        raise typer.BadParameter(f"unknown mode {mode!r}", param_hint="--mode") from exc
+    if runner == Mode.EVENT:
+        raise typer.BadParameter("event rules run on their topics", param_hint="--mode")
+    reports = asyncio.run(run_rules_job(_tenants(tenant), mode=runner, rule_ids=rule or None))
+    for r in reports:
+        typer.echo(
+            f"run-rules ({r.mode.value}): tenant={r.tenant_id} rules={len(r.rules_run)} "
+            f"findings={sum(r.findings.values())} raised={r.total_raised} failed={len(r.failed)}"
+        )
+        for rule_id in r.rules_run:
+            typer.echo(f"  {rule_id} findings={r.findings[rule_id]} raised={r.raised[rule_id]}")
+        for rule_id in r.failed:
+            typer.echo(f"  {rule_id} FAILED")
+
+
+@cli.command("validate-rules")
+def validate_rules_command(
+    rules_dir: str | None = typer.Option(
+        None, "--rules-dir", help="Rule directory (default: RULES_DIR or the monorepo rules/)."
+    ),
+) -> None:
+    """VA-001 / VA-007 (CI, `make check-api`): every rules/*.yaml validates, matches a Python
+    implementation, and ships a positive and a negative fixture. Exit 1 on any problem."""
+    from farmerapp.rules.loader import (
+        RuleConfigError,
+        check_fixtures,
+        check_registry,
+        load_rules,
+    )
+    from farmerapp.rules.loader import rules_dir as default_rules_dir
+    from farmerapp.rules.registry import implementations
+
+    _setup()
+    try:
+        rule_set = load_rules(rules_dir or default_rules_dir())
+    except RuleConfigError as exc:
+        typer.echo(f"validate-rules: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    implemented = implementations()
+    problems = check_registry(rule_set, implemented) + check_fixtures(rule_set, implemented)
+    for problem in problems:
+        typer.echo(f"validate-rules: {problem}", err=True)
+    if problems:
+        raise typer.Exit(1)
+    typer.echo(f"validate-rules: {len(rule_set.rules)} rules OK ({', '.join(rule_set.rules)})")
+
+
+@cli.command("flags-sla-escalation")
+def flags_sla_escalation(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+) -> None:
+    """OPS-010: move every unresolved flag past its SLA one level up (store manager ->
+    cluster head -> auditor -> owner) and notify the new owner. Run hourly."""
+    from farmerapp.rules.jobs import run_sla_escalation
+
+    _setup()
+    for r in asyncio.run(run_sla_escalation(_tenants(tenant))):
+        typer.echo(f"flags-sla-escalation: tenant={r.tenant_id} escalated={len(r.escalations)}")
+        for e in r.escalations:
+            typer.echo(f"  flag={e.flag_id} rule={e.rule_id} -> {e.to_role} {e.to_owner_id}")
+
+
 def main() -> None:
     cli(prog_name="python -m farmerapp.jobs")

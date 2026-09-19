@@ -1,0 +1,15 @@
+description: >
+  "Mallesh Goud" registered ten days ago and "Malesh Goud" registered today in the same
+  village, with farm centroids 20 m apart: the newer record is flagged as a likely duplicate
+  (medium severity, store manager, no watchers).
+mode: batch
+seed:
+  farmers:
+    - {ref: original, name: Mallesh Goud, village: v1, at: -10d}
+    - {ref: duplicate, name: Malesh Goud, village: v1, at: -1h}
+  farms:
+    - {ref: farm_a, farmer: original, area_acres: 1.0, square: {east_m: 0, north_m: 0, side_m: 64}}
+    - {ref: farm_b, farmer: duplicate, area_acres: 1.0, square: {east_m: 20, north_m: 0, side_m: 64}}
+expect:
+  flags:
+    - {subject: duplicate, severity: medium, owner: store_manager, watchers: [], reasons: [similar_name_nearby_farm]}

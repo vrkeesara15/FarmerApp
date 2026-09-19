@@ -44,6 +44,9 @@ async def receive_push(envelope: PushEnvelope) -> Response:
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(level=settings.log_level, json_logs=settings.log_json, service="worker")
+    from farmerapp.rules.loader import validate_rules
+
+    validate_rules()  # VA-001: the event rules the worker runs must load
     app = FastAPI(title="FarmerApp worker", version=__version__, docs_url=None, redoc_url=None)
     app.add_middleware(TraceMiddleware)
     install_error_handlers(app)

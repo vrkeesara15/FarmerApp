@@ -25,6 +25,7 @@ from farmerapp.catalog import router as catalog_routes
 from farmerapp.db import models as _models  # noqa: F401  (registers models + audit listener)
 from farmerapp.duty import router as duty_routes
 from farmerapp.farmers import router as farmer_routes
+from farmerapp.flags import router as flag_routes
 from farmerapp.invoices import router as invoice_routes
 from farmerapp.khata import router as khata_routes
 from farmerapp.location import batch_router as location_batch_routes
@@ -37,6 +38,8 @@ from farmerapp.payments import router as payment_routes
 from farmerapp.payments import webhooks as webhook_routes
 from farmerapp.payments.service import PaymentServices, build_payment_services
 from farmerapp.policies import router as policy_routes
+from farmerapp.rules import events as rule_events
+from farmerapp.rules.loader import validate_rules
 from farmerapp.settings import Settings, get_settings
 from farmerapp.stock import router as stock_routes
 from farmerapp.sync import router as sync_routes
@@ -138,6 +141,8 @@ def create_app(
     app.state.blobs = blob_store or build_blob_store(settings)  # NF-003 / SEC-016
     app.state.payments = payment_services or build_payment_services(settings)  # FA-021
     order_payment_events.register()  # FA-020 x FA-021: a captured payment advances its order
+    validate_rules()  # VA-001: invalid rules/*.yaml refuse to start
+    rule_events.register()  # SPEC 6.1: event rules on the in-process buses
 
     v1 = APIRouter(prefix=API_PREFIX)
     v1.include_router(health.router)
@@ -169,6 +174,8 @@ def create_app(
     v1.include_router(invoice_routes.pos_router)
     v1.include_router(invoice_routes.router)
     v1.include_router(day_close_routes.router)
+    # M4: validation agent inbox (WC-010, VA-002, VA-003).
+    v1.include_router(flag_routes.router)
     app.include_router(v1)
 
     # FA-002: refuse to start unless every route declares a role policy (or is public), and

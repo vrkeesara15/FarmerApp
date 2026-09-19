@@ -1,0 +1,18 @@
+# VA-F01 (SPEC 6.2): farmer phone format, OTP verification, staff / blocklisted phones.
+# Registration rejects malformed, duplicate and staff phones outright (FA-012); this rule
+# flags what is left: unverified phones past the grace period, phones that became staff
+# phones later, blocklisted numbers and malformed imports.
+id: VA-F01
+version: 1
+title: Farmer phone format, OTP verification and staff blocklist
+subject: farmer
+mode: [inline, batch]
+severity: high
+owner_role: store_manager
+sla_hours: 48
+enabled: true
+params:
+  phone_pattern: '^\+91[6-9][0-9]{9}$'   # E.164 Indian mobile
+  unverified_grace_hours: 72             # offline captures verify later (FA-012)
+  blocklist: []                          # extra numbers, E.164 (staff accounts are always checked)
+tenant_overrides: {}

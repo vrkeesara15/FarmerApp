@@ -1,0 +1,21 @@
+description: >
+  Two farmers' one-acre farms overlapping by half (both flagged), a self-intersecting
+  "bow-tie" boundary, and a farm declared as one acre that measures 2.5 acres.
+mode: batch
+seed:
+  farmers:
+    - {ref: left, name: Ramesh, at: -5d}
+    - {ref: right, name: Suresh, at: -4d}
+    - {ref: bowtie, name: Venkatesh, at: -3d}
+    - {ref: oversized, name: Narsimha, at: -2d}
+  farms:
+    - {ref: farm_left, farmer: left, area_acres: 1.0, square: {east_m: 0, north_m: 0, side_m: 64}}
+    - {ref: farm_right, farmer: right, area_acres: 1.0, square: {east_m: 32, north_m: 0, side_m: 64}}
+    - {ref: farm_bowtie, farmer: bowtie, area_acres: 1.0, ring: [[0, 400], [64, 464], [64, 400], [0, 464]]}
+    - {ref: farm_big, farmer: oversized, area_acres: 1.0, square: {east_m: 800, north_m: 0, side_m: 100}}
+expect:
+  flags:
+    - {subject: left, severity: medium, owner: store_manager, watchers: [], reasons: [farm_overlap]}
+    - {subject: right, severity: medium, owner: store_manager, watchers: [], reasons: [farm_overlap]}
+    - {subject: bowtie, reasons: [self_intersection]}
+    - {subject: oversized, reasons: [area_mismatch]}

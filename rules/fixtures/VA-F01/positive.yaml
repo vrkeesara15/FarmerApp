@@ -1,0 +1,15 @@
+description: >
+  An offline capture never OTP-verified four days later, and a farmer whose phone became a
+  staff account's phone after registration. Both are high severity farmer-data flags for the
+  store manager, watched by the auditor.
+mode: batch
+seed:
+  users:
+    - {ref: new_officer, role: field_officer, cluster: c1, store: s1, phone: "+919100000001"}
+  farmers:
+    - {ref: unverified, name: Ramulu, phone_verified: false, at: -4d}
+    - {ref: staff_phone, name: Sathaiah, phone: "+919100000001", at: -10d}
+expect:
+  flags:
+    - {subject: unverified, severity: high, owner: store_manager, watchers: [auditor], reasons: [phone_not_verified]}
+    - {subject: staff_phone, severity: high, owner: store_manager, watchers: [auditor], reasons: [staff_phone]}

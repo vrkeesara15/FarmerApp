@@ -533,6 +533,61 @@ into one head. Notes: `docs/prs/M3-integration.md`.
   `lines[].label_claim_id`) is checked with `catalog.recommendable.assert_sku_recommendable`;
   otherwise 422 `sku_not_recommendable` with `errors[].loc = ["lines", i, "label_claim_id"]`.
 
+## Validation agents: rules engine and flags (M4 / VA-001 .. VA-003 / VA-007 / WC-010 / OPS-010)
+
+Alembic `0018_flags_rules` (branch label `flags`, on `0017`); PR notes in
+`docs/prs/M4-rules-engine.md`; authoring guide in `rules/README.md`.
+
+- **Rules** are `rules/<id>.yaml` at the monorepo root (VA-001), validated by
+  `farmerapp/rules/schema.py` when the API, worker or a job starts (`validate_rules`; an
+  invalid file refuses to start; a missing directory logs `rules_dir_missing` and runs no
+  rules). `RULES_DIR` points elsewhere (containers). Each rule is one module
+  `farmerapp/rules/checks/va_<id>.py` with `@rule("VA-F02")`, reading `ctx.param(...)`.
+- **Runners** (SPEC 6.1, `farmerapp/rules/engine.py`): `run_inline` from the FA-012 write
+  paths (registration, farmer name / village edits, farm add / boundary edit),
+  `emit(session, tenant, topic, ids)` for event rules (registration emits
+  `farmer.registered`; the worker's `visit.created` / `farmer.registered` / `payment.webhook`
+  handlers call `rules.events.handle_event_message`; `payment.captured` runs in-process),
+  `run_batch` from `python -m farmerapp.jobs run-rules --mode batch --tenant fcc` (nightly
+  02:00 IST). A savepoint per rule: a failing rule is logged, never fails the write.
+- **Flags** (`farmerapp/flags/`): `raise_flag` dedupes (`<rule>:<subject>:<id>:<key>`, partial
+  unique index on unresolved flags; already reviewed under the same rule version -> not
+  raised again), routes (VA-003: employee -> cluster head, farmer data -> store manager, high
+  severity also auditors as `watchers`, fallback up the ladder), sets the SLA and notifies
+  (`flag_assigned`). History in append-only `flag_event` (resolutions carry the VA-006
+  `label`), thread in `flag_comment`.
+
+| Route | Roles | What |
+|---|---|---|
+| `GET /v1/flags` | owner, director, auditor, tenant admin (tenant); cluster head (own cluster, owned / watched); store manager (own store's farmer-data flags, owned); field officer (flags about themselves) | filters `status` / `severity` (repeatable), `rule_id`, `subject_type`, `owner=me`, `overdue`; `counts` by severity and rule; cursor pagination, newest first |
+| `GET /v1/flags/{id}` | same | evidence records with summaries (reviewers), map points / polygons, signed photo URLs, history, comments, `allowed_transitions` |
+| `POST /v1/flags/{id}/transition` | reviewers (not field officers) | `open -> in_review -> resolved_valid / resolved_fixed / escalated`, `escalated -> resolved_fixed / resolved_action`; anything else 409 `invalid_transition`; resolutions and escalation need a note; escalating hands the flag to an auditor |
+| `POST /v1/flags/{id}/comments` | all readers | the subject's comment is `is_subject_explanation` (VA-005); resolved -> 409 `flag_resolved` |
+| `POST /v1/flags/{id}/assign` | reviewers | to an active reviewer of the tenant, never the subject (422 `assignee_invalid`) |
+
+```python
+# a new rule: rules/VA-E02.yaml + this module + rules/fixtures/VA-E02/{positive,negative}.yaml
+@rule("VA-E02")
+async def check(ctx: RuleContext) -> list[Finding]:
+    limit = float(ctx.param("max_speed_kmh"))  # from the YAML (tenant overrides applied)
+    ...  # read through ctx.session; ctx.subject_ids is None in batch
+    return [Finding(subject_type=Subject.EMPLOYEE, subject_id=officer_id, key=day, title=t)]
+
+
+# write paths and subscribers
+await engine.run_inline(session, tenant_id, Subject.FARMER, [farmer.id])
+await engine.emit(session, tenant_id, "farmer.registered", [farmer.id])
+```
+
+- Jobs: `python -m farmerapp.jobs run-rules --tenant <id|fcc|gfl> [--mode batch] [--rule ID]`,
+  `python -m farmerapp.jobs flags-sla-escalation --tenant ...` (OPS-010, hourly: unresolved
+  flags past their SLA move one level up with a fresh SLA and a `flag_escalated`
+  notification), `python -m farmerapp.jobs validate-rules [--rules-dir]` (run by
+  `make check-api`: YAML valid, every rule implemented, both fixtures present).
+- Tests: golden fixtures `tests/rules/test_fixtures.py` (harness `tests/rules/harness.py`),
+  loader / tuning `tests/rules/test_loader.py`, runners `tests/rules/test_engine.py`, API
+  `tests/flags/test_api.py`, routing / dedupe / SLA `tests/flags/test_service.py`.
+
 ## Farmer registration writes (FA-012 / FA-013)
 
 `POST /v1/farmers` registers a farmer with nested `farms[{boundary GeoJSON, area_acres, soil,

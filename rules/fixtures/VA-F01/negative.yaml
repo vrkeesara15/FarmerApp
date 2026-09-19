@@ -1,0 +1,10 @@
+description: >
+  A verified farmer, and an offline capture still inside the 72 h verification grace period.
+  No flag.
+mode: batch
+seed:
+  farmers:
+    - {ref: verified, name: Ramulu, phone_verified: true, at: -10d}
+    - {ref: recent_offline, name: Sathaiah, phone_verified: false, at: -2h}
+expect:
+  flags: []

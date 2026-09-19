@@ -5770,6 +5770,345 @@ paths:
       - cluster_head
       - director
       - owner
+  /v1/flags:
+    get:
+      tags:
+      - flags
+      summary: Validation flags visible to the caller, newest first, with counts (WC-010)
+      operationId: listFlags
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/FlagStatus'
+          - type: 'null'
+          title: Status
+      - name: severity
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/Severity'
+          - type: 'null'
+          title: Severity
+      - name: rule_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 16
+          - type: 'null'
+          title: Rule Id
+      - name: subject_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/Subject'
+          - type: 'null'
+          title: Subject Type
+      - name: owner
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^me$
+          - type: 'null'
+          description: '`me`: owned or watched'
+          title: Owner
+        description: '`me`: owned or watched'
+      - name: overdue
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          description: Unresolved and past the SLA
+          title: Overdue
+        description: Unresolved and past the SLA
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/flags/{id}:
+    get:
+      tags:
+      - flags
+      summary: A flag with its evidence bundle, history and comments (WC-010, VA-002)
+      operationId: getFlag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/flags/{id}/transition:
+    post:
+      tags:
+      - flags
+      summary: Move a flag through the SPEC 6.1 review states
+      operationId: transitionFlag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_transition`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/flags/{id}/comments:
+    post:
+      tags:
+      - flags
+      summary: Add a review comment, or the subject's explanation (VA-005)
+      operationId: commentOnFlag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagCommentOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`flag_resolved`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/flags/{id}/assign:
+    post:
+      tags:
+      - flags
+      summary: Hand a flag to another reviewer (VA-003)
+      operationId: assignFlag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`flag_resolved`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`assignee_invalid`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
 components:
   schemas:
     AdjustmentIn:
@@ -5822,6 +6161,23 @@ components:
       - rejected
       - consumed
       title: ApprovalStatus
+    AssignIn:
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        note:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Note
+      additionalProperties: false
+      type: object
+      required:
+      - user_id
+      title: AssignIn
     AuditLogOut:
       properties:
         id:
@@ -6098,6 +6454,18 @@ components:
       - retired
       - all
       title: ClaimStatusFilter
+    CommentIn:
+      properties:
+        body:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Body
+      additionalProperties: false
+      type: object
+      required:
+      - body
+      title: CommentIn
     ConfirmationRequest:
       properties:
         channel:
@@ -7158,6 +7526,75 @@ components:
       - debit
       - credit
       title: EntryType
+    EvidenceOut:
+      properties:
+        records:
+          items:
+            $ref: '#/components/schemas/EvidenceRecord'
+          type: array
+          title: Records
+        map:
+          additionalProperties:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+          type: object
+          title: Map
+        photos:
+          items:
+            $ref: '#/components/schemas/EvidencePhoto'
+          type: array
+          title: Photos
+        metrics:
+          additionalProperties: true
+          type: object
+          title: Metrics
+      type: object
+      required:
+      - records
+      - map
+      - photos
+      - metrics
+      title: EvidenceOut
+    EvidencePhoto:
+      properties:
+        blob_uri:
+          type: string
+          title: Blob Uri
+        signed_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Signed Url
+        signed_url_expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Signed Url Expires At
+      type: object
+      required:
+      - blob_uri
+      title: EvidencePhoto
+    EvidenceRecord:
+      properties:
+        type:
+          type: string
+          title: Type
+        id:
+          type: string
+          title: Id
+        summary:
+          additionalProperties: true
+          type: object
+          title: Summary
+          description: A few fields of the record (empty when not visible).
+      type: object
+      required:
+      - type
+      - id
+      title: EvidenceRecord
     FarmCreate:
       properties:
         id:
@@ -7763,6 +8200,378 @@ components:
       additionalProperties: false
       type: object
       title: FarmerUpdate
+    FlagCommentOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        author_id:
+          type: string
+          format: uuid
+          title: Author Id
+        body:
+          type: string
+          title: Body
+        is_subject_explanation:
+          type: boolean
+          title: Is Subject Explanation
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - author_id
+      - body
+      - is_subject_explanation
+      - created_at
+      title: FlagCommentOut
+    FlagCounts:
+      properties:
+        total:
+          type: integer
+          title: Total
+        by_severity:
+          additionalProperties:
+            type: integer
+          type: object
+          title: By Severity
+        by_rule:
+          additionalProperties:
+            type: integer
+          type: object
+          title: By Rule
+      type: object
+      required:
+      - total
+      - by_severity
+      - by_rule
+      title: FlagCounts
+      description: 'Inbox grouping (C70): counts of the filtered set by severity and by rule.'
+    FlagDetailOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        rule_id:
+          type: string
+          title: Rule Id
+        rule_version:
+          type: integer
+          title: Rule Version
+        subject_type:
+          type: string
+          title: Subject Type
+        subject_id:
+          type: string
+          format: uuid
+          title: Subject Id
+        severity:
+          type: string
+          title: Severity
+        title:
+          type: string
+          title: Title
+        status:
+          $ref: '#/components/schemas/FlagStatus'
+        owner_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Owner Id
+        owner_role:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Owner Role
+        watchers:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: Watchers
+        sla_due_at:
+          type: string
+          format: date-time
+          title: Sla Due At
+        overdue:
+          type: boolean
+          title: Overdue
+        escalation_level:
+          type: integer
+          title: Escalation Level
+        raised_by_mode:
+          type: string
+          title: Raised By Mode
+        resolution_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Resolution Note
+        resolved_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Resolved At
+        resolved_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Resolved By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        version:
+          type: integer
+          title: Version
+        evidence:
+          $ref: '#/components/schemas/EvidenceOut'
+        events:
+          items:
+            $ref: '#/components/schemas/FlagEventOut'
+          type: array
+          title: Events
+        comments:
+          items:
+            $ref: '#/components/schemas/FlagCommentOut'
+          type: array
+          title: Comments
+        allowed_transitions:
+          items:
+            $ref: '#/components/schemas/FlagStatus'
+          type: array
+          title: Allowed Transitions
+      type: object
+      required:
+      - id
+      - rule_id
+      - rule_version
+      - subject_type
+      - subject_id
+      - severity
+      - title
+      - status
+      - owner_id
+      - owner_role
+      - watchers
+      - sla_due_at
+      - overdue
+      - escalation_level
+      - raised_by_mode
+      - resolution_note
+      - resolved_at
+      - resolved_by
+      - created_at
+      - version
+      - evidence
+      - events
+      - comments
+      - allowed_transitions
+      title: FlagDetailOut
+      description: 'C71: the flag with its evidence bundle, history and comment thread.'
+    FlagEventOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        kind:
+          type: string
+          title: Kind
+        actor_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Actor Id
+        from_status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: From Status
+        to_status:
+          type: string
+          title: To Status
+        from_owner_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: From Owner Id
+        to_owner_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: To Owner Id
+        label:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Label
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - kind
+      - actor_id
+      - from_status
+      - to_status
+      - from_owner_id
+      - to_owner_id
+      - label
+      - note
+      - created_at
+      title: FlagEventOut
+    FlagOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        rule_id:
+          type: string
+          title: Rule Id
+        rule_version:
+          type: integer
+          title: Rule Version
+        subject_type:
+          type: string
+          title: Subject Type
+        subject_id:
+          type: string
+          format: uuid
+          title: Subject Id
+        severity:
+          type: string
+          title: Severity
+        title:
+          type: string
+          title: Title
+        status:
+          $ref: '#/components/schemas/FlagStatus'
+        owner_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Owner Id
+        owner_role:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Owner Role
+        watchers:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: Watchers
+        sla_due_at:
+          type: string
+          format: date-time
+          title: Sla Due At
+        overdue:
+          type: boolean
+          title: Overdue
+        escalation_level:
+          type: integer
+          title: Escalation Level
+        raised_by_mode:
+          type: string
+          title: Raised By Mode
+        resolution_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Resolution Note
+        resolved_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Resolved At
+        resolved_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Resolved By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - rule_id
+      - rule_version
+      - subject_type
+      - subject_id
+      - severity
+      - title
+      - status
+      - owner_id
+      - owner_role
+      - watchers
+      - sla_due_at
+      - overdue
+      - escalation_level
+      - raised_by_mode
+      - resolution_note
+      - resolved_at
+      - resolved_by
+      - created_at
+      - version
+      title: FlagOut
+      description: 'An inbox row (FlagCard): no evidence bundle, see ``FlagDetailOut``.'
+    FlagPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/FlagOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+        counts:
+          $ref: '#/components/schemas/FlagCounts'
+      type: object
+      required:
+      - items
+      - counts
+      title: FlagPage
+    FlagStatus:
+      type: string
+      enum:
+      - open
+      - in_review
+      - resolved_valid
+      - resolved_fixed
+      - escalated
+      - resolved_action
+      title: FlagStatus
     Fulfilment:
       type: string
       enum:
@@ -11518,6 +12327,13 @@ components:
       - rabi
       - zaid
       title: Season
+    Severity:
+      type: string
+      enum:
+      - high
+      - medium
+      - low
+      title: Severity
     SkuAvailabilityOut:
       properties:
         sku_id:
@@ -12016,6 +12832,14 @@ components:
       required:
       - items
       title: StoreBriefList
+    Subject:
+      type: string
+      enum:
+      - farmer
+      - employee
+      - visit
+      - store
+      title: Subject
     SyncChangeOut:
       properties:
         entity:
@@ -12388,6 +13212,21 @@ components:
         ``transfer_in`` at the destination in one transaction (batch number, expiry and cost
 
         travel with the stock). No in-transit state in the pilot.'
+    TransitionIn:
+      properties:
+        to:
+          $ref: '#/components/schemas/FlagStatus'
+        note:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Note
+      additionalProperties: false
+      type: object
+      required:
+      - to
+      title: TransitionIn
     UploadCompleteOut:
       properties:
         upload_id:

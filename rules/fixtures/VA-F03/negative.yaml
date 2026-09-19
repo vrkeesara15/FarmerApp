@@ -1,0 +1,18 @@
+description: >
+  Adjacent one-acre farms that do not overlap, a farm measuring 1.2 acres declared as one
+  (inside ±30 %), one farmer's two overlapping plots (same farmer), and a farm without a
+  boundary. No flag.
+mode: batch
+seed:
+  farmers:
+    - {ref: a, name: Ramesh, at: -5d}
+    - {ref: b, name: Suresh, at: -4d}
+    - {ref: c, name: Venkatesh, at: -3d}
+  farms:
+    - {ref: farm_a, farmer: a, area_acres: 1.0, square: {east_m: 0, north_m: 0, side_m: 64}}
+    - {ref: farm_b, farmer: b, area_acres: 1.0, square: {east_m: 70, north_m: 0, side_m: 64}}
+    - {ref: farm_c1, farmer: c, area_acres: 1.0, square: {east_m: 0, north_m: 300, side_m: 70}}
+    - {ref: farm_c2, farmer: c, area_acres: 1.0, square: {east_m: 30, north_m: 300, side_m: 64}}
+    - {ref: farm_none, farmer: a, area_acres: 2.0}
+expect:
+  flags: []

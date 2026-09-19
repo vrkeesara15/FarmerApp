@@ -28,6 +28,8 @@ from farmerapp.db.base import Base, TenantRow
 class NotificationKind(StrEnum):
     DUTY_AUTO_ENDED = "duty_auto_ended"  # VV-007
     OFFICER_SYNC_SILENCE = "officer_sync_silence"  # OPS-006
+    FLAG_ASSIGNED = "flag_assigned"  # VA-003: a validation flag is yours (owner / watcher)
+    FLAG_ESCALATED = "flag_escalated"  # OPS-010 / SPEC 6.1: a flag moved up to you
 
 
 class Notification(Base, TenantRow):
