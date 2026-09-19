@@ -7,6 +7,7 @@ extension PhotoTipText on CoreLocalizations {
   String photoTip(String tipKey) => switch (tipKey) {
     PhotoTipKeys.blurry => photoTipBlurry,
     PhotoTipKeys.dark => photoTipDark,
+    PhotoTipKeys.notPlant => photoTipNotPlant,
     _ => photoTipOk,
   };
 }

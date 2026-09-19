@@ -7,13 +7,15 @@ import '../../router.dart';
 import '../khata/khata_screen.dart';
 import '../orders/commerce_copy.dart';
 import '../orders/orders_screen.dart';
+import '../scouting/scouting_screens.dart';
 import '../visits/visit_copy.dart';
 import '../visits/visits_list_screen.dart';
 import 'wizard_copy.dart';
 
 /// A22 Farmer profile: Overview (key facts, crop chips, farms with a mini
-/// MapPanel), Visits / Diagnoses / Orders / Khata placeholders, primary
-/// actions as labelled placeholders, sync / duplicate banners.
+/// MapPanel), Visits, Diagnoses (FA-019 scouting results), Orders and
+/// Khata tabs, primary actions (Start visit, Scout, New order, Collect),
+/// sync / duplicate banners.
 class FarmerProfileScreen extends ConsumerWidget {
   /// Creates the screen.
   const FarmerProfileScreen({required this.farmerId, super.key});
@@ -113,15 +115,13 @@ class _Profile extends ConsumerWidget {
                     ),
                   ),
                 ),
-                Tooltip(
-                  message: l10n.profileComingSoon,
-                  child: AppButton(
-                    label: l10n.profileScout,
-                    variant: AppButtonVariant.secondary,
-                    size: AppButtonSize.medium,
-                    icon: Icons.search,
-                    onPressed: null,
-                  ),
+                AppButton(
+                  key: const Key('profile-scout'),
+                  label: l10n.profileScout,
+                  variant: AppButtonVariant.secondary,
+                  size: AppButtonSize.medium,
+                  icon: Icons.search,
+                  onPressed: () => context.push(ScoutRoutes.plot(f.id)),
                 ),
                 AppButton(
                   key: const Key('profile-new-order'),
@@ -214,10 +214,7 @@ class _Profile extends ConsumerWidget {
                   children: <Widget>[
                     _Overview(detail: detail),
                     _Visits(farmerId: f.id),
-                    _Placeholder(
-                      icon: Icons.biotech_outlined,
-                      title: l10n.profileDiagnosesEmpty,
-                    ),
+                    FarmerDiagnosesList(farmerId: f.id),
                     _Orders(farmerId: f.id),
                     KhataBody(farmerId: f.id),
                   ],
@@ -472,21 +469,6 @@ class _Overview extends ConsumerWidget {
         ],
         const SizedBox(height: Tokens.space6),
       ],
-    );
-  }
-}
-
-class _Placeholder extends StatelessWidget {
-  const _Placeholder({required this.icon, required this.title});
-
-  final IconData icon;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = CoreLocalizations.of(context);
-    return Center(
-      child: EmptyState(icon: icon, title: title, help: l10n.profileComingSoon),
     );
   }
 }

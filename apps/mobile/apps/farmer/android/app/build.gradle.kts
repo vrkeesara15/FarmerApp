@@ -64,6 +64,13 @@ android {
     }
 }
 
+// DX-001: the on-device photo gate runs on the CPU (XNNPACK); the LiteRT GPU
+// delegate that tflite_flutter pulls in is never used, so it is not packaged
+// (FM-014 APK budget).
+configurations.all {
+    exclude(group = "com.google.ai.edge.litert", module = "litert-gpu")
+}
+
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     // SEC-024 Play Integrity standard requests (MainActivity.kt).

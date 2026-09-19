@@ -26,6 +26,7 @@ import 'screens/payments/credit_screen.dart';
 import 'screens/payments/link_screen.dart';
 import 'screens/payments/upi_screen.dart';
 import 'screens/phone_screen.dart';
+import 'screens/scouting/scouting_screens.dart';
 import 'screens/settings_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/store/store_routes.dart';
@@ -205,9 +206,37 @@ GoRouter buildRouter({String initialLocation = AppRoutes.splash}) {
                   duesFarmerId: state.pathParameters['farmerId'],
                 ),
               ),
+              // FA-019 scouting: plot → A40 camera → A41 review.
+              GoRoute(
+                path: 'scout',
+                builder: (context, state) => ScoutPlotScreen(
+                  farmerId: state.pathParameters['farmerId']!,
+                ),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: 'camera',
+                    builder: (context, state) => ScoutCameraScreen(
+                      farmerId: state.pathParameters['farmerId']!,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'review',
+                    builder: (context, state) => ScoutReviewScreen(
+                      farmerId: state.pathParameters['farmerId']!,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ],
+      ),
+      // FA-019 A42 / A43.
+      GoRoute(
+        path: '/scouting/:diagnosisId',
+        builder: (context, state) => ScoutResultScreen(
+          diagnosisId: state.pathParameters['diagnosisId']!,
+        ),
       ),
       GoRoute(
         path: AppRoutes.visits,
@@ -248,9 +277,11 @@ GoRouter buildRouter({String initialLocation = AppRoutes.splash}) {
           GoRoute(
             path: 'pick',
             builder: (context, state) => FarmerPickerScreen(
-              purpose: state.uri.queryParameters['for'] == 'collect'
-                  ? PickPurpose.collect
-                  : PickPurpose.order,
+              purpose: switch (state.uri.queryParameters['for']) {
+                'collect' => PickPurpose.collect,
+                'scout' => PickPurpose.scout,
+                _ => PickPurpose.order,
+              },
             ),
           ),
           GoRoute(

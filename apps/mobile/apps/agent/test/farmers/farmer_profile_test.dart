@@ -53,20 +53,17 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Cotton'), findsWidgets);
-    // FA-014 Start visit, FA-020 New order and FA-021 Collect are live;
-    // Scout arrives with the crop doctor.
+    // FA-014 Start visit, FA-019 Scout, FA-020 New order and FA-021
+    // Collect are live.
     for (final key in <String>[
       'profile-start-visit',
+      'profile-scout',
       'profile-new-order',
       'profile-collect',
     ]) {
       final button = tester.widget<AppButton>(find.byKey(Key(key)));
       expect(button.onPressed, isNotNull, reason: key);
     }
-    final scout = tester.widget<AppButton>(
-      find.ancestor(of: find.text('Scout'), matching: find.byType(AppButton)),
-    );
-    expect(scout.onPressed, isNull);
     expect(find.byKey(const Key('profile-pending-sync')), findsNothing);
     expect(find.byKey(const Key('profile-duplicate')), findsNothing);
 

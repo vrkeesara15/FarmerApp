@@ -463,12 +463,23 @@ class FakeKisanApi implements KisanApi {
         if (deletionMissing) {
           return _answer(404, <String, Object?>{'code': 'not_found'});
         }
+        // The real contract: 201 with a new ticket, 200 with the same one
+        // while a request is open; `ticket_id` is a uuid.
+        final open =
+            deletion != null &&
+            (deletion!['status'] == 'received' ||
+                deletion!['status'] == 'in_progress');
+        if (open) return _answer(200, deletion!);
         return _answer(
           201,
-          deletion ??= <String, Object?>{
-            'ticket_id': 'DEL-${1000 + ++_n}',
+          deletion = <String, Object?>{
+            'ticket_id':
+                'd3f1a2b4-5c6d-4e7f-8a9b-'
+                '${(1000 + ++_n).toString().padLeft(12, '0')}',
+            'type': 'deletion',
             'status': 'received',
             'due_by': _now().add(const Duration(days: 30)).toIso8601String(),
+            'created_at': _now().toIso8601String(),
           },
         );
       }, body: <String, Object?>{'reason': reason});

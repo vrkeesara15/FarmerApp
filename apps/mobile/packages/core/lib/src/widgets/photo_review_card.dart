@@ -93,6 +93,13 @@ class PhotoReviewCard extends StatelessWidget {
             Icons.blur_on,
             l10n.photoQualityBlurry,
           )
+        : !q.isPlant
+        ? (
+            p.statusWarning,
+            app.tint(p.statusWarningContainer),
+            Icons.eco_outlined,
+            l10n.photoQualityNotPlant,
+          )
         : (
             p.statusSuccess,
             app.tint(p.statusSuccessContainer),

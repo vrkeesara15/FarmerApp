@@ -56,9 +56,17 @@ abstract final class SyncEntities {
   /// officer who asked, so A56 learns about the decision without polling.
   static const String creditApprovalRequest = 'credit_approval_request';
 
+  /// M6 crop doctor / scouting diagnosis (`sync_docs`; create only, server
+  /// wins: the result arrives in the applied echo, by polling and in the
+  /// change feed).
+  static const String diagnosis = 'diagnosis';
+
   /// Entities whose create payload must not repeat the id (the server
   /// validates the body strictly and takes the id from `entity_id`).
-  static const Set<String> createPayloadWithoutId = <String>{payment};
+  static const Set<String> createPayloadWithoutId = <String>{
+    payment,
+    diagnosis,
+  };
 
   /// Entities with a local table and outbox support.
   static const Set<String> writable = <String>{
@@ -74,6 +82,7 @@ abstract final class SyncEntities {
     visitConfirmation,
     order,
     payment,
+    diagnosis,
   };
 }
 

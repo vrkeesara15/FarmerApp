@@ -32,6 +32,8 @@ class DiagnosisResultCard extends StatelessWidget {
     this.localName,
     this.symptoms = const <SymptomCheck>[],
     this.image,
+    this.provisionalState,
+    this.onSymptomTap,
     super.key,
   });
 
@@ -50,8 +52,16 @@ class DiagnosisResultCard extends StatelessWidget {
   /// Optional reference photo.
   final ImageProvider<Object>? image;
 
+  /// Overrides the provisional state (a medium-confidence answer can still
+  /// be provisional); null derives it from [confidence].
+  final bool? provisionalState;
+
+  /// Makes the symptom rows tappable ("check these signs": the user ticks
+  /// what they see); receives the row index.
+  final ValueChanged<int>? onSymptomTap;
+
   /// True when the diagnosis is provisional.
-  bool get provisional => confidence == ConfidenceLevel.low;
+  bool get provisional => provisionalState ?? confidence == ConfidenceLevel.low;
 
   @override
   Widget build(BuildContext context) {
@@ -122,9 +132,11 @@ class DiagnosisResultCard extends StatelessWidget {
             const SizedBox(height: Tokens.space4),
             Text(l10n.diagnosisSymptomsTitle, style: app.text.heading),
             const SizedBox(height: Tokens.space2),
-            for (final s in symptoms)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: Tokens.space1),
+            for (final (i, s) in symptoms.indexed)
+              _SymptomRow(
+                key: Key('diagnosis-symptom-$i'),
+                checked: s.present,
+                onTap: onSymptomTap == null ? null : () => onSymptomTap!(i),
                 child: Row(
                   children: <Widget>[
                     Icon(
@@ -162,6 +174,39 @@ class DiagnosisResultCard extends StatelessWidget {
         side: app.borderSide,
       ),
       child: body,
+    );
+  }
+}
+
+class _SymptomRow extends StatelessWidget {
+  const _SymptomRow({
+    required this.checked,
+    required this.child,
+    this.onTap,
+    super.key,
+  });
+
+  final bool checked;
+  final Widget child;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(vertical: Tokens.space1),
+      child: child,
+    );
+    if (onTap == null) return row;
+    return Semantics(
+      checked: checked,
+      button: true,
+      child: InkWell(
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Align(alignment: Alignment.centerLeft, child: row),
+        ),
+      ),
     );
   }
 }

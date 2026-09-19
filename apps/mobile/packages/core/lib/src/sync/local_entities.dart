@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart' show immutable;
 
 import '../db/app_database.dart';
+import '../diagnosis/diagnosis_codec.dart';
 import '../orders/order_codec.dart';
 import '../payments/payment_codec.dart';
 import 'sync_models.dart';
@@ -61,6 +62,7 @@ class LocalRow {
 /// | order          | server_wins (FA-020; lines replaced by the server's) |
 /// | payment        | server_wins (FA-021) |
 /// | khata_entry    | server_wins (pull only, `synced_refs`) |
+/// | diagnosis      | server_wins (create only; `sync_docs`, answers kept as history) |
 class LocalEntities {
   /// Creates the accessor over [db].
   LocalEntities(this.db);
@@ -83,6 +85,7 @@ class LocalEntities {
     SyncEntities.order: 'server_wins',
     SyncEntities.payment: 'server_wins',
     SyncEntities.khataEntry: 'server_wins',
+    SyncEntities.diagnosis: 'server_wins',
   };
 
   LocalRow? _row(String entity, String id, Map<String, Object?>? data) {
@@ -400,6 +403,13 @@ class LocalEntities {
         if (!isKnown(entity)) {
           throw ArgumentError.value(entity, 'entity', 'no local table');
         }
+        final stored = entity == SyncEntities.diagnosis
+            ? DiagnosisCodec.onWrite(
+                (await read(entity, id))?.data,
+                data,
+                now: now,
+              )
+            : data;
         await db
             .into(db.syncDocs)
             .insertOnConflictUpdate(
@@ -409,7 +419,7 @@ class LocalEntities {
                 version: Value<int>(version),
                 dirty: Value<bool>(dirty),
                 deleted: Value<bool>(deleted),
-                data: jsonEncode(docData(entity, id, data)),
+                data: jsonEncode(docData(entity, id, stored)),
                 updatedAt: now,
               ),
             );
@@ -460,7 +470,9 @@ class LocalEntities {
     SyncError error, {
     required DateTime now,
   }) async {
-    if (entity != SyncEntities.visit) return;
+    if (entity != SyncEntities.visit && entity != SyncEntities.diagnosis) {
+      return;
+    }
     final existing = await read(entity, id);
     if (existing == null) return;
     final local = Map<String, Object?>.from(

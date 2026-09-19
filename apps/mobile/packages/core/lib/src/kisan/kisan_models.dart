@@ -631,10 +631,19 @@ class DeletionRequest {
     dueBy: _time(j['due_by']),
   );
 
-  /// Ticket id.
+  /// Ticket id (a uuid from `POST /v1/me/deletion-request`).
   final String ticketId;
 
-  /// `received` (then processing / completed).
+  /// The reference the farmer reads out on the phone: the first 8
+  /// characters of a uuid ticket, upper case (the full id stays stored).
+  String get shortTicket {
+    final uuid = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F-]{27}$');
+    return uuid.hasMatch(ticketId)
+        ? ticketId.substring(0, 8).toUpperCase()
+        : ticketId;
+  }
+
+  /// `received`, `in_progress`, `completed` or `rejected`.
   final String status;
 
   /// When the deletion must be done by (UTC).

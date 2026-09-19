@@ -3876,4 +3876,257 @@ class CoreLocalizationsKn extends CoreLocalizations {
 
   @override
   String get kisanYourOfficer => 'ನಿಮ್ಮ ಫೀಲ್ಡ್ ಅಧಿಕಾರಿ';
+
+  @override
+  String get photoTipNotPlant =>
+      'ಕ್ಯಾಮೆರಾವನ್ನು ರೋಗದ ಎಲೆಯ ಕಡೆ ಹಿಡಿದು ಮತ್ತೆ ತೆಗೆಯಿರಿ';
+
+  @override
+  String get photoQualityNotPlant => 'ಎಲೆ ಕಾಣಲಿಲ್ಲ';
+
+  @override
+  String get treatmentPpeClothing => 'ಪೂರ್ಣ ತೋಳಿನ ಬಟ್ಟೆ';
+
+  @override
+  String get cropDoctorTitle => 'ಬೆಳೆ ವೈದ್ಯ';
+
+  @override
+  String get cropDoctorIntroTitle => 'ರೋಗದ ಎಲೆಯ ಫೋಟೋ ತೆಗೆಯಿರಿ';
+
+  @override
+  String get cropDoctorIntroTip1 => 'ಒಂದು ರೋಗದ ಎಲೆಯ ಹತ್ತಿರ ಹೋಗಿ';
+
+  @override
+  String get cropDoctorIntroTip2 => 'ಸೂರ್ಯ ನಿಮ್ಮ ಹಿಂದೆ ಇರುವಂತೆ ನಿಲ್ಲಿ';
+
+  @override
+  String get cropDoctorIntroTip3 =>
+      'ಅಲುಗಾಡದೆ ಹಿಡಿದು ಎಲೆಯ ಮೇಲೆ ಒತ್ತಿ ಫೋಕಸ್ ಮಾಡಿ';
+
+  @override
+  String get cropDoctorUpTo3 => 'ನೀವು 3 ಫೋಟೋಗಳವರೆಗೆ ತೆಗೆಯಬಹುದು';
+
+  @override
+  String get cropDoctorOpenCamera => 'ಕ್ಯಾಮೆರಾ ತೆರೆಯಿರಿ';
+
+  @override
+  String get cropDoctorTakePhoto => 'ಫೋಟೋ ತೆಗೆಯಿರಿ';
+
+  @override
+  String get cropDoctorCameraDenied =>
+      'ನಿಮ್ಮ ಬೆಳೆಯ ಫೋಟೋ ತೆಗೆಯಲು ಕ್ಯಾಮೆರಾಗೆ ಅನುಮತಿ ನೀಡಿ';
+
+  @override
+  String get cropDoctorCameraError => 'ಕ್ಯಾಮೆರಾ ತೆರೆಯಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.';
+
+  @override
+  String get cropDoctorTryAgain => 'ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ';
+
+  @override
+  String cropDoctorPhotoCount(int count) {
+    return 'ಫೋಟೋ $count / 3';
+  }
+
+  @override
+  String cropDoctorPhotosReady(int count) {
+    return '3 ರಲ್ಲಿ $count ಫೋಟೋ ಸಿದ್ಧ';
+  }
+
+  @override
+  String get cropDoctorAddPhoto => 'ಇನ್ನೊಂದು ಫೋಟೋ ಸೇರಿಸಿ';
+
+  @override
+  String get cropDoctorRemovePhoto => 'ಫೋಟೋ ತೆಗೆದುಹಾಕಿ';
+
+  @override
+  String get cropDoctorCheckCrop => 'ನನ್ನ ಬೆಳೆ ಪರೀಕ್ಷಿಸಿ';
+
+  @override
+  String get cropDoctorChooseCropTitle => 'ಇದು ಯಾವ ಬೆಳೆ?';
+
+  @override
+  String cropDoctorDetected(String crop) {
+    return 'ಇದು $crop ತರಹ ಕಾಣುತ್ತದೆ. ತಪ್ಪಾದರೆ ಬೇರೆ ಬೆಳೆ ಒತ್ತಿ.';
+  }
+
+  @override
+  String cropDoctorCropIs(String crop) {
+    return 'ಬೆಳೆ: $crop';
+  }
+
+  @override
+  String get cropDoctorChangeCrop => 'ಬೆಳೆ ಬದಲಿಸಿ';
+
+  @override
+  String get cropDoctorUnknownCrop => 'ನನಗೆ ಗೊತ್ತಿಲ್ಲ';
+
+  @override
+  String get cropDoctorAskExpertToo => 'ನಮ್ಮ ತಜ್ಞರನ್ನೂ ಕೇಳಿ';
+
+  @override
+  String get cropDoctorAnalysing => 'ನಿಮ್ಮ ಬೆಳೆಯನ್ನು ಪರೀಕ್ಷಿಸುತ್ತಿದ್ದೇವೆ…';
+
+  @override
+  String get cropDoctorAnalysingHelp => 'ಇದಕ್ಕೆ ಕೆಲವು ಸೆಕೆಂಡುಗಳು ಬೇಕು';
+
+  @override
+  String get cropDoctorQueuedTitle => 'ನಿಮ್ಮ ಫೋನ್‌ನಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ';
+
+  @override
+  String get cropDoctorQueuedHelp => 'ನಿಮಗೆ ಇಂಟರ್ನೆಟ್ ಸಿಕ್ಕಾಗ ಪರೀಕ್ಷಿಸುತ್ತೇವೆ';
+
+  @override
+  String get cropDoctorSendFailed =>
+      'ನಿಮ್ಮ ಫೋಟೋ ಕಳುಹಿಸಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ತೆಗೆಯಿರಿ.';
+
+  @override
+  String get cropDoctorResultTitle => 'ಫಲಿತಾಂಶ';
+
+  @override
+  String get cropDoctorMessageAnswered => 'ಸಮಸ್ಯೆ ಪತ್ತೆಯಾಗಿದೆ';
+
+  @override
+  String get cropDoctorMessageProvisional =>
+      'ತಾತ್ಕಾಲಿಕ — ತಜ್ಞರು ಖಚಿತಪಡಿಸುತ್ತಾರೆ';
+
+  @override
+  String get cropDoctorMessageUnknown =>
+      'ಇನ್ನೂ ಖಚಿತವಿಲ್ಲ. ನಮ್ಮ ತಜ್ಞರು ನಿಮ್ಮ ಫೋಟೋ ನೋಡುತ್ತಾರೆ.';
+
+  @override
+  String get cropDoctorMessageConfirmed =>
+      'ನಮ್ಮ ತಜ್ಞರು ಈ ಫಲಿತಾಂಶ ಖಚಿತಪಡಿಸಿದ್ದಾರೆ';
+
+  @override
+  String get cropDoctorMessageCorrected => 'ನಮ್ಮ ತಜ್ಞರು ಈ ಫಲಿತಾಂಶ ಬದಲಿಸಿದ್ದಾರೆ';
+
+  @override
+  String get cropDoctorOutNotPlant => 'ಫೋಟೋದಲ್ಲಿ ಗಿಡ ಕಾಣಲಿಲ್ಲ';
+
+  @override
+  String get cropDoctorOutUnsupportedCrop => 'ಈ ಬೆಳೆಯನ್ನು ಇನ್ನೂ ಪರೀಕ್ಷಿಸಲಾಗದು';
+
+  @override
+  String get cropDoctorOutUnreadable => 'ಫೋಟೋ ಸ್ಪಷ್ಟವಾಗಿಲ್ಲ';
+
+  @override
+  String get cropDoctorOutNoMatch => 'ಈ ಸಮಸ್ಯೆ ಪತ್ತೆಯಾಗಲಿಲ್ಲ';
+
+  @override
+  String get cropDoctorOutNotDiagnosable => 'ಫೋಟೋಗಳಿಂದ ತಜ್ಞರಿಗೆ ಹೇಳಲಾಗಲಿಲ್ಲ';
+
+  @override
+  String get cropDoctorOutHelp =>
+      'ನಮ್ಮ ತಜ್ಞರು ಇದನ್ನು ನೋಡುತ್ತಾರೆ. ನಿಮ್ಮ ಫೀಲ್ಡ್ ಆಫೀಸರ್‌ಗೆ ಕರೆ ಮಾಡಬಹುದು.';
+
+  @override
+  String get cropDoctorTalkToOfficer => 'ನಿಮ್ಮ ಫೀಲ್ಡ್ ಆಫೀಸರ್ ಜೊತೆ ಮಾತನಾಡಿ';
+
+  @override
+  String get cropDoctorCallOfficer => 'ನನ್ನ ಆಫೀಸರ್‌ಗೆ ಕರೆ';
+
+  @override
+  String get cropDoctorAskExpert => 'ತಜ್ಞರನ್ನು ಕೇಳಿ';
+
+  @override
+  String get cropDoctorAskExpertSent =>
+      'ನಮ್ಮ ತಜ್ಞರಿಗೆ ಕಳುಹಿಸಲಾಗಿದೆ. ಉತ್ತರ ತಿಳಿಸುತ್ತೇವೆ.';
+
+  @override
+  String get cropDoctorAskExpertAlready =>
+      'ನಮ್ಮ ತಜ್ಞರ ಬಳಿ ಈಗಾಗಲೇ ನಿಮ್ಮ ಫೋಟೋಗಳಿವೆ';
+
+  @override
+  String get cropDoctorOrder => 'ಆರ್ಡರ್ ಮಾಡಿ';
+
+  @override
+  String cropDoctorProductsAt(String store) {
+    return '$store ನಲ್ಲಿ ಸಿಗುವವು';
+  }
+
+  @override
+  String cropDoctorStoreDistance(String store, String km) {
+    return '$store, $km ಕಿ.ಮೀ';
+  }
+
+  @override
+  String get cropDoctorCulturalTitle => 'ಇದನ್ನೂ ಮಾಡಿ';
+
+  @override
+  String get cropDoctorNoProducts =>
+      'ನಿಮ್ಮ ಅಂಗಡಿಯಲ್ಲಿ ಇದಕ್ಕೆ ಇನ್ನೂ ಉತ್ಪನ್ನವಿಲ್ಲ. ನಿಮ್ಮ ಫೀಲ್ಡ್ ಆಫೀಸರ್ ಜೊತೆ ಮಾತನಾಡಿ.';
+
+  @override
+  String get cropDoctorUpdatedTitle => 'ನಿಮ್ಮ ಫಲಿತಾಂಶ ನವೀಕರಿಸಲಾಗಿದೆ';
+
+  @override
+  String get cropDoctorHistoryTitle => 'ಹಿಂದಿನ ಉತ್ತರಗಳು';
+
+  @override
+  String cropDoctorEarlierAnswer(String answer) {
+    return 'ಹಿಂದೆ: $answer';
+  }
+
+  @override
+  String get cropDoctorMyChecks => 'ನನ್ನ ಬೆಳೆ ಪರೀಕ್ಷೆಗಳು';
+
+  @override
+  String get cropDoctorWaiting => 'ಉತ್ತರಕ್ಕಾಗಿ ಕಾಯುತ್ತಿದೆ';
+
+  @override
+  String get cropDoctorSymptomsHelp =>
+      'ನಿಮ್ಮ ಬೆಳೆಯಲ್ಲಿ ಕಾಣುವ ಲಕ್ಷಣಗಳನ್ನು ಒತ್ತಿ';
+
+  @override
+  String cropDoctorResultUpdatedHome(String problem) {
+    return 'ಬೆಳೆ ಪರೀಕ್ಷೆ ನವೀಕರಣ: $problem';
+  }
+
+  @override
+  String get scoutTitle => 'ಬೆಳೆ ಪರಿಶೀಲನೆ';
+
+  @override
+  String get scoutChoosePlot => 'ಬೆಳೆ ಪ್ಲಾಟ್ ಆಯ್ಕೆಮಾಡಿ';
+
+  @override
+  String get scoutNoPlots =>
+      'ಈ ರೈತರಿಗೆ ಇನ್ನೂ ಬೆಳೆ ಪ್ಲಾಟ್ ಇಲ್ಲ. ಮೊದಲು ಜಮೀನು, ಬೆಳೆ ಸೇರಿಸಿ.';
+
+  @override
+  String scoutPlotLine(String crop, String farm) {
+    return '$crop · $farm';
+  }
+
+  @override
+  String scoutAttachedTo(String farmer, String crop) {
+    return '$farmer ಅವರಿಗಾಗಿ · $crop';
+  }
+
+  @override
+  String get scoutCreateOrder => 'ರೈತರಿಗಾಗಿ ಆರ್ಡರ್ ಮಾಡಿ';
+
+  @override
+  String get scoutCallFarmer => 'ರೈತರಿಗೆ ಕರೆ';
+
+  @override
+  String get scoutQueuedHelp =>
+      'ಸರದಿಯಲ್ಲಿದೆ. ಫೋನ್ ಆನ್‌ಲೈನ್ ಆದಾಗ ಕಳುಹಿಸಲಾಗುತ್ತದೆ.';
+
+  @override
+  String scoutProvenance(String model, String corpus) {
+    return 'ಮಾದರಿ $model · ಕಾರ್ಪಸ್ v$corpus';
+  }
+
+  @override
+  String get scoutNewDiagnosis => 'ಹೊಸ ರೋಗನಿರ್ಣಯ';
+
+  @override
+  String get scoutCheckPhotos => 'ಫೋಟೋ ಪರಿಶೀಲಿಸಿ';
+
+  @override
+  String get kisanDeleteStatusRejected =>
+      'ನಿಮ್ಮ ವಿನಂತಿ ಸ್ವೀಕರಿಸಲಾಗಿಲ್ಲ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಅಂಗಡಿಗೆ ಕರೆ ಮಾಡಿ.';
+
+  @override
+  String get cropDoctorNotOnPhone => 'ಈ ಬೆಳೆ ಪರೀಕ್ಷೆ ಈ ಫೋನ್‌ನಲ್ಲಿ ಇಲ್ಲ';
 }

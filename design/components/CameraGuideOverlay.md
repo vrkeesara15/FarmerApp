@@ -8,9 +8,9 @@ Source: `apps/mobile/packages/core/lib/src/widgets/camera_guide_overlay.dart` (e
 
 | Prop | Type | Notes |
 |---|---|---|
-| `tipKey` | `String?` | `PhotoTipKeys.blurry` lights "hold steady", `PhotoTipKeys.dark` lights "good light", `PhotoTipKeys.ok` shows the good-photo line; null = static overlay. Place above the camera preview in a Stack. |
+| `tipKey` | `String?` | `PhotoTipKeys.blurry` lights "hold steady", `PhotoTipKeys.dark` lights "good light", `PhotoTipKeys.notPlant` (DX-001 model, M6) lights "fill the frame", `PhotoTipKeys.ok` shows the good-photo line; null = static overlay. Place above the camera preview in a Stack. |
 
-`CameraGuideOverlay.highlightedTip(key)` returns the lit chip index (0/1/null) for screens that want to mirror it.
+`CameraGuideOverlay.highlightedTip(key)` returns the lit chip index (0/1/2/null) for screens that want to mirror it.
 
 ## Variants
 
@@ -20,7 +20,11 @@ Source: `apps/mobile/packages/core/lib/src/widgets/camera_guide_overlay.dart` (e
 ## States
 
 - static
-- blurry (`photo.tip.blurry`), dark (`photo.tip.dark`), ok (`photo.tip.ok`)
+- blurry (`photo.tip.blurry`), dark (`photo.tip.dark`), not a plant (`photo.tip.not_plant`, M6), ok (`photo.tip.ok`)
+
+## Usage (M6)
+
+`GuidedCameraView` (`lib/src/widgets/guided_camera_view.dart`) stacks the overlay on the live `camera`-plugin preview (`GuidedCamera` / `PluginGuidedCamera`; `image_picker` cannot draw an overlay), adds the "Photo n of 3" counter and an 80 dp shutter (`GuidedCameraView.shutterKey`, spoken label `cropDoctorTakePhoto`), and shows `cropDoctorCameraDenied` / `cropDoctorCameraError` with Try again when the camera cannot open. Used by F21 and A40; goldens `f21_camera_{light,sunlight}.png`.
 
 ## Accessibility
 

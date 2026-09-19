@@ -81,13 +81,17 @@ enum Fulfilment {
 @immutable
 class CartLine {
   /// Creates the line.
-  const CartLine({required this.item, required this.qty});
+  const CartLine({required this.item, required this.qty, this.labelClaimId});
 
   /// The SKU with its cached price.
   final CatalogItem item;
 
   /// Quantity (packs).
   final int qty;
+
+  /// The label claim behind a crop-doctor recommendation (DX-007); sent as
+  /// the order line's `label_claim_id` so FA-020 checks it again.
+  final String? labelClaimId;
 
   /// `qty x unit` (half-up), before tax — same rule as the server.
   int get estimatedLinePaise => item.pricePaise * qty;
@@ -97,7 +101,8 @@ class CartLine {
       roundHalfUp(estimatedLinePaise * item.gstRateBp, 10000);
 
   /// Copy with a new quantity.
-  CartLine withQty(int value) => CartLine(item: item, qty: value);
+  CartLine withQty(int value) =>
+      CartLine(item: item, qty: value, labelClaimId: labelClaimId);
 }
 
 /// `a / b` rounded half-up (non-negative inputs).

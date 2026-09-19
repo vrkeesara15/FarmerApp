@@ -25,6 +25,10 @@ class ProductCard extends StatelessWidget {
     this.stockAsOf,
     this.priceIsEstimate = false,
     this.quantity,
+    this.actionLabel,
+    this.actionIcon,
+    this.showAction = true,
+    this.actionKey,
     super.key,
   });
 
@@ -66,6 +70,20 @@ class ProductCard extends StatelessWidget {
 
   /// Units already in the cart (shown on the added button).
   final int? quantity;
+
+  /// Label of the action button instead of "Add" (e.g. "Order" on a
+  /// diagnosis result).
+  final String? actionLabel;
+
+  /// Icon of the action button instead of the cart.
+  final IconData? actionIcon;
+
+  /// False hides the action button entirely (SPEC 3.4: a provisional
+  /// diagnosis never shows a buy button).
+  final bool showAction;
+
+  /// Key of the action button (tests).
+  final Key? actionKey;
 
   @override
   Widget build(BuildContext context) {
@@ -175,21 +193,28 @@ class ProductCard extends StatelessWidget {
                         ],
                       ),
                     ],
-                    const SizedBox(height: Tokens.space2),
-                    AppButton(
-                      label: added
-                          ? (quantity == null
-                                ? l10n.productAdded
-                                : l10n.productInCart(quantity!))
-                          : l10n.productAdd,
-                      icon: added ? Icons.check : Icons.add_shopping_cart,
-                      variant: added
-                          ? AppButtonVariant.secondary
-                          : AppButtonVariant.primary,
-                      size: AppButtonSize.medium,
-                      expand: false,
-                      onPressed: outOfStock ? null : onAdd,
-                    ),
+                    if (showAction) ...<Widget>[
+                      const SizedBox(height: Tokens.space2),
+                      AppButton(
+                        key: actionKey,
+                        label: actionLabel != null
+                            ? actionLabel!
+                            : added
+                            ? (quantity == null
+                                  ? l10n.productAdded
+                                  : l10n.productInCart(quantity!))
+                            : l10n.productAdd,
+                        icon:
+                            actionIcon ??
+                            (added ? Icons.check : Icons.add_shopping_cart),
+                        variant: added
+                            ? AppButtonVariant.secondary
+                            : AppButtonVariant.primary,
+                        size: AppButtonSize.medium,
+                        expand: false,
+                        onPressed: outOfStock ? null : onAdd,
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -195,7 +195,7 @@ class SettingsScreen extends ConsumerWidget {
               title: l10n.kisanDeleteAccount,
               subtitle: deletion == null
                   ? null
-                  : l10n.kisanDeleteRequested(deletion.ticketId),
+                  : l10n.kisanDeleteRequested(deletion.shortTicket),
               color: p.statusDanger,
               onTap: () => context.push(AppRoutes.deleteAccount),
             ),

@@ -50,6 +50,9 @@ Future<void> startKisan() async {
     refreshSession: auth.refresh,
   );
   final connectivity = PlusConnectivityMonitor();
+  final qualityModel = TfliteQualityModel(
+    loader: TfliteFlutterInterpreter.load,
+  );
   final container = ProviderContainer(
     overrides: [
       ...settings,
@@ -79,6 +82,13 @@ Future<void> startKisan() async {
       audioPromptProvider.overrideWithValue(TtsAudioPrompt()),
       urlOpenerProvider.overrideWithValue(const LauncherUrlOpener()),
       barcodeScannerProvider.overrideWithValue(const MobileScannerQrScanner()),
+      // M6 crop doctor (FM-004 .. FM-006): live camera with the guide
+      // overlay, the DX-001 on-device gate (TFLite, heuristic fallback),
+      // photos kept on disk until uploaded, results polled and synced.
+      guidedCameraFactoryProvider.overrideWithValue(PluginGuidedCamera.new),
+      onDeviceQualityModelProvider.overrideWithValue(qualityModel),
+      photoStoreProvider.overrideWithValue(const DocumentsPhotoStore()),
+      diagnosisApiProvider.overrideWithValue(HttpDiagnosisApi(rest)),
     ],
   );
   StreamSubscription<bool>? onlineSub;
@@ -109,6 +119,8 @@ Future<void> startKisan() async {
       ),
     );
     unawaited(container.read(tenantSettingsSyncProvider).pullIfStale());
+    // DX-001: load the on-device model early (off the first frame's path).
+    unawaited(qualityModel.load());
     // Queued consent / visit confirmations go out on start and whenever the
     // network returns (NF-002; the farmer app has no background sync).
     Future<void> flush() =>

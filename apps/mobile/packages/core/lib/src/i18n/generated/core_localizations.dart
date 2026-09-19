@@ -7027,6 +7027,438 @@ abstract class CoreLocalizations {
   /// In en, this message translates to:
   /// **'Your field officer'**
   String get kisanYourOfficer;
+
+  /// Retake tip for key photo.tip.not_plant (DX-001: no leaf in the frame)
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at the sick leaf and take it again'**
+  String get photoTipNotPlant;
+
+  /// Photo check badge when the on-device model sees no plant
+  ///
+  /// In en, this message translates to:
+  /// **'No leaf seen'**
+  String get photoQualityNotPlant;
+
+  /// PPE pictogram label: full-sleeve clothing, apron or boots
+  ///
+  /// In en, this message translates to:
+  /// **'Full sleeves'**
+  String get treatmentPpeClothing;
+
+  /// No description provided for @cropDoctorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop doctor'**
+  String get cropDoctorTitle;
+
+  /// F20 heading
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo of the sick leaf'**
+  String get cropDoctorIntroTitle;
+
+  /// F20 picture tip 1 (fill the frame)
+  ///
+  /// In en, this message translates to:
+  /// **'Go close to one sick leaf'**
+  String get cropDoctorIntroTip1;
+
+  /// F20 picture tip 2 (good light)
+  ///
+  /// In en, this message translates to:
+  /// **'Stand with the sun behind you'**
+  String get cropDoctorIntroTip2;
+
+  /// F20 picture tip 3 (hold steady)
+  ///
+  /// In en, this message translates to:
+  /// **'Hold still and tap the leaf to focus'**
+  String get cropDoctorIntroTip3;
+
+  /// No description provided for @cropDoctorUpTo3.
+  ///
+  /// In en, this message translates to:
+  /// **'You can take up to 3 photos'**
+  String get cropDoctorUpTo3;
+
+  /// No description provided for @cropDoctorOpenCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Open camera'**
+  String get cropDoctorOpenCamera;
+
+  /// Shutter button (spoken label)
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get cropDoctorTakePhoto;
+
+  /// No description provided for @cropDoctorCameraDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow the camera to take a photo of your crop'**
+  String get cropDoctorCameraDenied;
+
+  /// No description provided for @cropDoctorCameraError.
+  ///
+  /// In en, this message translates to:
+  /// **'The camera did not open. Try again.'**
+  String get cropDoctorCameraError;
+
+  /// No description provided for @cropDoctorTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get cropDoctorTryAgain;
+
+  /// Camera counter
+  ///
+  /// In en, this message translates to:
+  /// **'Photo {count} of 3'**
+  String cropDoctorPhotoCount(int count);
+
+  /// F22 accepted photos count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of 3 photos ready'**
+  String cropDoctorPhotosReady(int count);
+
+  /// No description provided for @cropDoctorAddPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another photo'**
+  String get cropDoctorAddPhoto;
+
+  /// No description provided for @cropDoctorRemovePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get cropDoctorRemovePhoto;
+
+  /// Sends the photos for diagnosis
+  ///
+  /// In en, this message translates to:
+  /// **'Check my crop'**
+  String get cropDoctorCheckCrop;
+
+  /// F23 heading
+  ///
+  /// In en, this message translates to:
+  /// **'Which crop is this?'**
+  String get cropDoctorChooseCropTitle;
+
+  /// On-device crop guess, shown only while the on_device_crop_guess flag is on
+  ///
+  /// In en, this message translates to:
+  /// **'Looks like {crop}. Tap another crop if this is wrong.'**
+  String cropDoctorDetected(String crop);
+
+  /// Chosen crop line
+  ///
+  /// In en, this message translates to:
+  /// **'Crop: {crop}'**
+  String cropDoctorCropIs(String crop);
+
+  /// No description provided for @cropDoctorChangeCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Change crop'**
+  String get cropDoctorChangeCrop;
+
+  /// No description provided for @cropDoctorUnknownCrop.
+  ///
+  /// In en, this message translates to:
+  /// **'I don’t know'**
+  String get cropDoctorUnknownCrop;
+
+  /// No description provided for @cropDoctorAskExpertToo.
+  ///
+  /// In en, this message translates to:
+  /// **'Also ask our expert'**
+  String get cropDoctorAskExpertToo;
+
+  /// F24 / A42
+  ///
+  /// In en, this message translates to:
+  /// **'Checking your crop…'**
+  String get cropDoctorAnalysing;
+
+  /// No description provided for @cropDoctorAnalysingHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'This takes a few seconds'**
+  String get cropDoctorAnalysingHelp;
+
+  /// F24 offline state
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on your phone'**
+  String get cropDoctorQueuedTitle;
+
+  /// F24 / A42 queued offline
+  ///
+  /// In en, this message translates to:
+  /// **'We’ll check when you’re online'**
+  String get cropDoctorQueuedHelp;
+
+  /// No description provided for @cropDoctorSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send your photos. Take them again.'**
+  String get cropDoctorSendFailed;
+
+  /// No description provided for @cropDoctorResultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get cropDoctorResultTitle;
+
+  /// diagnosis.result.answered
+  ///
+  /// In en, this message translates to:
+  /// **'We found the problem'**
+  String get cropDoctorMessageAnswered;
+
+  /// diagnosis.result.provisional (FM-005 acceptance wording)
+  ///
+  /// In en, this message translates to:
+  /// **'Provisional — expert will confirm'**
+  String get cropDoctorMessageProvisional;
+
+  /// diagnosis.result.unknown
+  ///
+  /// In en, this message translates to:
+  /// **'We are not sure yet. Our expert will look at your photos.'**
+  String get cropDoctorMessageUnknown;
+
+  /// diagnosis.result.confirmed
+  ///
+  /// In en, this message translates to:
+  /// **'Our expert confirmed this result'**
+  String get cropDoctorMessageConfirmed;
+
+  /// diagnosis.result.corrected
+  ///
+  /// In en, this message translates to:
+  /// **'Our expert changed this result'**
+  String get cropDoctorMessageCorrected;
+
+  /// diagnosis.out_of_scope.not_a_plant (F28)
+  ///
+  /// In en, this message translates to:
+  /// **'We could not see a plant in the photo'**
+  String get cropDoctorOutNotPlant;
+
+  /// diagnosis.out_of_scope.unsupported_crop (F28)
+  ///
+  /// In en, this message translates to:
+  /// **'We cannot check this crop yet'**
+  String get cropDoctorOutUnsupportedCrop;
+
+  /// diagnosis.out_of_scope.unreadable_image
+  ///
+  /// In en, this message translates to:
+  /// **'The photo was not clear enough'**
+  String get cropDoctorOutUnreadable;
+
+  /// diagnosis.out_of_scope.no_match
+  ///
+  /// In en, this message translates to:
+  /// **'We could not find this problem'**
+  String get cropDoctorOutNoMatch;
+
+  /// diagnosis.out_of_scope.expert_not_diagnosable
+  ///
+  /// In en, this message translates to:
+  /// **'Our expert could not tell from the photos'**
+  String get cropDoctorOutNotDiagnosable;
+
+  /// No description provided for @cropDoctorOutHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Our expert will look at it. You can also call your field officer.'**
+  String get cropDoctorOutHelp;
+
+  /// SPEC 3.4 CTA shown instead of a buy button on provisional results
+  ///
+  /// In en, this message translates to:
+  /// **'Talk to your field officer'**
+  String get cropDoctorTalkToOfficer;
+
+  /// No description provided for @cropDoctorCallOfficer.
+  ///
+  /// In en, this message translates to:
+  /// **'Call my officer'**
+  String get cropDoctorCallOfficer;
+
+  /// No description provided for @cropDoctorAskExpert.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask an expert'**
+  String get cropDoctorAskExpert;
+
+  /// No description provided for @cropDoctorAskExpertSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to our expert. We’ll tell you the answer.'**
+  String get cropDoctorAskExpertSent;
+
+  /// No description provided for @cropDoctorAskExpertAlready.
+  ///
+  /// In en, this message translates to:
+  /// **'Our expert already has your photos'**
+  String get cropDoctorAskExpertAlready;
+
+  /// FM-006 one-tap order
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get cropDoctorOrder;
+
+  /// F25 products heading
+  ///
+  /// In en, this message translates to:
+  /// **'Products at {store}'**
+  String cropDoctorProductsAt(String store);
+
+  /// Store with distance, e.g. FCC Kondapur, 3 km
+  ///
+  /// In en, this message translates to:
+  /// **'{store}, {km} km'**
+  String cropDoctorStoreDistance(String store, String km);
+
+  /// No description provided for @cropDoctorCulturalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Also do this'**
+  String get cropDoctorCulturalTitle;
+
+  /// No description provided for @cropDoctorNoProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'No product for this at your store yet. Talk to your field officer.'**
+  String get cropDoctorNoProducts;
+
+  /// F27 banner
+  ///
+  /// In en, this message translates to:
+  /// **'Your result was updated'**
+  String get cropDoctorUpdatedTitle;
+
+  /// No description provided for @cropDoctorHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier answers'**
+  String get cropDoctorHistoryTitle;
+
+  /// F27 history line
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier: {answer}'**
+  String cropDoctorEarlierAnswer(String answer);
+
+  /// No description provided for @cropDoctorMyChecks.
+  ///
+  /// In en, this message translates to:
+  /// **'My crop checks'**
+  String get cropDoctorMyChecks;
+
+  /// No description provided for @cropDoctorWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the answer'**
+  String get cropDoctorWaiting;
+
+  /// No description provided for @cropDoctorSymptomsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the signs you see on your crop'**
+  String get cropDoctorSymptomsHelp;
+
+  /// F10 home card for an F27 update
+  ///
+  /// In en, this message translates to:
+  /// **'Crop check updated: {problem}'**
+  String cropDoctorResultUpdatedHome(String problem);
+
+  /// No description provided for @scoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scout crop'**
+  String get scoutTitle;
+
+  /// No description provided for @scoutChoosePlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the crop plot'**
+  String get scoutChoosePlot;
+
+  /// No description provided for @scoutNoPlots.
+  ///
+  /// In en, this message translates to:
+  /// **'This farmer has no crop plot yet. Add a farm and crop first.'**
+  String get scoutNoPlots;
+
+  /// Crop plot choice line
+  ///
+  /// In en, this message translates to:
+  /// **'{crop} · {farm}'**
+  String scoutPlotLine(String crop, String farm);
+
+  /// A43 header: the result is attached to this farmer and plot
+  ///
+  /// In en, this message translates to:
+  /// **'For {farmer} · {crop}'**
+  String scoutAttachedTo(String farmer, String crop);
+
+  /// A43 action (FA-019 / FA-020)
+  ///
+  /// In en, this message translates to:
+  /// **'Create order for farmer'**
+  String get scoutCreateOrder;
+
+  /// No description provided for @scoutCallFarmer.
+  ///
+  /// In en, this message translates to:
+  /// **'Call farmer'**
+  String get scoutCallFarmer;
+
+  /// A42 queued offline
+  ///
+  /// In en, this message translates to:
+  /// **'Queued. It will be sent when the phone is online.'**
+  String get scoutQueuedHelp;
+
+  /// A43 footer: stored model and corpus versions (DX-005)
+  ///
+  /// In en, this message translates to:
+  /// **'Model {model} · corpus v{corpus}'**
+  String scoutProvenance(String model, String corpus);
+
+  /// No description provided for @scoutNewDiagnosis.
+  ///
+  /// In en, this message translates to:
+  /// **'New diagnosis'**
+  String get scoutNewDiagnosis;
+
+  /// A41 heading
+  ///
+  /// In en, this message translates to:
+  /// **'Check photos'**
+  String get scoutCheckPhotos;
+
+  /// FM-015 deletion ticket status rejected
+  ///
+  /// In en, this message translates to:
+  /// **'Your request was not accepted. Please call your store.'**
+  String get kisanDeleteStatusRejected;
+
+  /// No description provided for @cropDoctorNotOnPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'This crop check is not on this phone'**
+  String get cropDoctorNotOnPhone;
 }
 
 class _CoreLocalizationsDelegate

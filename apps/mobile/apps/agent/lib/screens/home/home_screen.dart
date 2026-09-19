@@ -205,11 +205,14 @@ class HomeScreen extends ConsumerWidget {
                         onPressed: () => context.push(VisitRoutes.start()),
                       ),
                       AppButton(
+                        key: const Key('home-scout'),
                         label: l10n.actionScoutCrop,
                         icon: Icons.eco_outlined,
                         variant: AppButtonVariant.secondary,
                         size: AppButtonSize.medium,
-                        onPressed: null,
+                        onPressed: () => context.push(
+                          CommerceRoutes.pickFarmer(PickPurpose.scout),
+                        ),
                       ),
                       AppButton(
                         key: const Key('home-collect-payment'),
@@ -222,11 +225,6 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: Tokens.space2),
-                  Text(
-                    l10n.comingSoon,
-                    style: app.text.caption.copyWith(color: p.textSecondary),
                   ),
                 ],
               ),

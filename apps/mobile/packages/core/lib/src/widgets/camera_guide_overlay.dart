@@ -11,7 +11,8 @@ import 'photo_tip_text.dart';
 ///
 /// Give it the [tipKey] of the last quality-gate result (FM-004) to
 /// highlight the matching tip and show the retake line: `photo.tip.blurry`
-/// lights "hold steady", `photo.tip.dark` lights "good light".
+/// lights "hold steady", `photo.tip.dark` lights "good light" and
+/// `photo.tip.not_plant` lights "fill the frame".
 class CameraGuideOverlay extends StatelessWidget {
   /// Creates the overlay.
   const CameraGuideOverlay({this.tipKey, super.key});
@@ -27,6 +28,7 @@ class CameraGuideOverlay extends StatelessWidget {
   static int? highlightedTip(String? tipKey) => switch (tipKey) {
     PhotoTipKeys.blurry => 0,
     PhotoTipKeys.dark => 1,
+    PhotoTipKeys.notPlant => 2,
     _ => null,
   };
 

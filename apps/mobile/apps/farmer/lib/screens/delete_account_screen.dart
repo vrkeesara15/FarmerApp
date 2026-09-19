@@ -49,6 +49,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
   String _status(CoreLocalizations l10n, String status) => switch (status) {
     'received' => l10n.kisanDeleteStatusReceived,
     'completed' => l10n.kisanDeleteStatusCompleted,
+    'rejected' => l10n.kisanDeleteStatusRejected,
     _ => l10n.kisanDeleteStatusInProgress,
   };
 
@@ -74,7 +75,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
           ),
           const SizedBox(height: Tokens.space3),
           Text(
-            l10n.kisanDeleteTicket(ticket.ticketId),
+            l10n.kisanDeleteTicket(ticket.shortTicket),
             key: const Key('delete-ticket-id'),
             textAlign: TextAlign.center,
             style: app.text.heading,

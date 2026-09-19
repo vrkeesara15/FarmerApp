@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import 'screens/consent_screen.dart';
 import 'screens/consent_settings_screen.dart';
-import 'screens/crop_doctor_placeholder_screen.dart';
+import 'screens/crop_doctor/crop_camera_screen.dart';
+import 'screens/crop_doctor/crop_doctor_screen.dart';
+import 'screens/crop_doctor/diagnosis_result_screen.dart';
 import 'screens/delete_account_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/khata_screen.dart';
@@ -46,8 +48,20 @@ abstract final class AppRoutes {
   /// F10 Home.
   static const String home = '/home';
 
-  /// F20 Crop doctor (placeholder until the crop doctor task).
+  /// F20 Crop doctor intro and earlier checks.
   static const String cropDoctor = '/crop-doctor';
+
+  /// F21 Camera with the guide overlay.
+  static const String cropCamera = '/crop-doctor/camera';
+
+  /// F22 Photo check.
+  static const String cropCheck = '/crop-doctor/check';
+
+  /// F23 Choose crop.
+  static const String cropChoose = '/crop-doctor/crop';
+
+  /// F24–F28 one crop check: `/crop-doctor/result/<id>`.
+  static String cropResult(String id) => '/crop-doctor/result/$id';
 
   /// F30 catalogue by category (entry to product detail).
   static const String shop = '/shop';
@@ -152,7 +166,26 @@ GoRouter buildRouter({String initialLocation = AppRoutes.language}) {
       ),
       GoRoute(
         path: AppRoutes.cropDoctor,
-        builder: (context, state) => const CropDoctorPlaceholderScreen(),
+        builder: (context, state) => const CropDoctorScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: 'camera',
+            builder: (context, state) => const CropCameraScreen(),
+          ),
+          GoRoute(
+            path: 'check',
+            builder: (context, state) => const PhotoCheckScreen(),
+          ),
+          GoRoute(
+            path: 'crop',
+            builder: (context, state) => const ChooseCropScreen(),
+          ),
+          GoRoute(
+            path: 'result/:id',
+            builder: (context, state) =>
+                DiagnosisResultScreen(diagnosisId: state.pathParameters['id']!),
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.shop,

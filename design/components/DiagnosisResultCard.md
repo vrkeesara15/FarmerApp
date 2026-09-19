@@ -13,6 +13,8 @@ Source: `apps/mobile/packages/core/lib/src/widgets/diagnosis_result_card.dart` (
 | `confidence` | `ConfidenceLevel` | high | medium | low (provisional) |
 | `symptoms` | `List<SymptomCheck>` | label + present |
 | `image` | `ImageProvider?` |  |
+| `provisionalState` | `bool?` | M6: overrides the provisional look (an LLM answer can be medium confidence and still provisional); null derives it from `confidence == low` |
+| `onSymptomTap` | `ValueChanged<int>?` | M6: makes the symptom rows 48 dp tappable ("check these signs": the user ticks what they see; keys `diagnosis-symptom-<i>`) |
 
 ## Variants
 
@@ -23,6 +25,10 @@ Source: `apps/mobile/packages/core/lib/src/widgets/diagnosis_result_card.dart` (
 
 - default
 - provisional (dashed border, no buy actions expected by the screen)
+
+## Usage (M6)
+
+`DiagnosisResultView` (`lib/src/widgets/diagnosis_result_view.dart`) composes the card with the headline for `message_key`, Organic / Chemical `TreatmentCard`s (tank pictogram, PHI, PPE, safety text), ranked `ProductCard`s at the store (with `OwnBrandBadge`), cultural practices, the F27 updated banner and the earlier answers; `DiagnosisActionBar` holds the one-tap actions. Order buttons exist only when `Diagnosis.showBuy` (server `can_buy`, not provisional, answered / confirmed / corrected) — SPEC 3.4. Used by F25–F28 and A43; tests `test/widgets/diagnosis_result_view_test.dart`, goldens `f25_result_*`, `f26_provisional_*`, `f28_not_a_plant_*`, `a43_result_*`.
 
 ## Accessibility
 

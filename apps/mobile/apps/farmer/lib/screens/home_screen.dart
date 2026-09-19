@@ -54,6 +54,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final prompts =
         ref.watch(visitPromptsProvider).value ?? const <VisitPrompt>[];
     final crops = ref.watch(cropsProvider).value ?? const <CropRef>[];
+    final updated = (ref.watch(diagnosesProvider).value ?? const <Diagnosis>[])
+        .where((d) => d.updateUnseen)
+        .toList();
+    final lang = Localizations.localeOf(context).languageCode;
     final name = profile?.value.firstName ?? '';
     return KisanTabScaffold(
       tab: KisanTab.home,
@@ -82,6 +86,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       : l10n.kisanVisitQuestion(prompt.officerFirstName!),
                   onTap: () => context.push(AppRoutes.visit(prompt.visitId)),
                   child: Text(l10n.kisanVisitTapToAnswer, style: app.text.body),
+                ),
+              ),
+            // F27: the agronomist confirmed or corrected a crop check.
+            for (final d in updated.take(1))
+              Padding(
+                padding: const EdgeInsets.only(bottom: Tokens.space3),
+                child: KisanCard(
+                  key: const Key('home-diagnosis-updated'),
+                  icon: Icons.notifications_active_outlined,
+                  title: l10n.cropDoctorUpdatedTitle,
+                  onTap: () => context.push(AppRoutes.cropResult(d.id)),
+                  child: Text(
+                    l10n.cropDoctorResultUpdatedHome(
+                      d.problem?.nameIn(lang) ?? l10n.cropDoctorTitle,
+                    ),
+                    style: app.text.body,
+                  ),
                 ),
               ),
             _WeatherStrip(),

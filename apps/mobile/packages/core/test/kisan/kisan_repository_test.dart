@@ -267,9 +267,13 @@ void main() {
     expect(await repo.requestDeletion(reason: 'farmer_app'), KisanWrite.done);
     final d = (await repo.watchDeletion().first)!;
     expect(d.status, 'received');
-    expect(d.ticketId, startsWith('DEL-'));
+    expect(d.ticketId, matches(RegExp(r'^[0-9a-f]{8}-[0-9a-f-]{27}$')));
+    expect(d.shortTicket, 'D3F1A2B4');
     expect(d.dueBy, now.add(const Duration(days: 30)));
     expect(api.writes.last.$2, <String, Object?>{'reason': 'farmer_app'});
+    // While the request is open a repeat returns the same ticket (200).
+    expect(await repo.requestDeletion(), KisanWrite.done);
+    expect((await repo.watchDeletion().first)!.ticketId, d.ticketId);
     expect(await repo.refreshDeletion(), isTrue);
     api.offline = true;
     expect(await repo.requestDeletion(), KisanWrite.offline);

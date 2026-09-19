@@ -13,7 +13,9 @@ Source: `apps/mobile/packages/core/lib/src/widgets/treatment_card.dart` (exporte
 | `activeIngredient` | `String?` |  |
 | `dosePerAcre / dosePerTank` | `String` | pre-formatted |
 | `safetyIntervalDays` | `int?` |  |
-| `ppe` | `Set<Ppe>` | gloves | mask | goggles |
+| `ppe` | `Set<Ppe>` | gloves | mask | goggles | clothing (full sleeves / apron / boots, M6) |
+| `safetyText` | `String?` | label safety text (DX-009), shown under the PPE row with a shield icon (M6) |
+| `tankPictogram` | `bool` | draws the per-tank dose as `TankDose`: a 15 L knapsack tank with the dose next to it (F25 "shown visually", M6); default off keeps the plain dose tile |
 
 ## Variants
 
@@ -23,6 +25,8 @@ Source: `apps/mobile/packages/core/lib/src/widgets/treatment_card.dart` (exporte
 ## States
 
 - with/without safety interval and PPE
+- with safety text (DX-009)
+- tank pictogram (F25 / A43 via `DiagnosisResultView`)
 
 ## Accessibility
 
@@ -52,5 +56,5 @@ Source: `apps/mobile/packages/core/lib/src/widgets/treatment_card.dart` (exporte
 
 ## Tests
 
-Golden: treatment_card_{light,sunlight}.png
+Golden: treatment_card_{light,sunlight}.png (default look unchanged). M6: `test/widgets/diagnosis_result_view_test.dart` checks dose per acre, per tank (tank pictogram), PHI, PPE and safety text on every chemical option; farmer goldens `f25_result_*`, agent `a43_result_*`.
 

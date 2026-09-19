@@ -41,14 +41,14 @@ void main() {
     expect(deps.kisan.writes.last.$1, 'POST /v1/me/deletion-request');
     expect(find.byKey(const Key('delete-ticket')), findsOneWidget);
     expect(find.text('We got your request'), findsOneWidget);
-    expect(find.text('Ticket DEL-1001'), findsOneWidget);
+    expect(find.text('Ticket D3F1A2B4'), findsOneWidget);
     expect(find.text('We will finish by 19-10-2026'), findsOneWidget);
 
     // F70 shows the request; reopening reads the status from the API.
     await tester.pageBack();
     await settle(tester);
-    expect(find.text('Request sent · DEL-1001'), findsOneWidget);
-    deps.kisan.deletion!['status'] = 'processing';
+    expect(find.text('Request sent · D3F1A2B4'), findsOneWidget);
+    deps.kisan.deletion!['status'] = 'in_progress';
     await tapIt(tester, find.byKey(const Key('me-delete')));
     expect(find.text('We are deleting your data'), findsOneWidget);
   });

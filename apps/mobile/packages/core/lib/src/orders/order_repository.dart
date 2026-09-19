@@ -50,7 +50,7 @@ class OrderRepository {
         <String, Object?>{
           'sku_id': l.item.skuId,
           'qty': l.qty,
-          'label_claim_id': ?labelClaims[l.item.skuId],
+          'label_claim_id': ?(labelClaims[l.item.skuId] ?? l.labelClaimId),
         },
     ],
   };
@@ -115,7 +115,11 @@ class OrderRepository {
     final payload = SyncStore.payloadOf(open);
     final lineMaps = <Map<String, Object?>>[
       for (final l in lines)
-        <String, Object?>{'sku_id': l.item.skuId, 'qty': l.qty},
+        <String, Object?>{
+          'sku_id': l.item.skuId,
+          'qty': l.qty,
+          'label_claim_id': ?l.labelClaimId,
+        },
     ];
     await db.transaction(() async {
       await _store.requeue(

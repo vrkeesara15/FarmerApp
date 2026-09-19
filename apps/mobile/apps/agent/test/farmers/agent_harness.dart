@@ -42,7 +42,37 @@ class AgentDeps {
       tokens = InMemoryTokenStore(deviceId: 'device-1') {
     confirmApi = FakeVisitConfirmApi(clock: () => now);
     payApi = FakePaymentsApi(clock: () => now);
+    diagnosisServer = FakeDiagnosisServer(
+      sync: api,
+      api: diagnosisApi,
+      clock: () => now,
+    );
   }
+
+  /// FA-019 scouting: the live camera (queue shots on it).
+  final FakeGuidedCamera guidedCamera = FakeGuidedCamera();
+
+  /// FA-019: the DX-001 gate (queue verdicts on it).
+  final ScriptedQualityModel quality = ScriptedQualityModel();
+
+  /// FA-019: `GET /v1/diagnoses/{id}`.
+  final FakeDiagnosisApi diagnosisApi = FakeDiagnosisApi();
+
+  /// FA-019: answers the `diagnosis` create op.
+  late final FakeDiagnosisServer diagnosisServer;
+
+  /// Result poll waits (never released unless a test does).
+  final List<Completer<void>> diagnosisPolls = <Completer<void>>[];
+
+  /// Lets the waiting result poll run once.
+  void releaseDiagnosisPoll() {
+    for (final c in diagnosisPolls) {
+      if (!c.isCompleted) c.complete();
+    }
+  }
+
+  /// Opened URLs (call farmer).
+  final RecordingUrlOpener urls = RecordingUrlOpener();
 
   /// FA-020 catalogue / nearest store.
   final FakeCatalogApi catalogApi = FakeCatalogApi();
@@ -148,6 +178,24 @@ class AgentDeps {
     paymentTickerProvider.overrideWithValue(const Stream<void>.empty()),
     upiSleepProvider.overrideWithValue((d) => upiSleep(d)),
     fileReaderProvider.overrideWithValue((path) async => photos.files[path]!),
+    guidedCameraFactoryProvider.overrideWithValue(() => guidedCamera),
+    onDeviceQualityModelProvider.overrideWithValue(quality),
+    diagnosisPhotoPipelineProvider.overrideWithValue(
+      DiagnosisPhotoPipeline(
+        model: quality,
+        process: (bytes, time) async => processPhotoSync(
+          PhotoProcessRequest(bytes: bytes, captureTime: time),
+        ),
+      ),
+    ),
+    diagnosisApiProvider.overrideWithValue(diagnosisApi),
+    captureClockProvider.overrideWithValue(() => now),
+    urlOpenerProvider.overrideWithValue(urls),
+    diagnosisPollSleepProvider.overrideWithValue((d) {
+      final c = Completer<void>();
+      diagnosisPolls.add(c);
+      return c.future;
+    }),
     settingsStoreProvider.overrideWithValue(
       InMemorySettingsStore(AppSettings(locale: locale, themeMode: theme)),
     ),

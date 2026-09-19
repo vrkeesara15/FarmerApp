@@ -386,7 +386,11 @@ class KisanRepository {
       'payment_mode': paymentMode == 'upi_qr' ? null : paymentMode,
       'lines': <Object?>[
         for (final l in lines)
-          <String, Object?>{'sku_id': l.item.skuId, 'qty': l.qty},
+          <String, Object?>{
+            'sku_id': l.item.skuId,
+            'qty': l.qty,
+            'label_claim_id': ?l.labelClaimId,
+          },
       ],
     });
     if (r.isNetworkFailure) {

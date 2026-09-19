@@ -98,6 +98,9 @@ Future<void> startMitra() async {
   final drift = ClockDriftTracker(
     onChanged: (d) => db.setValue(clockDriftKey, '$d'),
   );
+  final qualityModel = TfliteQualityModel(
+    loader: TfliteFlutterInterpreter.load,
+  );
   final rest = RestJsonClient(
     store: store,
     client: client,
@@ -194,6 +197,11 @@ Future<void> startMitra() async {
         const MobileScannerBarcodeScanner(),
       ),
       urlOpenerProvider.overrideWithValue(const LauncherUrlOpener()),
+      // FA-019 scouting: live camera with the guide overlay, the DX-001
+      // on-device gate (TFLite, heuristic fallback), result polling.
+      guidedCameraFactoryProvider.overrideWithValue(PluginGuidedCamera.new),
+      onDeviceQualityModelProvider.overrideWithValue(qualityModel),
+      diagnosisApiProvider.overrideWithValue(HttpDiagnosisApi(rest)),
       // FA-016: confirmation request / officer-side OTP (online only).
       visitConfirmApiProvider.overrideWithValue(
         HttpVisitConfirmApi(
@@ -253,6 +261,8 @@ Future<void> startMitra() async {
     // M2 follow-up: tenant settings daily and whenever the network returns.
     final settingsSync = container.read(tenantSettingsSyncProvider);
     unawaited(settingsSync.pullIfStale());
+    // DX-001: load the on-device model early (off the first frame's path).
+    unawaited(qualityModel.load());
     onlineSub = connectivity.onlineChanges.listen((online) {
       if (online) unawaited(settingsSync.pullIfStale());
     });

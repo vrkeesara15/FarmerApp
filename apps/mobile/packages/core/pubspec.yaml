@@ -11,6 +11,7 @@ environment:
 dependencies:
   async: ^2.13.0
   battery_plus: ^7.1.1
+  camera: ^0.12.1
   connectivity_plus: ^7.0.0
   crypto: ^3.0.7
   drift: ^2.35.0
@@ -34,6 +35,7 @@ dependencies:
   qr_flutter: ^4.1.0
   safe_device: ^1.4.1
   sqlite3: ^3.6.0
+  tflite_flutter: ^0.12.1
   timezone: ^0.11.1
   workmanager: ^0.10.10
 
@@ -46,3 +48,7 @@ dev_dependencies:
 
 flutter:
   generate: true
+  # DX-001 on-device photo gate (ml/ondevice/INTEGRATION.md): shipped with
+  # the app, never downloaded or hot-loaded.
+  assets:
+    - assets/models/

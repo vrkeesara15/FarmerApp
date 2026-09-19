@@ -214,6 +214,41 @@ class KisanDeps {
       connectivity = FakeConnectivityMonitor(online: online) {
     kisan = FakeKisanApi(clock: () => now);
     payApi = FakePaymentsApi(clock: () => now);
+    diagnosisServer = FakeDiagnosisServer(
+      sync: syncApi,
+      api: diagnosisApi,
+      clock: () => now,
+    );
+  }
+
+  /// Crop doctor: the live camera (queue shots on it).
+  final FakeGuidedCamera camera = FakeGuidedCamera();
+
+  /// Crop doctor: the DX-001 gate (queue verdicts on it).
+  final ScriptedQualityModel quality = ScriptedQualityModel();
+
+  /// Crop doctor: `GET /v1/diagnoses/{id}`.
+  final FakeDiagnosisApi diagnosisApi = FakeDiagnosisApi();
+
+  /// Crop doctor: answers the `diagnosis` create op and plays the
+  /// agronomist.
+  late final FakeDiagnosisServer diagnosisServer;
+
+  /// Photos kept until uploaded.
+  final MemoryPhotoStore photos = MemoryPhotoStore();
+
+  /// Tenant flag `on_device_crop_guess`.
+  bool cropGuessFlag = false;
+
+  /// Result poll waits: each completes when the test calls
+  /// [releaseDiagnosisPoll].
+  final List<Completer<void>> diagnosisPolls = <Completer<void>>[];
+
+  /// Lets the waiting result poll run once.
+  void releaseDiagnosisPoll() {
+    for (final c in diagnosisPolls) {
+      if (!c.isCompleted) c.complete();
+    }
   }
 
   /// Farmer REST calls.
@@ -334,6 +369,26 @@ class KisanDeps {
     tokenStoreProvider.overrideWithValue(InMemoryTokenStore(deviceId: 'dev-1')),
     mapTileProviderProvider.overrideWithValue(BlankTileProvider()),
     paymentTickerProvider.overrideWithValue(const Stream<void>.empty()),
+    guidedCameraFactoryProvider.overrideWithValue(() => camera),
+    onDeviceQualityModelProvider.overrideWithValue(quality),
+    diagnosisPhotoPipelineProvider.overrideWithValue(
+      DiagnosisPhotoPipeline(
+        model: quality,
+        process: (bytes, time) async => processPhotoSync(
+          PhotoProcessRequest(bytes: bytes, captureTime: time),
+        ),
+      ),
+    ),
+    diagnosisApiProvider.overrideWithValue(diagnosisApi),
+    photoStoreProvider.overrideWithValue(photos),
+    fileReaderProvider.overrideWithValue((path) async => photos.files[path]!),
+    onDeviceCropGuessFlagProvider.overrideWithValue(cropGuessFlag),
+    captureClockProvider.overrideWithValue(() => now),
+    diagnosisPollSleepProvider.overrideWithValue((d) {
+      final c = Completer<void>();
+      diagnosisPolls.add(c);
+      return c.future;
+    }),
     upiSleepProvider.overrideWithValue((d) {
       final c = Completer<void>();
       polls.add(c);

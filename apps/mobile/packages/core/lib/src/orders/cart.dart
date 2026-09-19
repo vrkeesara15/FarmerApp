@@ -125,6 +125,23 @@ class CartNotifier extends Notifier<CartState> {
     state = state.copyWith(lines: lines);
   }
 
+  /// FM-006 / FA-019: puts a crop-doctor recommendation in the cart with
+  /// its label claim (one pack unless it is already there).
+  void addRecommended(CatalogItem item, {required String labelClaimId}) {
+    final lines = <CartLine>[...state.lines];
+    final i = lines.indexWhere((l) => l.item.skuId == item.skuId);
+    if (i >= 0) {
+      lines[i] = CartLine(
+        item: lines[i].item,
+        qty: lines[i].qty,
+        labelClaimId: labelClaimId,
+      );
+    } else {
+      lines.add(CartLine(item: item, qty: 1, labelClaimId: labelClaimId));
+    }
+    state = state.copyWith(lines: lines);
+  }
+
   /// Pickup or delivery.
   void setFulfilment(Fulfilment f) => state = state.copyWith(fulfilment: f);
 

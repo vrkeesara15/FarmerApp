@@ -28,8 +28,9 @@ Source: `apps/mobile/packages/core/lib/src/widgets/photo_review_card.dart` (expo
 | ok (`tipKey == photo.tip.ok`) | success, check_circle_outline, `photoQualityOk` | `photoTipOk` | enabled |
 | blurry (`photo.tip.blurry`) | danger, blur_on, `photoQualityBlurry` | `photoTipBlurry` | disabled |
 | dark (`photo.tip.dark`) | warning, brightness_low_outlined, `photoQualityDark` | `photoTipDark` | disabled |
+| not a plant (`photo.tip.not_plant`, DX-001 model, M6) | warning, eco_outlined, `photoQualityNotPlant` | `photoTipNotPlant` | disabled |
 
-Dark wins over blurry (a dark frame has no edges to measure), matching `PhotoQualityResult.tipKey`.
+Dark wins over blurry (a dark frame has no edges to measure), and both win over the plant check, matching `PhotoQualityResult.tipKey`.
 
 ## Accessibility
 

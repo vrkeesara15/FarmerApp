@@ -68,6 +68,9 @@ enum PickPurpose {
 
   /// Then A52 dues mode.
   collect,
+
+  /// Then the crop plot choice for scouting (FA-019).
+  scout,
 }
 
 /// Localised category label.

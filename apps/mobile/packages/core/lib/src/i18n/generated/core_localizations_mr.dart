@@ -3848,4 +3848,255 @@ class CoreLocalizationsMr extends CoreLocalizations {
 
   @override
   String get kisanYourOfficer => 'तुमचे फील्ड अधिकारी';
+
+  @override
+  String get photoTipNotPlant =>
+      'कॅमेरा आजारी पानाकडे धरा आणि पुन्हा फोटो काढा';
+
+  @override
+  String get photoQualityNotPlant => 'पान दिसले नाही';
+
+  @override
+  String get treatmentPpeClothing => 'पूर्ण बाह्यांचे कपडे';
+
+  @override
+  String get cropDoctorTitle => 'पीक डॉक्टर';
+
+  @override
+  String get cropDoctorIntroTitle => 'आजारी पानाचा फोटो काढा';
+
+  @override
+  String get cropDoctorIntroTip1 => 'एका आजारी पानाजवळ जा';
+
+  @override
+  String get cropDoctorIntroTip2 => 'सूर्य तुमच्या पाठीमागे ठेवून उभे राहा';
+
+  @override
+  String get cropDoctorIntroTip3 =>
+      'फोन स्थिर धरा आणि पानावर टॅप करून फोकस करा';
+
+  @override
+  String get cropDoctorUpTo3 => 'तुम्ही 3 फोटोपर्यंत काढू शकता';
+
+  @override
+  String get cropDoctorOpenCamera => 'कॅमेरा उघडा';
+
+  @override
+  String get cropDoctorTakePhoto => 'फोटो काढा';
+
+  @override
+  String get cropDoctorCameraDenied =>
+      'पिकाचा फोटो काढण्यासाठी कॅमेऱ्याला परवानगी द्या';
+
+  @override
+  String get cropDoctorCameraError => 'कॅमेरा उघडला नाही. पुन्हा प्रयत्न करा.';
+
+  @override
+  String get cropDoctorTryAgain => 'पुन्हा प्रयत्न करा';
+
+  @override
+  String cropDoctorPhotoCount(int count) {
+    return 'फोटो $count / 3';
+  }
+
+  @override
+  String cropDoctorPhotosReady(int count) {
+    return '3 पैकी $count फोटो तयार';
+  }
+
+  @override
+  String get cropDoctorAddPhoto => 'आणखी एक फोटो काढा';
+
+  @override
+  String get cropDoctorRemovePhoto => 'फोटो काढून टाका';
+
+  @override
+  String get cropDoctorCheckCrop => 'माझे पीक तपासा';
+
+  @override
+  String get cropDoctorChooseCropTitle => 'हे कोणते पीक आहे?';
+
+  @override
+  String cropDoctorDetected(String crop) {
+    return 'हे $crop वाटते. चुकीचे असल्यास दुसरे पीक दाबा.';
+  }
+
+  @override
+  String cropDoctorCropIs(String crop) {
+    return 'पीक: $crop';
+  }
+
+  @override
+  String get cropDoctorChangeCrop => 'पीक बदला';
+
+  @override
+  String get cropDoctorUnknownCrop => 'मला माहीत नाही';
+
+  @override
+  String get cropDoctorAskExpertToo => 'आमच्या तज्ज्ञालाही विचारा';
+
+  @override
+  String get cropDoctorAnalysing => 'तुमचे पीक तपासत आहोत…';
+
+  @override
+  String get cropDoctorAnalysingHelp => 'याला काही सेकंद लागतात';
+
+  @override
+  String get cropDoctorQueuedTitle => 'तुमच्या फोनमध्ये सेव्ह झाले';
+
+  @override
+  String get cropDoctorQueuedHelp => 'इंटरनेट आल्यावर आम्ही तपासू';
+
+  @override
+  String get cropDoctorSendFailed =>
+      'तुमचे फोटो पाठवता आले नाहीत. पुन्हा काढा.';
+
+  @override
+  String get cropDoctorResultTitle => 'निकाल';
+
+  @override
+  String get cropDoctorMessageAnswered => 'आम्हाला समस्या सापडली';
+
+  @override
+  String get cropDoctorMessageProvisional => 'तात्पुरते — तज्ज्ञ खात्री करतील';
+
+  @override
+  String get cropDoctorMessageUnknown =>
+      'अजून खात्री नाही. आमचे तज्ज्ञ तुमचे फोटो पाहतील.';
+
+  @override
+  String get cropDoctorMessageConfirmed =>
+      'आमच्या तज्ज्ञांनी हा निकाल निश्चित केला';
+
+  @override
+  String get cropDoctorMessageCorrected => 'आमच्या तज्ज्ञांनी हा निकाल बदलला';
+
+  @override
+  String get cropDoctorOutNotPlant => 'फोटोत रोप दिसले नाही';
+
+  @override
+  String get cropDoctorOutUnsupportedCrop => 'हे पीक अजून तपासता येत नाही';
+
+  @override
+  String get cropDoctorOutUnreadable => 'फोटो स्पष्ट नव्हता';
+
+  @override
+  String get cropDoctorOutNoMatch => 'ही समस्या ओळखता आली नाही';
+
+  @override
+  String get cropDoctorOutNotDiagnosable =>
+      'फोटोवरून तज्ज्ञांना सांगता आले नाही';
+
+  @override
+  String get cropDoctorOutHelp =>
+      'आमचे तज्ज्ञ हे पाहतील. तुम्ही तुमच्या फील्ड ऑफिसरला फोनही करू शकता.';
+
+  @override
+  String get cropDoctorTalkToOfficer => 'तुमच्या फील्ड ऑफिसरशी बोला';
+
+  @override
+  String get cropDoctorCallOfficer => 'माझ्या ऑफिसरला फोन';
+
+  @override
+  String get cropDoctorAskExpert => 'तज्ज्ञाला विचारा';
+
+  @override
+  String get cropDoctorAskExpertSent =>
+      'आमच्या तज्ज्ञाला पाठवले. उत्तर तुम्हाला कळवू.';
+
+  @override
+  String get cropDoctorAskExpertAlready =>
+      'आमच्या तज्ज्ञांकडे तुमचे फोटो आधीच आहेत';
+
+  @override
+  String get cropDoctorOrder => 'ऑर्डर करा';
+
+  @override
+  String cropDoctorProductsAt(String store) {
+    return '$store येथे मिळणारे';
+  }
+
+  @override
+  String cropDoctorStoreDistance(String store, String km) {
+    return '$store, $km किमी';
+  }
+
+  @override
+  String get cropDoctorCulturalTitle => 'हेही करा';
+
+  @override
+  String get cropDoctorNoProducts =>
+      'तुमच्या दुकानात यासाठी अजून उत्पादन नाही. तुमच्या फील्ड ऑफिसरशी बोला.';
+
+  @override
+  String get cropDoctorUpdatedTitle => 'तुमचा निकाल बदलला';
+
+  @override
+  String get cropDoctorHistoryTitle => 'आधीची उत्तरे';
+
+  @override
+  String cropDoctorEarlierAnswer(String answer) {
+    return 'आधी: $answer';
+  }
+
+  @override
+  String get cropDoctorMyChecks => 'माझ्या पीक तपासण्या';
+
+  @override
+  String get cropDoctorWaiting => 'उत्तराची वाट';
+
+  @override
+  String get cropDoctorSymptomsHelp => 'तुमच्या पिकावर दिसणारी लक्षणे दाबा';
+
+  @override
+  String cropDoctorResultUpdatedHome(String problem) {
+    return 'पीक तपासणी बदलली: $problem';
+  }
+
+  @override
+  String get scoutTitle => 'पीक पाहणी';
+
+  @override
+  String get scoutChoosePlot => 'पीक प्लॉट निवडा';
+
+  @override
+  String get scoutNoPlots =>
+      'या शेतकऱ्याचा अजून पीक प्लॉट नाही. आधी शेत आणि पीक जोडा.';
+
+  @override
+  String scoutPlotLine(String crop, String farm) {
+    return '$crop · $farm';
+  }
+
+  @override
+  String scoutAttachedTo(String farmer, String crop) {
+    return '$farmer साठी · $crop';
+  }
+
+  @override
+  String get scoutCreateOrder => 'शेतकऱ्यासाठी ऑर्डर करा';
+
+  @override
+  String get scoutCallFarmer => 'शेतकऱ्याला फोन';
+
+  @override
+  String get scoutQueuedHelp => 'रांगेत आहे. फोन ऑनलाइन झाल्यावर पाठवले जाईल.';
+
+  @override
+  String scoutProvenance(String model, String corpus) {
+    return 'मॉडेल $model · कॉर्पस v$corpus';
+  }
+
+  @override
+  String get scoutNewDiagnosis => 'नवीन निदान';
+
+  @override
+  String get scoutCheckPhotos => 'फोटो तपासा';
+
+  @override
+  String get kisanDeleteStatusRejected =>
+      'तुमची विनंती स्वीकारली नाही. कृपया तुमच्या दुकानाला फोन करा.';
+
+  @override
+  String get cropDoctorNotOnPhone => 'ही पीक तपासणी या फोनवर नाही';
 }

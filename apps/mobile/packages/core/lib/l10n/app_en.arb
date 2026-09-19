@@ -2663,5 +2663,267 @@
   "kisanYourOfficer": "Your field officer",
   "@kisanYourOfficer": {
     "description": "Farmer app (Kisan), M6"
-  }
+  },
+  "photoTipNotPlant": "Point the camera at the sick leaf and take it again",
+  "@photoTipNotPlant": {
+    "description": "Retake tip for key photo.tip.not_plant (DX-001: no leaf in the frame)"
+  },
+  "photoQualityNotPlant": "No leaf seen",
+  "@photoQualityNotPlant": {
+    "description": "Photo check badge when the on-device model sees no plant"
+  },
+  "treatmentPpeClothing": "Full sleeves",
+  "@treatmentPpeClothing": {
+    "description": "PPE pictogram label: full-sleeve clothing, apron or boots"
+  },
+  "cropDoctorTitle": "Crop doctor",
+  "cropDoctorIntroTitle": "Take a photo of the sick leaf",
+  "@cropDoctorIntroTitle": {
+    "description": "F20 heading"
+  },
+  "cropDoctorIntroTip1": "Go close to one sick leaf",
+  "@cropDoctorIntroTip1": {
+    "description": "F20 picture tip 1 (fill the frame)"
+  },
+  "cropDoctorIntroTip2": "Stand with the sun behind you",
+  "@cropDoctorIntroTip2": {
+    "description": "F20 picture tip 2 (good light)"
+  },
+  "cropDoctorIntroTip3": "Hold still and tap the leaf to focus",
+  "@cropDoctorIntroTip3": {
+    "description": "F20 picture tip 3 (hold steady)"
+  },
+  "cropDoctorUpTo3": "You can take up to 3 photos",
+  "cropDoctorOpenCamera": "Open camera",
+  "cropDoctorTakePhoto": "Take photo",
+  "@cropDoctorTakePhoto": {
+    "description": "Shutter button (spoken label)"
+  },
+  "cropDoctorCameraDenied": "Allow the camera to take a photo of your crop",
+  "cropDoctorCameraError": "The camera did not open. Try again.",
+  "cropDoctorTryAgain": "Try again",
+  "cropDoctorPhotoCount": "Photo {count} of 3",
+  "@cropDoctorPhotoCount": {
+    "description": "Camera counter",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cropDoctorPhotosReady": "{count} of 3 photos ready",
+  "@cropDoctorPhotosReady": {
+    "description": "F22 accepted photos count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cropDoctorAddPhoto": "Add another photo",
+  "cropDoctorRemovePhoto": "Remove photo",
+  "cropDoctorCheckCrop": "Check my crop",
+  "@cropDoctorCheckCrop": {
+    "description": "Sends the photos for diagnosis"
+  },
+  "cropDoctorChooseCropTitle": "Which crop is this?",
+  "@cropDoctorChooseCropTitle": {
+    "description": "F23 heading"
+  },
+  "cropDoctorDetected": "Looks like {crop}. Tap another crop if this is wrong.",
+  "@cropDoctorDetected": {
+    "description": "On-device crop guess, shown only while the on_device_crop_guess flag is on",
+    "placeholders": {
+      "crop": {
+        "type": "String"
+      }
+    }
+  },
+  "cropDoctorCropIs": "Crop: {crop}",
+  "@cropDoctorCropIs": {
+    "description": "Chosen crop line",
+    "placeholders": {
+      "crop": {
+        "type": "String"
+      }
+    }
+  },
+  "cropDoctorChangeCrop": "Change crop",
+  "cropDoctorUnknownCrop": "I don’t know",
+  "cropDoctorAskExpertToo": "Also ask our expert",
+  "cropDoctorAnalysing": "Checking your crop…",
+  "@cropDoctorAnalysing": {
+    "description": "F24 / A42"
+  },
+  "cropDoctorAnalysingHelp": "This takes a few seconds",
+  "cropDoctorQueuedTitle": "Saved on your phone",
+  "@cropDoctorQueuedTitle": {
+    "description": "F24 offline state"
+  },
+  "cropDoctorQueuedHelp": "We’ll check when you’re online",
+  "@cropDoctorQueuedHelp": {
+    "description": "F24 / A42 queued offline"
+  },
+  "cropDoctorSendFailed": "Could not send your photos. Take them again.",
+  "cropDoctorResultTitle": "Result",
+  "cropDoctorMessageAnswered": "We found the problem",
+  "@cropDoctorMessageAnswered": {
+    "description": "diagnosis.result.answered"
+  },
+  "cropDoctorMessageProvisional": "Provisional — expert will confirm",
+  "@cropDoctorMessageProvisional": {
+    "description": "diagnosis.result.provisional (FM-005 acceptance wording)"
+  },
+  "cropDoctorMessageUnknown": "We are not sure yet. Our expert will look at your photos.",
+  "@cropDoctorMessageUnknown": {
+    "description": "diagnosis.result.unknown"
+  },
+  "cropDoctorMessageConfirmed": "Our expert confirmed this result",
+  "@cropDoctorMessageConfirmed": {
+    "description": "diagnosis.result.confirmed"
+  },
+  "cropDoctorMessageCorrected": "Our expert changed this result",
+  "@cropDoctorMessageCorrected": {
+    "description": "diagnosis.result.corrected"
+  },
+  "cropDoctorOutNotPlant": "We could not see a plant in the photo",
+  "@cropDoctorOutNotPlant": {
+    "description": "diagnosis.out_of_scope.not_a_plant (F28)"
+  },
+  "cropDoctorOutUnsupportedCrop": "We cannot check this crop yet",
+  "@cropDoctorOutUnsupportedCrop": {
+    "description": "diagnosis.out_of_scope.unsupported_crop (F28)"
+  },
+  "cropDoctorOutUnreadable": "The photo was not clear enough",
+  "@cropDoctorOutUnreadable": {
+    "description": "diagnosis.out_of_scope.unreadable_image"
+  },
+  "cropDoctorOutNoMatch": "We could not find this problem",
+  "@cropDoctorOutNoMatch": {
+    "description": "diagnosis.out_of_scope.no_match"
+  },
+  "cropDoctorOutNotDiagnosable": "Our expert could not tell from the photos",
+  "@cropDoctorOutNotDiagnosable": {
+    "description": "diagnosis.out_of_scope.expert_not_diagnosable"
+  },
+  "cropDoctorOutHelp": "Our expert will look at it. You can also call your field officer.",
+  "cropDoctorTalkToOfficer": "Talk to your field officer",
+  "@cropDoctorTalkToOfficer": {
+    "description": "SPEC 3.4 CTA shown instead of a buy button on provisional results"
+  },
+  "cropDoctorCallOfficer": "Call my officer",
+  "cropDoctorAskExpert": "Ask an expert",
+  "cropDoctorAskExpertSent": "Sent to our expert. We’ll tell you the answer.",
+  "cropDoctorAskExpertAlready": "Our expert already has your photos",
+  "cropDoctorOrder": "Order",
+  "@cropDoctorOrder": {
+    "description": "FM-006 one-tap order"
+  },
+  "cropDoctorProductsAt": "Products at {store}",
+  "@cropDoctorProductsAt": {
+    "description": "F25 products heading",
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
+  "cropDoctorStoreDistance": "{store}, {km} km",
+  "@cropDoctorStoreDistance": {
+    "description": "Store with distance, e.g. FCC Kondapur, 3 km",
+    "placeholders": {
+      "store": {
+        "type": "String"
+      },
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "cropDoctorCulturalTitle": "Also do this",
+  "cropDoctorNoProducts": "No product for this at your store yet. Talk to your field officer.",
+  "cropDoctorUpdatedTitle": "Your result was updated",
+  "@cropDoctorUpdatedTitle": {
+    "description": "F27 banner"
+  },
+  "cropDoctorHistoryTitle": "Earlier answers",
+  "cropDoctorEarlierAnswer": "Earlier: {answer}",
+  "@cropDoctorEarlierAnswer": {
+    "description": "F27 history line",
+    "placeholders": {
+      "answer": {
+        "type": "String"
+      }
+    }
+  },
+  "cropDoctorMyChecks": "My crop checks",
+  "cropDoctorWaiting": "Waiting for the answer",
+  "cropDoctorSymptomsHelp": "Tap the signs you see on your crop",
+  "cropDoctorResultUpdatedHome": "Crop check updated: {problem}",
+  "@cropDoctorResultUpdatedHome": {
+    "description": "F10 home card for an F27 update",
+    "placeholders": {
+      "problem": {
+        "type": "String"
+      }
+    }
+  },
+  "scoutTitle": "Scout crop",
+  "scoutChoosePlot": "Choose the crop plot",
+  "scoutNoPlots": "This farmer has no crop plot yet. Add a farm and crop first.",
+  "scoutPlotLine": "{crop} · {farm}",
+  "@scoutPlotLine": {
+    "description": "Crop plot choice line",
+    "placeholders": {
+      "crop": {
+        "type": "String"
+      },
+      "farm": {
+        "type": "String"
+      }
+    }
+  },
+  "scoutAttachedTo": "For {farmer} · {crop}",
+  "@scoutAttachedTo": {
+    "description": "A43 header: the result is attached to this farmer and plot",
+    "placeholders": {
+      "farmer": {
+        "type": "String"
+      },
+      "crop": {
+        "type": "String"
+      }
+    }
+  },
+  "scoutCreateOrder": "Create order for farmer",
+  "@scoutCreateOrder": {
+    "description": "A43 action (FA-019 / FA-020)"
+  },
+  "scoutCallFarmer": "Call farmer",
+  "scoutQueuedHelp": "Queued. It will be sent when the phone is online.",
+  "@scoutQueuedHelp": {
+    "description": "A42 queued offline"
+  },
+  "scoutProvenance": "Model {model} · corpus v{corpus}",
+  "@scoutProvenance": {
+    "description": "A43 footer: stored model and corpus versions (DX-005)",
+    "placeholders": {
+      "model": {
+        "type": "String"
+      },
+      "corpus": {
+        "type": "String"
+      }
+    }
+  },
+  "scoutNewDiagnosis": "New diagnosis",
+  "scoutCheckPhotos": "Check photos",
+  "@scoutCheckPhotos": {
+    "description": "A41 heading"
+  },
+  "kisanDeleteStatusRejected": "Your request was not accepted. Please call your store.",
+  "@kisanDeleteStatusRejected": {
+    "description": "FM-015 deletion ticket status rejected"
+  },
+  "cropDoctorNotOnPhone": "This crop check is not on this phone"
 }

@@ -19,6 +19,9 @@ Source: `apps/mobile/packages/core/lib/src/widgets/product_card.dart` (exported 
 | `stockAsOf` | `DateTime?` | UTC time the stock figure was true; appends `productStockAsOf(HH:mm)` |
 | `priceIsEstimate` | `bool` | adds `productPriceEstimate` under the price (cached price list; the server prices the order) |
 | `quantity` | `int?` | units in the cart; the added button reads `productInCart(n)` |
+| `actionLabel / actionIcon` | `String? / IconData?` | replaces "Add" (M6 diagnosis result: "Order" / "Create order for farmer") |
+| `showAction` | `bool` | false hides the button entirely — SPEC 3.4: a provisional diagnosis never shows a buy button (M6) |
+| `actionKey` | `Key?` | key of the button (`DiagnosisKeys.orderProduct(sku)`) |
 
 ## Variants
 

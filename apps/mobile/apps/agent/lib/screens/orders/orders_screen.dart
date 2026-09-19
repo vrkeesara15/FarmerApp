@@ -209,11 +209,12 @@ class _FarmerPickerScreenState extends ConsumerState<FarmerPickerScreen> {
                     name: f.name,
                     village: f.villageName,
                     pendingSync: f.pendingSync,
-                    onTap: () => context.pushReplacement(
-                      widget.purpose == PickPurpose.order
-                          ? CommerceRoutes.catalogue(f.id)
-                          : CommerceRoutes.collect(f.id),
-                    ),
+                    onTap: () =>
+                        context.pushReplacement(switch (widget.purpose) {
+                          PickPurpose.order => CommerceRoutes.catalogue(f.id),
+                          PickPurpose.collect => CommerceRoutes.collect(f.id),
+                          PickPurpose.scout => '/farmers/${f.id}/scout',
+                        }),
                   );
                 },
               ),

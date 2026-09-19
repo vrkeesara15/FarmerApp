@@ -28,6 +28,7 @@ class PublicTenantSettings {
     this.languagesEnabled = const <String>['en', 'te', 'kn', 'hi', 'mr'],
     this.defaultLanguage = 'en',
     this.branding = const TenantBranding(),
+    this.onDeviceCropGuess = false,
   });
 
   /// Parses the API shape leniently.
@@ -42,6 +43,9 @@ class PublicTenantSettings {
     final end = json['auto_duty_end_local_time'];
     final languages = json['languages_enabled'];
     final brandingJson = json['branding'];
+    final features = json['features'] is Map
+        ? Map<String, Object?>.from(json['features']! as Map)
+        : const <String, Object?>{};
     return PublicTenantSettings(
       geofenceRadiusM: positive(json['geofence_radius_m'], d.geofenceRadiusM),
       meetingPointRadiusM: meeting is num && meeting > 0
@@ -72,6 +76,9 @@ class PublicTenantSettings {
       branding: brandingJson is Map
           ? TenantBranding.fromJson(Map<String, Object?>.from(brandingJson))
           : d.branding,
+      onDeviceCropGuess:
+          (features['on_device_crop_guess'] ?? json['on_device_crop_guess']) ==
+          true,
     );
   }
 
@@ -111,6 +118,12 @@ class PublicTenantSettings {
   /// App names, colour, logo, support phone.
   final TenantBranding branding;
 
+  /// DX-001 remote-config flag `on_device_crop_guess` (`features` object of
+  /// the public settings): pre-select the on-device crop guess. Off until
+  /// the model passes the field-validation gate (ml/ondevice/INTEGRATION.md
+  /// §7); the quality / plant gate runs regardless.
+  final bool onDeviceCropGuess;
+
   /// The visit flow's view (pre-check radius, proof checklist minimum).
   VisitSettings get visitSettings => VisitSettings(
     geofenceRadiusM: geofenceRadiusM.toDouble(),
@@ -145,6 +158,7 @@ class PublicTenantSettings {
     'languages_enabled': languagesEnabled,
     'default_language': defaultLanguage,
     'branding': branding.toJson(),
+    'features': <String, Object?>{'on_device_crop_guess': onDeviceCropGuess},
   };
 
   @override
