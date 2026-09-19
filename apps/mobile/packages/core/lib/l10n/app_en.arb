@@ -2815,6 +2815,10 @@
   "cropDoctorAskExpert": "Ask an expert",
   "cropDoctorAskExpertSent": "Sent to our expert. We’ll tell you the answer.",
   "cropDoctorAskExpertAlready": "Our expert already has your photos",
+  "cropDoctorAskExpertFailed": "Could not reach our expert. Check your internet and try again.",
+  "@cropDoctorAskExpertFailed": {
+    "description": "FM-006 ask-expert could not reach the server (offline)"
+  },
   "cropDoctorOrder": "Order",
   "@cropDoctorOrder": {
     "description": "FM-006 one-tap order"

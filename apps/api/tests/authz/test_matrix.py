@@ -262,12 +262,13 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
     "POST /v1/sync": RouteFixture(
         body=lambda _ctx: {"device_id": "matrix", "cursor": None, "ops": []}
     ),
+    # The agronomist uploads WC-007 corpus images only (other purposes: 403, tests/uploads).
     "POST /v1/uploads": RouteFixture(
-        body=lambda _ctx: {
+        body=lambda ctx: {
             "sha256": "0" * 64,
             "size_bytes": 10,
             "content_type": "image/jpeg",
-            "purpose": "farm_photo",
+            "purpose": "corpus" if ctx.actor.role == UserRole.AGRONOMIST else "farm_photo",
             "chunk_size": 262144,
         }
     ),
@@ -538,6 +539,9 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
         }
     ),
     "GET /v1/diagnoses/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "POST /v1/diagnoses/{id}/ask-expert": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"note": "matrix"}
+    ),
     "POST /v1/diagnoses/{id}/review": RouteFixture(
         path_params=lambda _ctx: {"id": NO_SUCH_ID},
         body=lambda _ctx: {"action": "confirm", "note": "matrix"},

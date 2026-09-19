@@ -1473,7 +1473,14 @@
       "onDevice": "डिवाइस पर मॉडल",
       "llm": "LLM मॉडल",
       "corpus": "कॉर्पस संस्करण",
-      "notUsed": "उपयोग नहीं हुआ"
+      "notUsed": "उपयोग नहीं हुआ",
+      "onDeviceScores": "डिवाइस पर स्कोर",
+      "plantScore": "पौधा {score}",
+      "qualityScore": "फोटो गुणवत्ता {score}",
+      "fallback": "वैकल्पिक: {name}",
+      "onDeviceTime": "डिवाइस पर लगा समय",
+      "ms": "{ms} मि.से.",
+      "expertNote": "विशेषज्ञ से पूछते समय का नोट"
     },
     "history": "समीक्षा इतिहास",
     "historyEntry": "{action}: {from} → {to}",

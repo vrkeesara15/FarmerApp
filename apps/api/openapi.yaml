@@ -2826,6 +2826,7 @@ paths:
           content:
             application/problem+json: {}
       x-roles:
+      - agronomist
       - cluster_head
       - farmer
       - field_officer
@@ -2875,6 +2876,7 @@ paths:
           content:
             application/problem+json: {}
       x-roles:
+      - agronomist
       - cluster_head
       - farmer
       - field_officer
@@ -2956,6 +2958,7 @@ paths:
               type: string
               format: binary
       x-roles:
+      - agronomist
       - cluster_head
       - farmer
       - field_officer
@@ -3013,6 +3016,7 @@ paths:
           content:
             application/problem+json: {}
       x-roles:
+      - agronomist
       - cluster_head
       - farmer
       - field_officer
@@ -8344,6 +8348,65 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+  /v1/diagnoses/{id}/ask-expert:
+    post:
+      tags:
+      - diagnosis
+      summary: 'Ask an expert: put an answered case in the agronomist queue (FM-006, no re-upload)'
+      description: 'The farmer the case is about, or the field officer who asked for it. The same photos
+
+        go to the agronomist queue as a ``flagged`` case and the agronomists are notified
+
+        (``diagnosis_expert_requested``). Idempotent: repeating it changes nothing.'
+      operationId: askExpertDiagnosis
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/AskExpertIn'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiagnosisDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`diagnosis_already_reviewed`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
+      - field_officer
   /v1/diagnoses/{id}/review:
     post:
       tags:
@@ -9222,6 +9285,19 @@ components:
       - rejected
       - consumed
       title: ApprovalStatus
+    AskExpertIn:
+      properties:
+        note:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Note
+          description: For the agronomist.
+      additionalProperties: false
+      type: object
+      title: AskExpertIn
+      description: FM-006 "Ask an expert" on an answered case.
     AssignIn:
       properties:
         user_id:
@@ -11559,8 +11635,19 @@ components:
             format: uuid
           - type: string
             const: unknown
+          - type: 'null'
           title: Crop Id
-          description: The crop the user chose, or `unknown` (then the on-device guess / corpus).
+          description: The crop the user chose, or `unknown` (then the on-device guess / corpus). Give
+            `crop_id` or `crop_code`.
+        crop_code:
+          anyOf:
+          - type: string
+            maxLength: 32
+            minLength: 1
+          - type: 'null'
+          title: Crop Code
+          description: Crop code of the tenant (e.g. `paddy`) instead of `crop_id`; unknown codes are
+            422 `diagnosis_invalid`.
         images:
           items:
             $ref: '#/components/schemas/DiagnosisPhotoIn'
@@ -11595,9 +11682,13 @@ components:
           title: Ask Expert
           description: 'FM-006: send to the agronomist too.'
           default: false
+        on_device:
+          anyOf:
+          - $ref: '#/components/schemas/OnDeviceIn'
+          - type: 'null'
+          description: DX-001 on-device scores (DX-005 provenance).
       type: object
       required:
-      - crop_id
       - images
       title: DiagnosisCreate
       description: '``POST /v1/diagnoses`` and the sync op ``diagnosis`` create (same body).'
@@ -11705,6 +11796,13 @@ components:
         flagged:
           type: boolean
           title: Flagged
+        expert_requested_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expert Requested At
+          description: 'FM-006: when ask-expert moved it into the agronomist queue.'
         model_versions:
           additionalProperties: true
           type: object
@@ -11776,6 +11874,25 @@ components:
           type: boolean
           title: Llm Used
           default: false
+        on_device:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: On Device
+          description: DX-001 on-device block as sent by the app (DX-005).
+        expert_requested_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Expert Requested By
+        expert_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Expert Note
+          description: FM-006 ask-expert note.
       type: object
       required:
       - id
@@ -11914,6 +12031,13 @@ components:
         flagged:
           type: boolean
           title: Flagged
+        expert_requested_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expert Requested At
+          description: 'FM-006: when ask-expert moved it into the agronomist queue.'
         model_versions:
           additionalProperties: true
           type: object
@@ -13626,6 +13750,27 @@ components:
       - confirmed
       - crop_stage
       title: FarmerVisitOut
+    FeatureSettings:
+      properties:
+        on_device_crop_guess:
+          type: boolean
+          title: On Device Crop Guess
+          description: 'DX-001: send and pre-select the on-device crop guess. Off until the field-accuracy
+            gate passes (ml/ondevice/INTEGRATION.md section 7).'
+          default: false
+      type: object
+      title: FeatureSettings
+      description: Remote-config flags the apps read from ``GET /v1/settings/public`` (``features``).
+    FeaturesPatch:
+      properties:
+        on_device_crop_guess:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: On Device Crop Guess
+      additionalProperties: false
+      type: object
+      title: FeaturesPatch
     FieldTeamOut:
       properties:
         filters:
@@ -15537,6 +15682,119 @@ components:
       - score
       - purpose
       title: OfficerVisitOut
+    OnDeviceHeuristic:
+      properties:
+        blur_score:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Blur Score
+        brightness:
+          anyOf:
+          - type: number
+            maximum: 1.0
+            minimum: 0.0
+          - type: 'null'
+          title: Brightness
+      additionalProperties: false
+      type: object
+      title: OnDeviceHeuristic
+    OnDeviceIn:
+      properties:
+        model:
+          type: string
+          maxLength: 64
+          title: Model
+          description: On-device model name, e.g. `crop_quality`.
+        model_version:
+          type: string
+          maxLength: 64
+          title: Model Version
+          description: e.g. `ondevice-v1.0` or `heuristic-laplacian-v1`.
+        model_sha256:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-f]{64}$
+          - type: 'null'
+          title: Model Sha256
+        fallback:
+          anyOf:
+          - type: string
+            maxLength: 16
+          - type: 'null'
+          title: Fallback
+          description: '`laplacian` when the model was not used.'
+        plant_score:
+          anyOf:
+          - type: number
+            maximum: 1.0
+            minimum: 0.0
+          - type: 'null'
+          title: Plant Score
+          description: Is-a-plant.
+        quality:
+          anyOf:
+          - $ref: '#/components/schemas/OnDeviceQualityScores'
+          - type: 'null'
+        crop_scores:
+          anyOf:
+          - additionalProperties:
+              type: number
+              maximum: 1.0
+              minimum: 0.0
+            type: object
+            maxProperties: 16
+          - type: 'null'
+          title: Crop Scores
+          description: Crop code -> probability.
+        heuristic:
+          anyOf:
+          - $ref: '#/components/schemas/OnDeviceHeuristic'
+          - type: 'null'
+        latency_ms:
+          anyOf:
+          - type: integer
+            maximum: 600000.0
+            minimum: 0.0
+          - type: 'null'
+          title: Latency Ms
+          description: Inference ms.
+      additionalProperties: false
+      type: object
+      required:
+      - model
+      - model_version
+      title: OnDeviceIn
+      description: 'DX-001 on-device check (ml/ondevice/INTEGRATION.md section 5), kept as DX-005
+
+        provenance. Scores describe the accepted photos; no location or identity.'
+    OnDeviceQualityScores:
+      properties:
+        ok:
+          anyOf:
+          - type: number
+            maximum: 1.0
+            minimum: 0.0
+          - type: 'null'
+          title: Ok
+        blurry:
+          anyOf:
+          - type: number
+            maximum: 1.0
+            minimum: 0.0
+          - type: 'null'
+          title: Blurry
+        dark:
+          anyOf:
+          - type: number
+            maximum: 1.0
+            minimum: 0.0
+          - type: 'null'
+          title: Dark
+      additionalProperties: false
+      type: object
+      title: OnDeviceQualityScores
     OpenDebitOut:
       properties:
         entry_id:
@@ -18181,6 +18439,8 @@ components:
           - hi
           - mr
           title: Default Language
+        features:
+          $ref: '#/components/schemas/FeatureSettings'
         branding:
           $ref: '#/components/schemas/Branding'
       type: object
@@ -18194,6 +18454,7 @@ components:
       - sampling
       - languages_enabled
       - default_language
+      - features
       - branding
       title: PublicSettings
       description: What the field and farmer apps read (no finance, credit or invoicing keys).
@@ -18668,6 +18929,13 @@ components:
         flagged:
           type: boolean
           title: Flagged
+        expert_requested_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expert Requested At
+          description: 'FM-006: when ask-expert moved it into the agronomist queue.'
         model_versions:
           additionalProperties: true
           type: object
@@ -18739,6 +19007,25 @@ components:
           type: boolean
           title: Llm Used
           default: false
+        on_device:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: On Device
+          description: DX-001 on-device block as sent by the app (DX-005).
+        expert_requested_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Expert Requested By
+        expert_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Expert Note
+          description: FM-006 ask-expert note.
         age_hours:
           type: number
           title: Age Hours
@@ -19120,6 +19407,10 @@ components:
             - mr
           - type: 'null'
           title: Default Language
+        features:
+          anyOf:
+          - $ref: '#/components/schemas/FeaturesPatch'
+          - type: 'null'
         branding:
           anyOf:
           - $ref: '#/components/schemas/BrandingPatch'
@@ -20381,6 +20672,8 @@ components:
           - mr
           title: Default Language
           default: en
+        features:
+          $ref: '#/components/schemas/FeatureSettings'
         branding:
           $ref: '#/components/schemas/Branding'
       type: object

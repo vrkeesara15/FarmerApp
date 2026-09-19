@@ -274,3 +274,35 @@ async def test_signed_url_for_a_blob(
     for bad in (f"gs://photos/{uuid.uuid4()}/profile/x.jpg", "http://evil/x", uri + ".nope"):
         resp = await client.get("/v1/blobs/signed-url", params={"uri": bad}, headers=headers)
         assert resp.status_code == 404, bad
+
+
+async def test_agronomist_uploads_corpus_images_only(
+    client: AsyncClient, bearer: Bearer, blobs: LocalBlobStore, world: World
+) -> None:
+    """WC-007: the agronomist starts corpus uploads (C61 corpus manager); every other
+    purpose is 403 for that role."""
+    agronomist = bearer(world.a.user(UserRole.AGRONOMIST))
+    data = os.urandom(1000)
+    init = await _init(client, agronomist, data, purpose="corpus")
+    uid = init["upload_id"]
+    resp = await _put(client, agronomist, uid, 0, data)
+    assert resp.status_code == 200, resp.text
+    resp = await client.get(f"/v1/uploads/{uid}", headers=agronomist)
+    assert resp.status_code == 200 and resp.json()["received_chunks"] == [0]
+    resp = await client.post(f"/v1/uploads/{uid}/complete", headers=agronomist)
+    assert resp.status_code == 200, resp.text
+    assert "/corpus/" in resp.json()["blob_uri"]
+    assert await blobs.get(resp.json()["blob_uri"]) == data
+    for purpose in ("farm_photo", "diagnosis", "receipt"):
+        resp = await client.post(
+            "/v1/uploads",
+            json={
+                "sha256": _sha(data),
+                "size_bytes": len(data),
+                "content_type": "image/jpeg",
+                "purpose": purpose,
+                "chunk_size": CHUNK,
+            },
+            headers=agronomist,
+        )
+        assert resp.status_code == 403 and resp.json()["code"] == "forbidden", purpose

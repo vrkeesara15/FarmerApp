@@ -1378,6 +1378,7 @@
   "cropDoctorAskExpert": "तज्ज्ञाला विचारा",
   "cropDoctorAskExpertSent": "आमच्या तज्ज्ञाला पाठवले. उत्तर तुम्हाला कळवू.",
   "cropDoctorAskExpertAlready": "आमच्या तज्ज्ञांकडे तुमचे फोटो आधीच आहेत",
+  "cropDoctorAskExpertFailed": "आमच्या तज्ज्ञांपर्यंत पोहोचता आले नाही. इंटरनेट तपासा आणि पुन्हा प्रयत्न करा.",
   "cropDoctorOrder": "ऑर्डर करा",
   "cropDoctorProductsAt": "{store} येथे मिळणारे",
   "cropDoctorStoreDistance": "{store}, {km} किमी",

@@ -1378,6 +1378,7 @@
   "cropDoctorAskExpert": "विशेषज्ञ से पूछें",
   "cropDoctorAskExpertSent": "हमारे विशेषज्ञ को भेज दिया। जवाब आपको बताएँगे।",
   "cropDoctorAskExpertAlready": "हमारे विशेषज्ञ के पास आपकी फोटो पहले से हैं",
+  "cropDoctorAskExpertFailed": "हमारे विशेषज्ञ तक नहीं पहुँच सके। इंटरनेट जाँचें और फिर से कोशिश करें।",
   "cropDoctorOrder": "ऑर्डर करें",
   "cropDoctorProductsAt": "{store} पर उपलब्ध",
   "cropDoctorStoreDistance": "{store}, {km} किमी",

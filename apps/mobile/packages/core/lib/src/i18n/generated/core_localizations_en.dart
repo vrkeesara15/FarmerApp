@@ -4022,6 +4022,10 @@ class CoreLocalizationsEn extends CoreLocalizations {
   String get cropDoctorAskExpertAlready => 'Our expert already has your photos';
 
   @override
+  String get cropDoctorAskExpertFailed =>
+      'Could not reach our expert. Check your internet and try again.';
+
+  @override
   String get cropDoctorOrder => 'Order';
 
   @override

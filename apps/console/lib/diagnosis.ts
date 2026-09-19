@@ -136,6 +136,24 @@ export interface Diagnosis {
   scores?: DiagnosisScores | null;
   reviews?: DiagnosisReview[];
   reviewed_by?: string | null;
+  /** DX-001 block the app sent (reviewer roles only; DX-005 provenance). */
+  on_device?: OnDeviceBlock | null;
+  /** FM-006 ask-expert on an answered case. */
+  expert_requested_at?: string | null;
+  expert_requested_by?: string | null;
+  expert_note?: string | null;
+}
+
+export interface OnDeviceBlock {
+  model: string;
+  model_version: string;
+  model_sha256?: string;
+  fallback?: string | null;
+  plant_score?: number | null;
+  quality?: { ok?: number | null; blurry?: number | null; dark?: number | null } | null;
+  crop_scores?: Record<string, number> | null;
+  heuristic?: { blur_score?: number | null; brightness?: number | null } | null;
+  latency_ms?: number | null;
 }
 
 export interface ReviewQueueItem extends Diagnosis {

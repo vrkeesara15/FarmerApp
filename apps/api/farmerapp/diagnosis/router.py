@@ -4,6 +4,7 @@
 * ``GET /v1/diagnoses``, ``GET /v1/diagnoses/{id}`` — farmer, field officer, cluster head,
   store manager (their scope), agronomist, owner, director, tenant admin, auditor.
 * ``GET /v1/diagnoses/review-queue`` — agronomist, owner.
+* ``POST /v1/diagnoses/{id}/ask-expert`` — the farmer it is about, the officer who asked.
 * ``POST /v1/diagnoses/{id}/review`` — agronomist.
 * ``GET /v1/diagnoses/thresholds`` (agronomist, owner, director) / ``PUT`` (agronomist).
 """
@@ -32,6 +33,7 @@ from farmerapp.diagnosis.decision import (
 )
 from farmerapp.diagnosis.models import Confidence, Diagnosis, DiagnosisStatus
 from farmerapp.diagnosis.schemas import (
+    AskExpertIn,
     DiagnosisCreate,
     DiagnosisDetailOut,
     DiagnosisOut,
@@ -114,6 +116,9 @@ async def _detail(
         reviews=[DiagnosisReviewOut.from_row(r) for r in reviews],
         reviewed_by=row.reviewed_by,
         llm_used=row.llm_used,
+        on_device=row.on_device,
+        expert_requested_by=row.expert_requested_by,
+        expert_note=row.expert_note,
     )
 
 
@@ -329,6 +334,31 @@ async def get_diagnosis(
     return await _detail(
         session, actor, row, services=get_diagnosis_services(request), now=services.clock.now()
     )
+
+
+@router.post(
+    "/{id}/ask-expert",
+    operation_id="askExpertDiagnosis",
+    summary="Ask an expert: put an answered case in the agronomist queue (FM-006, no re-upload)",
+    response_model=DiagnosisDetailOut,
+    responses=problem_responses((404, "not_found"), (409, "diagnosis_already_reviewed")),
+)
+async def ask_expert(
+    id: uuid.UUID,
+    request: Request,
+    actor: Annotated[User, require_roles(*CREATE_ROLES)],
+    session: DbSession,
+    services: Services,
+    body: AskExpertIn | None = None,
+) -> DiagnosisDetailOut:
+    """The farmer the case is about, or the field officer who asked for it. The same photos
+    go to the agronomist queue as a ``flagged`` case and the agronomists are notified
+    (``diagnosis_expert_requested``). Idempotent: repeating it changes nothing."""
+    diagnosis_services = get_diagnosis_services(request)
+    row = await service.visible_diagnosis(session, actor, id, for_update=True)
+    now = services.clock.now()
+    await service.ask_expert(session, actor, row, note=body.note if body else None, now=now)
+    return await _detail(session, actor, row, services=diagnosis_services, now=now)
 
 
 @router.post(

@@ -87,7 +87,8 @@ void main() {
     expect(op.entity, SyncEntities.diagnosis);
     expect(op.entityId, id);
     expect(op.payload.containsKey('id'), isFalse, reason: 'contract');
-    expect(op.payload['crop_id'], 'unknown', reason: 'pilot placeholder');
+    expect(op.payload.containsKey('crop_id'), isFalse, reason: 'no server id');
+    expect(op.payload['crop_code'], 'chilli', reason: 'resolved per tenant');
     expect(op.payload.containsKey('crop_guess'), isFalse, reason: 'flag off');
     expect(op.payload['on_device_model'], 'ondevice-v1.0');
     expect(op.payload['ask_expert'], isFalse);
@@ -124,6 +125,7 @@ void main() {
     );
     final op = SyncStore.toOp((await engine.store.openOps()).single);
     expect(op.payload['crop_id'], '5f0c7a8e-1d2b-4c3d-9e4f-0a1b2c3d4e5f');
+    expect(op.payload.containsKey('crop_code'), isFalse);
     expect(op.payload['farmer_id'], 'farmer-9');
     expect(op.payload['crop_plot_id'], 'plot-9');
     expect(op.payload['crop_guess'], <String, Object?>{
@@ -290,21 +292,52 @@ void main() {
       expect(server.creates.single.payload['ask_expert'], isTrue);
     });
 
-    test('answered: the same photos go to the expert as a new case', () async {
+    test('answered: the server queues the same case (no re-upload)', () async {
       final id = await repo.submit(
         DiagnosisRequest(photos: <CapturedPhoto>[_photo()]),
       );
       await engine.syncNow();
-      final (outcome, newId) = await repo.askExpert(id);
+      final uploads = sync.uploads.length;
+      final (outcome, same) = await repo.askExpert(id);
       expect(outcome, AskExpertOutcome.sent);
-      expect(newId, isNot(id));
+      expect(same, id);
+      expect(api.askExpertCalls, <String>[id]);
+      expect(await engine.store.openOps(), isEmpty, reason: 'no new case');
       await engine.syncNow();
-      final second = server.creates.last.payload;
-      expect(second['ask_expert'], isTrue);
-      expect(
-        (second['images']! as List).single,
-        containsPair('blob_uri', startsWith('blob://')),
+      expect(server.creates, hasLength(1));
+      expect(sync.uploads, hasLength(uploads), reason: 'no photo re-upload');
+      final d = (await repo.get(id))!;
+      expect(d.askExpert, isTrue);
+      expect(d.status, DiagnosisStatus.answered);
+      expect(d.localPhotos, hasLength(1), reason: 'device fields kept');
+      // asking again: already with the expert, no second call
+      final (again, _) = await repo.askExpert(id);
+      expect(again, AskExpertOutcome.alreadyWithExpert);
+      expect(api.askExpertCalls, hasLength(1));
+    });
+
+    test('answered but offline: nothing changes, the user may retry', () async {
+      final id = await repo.submit(
+        DiagnosisRequest(photos: <CapturedPhoto>[_photo()]),
       );
+      await engine.syncNow();
+      api.offline = true;
+      final (outcome, _) = await repo.askExpert(id);
+      expect(outcome, AskExpertOutcome.failed);
+      expect((await repo.get(id))!.askExpert, isFalse);
+      api.offline = false;
+      final (retry, _) = await repo.askExpert(id);
+      expect(retry, AskExpertOutcome.sent);
+    });
+
+    test('reviewed already: the server says the expert answered', () async {
+      final id = await repo.submit(
+        DiagnosisRequest(photos: <CapturedPhoto>[_photo()]),
+      );
+      await engine.syncNow();
+      server.review(id);
+      final (outcome, _) = await repo.askExpert(id);
+      expect(outcome, AskExpertOutcome.alreadyWithExpert);
     });
   });
 

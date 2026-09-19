@@ -369,11 +369,12 @@ class _ScoutResultScreenState extends ConsumerState<ScoutResultScreen> {
     await syncIfOnline(ref).catchError((Object _) => false);
     messenger.showSnackBar(
       SnackBar(
-        content: Text(
-          outcome == AskExpertOutcome.alreadyWithExpert
-              ? l10n.cropDoctorAskExpertAlready
-              : l10n.cropDoctorAskExpertSent,
-        ),
+        content: Text(switch (outcome) {
+          AskExpertOutcome.alreadyWithExpert => l10n.cropDoctorAskExpertAlready,
+          AskExpertOutcome.failed => l10n.cropDoctorAskExpertFailed,
+          AskExpertOutcome.sent ||
+          AskExpertOutcome.addedToQueued => l10n.cropDoctorAskExpertSent,
+        }),
       ),
     );
   }

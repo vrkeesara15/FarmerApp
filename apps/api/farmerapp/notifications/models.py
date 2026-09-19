@@ -37,6 +37,8 @@ class NotificationKind(StrEnum):
     DIAGNOSIS_REVIEWED = "diagnosis_reviewed"  # WC-006: the agronomist confirmed / corrected
     DIAGNOSIS_QUEUE_AGED = "diagnosis_queue_aged"  # OPS-009 / DX-006: provisional > 18 h
     DIAGNOSIS_LLM_RATE = "diagnosis_llm_rate"  # OPS-009: LLM fallback > 40 % in a day
+    #: FM-006: a farmer / officer asked an expert about an answered case (to agronomists)
+    DIAGNOSIS_EXPERT_REQUESTED = "diagnosis_expert_requested"
     DATA_REQUEST_RECEIVED = "data_request_received"  # FM-015 / NF-013: a ticket to handle
 
 

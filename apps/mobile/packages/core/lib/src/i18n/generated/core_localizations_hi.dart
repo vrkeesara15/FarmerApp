@@ -4014,6 +4014,10 @@ class CoreLocalizationsHi extends CoreLocalizations {
       'हमारे विशेषज्ञ के पास आपकी फोटो पहले से हैं';
 
   @override
+  String get cropDoctorAskExpertFailed =>
+      'हमारे विशेषज्ञ तक नहीं पहुँच सके। इंटरनेट जाँचें और फिर से कोशिश करें।';
+
+  @override
   String get cropDoctorOrder => 'ऑर्डर करें';
 
   @override

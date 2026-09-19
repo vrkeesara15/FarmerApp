@@ -178,6 +178,8 @@ scanner) and the new screens (~0.5 MB Dart).
 
 ## API / infra follow-ups (not in this branch)
 
+Closed in `feat/M6-api-gaps` (docs/prs/M6-api-gaps.md): the settings flag, `ask-expert`, `crop_code` and the `on_device` block (the apps do not send the block yet). FA-007 push is still open.
+
 - `features.on_device_crop_guess` in `GET /v1/settings/public` (tenant setting, default false).
 - `POST /v1/diagnoses/{id}/ask-expert` to flag an answered case without a second diagnosis (the app
   re-submits the same blobs with `ask_expert: true` today).

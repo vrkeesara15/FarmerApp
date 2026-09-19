@@ -54,6 +54,13 @@ class DiagnosisNotReviewableError(AppError):
     code = "diagnosis_not_reviewable"
 
 
+class DiagnosisAlreadyReviewedError(AppError):
+    """FM-006: an agronomist already answered the case; there is nothing to escalate."""
+
+    status = 409
+    code = "diagnosis_already_reviewed"
+
+
 class ReviewInvalidError(AppError):
     status = 422
     code = "review_invalid"
@@ -69,6 +76,7 @@ __all__ = [
     "CorpusImageExistsError",
     "CorpusProblemExistsError",
     "CorpusProblemInvalidError",
+    "DiagnosisAlreadyReviewedError",
     "DiagnosisImageMissingError",
     "DiagnosisInvalidError",
     "DiagnosisNotReviewableError",

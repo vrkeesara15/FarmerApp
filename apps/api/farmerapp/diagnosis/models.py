@@ -319,6 +319,9 @@ class Diagnosis(Base, BaseColumns):
     #: DX-005 {"encoder": "fake-dct@1", "on_device": "...", "llm": "claude-opus-5" | null}
     model_versions: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     corpus_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: DX-001 / DX-005 on-device block the app sent (model, version, plant / quality / crop
+    #: scores, latency_ms, fallback) — ml/ondevice/INTEGRATION.md section 5
+    on_device: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     #: DX-005 {"top1", "votes", "agreement", "neighbours", "candidates", "thresholds", ...}
     scores: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     final_problem_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -332,6 +335,14 @@ class Diagnosis(Base, BaseColumns):
     flagged: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("false"), default=False
     )
+    #: FM-006 ``POST /v1/diagnoses/{id}/ask-expert``: who moved it into the queue, when, why
+    expert_requested_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    expert_requested_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("user.id", ondelete="SET NULL"), nullable=True
+    )
+    expert_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0", default=0)
     captured_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     answered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

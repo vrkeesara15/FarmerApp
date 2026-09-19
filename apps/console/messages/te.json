@@ -1473,7 +1473,14 @@
       "onDevice": "పరికరంలోని మోడల్",
       "llm": "LLM మోడల్",
       "corpus": "కార్పస్ వెర్షన్",
-      "notUsed": "ఉపయోగించలేదు"
+      "notUsed": "ఉపయోగించలేదు",
+      "onDeviceScores": "పరికరంలోని స్కోర్లు",
+      "plantScore": "మొక్క {score}",
+      "qualityScore": "ఫోటో నాణ్యత {score}",
+      "fallback": "ప్రత్యామ్నాయం: {name}",
+      "onDeviceTime": "పరికరంలో పట్టిన సమయం",
+      "ms": "{ms} మి.సె.",
+      "expertNote": "నిపుణుడిని అడిగినప్పటి గమనిక"
     },
     "history": "సమీక్ష చరిత్ర",
     "historyEntry": "{action}: {from} → {to}",

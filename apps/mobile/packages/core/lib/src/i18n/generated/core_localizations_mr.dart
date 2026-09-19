@@ -4009,6 +4009,10 @@ class CoreLocalizationsMr extends CoreLocalizations {
       'आमच्या तज्ज्ञांकडे तुमचे फोटो आधीच आहेत';
 
   @override
+  String get cropDoctorAskExpertFailed =>
+      'आमच्या तज्ज्ञांपर्यंत पोहोचता आले नाही. इंटरनेट तपासा आणि पुन्हा प्रयत्न करा.';
+
+  @override
   String get cropDoctorOrder => 'ऑर्डर करा';
 
   @override

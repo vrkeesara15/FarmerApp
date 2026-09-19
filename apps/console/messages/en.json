@@ -1473,7 +1473,14 @@
       "onDevice": "On-device model",
       "llm": "LLM model",
       "corpus": "Corpus version",
-      "notUsed": "Not used"
+      "notUsed": "Not used",
+      "onDeviceScores": "On-device scores",
+      "plantScore": "plant {score}",
+      "qualityScore": "photo quality {score}",
+      "fallback": "fallback: {name}",
+      "onDeviceTime": "On-device time",
+      "ms": "{ms} ms",
+      "expertNote": "Ask-expert note"
     },
     "history": "Review history",
     "historyEntry": "{action}: {from} → {to}",

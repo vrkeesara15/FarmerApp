@@ -5,9 +5,9 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from farmerapp.api.pagination import PageOut
 from farmerapp.diagnosis.models import (
@@ -61,6 +61,51 @@ class CropGuessIn(BaseModel):
     confidence: float = Field(ge=0, le=1)
 
 
+class OnDeviceQualityScores(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    ok: float | None = Field(default=None, ge=0, le=1)
+    blurry: float | None = Field(default=None, ge=0, le=1)
+    dark: float | None = Field(default=None, ge=0, le=1)
+
+
+class OnDeviceHeuristic(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    blur_score: float | None = Field(default=None, ge=0)
+    brightness: float | None = Field(default=None, ge=0, le=1)
+
+
+class OnDeviceIn(BaseModel):
+    """DX-001 on-device check (ml/ondevice/INTEGRATION.md section 5), kept as DX-005
+    provenance. Scores describe the accepted photos; no location or identity."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    model: str = Field(max_length=64, description="On-device model name, e.g. `crop_quality`.")
+    model_version: str = Field(
+        max_length=64, description="e.g. `ondevice-v1.0` or `heuristic-laplacian-v1`."
+    )
+    model_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    fallback: str | None = Field(
+        default=None, max_length=16, description="`laplacian` when the model was not used."
+    )
+    plant_score: float | None = Field(default=None, ge=0, le=1, description="Is-a-plant.")
+    quality: OnDeviceQualityScores | None = None
+    crop_scores: dict[str, Annotated[float, Field(ge=0, le=1)]] | None = Field(
+        default=None, max_length=16, description="Crop code -> probability."
+    )
+    heuristic: OnDeviceHeuristic | None = None
+    latency_ms: int | None = Field(default=None, ge=0, le=600_000, description="Inference ms.")
+
+    @field_validator("crop_scores")
+    @classmethod
+    def _crop_codes(cls, value: dict[str, float] | None) -> dict[str, float] | None:
+        if value is not None and any(not code or len(code) > 32 for code in value):
+            raise ValueError("crop codes are 1-32 characters")
+        return value
+
+
 class DiagnosisCreate(BaseModel):
     """``POST /v1/diagnoses`` and the sync op ``diagnosis`` create (same body)."""
 
@@ -69,8 +114,17 @@ class DiagnosisCreate(BaseModel):
         default=None, description="Required for a field officer; a farmer asks for themself."
     )
     crop_plot_id: uuid.UUID | None = None
-    crop_id: uuid.UUID | Literal["unknown"] = Field(
-        description="The crop the user chose, or `unknown` (then the on-device guess / corpus)."
+    crop_id: uuid.UUID | Literal["unknown"] | None = Field(
+        default=None,
+        description="The crop the user chose, or `unknown` (then the on-device guess / "
+        "corpus). Give `crop_id` or `crop_code`.",
+    )
+    crop_code: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=32,
+        description="Crop code of the tenant (e.g. `paddy`) instead of `crop_id`; unknown "
+        "codes are 422 `diagnosis_invalid`.",
     )
     images: list[DiagnosisPhotoIn] = Field(min_length=1, max_length=MAX_PHOTOS)
     crop_guess: CropGuessIn | None = None
@@ -78,6 +132,25 @@ class DiagnosisCreate(BaseModel):
     crop_stage: str | None = Field(default=None, max_length=16)
     captured_at: datetime | None = None
     ask_expert: bool = Field(default=False, description="FM-006: send to the agronomist too.")
+    on_device: OnDeviceIn | None = Field(
+        default=None, description="DX-001 on-device scores (DX-005 provenance)."
+    )
+
+    @model_validator(mode="after")
+    def _one_crop(self) -> DiagnosisCreate:
+        if self.crop_id is None and self.crop_code is None:
+            raise ValueError("crop_id or crop_code is required")
+        if isinstance(self.crop_id, uuid.UUID) and self.crop_code is not None:
+            raise ValueError("give crop_id or crop_code, not both")
+        return self
+
+
+class AskExpertIn(BaseModel):
+    """FM-006 "Ask an expert" on an answered case."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    note: str | None = Field(default=None, max_length=2000, description="For the agronomist.")
 
 
 class DiagnosisPhotoOut(BaseModel):
@@ -111,6 +184,9 @@ class DiagnosisOut(BaseModel):
     final_problem_id: uuid.UUID | None
     out_of_scope_reason: str | None
     flagged: bool
+    expert_requested_at: datetime | None = Field(
+        default=None, description="FM-006: when ask-expert moved it into the agronomist queue."
+    )
     model_versions: dict[str, Any]
     corpus_version: int | None
     images: list[DiagnosisPhotoOut]
@@ -147,6 +223,7 @@ class DiagnosisOut(BaseModel):
             final_problem_id=row.final_problem_id,
             out_of_scope_reason=row.out_of_scope_reason,
             flagged=row.flagged,
+            expert_requested_at=row.expert_requested_at,
             model_versions=dict(row.model_versions or {}),
             corpus_version=row.corpus_version,
             images=[
@@ -204,6 +281,11 @@ class DiagnosisDetailOut(DiagnosisOut):
     reviews: list[DiagnosisReviewOut] = Field(default_factory=list)
     reviewed_by: uuid.UUID | None = None
     llm_used: bool = False
+    on_device: dict[str, Any] | None = Field(
+        default=None, description="DX-001 on-device block as sent by the app (DX-005)."
+    )
+    expert_requested_by: uuid.UUID | None = None
+    expert_note: str | None = Field(default=None, description="FM-006 ask-expert note.")
 
 
 class DiagnosisPage(PageOut[DiagnosisOut]):
@@ -460,6 +542,7 @@ class CorpusVersionsOut(BaseModel):
 __all__ = [
     "LANGUAGES",
     "MAX_PHOTOS",
+    "AskExpertIn",
     "CorpusApprovalIn",
     "CorpusImageCreate",
     "CorpusImageOut",
@@ -479,6 +562,7 @@ __all__ = [
     "DiagnosisPhotoIn",
     "DiagnosisPhotoOut",
     "DiagnosisReviewOut",
+    "OnDeviceIn",
     "PhotoQualityIn",
     "ReviewIn",
     "ReviewQueueCounts",

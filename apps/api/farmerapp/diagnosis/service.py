@@ -11,6 +11,8 @@
   cluster head / store manager: their cluster / store's farmers; agronomist, owner,
   director, tenant admin, auditor: the tenant (SPEC 2.6 "Farmer profile" row: the agronomist
   reads crop data).
+* ``ask_expert`` — FM-006 on an answered case: flagged into the agronomist queue with the
+  same photos (no second diagnosis), agronomists notified (``diagnosis_expert_requested``).
 * ``review`` — WC-006: confirm / correct / not diagnosable, the farmer's result is rebuilt
   (status ``confirmed`` / ``corrected``, source ``agronomist``, ``can_buy`` now true), the
   farmer and officer are notified (``diagnosis_reviewed``), ``add_to_corpus`` copies the
@@ -28,11 +30,12 @@ from sqlalchemy import ColumnElement, and_, false, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.api.errors import ForbiddenError, NotFoundError
-from farmerapp.auth.models import User, UserRole
+from farmerapp.auth.models import User, UserRole, UserStatus
 from farmerapp.auth.scope import farmer_filters
 from farmerapp.catalog.crops import Crop
 from farmerapp.diagnosis.corpus import add_image, get_problem, read_tenant_blob
 from farmerapp.diagnosis.errors import (
+    DiagnosisAlreadyReviewedError,
     DiagnosisInvalidError,
     DiagnosisNotReviewableError,
     ReviewInvalidError,
@@ -61,7 +64,7 @@ from farmerapp.diagnosis.schemas import CorpusImageCreate, DiagnosisCreate, Revi
 from farmerapp.diagnosis.services import DiagnosisServices
 from farmerapp.farmers.models import CropPlot, Farm, Farmer, Season
 from farmerapp.logging import get_logger
-from farmerapp.notifications.models import NotificationKind
+from farmerapp.notifications.models import Notification, NotificationKind
 from farmerapp.payments.publisher import PublishError
 from farmerapp.tenants.models import Village
 from farmerapp.worker.topics import Topic
@@ -117,6 +120,22 @@ async def visible_diagnosis(
 
 
 # --------------------------------------------------------------------------- create
+async def crop_id_for_code(session: AsyncSession, tenant_id: uuid.UUID, code: str) -> uuid.UUID:
+    """The tenant's crop with this code (``paddy``); 422 ``diagnosis_invalid`` otherwise."""
+    crop_id = await session.scalar(
+        select(Crop.id).where(
+            Crop.tenant_id == tenant_id,
+            Crop.code == code.strip().lower(),
+            Crop.deleted_at.is_(None),
+        )
+    )
+    if crop_id is None:
+        raise DiagnosisInvalidError(
+            f"Unknown crop code {code!r}.", extra={"errors": [{"loc": ["crop_code"]}]}
+        )
+    return crop_id
+
+
 async def _farmer_for(session: AsyncSession, actor: User, farmer_id: uuid.UUID | None) -> Farmer:
     role = UserRole(actor.role)
     stmt = select(Farmer).where(Farmer.deleted_at.is_(None))
@@ -185,6 +204,8 @@ async def create_diagnosis(
         if crop is None or crop.tenant_id != actor.tenant_id:
             raise DiagnosisInvalidError("Unknown crop.", extra={"errors": [{"loc": ["crop_id"]}]})
         crop_id = crop.id
+    elif body.crop_code is not None:
+        crop_id = await crop_id_for_code(session, actor.tenant_id, body.crop_code)
     elif plot is not None:
         crop_id = plot.crop_id
     photos: list[dict[str, Any]] = []
@@ -222,9 +243,10 @@ async def create_diagnosis(
         status=DiagnosisStatus.QUEUED.value,
         model_versions={
             "encoder": services.encoder.info.label,
-            "on_device": body.on_device_model,
+            "on_device": (body.on_device.model_version if body.on_device else body.on_device_model),
             "llm": None,
         },
+        on_device=body.on_device.model_dump(exclude_none=True) if body.on_device else None,
         flagged=body.ask_expert,
         captured_at=body.captured_at,
     )
@@ -391,6 +413,82 @@ async def review(
     return row
 
 
+# --------------------------------------------------------------------------- ask expert
+async def _expert_recipients(session: AsyncSession, tenant_id: uuid.UUID) -> list[uuid.UUID]:
+    """Active agronomists of the tenant (owners when there is none, as OPS-009 does)."""
+    for role in (UserRole.AGRONOMIST, UserRole.OWNER):
+        rows = await session.execute(
+            select(User.id)
+            .where(
+                User.tenant_id == tenant_id,
+                User.role == role.value,
+                User.status == UserStatus.ACTIVE.value,
+                User.deleted_at.is_(None),
+            )
+            .order_by(User.id)
+        )
+        found = list(rows.scalars())
+        if found:
+            return found
+    return []
+
+
+async def ask_expert(
+    session: AsyncSession,
+    actor: User,
+    diagnosis: Diagnosis,
+    *,
+    note: str | None,
+    now: datetime | None = None,
+) -> bool:
+    """FM-006 "Ask an expert" on a case the caller owns: the farmer it is about, or the
+    field officer who asked for it. The same photos go to the agronomist queue as a
+    ``flagged`` case (no second diagnosis). Idempotent: an already flagged case is left
+    alone (``False``); a case the agronomist already reviewed is 409."""
+    now = now or datetime.now(UTC)
+    role = UserRole(actor.role)
+    if role == UserRole.FIELD_OFFICER and diagnosis.requested_by != actor.id:
+        raise ForbiddenError("Only the field officer who asked for this diagnosis can escalate it.")
+    if role not in (UserRole.FARMER, UserRole.FIELD_OFFICER):
+        raise ForbiddenError("Only farmers and field officers ask an expert.")
+    if diagnosis.reviewed_at is not None:
+        raise DiagnosisAlreadyReviewedError("An agronomist has already answered this case.")
+    if diagnosis.flagged:
+        return False
+    diagnosis.flagged = True
+    diagnosis.expert_requested_at = now
+    diagnosis.expert_requested_by = actor.id
+    diagnosis.expert_note = note
+    kind = NotificationKind.DIAGNOSIS_EXPERT_REQUESTED
+    for user_id in await _expert_recipients(session, diagnosis.tenant_id):
+        session.add(
+            Notification(
+                tenant_id=diagnosis.tenant_id,
+                user_id=user_id,
+                kind=kind.value,
+                title_key=f"notification.{kind.value}.title",
+                body_key=f"notification.{kind.value}.body",
+                data={
+                    "diagnosis_id": str(diagnosis.id),
+                    "status": diagnosis.status,
+                    "farmer_id": str(diagnosis.farmer_id),
+                },
+            )
+        )
+    await session.flush()
+    await session.refresh(diagnosis)
+    log.info(
+        "diagnosis_expert_requested",
+        tenant_id=str(actor.tenant_id),
+        diagnosis_id=str(diagnosis.id),
+        status=diagnosis.status,
+        source=diagnosis.source,
+        by_role=role.value,
+        has_note=note is not None,
+    )
+    return True
+
+
 def queue_filters(actor: User) -> list[ColumnElement[bool]]:
     """WC-006 queue: unreviewed provisional / out-of-scope diagnoses, or flagged ones."""
     return [
@@ -414,7 +512,9 @@ async def reviews_of(session: AsyncSession, diagnosis_id: uuid.UUID) -> list[Dia
 
 __all__ = [
     "REVIEWER_ROLES",
+    "ask_expert",
     "create_diagnosis",
+    "crop_id_for_code",
     "deliver_diagnosis",
     "diagnosis_filters",
     "queue_filters",

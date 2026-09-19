@@ -32,6 +32,7 @@ holidays                            []           OPS-007 dates (YYYY-MM-DD) no s
 day_close_deadline_local_time       "22:00"      OPS-007 a working day not closed by then alerts
 languages_enabled                   all five     NF-008 languages the apps offer
 default_language                    "en"         language of a new user
+features.on_device_crop_guess       false        DX-001 apps pre-select the on-device crop guess
 branding.*                          see Branding C102 app names, colour, logo, support phone
 =================================== ============ ==============================================
 
@@ -107,6 +108,7 @@ SETTINGS_KEYS: Mapping[str, str] = {
     "day_close_deadline_local_time": "OPS-007 local time (HH:MM, IST) by which a day is closed",
     "languages_enabled": "NF-008 languages offered in the apps",
     "default_language": "Language of new users",
+    "features": "App feature flags: on_device_crop_guess (DX-001 crop hint, default off)",
     "branding": "C102 app names, primary colour, logo and support phone (tenant.branding)",
 }
 
@@ -117,6 +119,18 @@ class SamplingSettings(BaseModel):
     moving_s: int = Field(default=120, ge=30, le=3600)
     stationary_s: int = Field(default=600, ge=60, le=7200)
     upload_s: int = Field(default=900, ge=60, le=86_400)
+
+
+class FeatureSettings(BaseModel):
+    """Remote-config flags the apps read from ``GET /v1/settings/public`` (``features``)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    on_device_crop_guess: bool = Field(
+        default=False,
+        description="DX-001: send and pre-select the on-device crop guess. Off until the "
+        "field-accuracy gate passes (ml/ondevice/INTEGRATION.md section 7).",
+    )
 
 
 class Branding(BaseModel):
@@ -167,6 +181,7 @@ class TenantSettings(BaseModel):
         default_factory=lambda: list(SUPPORTED_LANGUAGES), min_length=1
     )
     default_language: Language = "en"
+    features: FeatureSettings = Field(default_factory=FeatureSettings)
     branding: Branding = Field(default_factory=Branding)
 
     def auto_duty_end_time(self) -> time:
@@ -201,6 +216,7 @@ PUBLIC_KEYS: tuple[str, ...] = (
     "sampling",
     "languages_enabled",
     "default_language",
+    "features",
     "branding",
 )
 
@@ -271,6 +287,7 @@ __all__ = [
     "SETTINGS_KEYS",
     "SUPPORTED_LANGUAGES",
     "Branding",
+    "FeatureSettings",
     "SamplingSettings",
     "TenantSettings",
     "get_tenant_settings",

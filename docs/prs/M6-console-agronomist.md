@@ -55,6 +55,8 @@ hidden (and gets the ForbiddenState if they type the URL). The API enforces the 
 
 ## API gaps / follow-ups (for the API worktree)
 
+Item 1 is closed in `feat/M6-api-gaps` (docs/prs/M6-api-gaps.md); 2–4 are still open.
+
 1. **Agronomists cannot upload corpus images yet**: `farmerapp/uploads/router.py`
    `UPLOAD_ROLES` (and `x-roles` of `initUpload` / `putUploadChunk` / `completeUpload`) lacks
    `agronomist`, although `POST /v1/corpus/problems/{id}/images` requires an upload with

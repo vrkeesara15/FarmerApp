@@ -4037,6 +4037,10 @@ class CoreLocalizationsKn extends CoreLocalizations {
       'ನಮ್ಮ ತಜ್ಞರ ಬಳಿ ಈಗಾಗಲೇ ನಿಮ್ಮ ಫೋಟೋಗಳಿವೆ';
 
   @override
+  String get cropDoctorAskExpertFailed =>
+      'ನಮ್ಮ ತಜ್ಞರನ್ನು ತಲುಪಲಾಗಲಿಲ್ಲ. ಇಂಟರ್ನೆಟ್ ನೋಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.';
+
+  @override
   String get cropDoctorOrder => 'ಆರ್ಡರ್ ಮಾಡಿ';
 
   @override

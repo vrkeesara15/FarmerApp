@@ -1473,7 +1473,14 @@
       "onDevice": "ಸಾಧನದಲ್ಲಿನ ಮಾದರಿ",
       "llm": "LLM ಮಾದರಿ",
       "corpus": "ಕಾರ್ಪಸ್ ಆವೃತ್ತಿ",
-      "notUsed": "ಬಳಸಲಾಗಿಲ್ಲ"
+      "notUsed": "ಬಳಸಲಾಗಿಲ್ಲ",
+      "onDeviceScores": "ಸಾಧನದಲ್ಲಿನ ಅಂಕಗಳು",
+      "plantScore": "ಸಸ್ಯ {score}",
+      "qualityScore": "ಫೋಟೋ ಗುಣಮಟ್ಟ {score}",
+      "fallback": "ಪರ್ಯಾಯ: {name}",
+      "onDeviceTime": "ಸಾಧನದಲ್ಲಿ ತೆಗೆದುಕೊಂಡ ಸಮಯ",
+      "ms": "{ms} ಮಿ.ಸೆ.",
+      "expertNote": "ತಜ್ಞರನ್ನು ಕೇಳಿದಾಗಿನ ಟಿಪ್ಪಣಿ"
     },
     "history": "ಪರಿಶೀಲನಾ ಇತಿಹಾಸ",
     "historyEntry": "{action}: {from} → {to}",

@@ -104,6 +104,40 @@ describe("C60 evidence", () => {
   });
 });
 
+describe("C60 provenance: on-device block and ask-expert note", () => {
+  it("shows the on-device scores, time and the note when present", () => {
+    render(
+      <ProvenanceBlock
+        diagnosis={{
+          ...diagnosis,
+          on_device: {
+            model: "crop_quality",
+            model_version: "ondevice-v1.0",
+            plant_score: 0.998,
+            quality: { ok: 0.97, blurry: 0.02, dark: 0.01 },
+            crop_scores: { paddy: 0.93, cotton: 0.01 },
+            latency_ms: 38,
+          },
+          expert_note: "Spots spread to the next field",
+        }}
+      />,
+    );
+    const prov = screen.getByTestId("provenance");
+    expect(
+      within(prov).getByText("plant 1.00 · photo quality 0.97 · paddy 0.93"),
+    ).toBeInTheDocument();
+    expect(within(prov).getByText("38 ms")).toBeInTheDocument();
+    expect(within(prov).getByText("Spots spread to the next field")).toBeInTheDocument();
+  });
+
+  it("leaves the rows out without an on-device block", () => {
+    render(<ProvenanceBlock diagnosis={diagnosis} />);
+    const prov = screen.getByTestId("provenance");
+    expect(within(prov).queryByText("On-device scores")).toBeNull();
+    expect(within(prov).queryByText("Ask-expert note")).toBeNull();
+  });
+});
+
 describe("C60 review form validation", () => {
   const setup = (currentProblemId: string | null = "blast") => {
     const onSubmit = vi.fn();

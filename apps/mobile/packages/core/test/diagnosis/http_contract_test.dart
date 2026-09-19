@@ -106,6 +106,39 @@ void main() {
     expect(d.corpusVersion, 7);
   });
 
+  test(
+    'FM-006: POST /v1/diagnoses/{id}/ask-expert, flagged comes back',
+    () async {
+      final requests = <http.Request>[];
+      final api = HttpDiagnosisApi(
+        _rest(
+          requests,
+          (_) => http.Response.bytes(
+            utf8.encode(
+              jsonEncode(<String, Object?>{
+                ...FakeDiagnosisServer.diagnosisOut(
+                  id: 'dx-2',
+                  outcome: FakeDiagnosisOutcome.high,
+                ),
+                'flagged': true,
+                'expert_requested_at': '2026-09-19T05:00:00Z',
+              }),
+            ),
+            200,
+            headers: <String, String>{
+              'content-type': 'application/json; charset=utf-8',
+            },
+          ),
+        ),
+      );
+      final r = await api.askExpert('dx-2');
+      expect(requests.single.method, 'POST');
+      expect(requests.single.url.path, '/v1/diagnoses/dx-2/ask-expert');
+      expect(jsonDecode(requests.single.body), <String, Object?>{});
+      expect(Diagnosis.fromData('dx-2', r.body).askExpert, isTrue);
+    },
+  );
+
   test('F62: the officer object on the farmer profile', () {
     final p = FarmerProfile.fromJson(const <String, Object?>{
       'id': 'f-1',

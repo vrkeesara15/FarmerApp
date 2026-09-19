@@ -9,7 +9,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from farmerapp.auth.models import User
+from farmerapp.auth.models import User, UserRole
 from farmerapp.db.models import Tenant
 from farmerapp.khata.ledger import tenant_credit_settings
 from farmerapp.policies.service import settings_for
@@ -122,6 +122,61 @@ async def test_patch_merges_validates_and_audits_before_after(
     public = (await client.get("/v1/settings/public", headers=bearer(officer))).json()
     assert public["geofence_radius_m"] == 200 and public["min_visit_duration_s"] == 240
     assert public["languages_enabled"] == ["te", "en"]
+
+
+async def test_on_device_crop_guess_flag_default_off_public_and_audited(
+    client: AsyncClient,
+    owner: User,
+    officer: User,
+    tenant: Tenant,
+    admin_headers: Mint,
+    bearer: Mint,
+    db_session: AsyncSession,
+) -> None:
+    """DX-001: ``features.on_device_crop_guess`` is off by default, readable by the apps
+    (farmer and officer) and every change is audited with before / after."""
+    farmer_user = User(
+        tenant_id=tenant.id, phone="+919000000071", name="farmer user", role=UserRole.FARMER
+    )
+    db_session.add(farmer_user)
+    await db_session.flush()
+    for user in (farmer_user, officer):
+        public = (await client.get("/v1/settings/public", headers=bearer(user))).json()
+        assert public["features"] == {"on_device_crop_guess": False}
+
+    resp = await client.patch(
+        "/v1/settings",
+        json={"features": {"on_device_crop_guess": True}},
+        headers=admin_headers(owner),
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["features"] == {"on_device_crop_guess": True}
+    (row,) = await audit_rows(db_session, action="tenant_settings.update")
+    assert row.before == {"features": {"on_device_crop_guess": False}}
+    assert row.after == {"features": {"on_device_crop_guess": True}}
+    for user in (farmer_user, officer):
+        public = (await client.get("/v1/settings/public", headers=bearer(user))).json()
+        assert public["features"]["on_device_crop_guess"] is True
+
+    # the same value again is no change (no event); null resets to the default (audited)
+    same = await client.patch(
+        "/v1/settings",
+        json={"features": {"on_device_crop_guess": True}},
+        headers=admin_headers(owner),
+    )
+    assert same.status_code == 200
+    assert len(await audit_rows(db_session, action="tenant_settings.update")) == 1
+    reset = await client.patch(
+        "/v1/settings",
+        json={"features": {"on_device_crop_guess": None}},
+        headers=admin_headers(owner),
+    )
+    assert reset.json()["features"] == {"on_device_crop_guess": False}
+    assert len(await audit_rows(db_session, action="tenant_settings.update")) == 2
+    unknown = await client.patch(
+        "/v1/settings", json={"features": {"crop_hint": True}}, headers=admin_headers(owner)
+    )
+    assert unknown.status_code == 422, unknown.text
 
 
 async def test_null_resets_to_default_and_noop_writes_no_event(

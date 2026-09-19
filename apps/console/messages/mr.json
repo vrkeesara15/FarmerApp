@@ -1473,7 +1473,14 @@
       "onDevice": "डिव्हाइसवरील मॉडेल",
       "llm": "LLM मॉडेल",
       "corpus": "कॉर्पस आवृत्ती",
-      "notUsed": "वापरले नाही"
+      "notUsed": "वापरले नाही",
+      "onDeviceScores": "डिव्हाइसवरील गुण",
+      "plantScore": "रोप {score}",
+      "qualityScore": "फोटो गुणवत्ता {score}",
+      "fallback": "पर्याय: {name}",
+      "onDeviceTime": "डिव्हाइसवर लागलेला वेळ",
+      "ms": "{ms} मि.से.",
+      "expertNote": "तज्ज्ञांना विचारतानाची टीप"
     },
     "history": "पुनरावलोकन इतिहास",
     "historyEntry": "{action}: {from} → {to}",

@@ -4,12 +4,13 @@
   tenant_admin).
 * ``GET /v1/settings/public`` — the subset the apps need (any signed-in role): geofence and
   meeting-point radius, minimum visit time, auto duty end, idle end, sampling, location
-  policy version, languages and branding. **The mobile settings cache (geofence radius,
-  minimum visit duration, sampling) is filled from this endpoint** on login and on every
-  sync; the values are authoritative server-side (check-in and check-out re-evaluate them).
+  policy version, languages, feature flags (``features.on_device_crop_guess``) and branding.
+  **The mobile settings cache (geofence radius, minimum visit duration, sampling, features) is
+  filled from this endpoint** on login and on every sync; the values are authoritative
+  server-side (check-in and check-out re-evaluate them).
 * ``PATCH /v1/settings`` — owner and tenant_admin, step-up required (SEC-028). A partial
-  body: nested ``sampling`` / ``branding`` merge key by key, ``null`` resets a nullable key to
-  its default. The merged result is validated with ``TenantSettings`` (422
+  body: nested ``sampling`` / ``features`` / ``branding`` merge key by key, ``null`` resets
+  a nullable key to its default. The merged result is validated with ``TenantSettings`` (422
   ``invalid_settings`` with the pydantic errors). Audited twice: the FA-006 listener's
   ``tenant.update`` row (raw JSON diff) and an explicit ``tenant_settings.update`` with the
   before / after of the changed keys only.
@@ -34,6 +35,7 @@ from farmerapp.logging import get_logger
 from farmerapp.tenants.settings import (
     PUBLIC_KEYS,
     Branding,
+    FeatureSettings,
     Language,
     SamplingSettings,
     TenantSettings,
@@ -67,6 +69,7 @@ class PublicSettings(BaseModel):
     sampling: SamplingSettings
     languages_enabled: list[Language]
     default_language: Language
+    features: FeatureSettings
     branding: Branding
 
     @classmethod
@@ -80,6 +83,12 @@ class SamplingPatch(BaseModel):
     moving_s: int | None = None
     stationary_s: int | None = None
     upload_s: int | None = None
+
+
+class FeaturesPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    on_device_crop_guess: bool | None = None
 
 
 class BrandingPatch(BaseModel):
@@ -122,6 +131,7 @@ class SettingsPatch(BaseModel):
     )
     languages_enabled: list[Language] | None = None
     default_language: Language | None = None
+    features: FeaturesPatch | None = None
     branding: BrandingPatch | None = None
 
 
@@ -178,10 +188,13 @@ async def update_settings(
     patch = body.model_dump(exclude_unset=True, mode="json")
     branding_patch = patch.pop("branding", None)
     sampling_patch = patch.pop("sampling", None)
+    features_patch = patch.pop("features", None)
 
     raw = _merge(dict(tenant.settings or {}), patch)
     if sampling_patch is not None:
         raw["sampling"] = _merge(dict(raw.get("sampling") or {}), sampling_patch)
+    if features_patch is not None:
+        raw["features"] = _merge(dict(raw.get("features") or {}), features_patch)
     branding = dict(tenant.branding or {})
     if branding_patch is not None:
         branding = _merge(branding, branding_patch)

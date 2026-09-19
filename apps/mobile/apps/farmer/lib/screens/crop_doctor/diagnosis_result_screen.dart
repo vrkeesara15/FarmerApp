@@ -70,12 +70,12 @@ class _DiagnosisResultScreenState extends ConsumerState<DiagnosisResultScreen> {
         .askExpert(widget.diagnosisId);
     await ref.read(kisanFlushProvider)().catchError((Object _) {});
     if (!mounted) return;
-    showKisanMessage(
-      context,
-      outcome == AskExpertOutcome.alreadyWithExpert
-          ? l10n.cropDoctorAskExpertAlready
-          : l10n.cropDoctorAskExpertSent,
-    );
+    showKisanMessage(context, switch (outcome) {
+      AskExpertOutcome.alreadyWithExpert => l10n.cropDoctorAskExpertAlready,
+      AskExpertOutcome.failed => l10n.cropDoctorAskExpertFailed,
+      AskExpertOutcome.sent ||
+      AskExpertOutcome.addedToQueued => l10n.cropDoctorAskExpertSent,
+    });
   }
 
   @override

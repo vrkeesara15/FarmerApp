@@ -18,11 +18,11 @@ from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from farmerapp.api.errors import AppError, NotFoundError
-from farmerapp.auth.models import User
+from farmerapp.api.errors import AppError, ForbiddenError, NotFoundError
+from farmerapp.auth.models import User, UserRole
 from farmerapp.settings import Settings
 from farmerapp.uploads.blobstore import BlobStore, blob_key
-from farmerapp.uploads.models import UploadChunk, UploadSession, UploadStatus
+from farmerapp.uploads.models import UploadChunk, UploadPurpose, UploadSession, UploadStatus
 from farmerapp.uploads.schemas import (
     ChunkAck,
     SignedUrlOut,
@@ -30,6 +30,12 @@ from farmerapp.uploads.schemas import (
     UploadInit,
     UploadStatusOut,
 )
+
+#: Roles that may only upload some purposes (403 otherwise): the agronomist uploads corpus
+#: images for the WC-007 corpus manager and nothing else.
+PURPOSE_LIMITED_ROLES: dict[UserRole, frozenset[UploadPurpose]] = {
+    UserRole.AGRONOMIST: frozenset({UploadPurpose.CORPUS}),
+}
 
 
 class UploadTooLargeError(AppError):
@@ -115,6 +121,11 @@ def _status_out(upload: UploadSession, received: list[int]) -> UploadStatusOut:
 async def init_upload(
     session: AsyncSession, actor: User, body: UploadInit, *, settings: Settings
 ) -> UploadStatusOut:
+    if (
+        UserRole(actor.role) in PURPOSE_LIMITED_ROLES
+        and body.purpose not in PURPOSE_LIMITED_ROLES[UserRole(actor.role)]
+    ):
+        raise ForbiddenError(f"This role cannot upload {body.purpose!s} files.")
     if body.size_bytes > settings.upload_max_bytes:
         raise UploadTooLargeError(f"Uploads are capped at {settings.upload_max_bytes} bytes.")
     now = _now()
@@ -253,6 +264,7 @@ async def signed_url(
 
 
 __all__ = [
+    "PURPOSE_LIMITED_ROLES",
     "ChunkIndexInvalidError",
     "ChunkShaMismatchError",
     "ChunkSizeInvalidError",

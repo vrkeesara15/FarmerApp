@@ -52,9 +52,16 @@ resized on the device (NF-004).
   "on_device_model": "crop-tflite-2026.10",
   "crop_stage": "vegetative",
   "captured_at": "2026-09-19T05:10:00Z",
-  "ask_expert": false
+  "ask_expert": false,
+  "crop_code": "paddy (alternative to crop_id, added in M6-api-gaps)",
+  "on_device": {"model": "crop_quality", "model_version": "ondevice-v1.0", "plant_score": 0.998,
+                "quality": {"ok": 0.97, "blurry": 0.02, "dark": 0.01},
+                "crop_scores": {"paddy": 0.93, "other": 0.02}, "latency_ms": 38}
 }
 ```
+
+Added in `feat/M6-api-gaps` (docs/prs/M6-api-gaps.md): `crop_code` instead of `crop_id`, the
+`on_device` block, and `POST /v1/diagnoses/{id}/ask-expert {note?}`.
 
 1–3 images (422 `validation_error` otherwise). Problems: `404 not_found` (farmer not yours),
 `422 diagnosis_image_missing` (not a completed upload of your tenant), `422

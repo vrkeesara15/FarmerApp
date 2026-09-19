@@ -424,7 +424,10 @@ class Diagnosis {
       updatedAt: _time(d['updated_at']),
       version: (d['version'] as num?)?.toInt() ?? 0,
       waitingForNetwork: dirty || status == DiagnosisStatus.pending,
-      askExpert: d['ask_expert'] == true || local['ask_expert'] == true,
+      askExpert:
+          d['ask_expert'] == true ||
+          d['flagged'] == true ||
+          local['ask_expert'] == true,
       failureCode: _map(local['failure'])['code'] as String?,
       history: <DiagnosisHistoryEntry>[
         for (final h in (local['history'] as List?) ?? const <Object?>[])

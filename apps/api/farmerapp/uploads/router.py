@@ -25,13 +25,15 @@ from farmerapp.uploads.schemas import (
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 blob_router = APIRouter(prefix="/blobs", tags=["uploads"])
 
-#: Devices that capture photos: field staff and farmers (plus the admin for the console).
+#: Devices that capture photos: field staff and farmers (plus the admin for the console), and
+#: the agronomist for WC-007 corpus images (purpose ``corpus`` only).
 UPLOAD_ROLES = (
     Role.FIELD_OFFICER,
     Role.STORE_MANAGER,
     Role.CLUSTER_HEAD,
     Role.FARMER,
     Role.TENANT_ADMIN,
+    Role.AGRONOMIST,
 )
 
 CHUNK_SHA_HEADER = "X-Chunk-Sha256"

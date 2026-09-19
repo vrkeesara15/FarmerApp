@@ -7310,6 +7310,12 @@ abstract class CoreLocalizations {
   /// **'Our expert already has your photos'**
   String get cropDoctorAskExpertAlready;
 
+  /// FM-006 ask-expert could not reach the server (offline)
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach our expert. Check your internet and try again.'**
+  String get cropDoctorAskExpertFailed;
+
   /// FM-006 one-tap order
   ///
   /// In en, this message translates to:

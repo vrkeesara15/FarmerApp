@@ -63,10 +63,12 @@ class DiagnosisRequest {
   /// Crop plot to attach the result to (FA-019).
   final String? cropPlotId;
 
-  /// Server crop id; null (or a `pilot:` placeholder) sends `unknown`.
+  /// Server crop id; null (or a `pilot:` placeholder) sends [cropCode], else
+  /// `unknown`.
   final String? cropId;
 
-  /// Crop code for display before the answer.
+  /// Crop code (`paddy`): shown before the answer and sent as `crop_code`
+  /// when there is no server id (the server resolves it per tenant).
   final String? cropCode;
 
   /// Crop stage of the plot.
@@ -92,11 +94,14 @@ enum AskExpertOutcome {
   /// scope or asked before): nothing new is sent.
   alreadyWithExpert,
 
-  /// A new case with the same photos was queued with `ask_expert: true`.
+  /// The answered case was put in the agronomist queue (same photos).
   sent,
 
   /// Not queued yet: the flag was added to the queued request.
   addedToQueued,
+
+  /// The server could not be reached (offline); nothing changed, try again.
+  failed,
 }
 
 /// Crop-doctor cases (FM-004 .. FM-006, FA-019): photos saved on the phone,
@@ -172,7 +177,12 @@ class DiagnosisRepository {
       <String, Object?>{
         'farmer_id': ?request.farmerId,
         'crop_plot_id': ?request.cropPlotId,
-        'crop_id': cropId == null || !_isServerId(cropId) ? 'unknown' : cropId,
+        if (cropId != null && _isServerId(cropId))
+          'crop_id': cropId
+        else if (request.cropCode case final code?)
+          'crop_code': code
+        else
+          'crop_id': 'unknown',
         'images': images,
         if (guess != null)
           'crop_guess': <String, Object?>{
@@ -346,38 +356,27 @@ class DiagnosisRepository {
       }
       return (AskExpertOutcome.addedToQueued, id);
     }
-    // Answered already: the same photos go to the agronomist as a new case.
+    // Answered already: the server moves this case into the agronomist queue
+    // (`POST /v1/diagnoses/{id}/ask-expert`, same photos, no re-upload).
+    final r = await api.askExpert(id);
+    if (r.status == 409) return (AskExpertOutcome.alreadyWithExpert, id);
+    if (!r.ok) return (AskExpertOutcome.failed, id);
     final row = await _store.entities.read(SyncEntities.diagnosis, id);
-    final images = <Map<String, Object?>>[
-      for (final i in (row?.data['images'] as List?) ?? const <Object?>[])
-        if (i is Map && i['blob_uri'] is String)
-          <String, Object?>{
-            'blob_uri': i['blob_uri'],
-            if (i['sha256'] is String) 'sha256': i['sha256'],
-          },
-    ];
-    if (images.isEmpty) return (AskExpertOutcome.alreadyWithExpert, id);
-    final newId = _newId();
-    await outbox.enqueueCreate(
+    await _store.entities.write(
       SyncEntities.diagnosis,
-      newId,
+      id,
       <String, Object?>{
-        'farmer_id': ?d.farmerId,
-        'crop_plot_id': ?d.cropPlotId,
-        'crop_id': d.cropId ?? 'unknown',
-        'images': images,
-        'captured_at': (d.capturedAt ?? _now()).toIso8601String(),
-        'ask_expert': true,
+        ...r.body,
+        Diagnosis.localKey: <String, Object?>{
+          ...?(row?.data[Diagnosis.localKey] as Map?)?.cast<String, Object?>(),
+          'ask_expert': true,
+        },
       },
-      local: <String, Object?>{
-        'photos': d.localPhotos,
-        'crop_code': ?d.cropCode,
-        'subject': d.subject,
-        'ask_expert': true,
-        'asked_about': id,
-      },
+      version: (r.body['version'] as num?)?.toInt() ?? row?.version ?? 0,
+      dirty: false,
+      now: _now(),
     );
-    return (AskExpertOutcome.sent, newId);
+    return (AskExpertOutcome.sent, id);
   }
 }
 

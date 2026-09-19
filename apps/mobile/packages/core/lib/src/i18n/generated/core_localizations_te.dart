@@ -4037,6 +4037,10 @@ class CoreLocalizationsTe extends CoreLocalizations {
       'మా నిపుణుడి దగ్గర ఇప్పటికే మీ ఫోటోలు ఉన్నాయి';
 
   @override
+  String get cropDoctorAskExpertFailed =>
+      'మా నిపుణుడిని చేరుకోలేకపోయాం. ఇంటర్నెట్ చూసి మళ్లీ ప్రయత్నించండి.';
+
+  @override
   String get cropDoctorOrder => 'ఆర్డర్ చేయండి';
 
   @override

@@ -170,6 +170,31 @@ export function LlmAnswer({ diagnosis, nameOf }: { diagnosis: Diagnosis; nameOf:
   );
 }
 
+/** DX-001 on-device scores as sent by the app: plant, photo quality, top crop, time. */
+function onDeviceRows(
+  block: Diagnosis["on_device"],
+  t: ReturnType<typeof useT>,
+): Array<[string, string]> {
+  if (!block) return [];
+  const score = (n: number) => n.toFixed(2);
+  const parts: string[] = [];
+  if (block.plant_score != null)
+    parts.push(t("review.provenance.plantScore", { score: score(block.plant_score) }));
+  if (block.quality?.ok != null)
+    parts.push(t("review.provenance.qualityScore", { score: score(block.quality.ok) }));
+  const top = Object.entries(block.crop_scores ?? {}).sort((a, b) => b[1] - a[1])[0];
+  if (top) parts.push(`${top[0]} ${score(top[1])}`);
+  if (block.fallback) parts.push(t("review.provenance.fallback", { name: block.fallback }));
+  const rows: Array<[string, string]> = [];
+  if (parts.length) rows.push([t("review.provenance.onDeviceScores"), parts.join(" · ")]);
+  if (block.latency_ms != null)
+    rows.push([
+      t("review.provenance.onDeviceTime"),
+      t("review.provenance.ms", { ms: String(block.latency_ms) }),
+    ]);
+  return rows;
+}
+
 export function ProvenanceBlock({ diagnosis }: { diagnosis: Diagnosis }) {
   const t = useT();
   const mv = diagnosis.model_versions ?? {};
@@ -189,7 +214,9 @@ export function ProvenanceBlock({ diagnosis }: { diagnosis: Diagnosis }) {
       t("review.provenance.corpus"),
       diagnosis.corpus_version === null ? none : String(diagnosis.corpus_version),
     ],
+    ...onDeviceRows(diagnosis.on_device, t),
   ];
+  if (diagnosis.expert_note) rows.push([t("review.provenance.expertNote"), diagnosis.expert_note]);
   return (
     <section
       className="flex flex-col gap-2"
