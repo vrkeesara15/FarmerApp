@@ -1,0 +1,274 @@
+{
+  "model_name": "crop_quality",
+  "model_version": "ondevice-v1.0",
+  "file": "crop_quality_v1.tflite",
+  "size_bytes": 3001256,
+  "sha256": "589b18c9a851f3958330ffbcd36d23deaa1363d8305a16a95942dcc046cec4db",
+  "created_at": "2026-09-19T17:04:04Z",
+  "git_sha": "d6aedeb56af47a2103d9823d4e02f87bc38941fd-dirty",
+  "source": "public",
+  "architecture": "mobilenet_v2 (alpha 1.0, ImageNet init) + plant / quality / crop heads",
+  "quantization": "int8 full-integer post-training (weights + activations), uint8 input, float32 output",
+  "export_surgery": {
+    "dead_squeeze_excite_channels_folded": {},
+    "why": "keeps XNNPACK able to load the int8 graph; function unchanged"
+  },
+  "input": {
+    "name": "serve_image:0",
+    "shape": [
+      1,
+      224,
+      224,
+      3
+    ],
+    "dtype": "uint8",
+    "quantization": {
+      "scale": 1.000000238418579,
+      "zero_point": 0
+    },
+    "layout": "NHWC",
+    "color": "RGB",
+    "normalisation": "none: raw 0..255 pixel values as uint8 (the model rescales internally)",
+    "resize": "centre square of side 0.875 x short edge, resized to 224x224 (area / bilinear); matches the evaluation centre crop"
+  },
+  "output": {
+    "name": "StatefulPartitionedCall:0",
+    "shape": [
+      1,
+      11
+    ],
+    "dtype": "float32",
+    "layout": [
+      "plant",
+      "quality_ok",
+      "quality_blurry",
+      "quality_dark",
+      "crop_paddy",
+      "crop_cotton",
+      "crop_chilli",
+      "crop_maize",
+      "crop_tomato",
+      "crop_groundnut",
+      "crop_other"
+    ],
+    "semantics": {
+      "plant": "sigmoid p(plant or leaf present)",
+      "quality_*": "softmax over quality labels",
+      "crop_*": "softmax over crop labels"
+    }
+  },
+  "labels": {
+    "quality": [
+      "ok",
+      "blurry",
+      "dark"
+    ],
+    "crop": [
+      "paddy",
+      "cotton",
+      "chilli",
+      "maize",
+      "tomato",
+      "groundnut",
+      "other"
+    ]
+  },
+  "thresholds": {
+    "plant_min": 0.5,
+    "blurry_min": 0.5,
+    "dark_min": 0.5,
+    "crop_min": 0.6
+  },
+  "training": {
+    "config": {
+      "seed": 1337,
+      "backbone": "mobilenet_v2",
+      "alpha": 1.0,
+      "batch_size": 64,
+      "head_epochs": 4,
+      "finetune_epochs": 8,
+      "head_lr": 0.002,
+      "finetune_lr": 0.0003,
+      "finetune_from_layer": "block_12_expand",
+      "dropout": 0.25,
+      "label_smoothing": 0.05,
+      "loss_weights": {
+        "plant": 1.0,
+        "quality": 1.0,
+        "crop": 1.0
+      },
+      "val_fraction": 0.15,
+      "test_fraction": 0.15,
+      "degradation": {
+        "p_blurry": 0.22,
+        "p_dark": 0.18,
+        "blur_sigma_min": 2.2,
+        "blur_sigma_max": 5.0,
+        "ok_sigma_max": 0.6,
+        "dark_lum_min": 0.02,
+        "dark_lum_max": 0.11,
+        "ok_lum_min": 0.2
+      },
+      "thresholds": {
+        "plant_min": 0.5,
+        "blurry_min": 0.5,
+        "dark_min": 0.5,
+        "crop_min": 0.6
+      },
+      "train_rows": 9759,
+      "val_rows": 2007,
+      "pretrained": "imagenet (keras.applications mobilenet_v2 alpha 1.0, Apache-2.0)",
+      "tensorflow": "2.21.0",
+      "keras": "3.15.1",
+      "train_seconds": 1538
+    },
+    "data_sources": [
+      {
+        "id": "rice_india",
+        "source": "public",
+        "repo": "Project-AgML/rice_leaf_disease_classification_india",
+        "revision": "07f0debab8a2b52f731759bf7b859ab3f10dd3b1",
+        "licence": "CC-BY-4.0",
+        "attribution": "Sethy P.K. (2024), Rice Leaf Disease Image Samples, Mendeley Data V2, doi:10.17632/fwcj7stb8r.2 (via AgML)",
+        "images": {
+          "train": 1066,
+          "val": 213,
+          "test": 221
+        }
+      },
+      {
+        "id": "cotton_bd2",
+        "source": "public",
+        "repo": "Project-AgML/cotton_leaf_disease_classification_bangladesh_2",
+        "revision": "514e78b8fcbdaee97bd134c81d798c613fd8c556",
+        "licence": "CC-BY-4.0",
+        "attribution": "Bishshash P. et al. (2024), SAR-CLD-2024 cotton leaf disease dataset, Mendeley Data V2, doi:10.17632/b3jy2p6k8w.2 (via AgML)",
+        "images": {
+          "train": 1040,
+          "val": 209,
+          "test": 251
+        }
+      },
+      {
+        "id": "chili_cold",
+        "source": "public",
+        "repo": "Project-AgML/COLD_chili_leaf_disease_classification",
+        "revision": "621010d7c9e745e6d1541cc7c02245fa3061d339",
+        "licence": "CC-BY-4.0",
+        "attribution": "Aishwarya M.P., Reddy A.P. (2024), chilli dataset, Mendeley Data V2, doi:10.17632/tf9dtfz9m6.2 (via AgML)",
+        "images": {
+          "train": 386,
+          "val": 77,
+          "test": 69
+        }
+      },
+      {
+        "id": "tom2024",
+        "source": "public",
+        "repo": "Project-AgML/TOM2024_disease_classification",
+        "revision": "ce3661eacdd4468183ace9154c3c914441551c30",
+        "licence": "CC-BY-4.0",
+        "attribution": "Appiah O. et al. (2024), TOM2024, Mendeley Data V1, doi:10.17632/3d4yg89rtr.1 (via AgML)",
+        "images": {
+          "train": 3179,
+          "val": 669,
+          "test": 652
+        }
+      },
+      {
+        "id": "groundnut_in",
+        "source": "public",
+        "repo": "Project-AgML/groundnut_leaf_disease_classification",
+        "revision": "bd72e3309fa2cc8d422e4fcb23dd64651031f231",
+        "licence": "CC-BY-4.0",
+        "attribution": "Sasmal B. et al. (2024), A novel groundnut leaf dataset, Mendeley Data V2, doi:10.17632/x6x5jkk873.2 (via AgML)",
+        "images": {
+          "train": 1051,
+          "val": 240,
+          "test": 209
+        }
+      },
+      {
+        "id": "blackgram_in",
+        "source": "public",
+        "repo": "Project-AgML/blackgram_plant_leaf_disease_classification",
+        "revision": "d5eafc74aa2b2bc901eb45867e630f423c1af335",
+        "licence": "CC-BY-4.0",
+        "attribution": "Talasila S. et al. (2022), Blackgram Plant Leaf Disease Dataset, Mendeley Data V3, doi:10.17632/zfcv9fmrgv.3 (via AgML)",
+        "images": {
+          "train": 501,
+          "val": 92,
+          "test": 107
+        }
+      },
+      {
+        "id": "banana_leaf",
+        "source": "public",
+        "repo": "Project-AgML/banana_leaf_disease_classification",
+        "revision": "90333badcfbd1f843d55d40eb7388cd6ad6deee7",
+        "licence": "CC-BY-4.0",
+        "attribution": "Hailu Y. (2021), Banana Leaf Disease Images, Mendeley Data V1, doi:10.17632/rjykr62kdh.1 (via AgML)",
+        "images": {
+          "train": 341,
+          "val": 71,
+          "test": 88
+        }
+      },
+      {
+        "id": "caltech101",
+        "source": "public",
+        "repo": "HuggingFaceM4/Caltech-101",
+        "revision": "71d2394c09f83658fb6f6a1eb272a0d9dc71b331",
+        "licence": "CC-BY-4.0",
+        "attribution": "Li F.-F., Andreeto M., Ranzato M., Perona P. (2022), Caltech 101 (1.0), CaltechDATA, doi:10.22002/D1.20086",
+        "images": {
+          "train": 1758,
+          "val": 359,
+          "test": 383
+        }
+      },
+      {
+        "id": "synthetic_negatives",
+        "source": "synthetic",
+        "repo": null,
+        "revision": null,
+        "licence": "generated (no third-party rights)",
+        "attribution": "FarmerApp data/prepare.py (seeded)",
+        "images": {
+          "train": 437,
+          "val": 77,
+          "test": 86
+        }
+      }
+    ],
+    "note": "Bootstrap on public datasets only (SPEC 3.3). Field images from the pilot are the real source; DX-012 fine-tunes monthly on them."
+  },
+  "evaluation": {
+    "split": "test",
+    "images": 2066,
+    "accuracy": {
+      "plant": 0.9942,
+      "quality": 0.9801,
+      "crop": 0.9724,
+      "retake_gate": 0.9813
+    },
+    "balanced_accuracy": {
+      "plant": 0.9955,
+      "quality": 0.9798,
+      "crop": 0.9769,
+      "retake_gate": 0.9837
+    },
+    "false_retake_rate_on_good_plant_photos": 0.0113,
+    "report": "eval_tflite.md",
+    "float_accuracy": {
+      "plant": 0.9956,
+      "quality": 0.9907,
+      "crop": 0.9756
+    },
+    "int8_drop": {
+      "plant": 0.0015,
+      "quality": 0.0106,
+      "crop": 0.0031
+    }
+  }
+}

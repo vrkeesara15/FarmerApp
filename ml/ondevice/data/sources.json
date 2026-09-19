@@ -1,0 +1,139 @@
+{
+  "_comment": "Bootstrap datasets for DX-001 (SPEC 3.3: public data for bootstrapping only, tagged source=public). Every entry is pinned to a Hugging Face dataset revision and the LFS sha256 of each file. Nothing here is committed to Git: data/download.py fetches into data/raw/, data/prepare.py writes data/cache/ + data/manifest.csv.",
+  "sources": [
+    {
+      "id": "rice_india",
+      "crop": "paddy",
+      "is_plant": true,
+      "repo": "Project-AgML/rice_leaf_disease_classification_india",
+      "revision": "07f0debab8a2b52f731759bf7b859ab3f10dd3b1",
+      "files": [
+        {"path": "data/train-00000-of-00001.parquet", "size": 207795551, "sha256": "115a480f48f385f36911168ee149cd4c1aa68fa7ab5c7dc7a36e5c104f88fc84"}
+      ],
+      "format": "parquet",
+      "max_images": 1500,
+      "licence": "CC-BY-4.0",
+      "attribution": "Sethy P.K. (2024), Rice Leaf Disease Image Samples, Mendeley Data V2, doi:10.17632/fwcj7stb8r.2 (via AgML)",
+      "notes": "Odisha, India; field leaf close-ups on plain background, 4 diseases, no healthy class."
+    },
+    {
+      "id": "cotton_bd2",
+      "crop": "cotton",
+      "is_plant": true,
+      "repo": "Project-AgML/cotton_leaf_disease_classification_bangladesh_2",
+      "revision": "514e78b8fcbdaee97bd134c81d798c613fd8c556",
+      "files": [
+        {"path": "raw/train-00000-of-00001.parquet", "size": 300248895, "sha256": "ab43f76965bd7e4e437ebc52d7dff0c2f04175ecf778e5a971d62742308569a3"}
+      ],
+      "format": "parquet",
+      "max_images": 1500,
+      "licence": "CC-BY-4.0",
+      "attribution": "Bishshash P. et al. (2024), SAR-CLD-2024 cotton leaf disease dataset, Mendeley Data V2, doi:10.17632/b3jy2p6k8w.2 (via AgML)",
+      "notes": "Bangladesh field photos; raw config only (the augmented config would leak across splits)."
+    },
+    {
+      "id": "chili_cold",
+      "crop": "chilli",
+      "is_plant": true,
+      "repo": "Project-AgML/COLD_chili_leaf_disease_classification",
+      "revision": "621010d7c9e745e6d1541cc7c02245fa3061d339",
+      "files": [
+        {"path": "raw/train-00000-of-00001.parquet", "size": 13484878, "sha256": "b2bdda09b363c300e32d083f09eb2ce1c0161c450c13cf0e3604681960add4c8"}
+      ],
+      "format": "parquet",
+      "max_images": 1500,
+      "licence": "CC-BY-4.0",
+      "attribution": "Aishwarya M.P., Reddy A.P. (2024), chilli dataset, Mendeley Data V2, doi:10.17632/tf9dtfz9m6.2 (via AgML)",
+      "notes": "Karnataka, India; only 532 raw images, so chilli is the smallest class (class weights compensate)."
+    },
+    {
+      "id": "tom2024",
+      "crop_from_column": "crop_type",
+      "crop_map": {"Tomato": "tomato", "Maize": "maize", "Onion": "other"},
+      "is_plant": true,
+      "repo": "Project-AgML/TOM2024_disease_classification",
+      "revision": "ce3661eacdd4468183ace9154c3c914441551c30",
+      "files": [
+        {"path": "raw/train-00000-of-00001.parquet", "size": 131741142, "sha256": "975e959d417853045d1d04b0c3dc2cf52f0949c2f30e5db9541166058ff75447"}
+      ],
+      "format": "parquet",
+      "max_images": 1500,
+      "licence": "CC-BY-4.0",
+      "attribution": "Appiah O. et al. (2024), TOM2024, Mendeley Data V1, doi:10.17632/3d4yg89rtr.1 (via AgML)",
+      "notes": "Burkina Faso field photos of tomato, onion and maize (leaves, fruits, pests); onion is used as a non-pilot 'other' crop. The cap applies per mapped crop."
+    },
+    {
+      "id": "groundnut_in",
+      "crop": "groundnut",
+      "is_plant": true,
+      "repo": "Project-AgML/groundnut_leaf_disease_classification",
+      "revision": "bd72e3309fa2cc8d422e4fcb23dd64651031f231",
+      "files": [
+        {"path": "data/train-00000-of-00002.parquet", "size": 258412326, "sha256": "cac31a566d899ce4be4f34f80102f1760f90902a3f96a156856a51accf66486f"},
+        {"path": "data/train-00001-of-00002.parquet", "size": 262610452, "sha256": "d17742919e59c97b7ebf7019b733bc026b778186762e28f1730269a63e98c7cf"}
+      ],
+      "format": "parquet",
+      "max_images": 1500,
+      "licence": "CC-BY-4.0",
+      "attribution": "Sasmal B. et al. (2024), A novel groundnut leaf dataset, Mendeley Data V2, doi:10.17632/x6x5jkk873.2 (via AgML)",
+      "notes": "West Bengal, India; field photos."
+    },
+    {
+      "id": "blackgram_in",
+      "crop": "other",
+      "is_plant": true,
+      "repo": "Project-AgML/blackgram_plant_leaf_disease_classification",
+      "revision": "d5eafc74aa2b2bc901eb45867e630f423c1af335",
+      "files": [
+        {"path": "data/train-00000-of-00001.parquet", "size": 121530545, "sha256": "67a0d308318acfe3786ecfd32bf48e9d265cc6bea18e641ad4286dfd8395559d"}
+      ],
+      "format": "parquet",
+      "max_images": 700,
+      "licence": "CC-BY-4.0",
+      "attribution": "Talasila S. et al. (2022), Blackgram Plant Leaf Disease Dataset, Mendeley Data V3, doi:10.17632/zfcv9fmrgv.3 (via AgML)",
+      "notes": "Andhra Pradesh, India; a non-pilot pulse crop grown next to the pilot crops, used for 'other'."
+    },
+    {
+      "id": "banana_leaf",
+      "crop": "other",
+      "is_plant": true,
+      "repo": "Project-AgML/banana_leaf_disease_classification",
+      "revision": "90333badcfbd1f843d55d40eb7388cd6ad6deee7",
+      "files": [
+        {"path": "data/train-00000-of-00001.parquet", "size": 6920645, "sha256": "be67ba60f3978625067f1f3cc8f48e20dc47f94a468f3ef2987e756e03deea7d"}
+      ],
+      "format": "parquet",
+      "max_images": 500,
+      "licence": "CC-BY-4.0",
+      "attribution": "Hailu Y. (2021), Banana Leaf Disease Images, Mendeley Data V1, doi:10.17632/rjykr62kdh.1 (via AgML)",
+      "notes": "Ethiopia; non-pilot crop for 'other'."
+    },
+    {
+      "id": "caltech101",
+      "crop": null,
+      "is_plant": false,
+      "repo": "HuggingFaceM4/Caltech-101",
+      "revision": "71d2394c09f83658fb6f6a1eb272a0d9dc71b331",
+      "files": [
+        {"path": "caltech-101.zip", "size": 137414764, "sha256": "331234750fc7f77520e50d9565e8b6907b03565e30320da1401130db08c61f91"}
+      ],
+      "format": "caltech_zip",
+      "exclude_categories": ["BACKGROUND_Google", "bonsai", "joshua_tree", "lotus", "sunflower", "water_lilly", "strawberry", "pineapple"],
+      "max_images": 2500,
+      "max_per_category": 40,
+      "licence": "CC-BY-4.0",
+      "attribution": "Li F.-F., Andreeto M., Ranzato M., Perona P. (2022), Caltech 101 (1.0), CaltechDATA, doi:10.22002/D1.20086",
+      "notes": "Non-plant negatives for is_plant; plant-like categories and the unlabelled Google background set are excluded."
+    },
+    {
+      "id": "synthetic_negatives",
+      "crop": null,
+      "is_plant": false,
+      "format": "synthetic",
+      "max_images": 600,
+      "licence": "generated (no third-party rights)",
+      "attribution": "FarmerApp data/prepare.py (seeded)",
+      "notes": "Flat colours, gradients, noise, soil-like brown texture, sky, lens-covered black frames: the non-plant frames a field camera actually produces."
+    }
+  ]
+}
