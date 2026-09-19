@@ -50,6 +50,19 @@ from farmerapp.settings import get_settings
 API_ROOT = Path(__file__).resolve().parents[1]
 # NF-005 latency suite: only with `make perf-api` (FARMERAPP_PERF=1), never in the default run.
 collect_ignore_glob = [] if os.environ.get("FARMERAPP_PERF") == "1" else ["perf/*"]
+#: M6 kNN benchmark (``slow``: 200k vectors): only with FARMERAPP_SLOW=1, never by default.
+RUN_SLOW = os.environ.get("FARMERAPP_SLOW") == "1"
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    if RUN_SLOW:
+        return
+    skip = pytest.mark.skip(reason="slow benchmark: set FARMERAPP_SLOW=1 to run")
+    for item in items:
+        if "slow" in item.keywords:
+            item.add_marker(skip)
+
+
 TEST_DB_NAME = "farmerapp_test"
 # Set by pytest-xdist in each worker process before conftest is imported ("gw0", "gw1", ...);
 # absent in a serial run.
@@ -198,6 +211,11 @@ def _env() -> Iterator[None]:
     os.environ["PAYMENT_WEBHOOK_DELIVERY"] = "inline"
     os.environ["OTP_DEV_CODE"] = ""  # never accept the dev code in tests unless a test opts in
     os.environ["BLOB_STORE"] = "local"  # NF-003: uploads land in a temp directory
+    # M6: never call an LLM provider or the embed service from tests; run the pipeline inline.
+    os.environ["DIAGNOSIS_LLM"] = "fake"
+    os.environ["DIAGNOSIS_ENCODER"] = "fake"
+    os.environ["DIAGNOSIS_DELIVERY"] = "inline"
+    os.environ.pop("ANTHROPIC_API_KEY", None)
     os.environ["BLOB_LOCAL_DIR"] = tempfile.mkdtemp(prefix="farmerapp-blobs-")
     get_settings.cache_clear()
     yield

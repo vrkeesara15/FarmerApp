@@ -16,6 +16,8 @@ PRD_PII_AND_BLOBS: dict[str, Any] = {
     "pii_kms_key_name": KMS_KEY,
     "pii_hash_pepper": STRONG,
     "blob_store": "gcs",
+    "diagnosis_encoder": "remote",  # DX-002: the pinned embed service in prd
+    "diagnosis_llm": "claude",  # tests run with DIAGNOSIS_LLM=fake
 }
 
 
@@ -83,3 +85,12 @@ def test_prd_requires_a_pepper_and_gcs() -> None:
     with pytest.raises(ValueError, match="BLOB_STORE=gcs"):
         _prd(blob_store="local")
     assert _prd().pii_kek_backend == "kms"
+
+
+def test_prd_requires_the_remote_encoder_and_a_real_llm() -> None:
+    """M6: the fake encoder / fake LLM never serve farmers in production."""
+    with pytest.raises(ValueError, match="DIAGNOSIS_ENCODER=remote"):
+        _prd(diagnosis_encoder="fake")
+    with pytest.raises(ValueError, match="DIAGNOSIS_LLM=fake"):
+        _prd(diagnosis_llm="fake")
+    assert _prd(diagnosis_llm="off").diagnosis_llm == "off"

@@ -67,4 +67,45 @@ class GoogleAccessToken:  # pragma: no cover - needs Google credentials (human g
         return str(email)
 
 
-__all__ = ["CLOUD_PLATFORM", "PLAY_INTEGRITY_SCOPE", "GoogleAccessToken", "TokenProvider"]
+_METADATA_IDENTITY = (
+    "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity"
+)
+_ID_TOKEN_TTL = timedelta(minutes=50)
+
+
+class MetadataIdentityToken:  # pragma: no cover - needs the Cloud Run metadata server
+    """OIDC identity token for calling another Cloud Run service (the M6 ``embed`` service,
+    ingress internal, invoker = the worker's service account). Cached for 50 minutes (the
+    token lives an hour)."""
+
+    def __init__(self, audience: str) -> None:
+        self._audience = audience
+        self._token: str | None = None
+        self._expires = datetime.min.replace(tzinfo=UTC)
+        self._lock = asyncio.Lock()
+
+    async def __call__(self) -> str:
+        import httpx
+
+        async with self._lock:
+            now = datetime.now(UTC)
+            if self._token is None or now >= self._expires:
+                async with httpx.AsyncClient(timeout=5.0) as client:
+                    resp = await client.get(
+                        _METADATA_IDENTITY,
+                        params={"audience": self._audience},
+                        headers={"Metadata-Flavor": "Google"},
+                    )
+                    resp.raise_for_status()
+                self._token = resp.text.strip()
+                self._expires = now + _ID_TOKEN_TTL
+            return self._token
+
+
+__all__ = [
+    "CLOUD_PLATFORM",
+    "PLAY_INTEGRITY_SCOPE",
+    "GoogleAccessToken",
+    "MetadataIdentityToken",
+    "TokenProvider",
+]

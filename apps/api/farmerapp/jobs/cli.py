@@ -404,5 +404,35 @@ def flags_sla_escalation(
             typer.echo(f"  flag={e.flag_id} rule={e.rule_id} -> {e.to_role} {e.to_owner_id}")
 
 
+@cli.command("diagnosis-queue-age")
+def diagnosis_queue_age(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+    day: str | None = typer.Option(
+        None, "--date", help="IST day of the LLM fallback rate (YYYY-MM-DD); default today."
+    ),
+) -> None:
+    """OPS-009 / DX-006: alert agronomists once per diagnosis waiting > 18 h for review,
+    re-deliver stale queued diagnoses, log the day's LLM fallback rate and alert above 40 %.
+    Hourly."""
+    from datetime import date
+
+    from farmerapp.diagnosis.services import worker_services
+    from farmerapp.ops.diagnosis_watch import run_diagnosis_watch
+
+    _setup()
+    when = date.fromisoformat(day) if day else None
+    reports = asyncio.run(
+        run_diagnosis_watch(_tenants(tenant), day=when, services=worker_services())
+    )
+    for r in reports:
+        typer.echo(
+            f"diagnosis-queue-age: tenant={r.tenant_id} queue={r.queue} overdue={r.overdue} "
+            f"newly_alerted={len(r.alerted)} redelivered={len(r.redelivered)} "
+            f"day={r.day} answered={r.answered} llm_rate={r.llm_rate} alert={r.llm_alert}"
+        )
+
+
 def main() -> None:
     cli(prog_name="python -m farmerapp.jobs")

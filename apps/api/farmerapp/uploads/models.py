@@ -41,6 +41,7 @@ class UploadPurpose(StrEnum):
     RECEIPT = "receipt"
     DIAGNOSIS = "diagnosis"
     PROFILE = "profile"
+    CORPUS = "corpus"  # WC-007 corpus manager image uploads (M6)
 
 
 class UploadStatus(StrEnum):

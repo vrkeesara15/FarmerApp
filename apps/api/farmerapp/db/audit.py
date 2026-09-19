@@ -50,7 +50,8 @@ SYSTEM_ROLE = "system"
 #: Columns whose values are never written to the trail (secrets at rest).
 REDACTED_COLUMNS: frozenset[str] = frozenset({"code_hash", "token_hash"})
 #: Bookkeeping columns that would only add noise to a diff.
-EXCLUDED_COLUMNS: frozenset[str] = frozenset({"updated_at", "version"})
+#: ``embedding`` (M6 corpus images): 768 floats of derived data, never a meaningful diff.
+EXCLUDED_COLUMNS: frozenset[str] = frozenset({"updated_at", "version", "embedding"})
 
 DEVICE_HEADER = "X-Device-Id"
 FORWARDED_FOR_HEADER = "X-Forwarded-For"

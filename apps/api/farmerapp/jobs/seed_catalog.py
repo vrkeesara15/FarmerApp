@@ -434,6 +434,25 @@ PROBLEMS: tuple[SeedProblem, ...] = (
         {"te": "కాండం కుళ్ళు", "hi": "तना सड़न"},
         "Yellowing and wilting; white fungal threads and mustard-like sclerotia at the base",
     ),
+    # M6 corpus seed additions (10 problems per pilot crop)
+    SeedProblem(
+        "maize_rust",
+        "Common rust",
+        D,
+        "maize",
+        "Puccinia sorghi",
+        {"te": "తుప్పు తెగులు", "hi": "गेरुई रोग"},
+        "Small cinnamon-brown powdery pustules on both leaf surfaces; leaves dry early",
+    ),
+    SeedProblem(
+        "groundnut_bud_necrosis",
+        "Peanut bud necrosis",
+        D,
+        "groundnut",
+        "Groundnut bud necrosis virus (thrips-borne)",
+        {"te": "మొవ్వు కుళ్ళు", "hi": "कली परिगलन"},
+        "Chlorotic ring spots on young leaves; terminal bud dies; plants stunted and bushy",
+    ),
     # any crop
     SeedProblem(
         "aphids",

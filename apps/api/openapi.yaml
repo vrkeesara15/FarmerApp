@@ -6685,7 +6685,7 @@ paths:
           anyOf:
           - type: array
             items:
-              $ref: '#/components/schemas/Severity'
+              $ref: '#/components/schemas/farmerapp__rules__schema__Severity'
           - type: 'null'
           title: Severity
       - name: rule_id
@@ -8007,6 +8007,1144 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+  /v1/diagnoses:
+    post:
+      tags:
+      - diagnosis
+      summary: 'Ask the crop doctor: queue a diagnosis for 1-3 uploaded photos (FM-004, FA-019)'
+      operationId: createDiagnosis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiagnosisCreate'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiagnosisOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`diagnosis_image_missing`, `diagnosis_invalid`, `idempotency_key_reuse`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
+      - field_officer
+    get:
+      tags:
+      - diagnosis
+      summary: Diagnoses visible to the caller, newest first (history, FM-005)
+      operationId: listDiagnoses
+      parameters:
+      - name: farmer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/DiagnosisStatus'
+          - type: 'null'
+          title: Status
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiagnosisPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/diagnoses/review-queue:
+    get:
+      tags:
+      - diagnosis
+      summary: 'Agronomist queue: provisional, out-of-scope and flagged diagnoses (WC-006)'
+      operationId: diagnosisReviewQueue
+      parameters:
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+      - name: confidence
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/Confidence'
+          - type: 'null'
+          title: Confidence
+      - name: min_age_hours
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: number
+            minimum: 0
+          - type: 'null'
+          description: Older than N hours
+          title: Min Age Hours
+        description: Older than N hours
+      - name: flagged
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Flagged
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewQueuePage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - owner
+  /v1/diagnoses/thresholds:
+    get:
+      tags:
+      - diagnosis
+      summary: DX-003 decision thresholds per crop with their versions
+      operationId: getDiagnosisThresholds
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThresholdsOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - director
+      - owner
+    put:
+      tags:
+      - diagnosis
+      summary: 'Set the DX-003 thresholds of a crop (or the default): a new config version'
+      operationId: setDiagnosisThresholds
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThresholdIn'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThresholdOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: '`validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+  /v1/diagnoses/{id}:
+    get:
+      tags:
+      - diagnosis
+      summary: A diagnosis and its result (poll after POST; also in the sync feed)
+      operationId: getDiagnosis
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiagnosisDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/diagnoses/{id}/review:
+    post:
+      tags:
+      - diagnosis
+      summary: Agronomist confirms or corrects a diagnosis, optionally adding it to the corpus
+      operationId: reviewDiagnosis
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiagnosisDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`diagnosis_not_reviewable`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`review_invalid`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+  /v1/corpus/problems:
+    get:
+      tags:
+      - corpus
+      summary: Corpus problems with image counts by status (WC-007)
+      operationId: listCorpusProblems
+      parameters:
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/CorpusStatus'
+          - type: 'null'
+          title: Status
+      - name: source
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/CorpusSource'
+          - type: 'null'
+          title: Source
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorpusProblemPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - director
+      - owner
+    post:
+      tags:
+      - corpus
+      summary: New corpus problem (draft) for a crop x pest / disease
+      operationId: createCorpusProblem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorpusProblemCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorpusProblemOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: '`corpus_problem_exists`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`corpus_problem_invalid`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+  /v1/corpus/problems/{id}:
+    get:
+      tags:
+      - corpus
+      summary: A corpus problem
+      operationId: getCorpusProblem
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorpusProblemOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - director
+      - owner
+    patch:
+      tags:
+      - corpus
+      summary: Edit a draft / reviewed corpus problem (approved entries are immutable)
+      operationId: updateCorpusProblem
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorpusProblemUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorpusProblemOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`corpus_entry_locked`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+  /v1/corpus/problems/{id}/transition:
+    post:
+      tags:
+      - corpus
+      summary: Move a corpus problem through draft -> reviewed -> approved -> retired
+      operationId: transitionCorpusProblem
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorpusTransitionIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorpusProblemOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_transition`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+  /v1/corpus/problems/{id}/images:
+    get:
+      tags:
+      - corpus
+      summary: Images of a corpus problem
+      operationId: listCorpusImages
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/CorpusStatus'
+          - type: 'null'
+          title: Status
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorpusImagePage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - director
+      - owner
+    post:
+      tags:
+      - corpus
+      summary: Add an uploaded image to a problem; the server computes its embedding
+      operationId: addCorpusImage
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorpusImageCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorpusImageOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`corpus_image_exists`, `corpus_entry_locked`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`diagnosis_image_missing`'
+          content:
+            application/problem+json: {}
+        '503':
+          description: '`encoder_unavailable`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+  /v1/corpus/images/{id}/transition:
+    post:
+      tags:
+      - corpus
+      summary: Move a corpus image through draft -> reviewed -> approved -> retired
+      operationId: transitionCorpusImage
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorpusTransitionIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorpusImageOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_transition`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+  /v1/corpus/approvals:
+    post:
+      tags:
+      - corpus
+      summary: 'Approve reviewed problems and images together: one corpus version bump'
+      operationId: approveCorpusSet
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorpusApprovalIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorpusVersionOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_transition`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`corpus_problem_invalid`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+  /v1/corpus/versions:
+    get:
+      tags:
+      - corpus
+      summary: Corpus versions (DX-005), newest first
+      operationId: listCorpusVersions
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorpusVersionsOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - director
+      - owner
+  /v1/me/deletion-request:
+    get:
+      tags:
+      - privacy
+      summary: 'FM-015: my latest deletion request'
+      operationId: getAccountDeletionRequest
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionRequestOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+    post:
+      tags:
+      - privacy
+      summary: 'FM-015: ask to delete my account and data (a ticket due in 30 days)'
+      operationId: requestAccountDeletion
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeletionRequestIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionRequestOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/admin/data-requests:
+    get:
+      tags:
+      - privacy
+      summary: 'NF-013 / FM-015: data-principal requests of the tenant, oldest due first'
+      operationId: listDataRequests
+      parameters:
+      - name: type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/DataRequestType'
+          - type: 'null'
+          title: Type
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/DataRequestStatus'
+          - type: 'null'
+          title: Status
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataRequestPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - owner
+      - tenant_admin
+  /v1/admin/data-requests/{id}:
+    patch:
+      tags:
+      - privacy
+      summary: 'Move a data request: received -> in_progress -> completed / rejected'
+      operationId: updateDataRequest
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataRequestUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataRequestOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_transition`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - owner
+      - tenant_admin
 components:
   schemas:
     AdjustmentIn:
@@ -8559,6 +9697,13 @@ components:
       required:
       - body
       title: CommentIn
+    Confidence:
+      type: string
+      enum:
+      - high
+      - medium
+      - low
+      title: Confidence
     ConfirmationRequest:
       properties:
         channel:
@@ -8787,6 +9932,521 @@ components:
       - recorded_by
       - created_at
       title: ConsentRecordOut
+    CorpusApprovalIn:
+      properties:
+        problem_ids:
+          items:
+            type: string
+            format: uuid
+          type: array
+          maxItems: 500
+          title: Problem Ids
+        image_ids:
+          items:
+            type: string
+            format: uuid
+          type: array
+          maxItems: 2000
+          title: Image Ids
+        note:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Note
+      type: object
+      title: CorpusApprovalIn
+    CorpusImageCreate:
+      properties:
+        blob_uri:
+          type: string
+          maxLength: 512
+          title: Blob Uri
+          description: A completed upload (purpose `corpus`).
+        sha256:
+          anyOf:
+          - type: string
+            maxLength: 64
+            minLength: 64
+          - type: 'null'
+          title: Sha256
+        stage:
+          anyOf:
+          - type: string
+            maxLength: 16
+          - type: 'null'
+          title: Stage
+        part:
+          anyOf:
+          - $ref: '#/components/schemas/ImagePart'
+          - type: 'null'
+        severity:
+          anyOf:
+          - $ref: '#/components/schemas/farmerapp__diagnosis__models__Severity'
+          - type: 'null'
+        region:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+          title: Region
+        season:
+          anyOf:
+          - type: string
+            maxLength: 8
+          - type: 'null'
+          title: Season
+        source:
+          $ref: '#/components/schemas/CorpusSource'
+          default: internal
+      type: object
+      required:
+      - blob_uri
+      title: CorpusImageCreate
+    CorpusImageOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        problem_id:
+          type: string
+          format: uuid
+          title: Problem Id
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        blob_uri:
+          type: string
+          title: Blob Uri
+        sha256:
+          type: string
+          title: Sha256
+        encoder_name:
+          type: string
+          title: Encoder Name
+        encoder_version:
+          type: string
+          title: Encoder Version
+        stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Stage
+        part:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Part
+        severity:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Severity
+        region:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region
+        season:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Season
+        source:
+          type: string
+          title: Source
+        status:
+          $ref: '#/components/schemas/CorpusStatus'
+        labelled_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Labelled By
+        approved_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Approved By
+        approved_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Approved At
+        approved_in_version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Approved In Version
+        from_diagnosis_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: From Diagnosis Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        version:
+          type: integer
+          title: Version
+        signed_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Signed Url
+          description: 15-minute read URL (listings).
+      type: object
+      required:
+      - id
+      - problem_id
+      - crop_id
+      - blob_uri
+      - sha256
+      - encoder_name
+      - encoder_version
+      - stage
+      - part
+      - severity
+      - region
+      - season
+      - source
+      - status
+      - labelled_by
+      - approved_by
+      - approved_at
+      - approved_in_version
+      - from_diagnosis_id
+      - created_at
+      - version
+      title: CorpusImageOut
+    CorpusImagePage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/CorpusImageOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: CorpusImagePage
+    CorpusProblemCreate:
+      properties:
+        pest_or_disease_id:
+          type: string
+          format: uuid
+          title: Pest Or Disease Id
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        names:
+          additionalProperties:
+            type: string
+          type: object
+          title: Names
+          description: Per language; `en` required.
+        symptoms:
+          additionalProperties:
+            items:
+              type: string
+            type: array
+          type: object
+          title: Symptoms
+        cultural_practices:
+          additionalProperties:
+            items:
+              type: string
+            type: array
+          type: object
+          title: Cultural Practices
+        source:
+          $ref: '#/components/schemas/CorpusSource'
+          default: internal
+        notes:
+          anyOf:
+          - type: string
+            maxLength: 4000
+          - type: 'null'
+          title: Notes
+      type: object
+      required:
+      - pest_or_disease_id
+      - crop_id
+      - names
+      title: CorpusProblemCreate
+    CorpusProblemOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        pest_or_disease_id:
+          type: string
+          format: uuid
+          title: Pest Or Disease Id
+        pest_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Pest Code
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        problem_type:
+          type: string
+          title: Problem Type
+        names:
+          additionalProperties: true
+          type: object
+          title: Names
+        symptoms:
+          additionalProperties: true
+          type: object
+          title: Symptoms
+        cultural_practices:
+          additionalProperties: true
+          type: object
+          title: Cultural Practices
+        status:
+          $ref: '#/components/schemas/CorpusStatus'
+        source:
+          type: string
+          title: Source
+        labelled_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Labelled By
+        reviewed_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Reviewed By
+        reviewed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Reviewed At
+        approved_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Approved By
+        approved_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Approved At
+        approved_in_version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Approved In Version
+        retired_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Retired At
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+        image_counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Image Counts
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - pest_or_disease_id
+      - pest_code
+      - crop_id
+      - problem_type
+      - names
+      - symptoms
+      - cultural_practices
+      - status
+      - source
+      - labelled_by
+      - reviewed_by
+      - reviewed_at
+      - approved_by
+      - approved_at
+      - approved_in_version
+      - retired_at
+      - notes
+      - image_counts
+      - created_at
+      - updated_at
+      - version
+      title: CorpusProblemOut
+    CorpusProblemPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/CorpusProblemOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+        corpus_version:
+          type: integer
+          title: Corpus Version
+      type: object
+      required:
+      - items
+      - corpus_version
+      title: CorpusProblemPage
+    CorpusProblemUpdate:
+      properties:
+        names:
+          anyOf:
+          - additionalProperties:
+              type: string
+            type: object
+          - type: 'null'
+          title: Names
+        symptoms:
+          anyOf:
+          - additionalProperties:
+              items:
+                type: string
+              type: array
+            type: object
+          - type: 'null'
+          title: Symptoms
+        cultural_practices:
+          anyOf:
+          - additionalProperties:
+              items:
+                type: string
+              type: array
+            type: object
+          - type: 'null'
+          title: Cultural Practices
+        notes:
+          anyOf:
+          - type: string
+            maxLength: 4000
+          - type: 'null'
+          title: Notes
+      type: object
+      title: CorpusProblemUpdate
+    CorpusSource:
+      type: string
+      enum:
+      - internal
+      - public
+      title: CorpusSource
+    CorpusStatus:
+      type: string
+      enum:
+      - draft
+      - reviewed
+      - approved
+      - retired
+      title: CorpusStatus
+    CorpusTransitionIn:
+      properties:
+        to:
+          $ref: '#/components/schemas/CorpusStatus'
+        note:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Note
+      type: object
+      required:
+      - to
+      title: CorpusTransitionIn
+    CorpusVersionOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        version:
+          type: integer
+          title: Version
+        approved_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Approved By
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+        changes:
+          additionalProperties: true
+          type: object
+          title: Changes
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - version
+      - approved_by
+      - note
+      - changes
+      - created_at
+      title: CorpusVersionOut
+    CorpusVersionsOut:
+      properties:
+        current:
+          type: integer
+          title: Current
+        items:
+          items:
+            $ref: '#/components/schemas/CorpusVersionOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - current
+      - items
+      title: CorpusVersionsOut
     CountAmount:
       properties:
         count:
@@ -9030,6 +10690,23 @@ components:
       - updated_at
       - version
       title: CreditLimitOut
+    CropGuessIn:
+      properties:
+        code:
+          type: string
+          maxLength: 32
+          title: Code
+          description: Crop code of the on-device model (DX-001).
+        confidence:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Confidence
+      type: object
+      required:
+      - code
+      - confidence
+      title: CropGuessIn
     CropList:
       properties:
         items:
@@ -9254,6 +10931,128 @@ components:
       - maturity
       - harvested
       title: CropStage
+    DataRequestOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        type:
+          $ref: '#/components/schemas/DataRequestType'
+        status:
+          $ref: '#/components/schemas/DataRequestStatus'
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+        due_by:
+          type: string
+          format: date-time
+          title: Due By
+        overdue:
+          type: boolean
+          title: Overdue
+          default: false
+        handled_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Handled By
+        handled_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Handled At
+        resolution_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Resolution Note
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - type
+      - status
+      - user_id
+      - farmer_id
+      - reason
+      - due_by
+      - handled_by
+      - handled_at
+      - resolution_note
+      - created_at
+      - updated_at
+      - version
+      title: DataRequestOut
+    DataRequestPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/DataRequestOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: DataRequestPage
+    DataRequestStatus:
+      type: string
+      enum:
+      - received
+      - in_progress
+      - completed
+      - rejected
+      title: DataRequestStatus
+    DataRequestType:
+      type: string
+      enum:
+      - deletion
+      - access
+      - correction
+      title: DataRequestType
+    DataRequestUpdate:
+      properties:
+        status:
+          $ref: '#/components/schemas/DataRequestStatus'
+        note:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Note
+      type: object
+      required:
+      - status
+      title: DataRequestUpdate
     DayCloseIn:
       properties:
         business_date:
@@ -9502,6 +11301,42 @@ components:
       - day_close
       title: DaySummaryOut
       description: ST-002 "day-end totals by mode" for one store and business date (IST).
+    DeletionRequestIn:
+      properties:
+        reason:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Reason
+      type: object
+      title: DeletionRequestIn
+    DeletionRequestOut:
+      properties:
+        ticket_id:
+          type: string
+          format: uuid
+          title: Ticket Id
+        type:
+          $ref: '#/components/schemas/DataRequestType'
+        status:
+          $ref: '#/components/schemas/DataRequestStatus'
+        due_by:
+          type: string
+          format: date-time
+          title: Due By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - ticket_id
+      - type
+      - status
+      - due_by
+      - created_at
+      title: DeletionRequestOut
     DeviceBrief:
       properties:
         device_id:
@@ -9670,6 +11505,609 @@ components:
       - user_status
       title: DeviceStatusOut
       description: '``GET /v1/devices/me/status`` (SEC-025): polled by the apps on start.'
+    DiagnosisCreate:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Client id (offline capture).
+        farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Farmer Id
+          description: Required for a field officer; a farmer asks for themself.
+        crop_plot_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Plot Id
+        crop_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: string
+            const: unknown
+          title: Crop Id
+          description: The crop the user chose, or `unknown` (then the on-device guess / corpus).
+        images:
+          items:
+            $ref: '#/components/schemas/DiagnosisPhotoIn'
+          type: array
+          maxItems: 3
+          minItems: 1
+          title: Images
+        crop_guess:
+          anyOf:
+          - $ref: '#/components/schemas/CropGuessIn'
+          - type: 'null'
+        on_device_model:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: On Device Model
+        crop_stage:
+          anyOf:
+          - type: string
+            maxLength: 16
+          - type: 'null'
+          title: Crop Stage
+        captured_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Captured At
+        ask_expert:
+          type: boolean
+          title: Ask Expert
+          description: 'FM-006: send to the agronomist too.'
+          default: false
+      type: object
+      required:
+      - crop_id
+      - images
+      title: DiagnosisCreate
+      description: '``POST /v1/diagnoses`` and the sync op ``diagnosis`` create (same body).'
+    DiagnosisDetailOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        subject:
+          type: string
+          title: Subject
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        crop_plot_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Plot Id
+        requested_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Requested By
+        crop_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+        crop_detected_on_device:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Crop Detected On Device
+        district:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: District
+        season:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Season
+        crop_stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Crop Stage
+        status:
+          $ref: '#/components/schemas/DiagnosisStatus'
+        source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source
+        confidence:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Confidence
+        provisional:
+          type: boolean
+          title: Provisional
+          description: Show 'provisional — expert will confirm' (FM-005).
+        can_buy:
+          type: boolean
+          title: Can Buy
+          description: False until corpus / agronomist confirmed (SPEC 3.4).
+        cta:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cta
+          description: '`buy` | `talk_to_field_officer` | `ask_expert`.'
+        message_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Key
+          description: i18n key of the headline message.
+        result:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Result
+        final_problem_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Final Problem Id
+        out_of_scope_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Out Of Scope Reason
+        flagged:
+          type: boolean
+          title: Flagged
+        model_versions:
+          additionalProperties: true
+          type: object
+          title: Model Versions
+        corpus_version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Corpus Version
+        images:
+          items:
+            $ref: '#/components/schemas/DiagnosisPhotoOut'
+          type: array
+          title: Images
+        captured_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Captured At
+        answered_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Answered At
+        reviewed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Reviewed At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+        scores:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Scores
+          description: DX-005 neighbours, votes, candidates, thresholds.
+        reviews:
+          items:
+            $ref: '#/components/schemas/DiagnosisReviewOut'
+          type: array
+          title: Reviews
+        reviewed_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Reviewed By
+        llm_used:
+          type: boolean
+          title: Llm Used
+          default: false
+      type: object
+      required:
+      - id
+      - subject
+      - farmer_id
+      - crop_plot_id
+      - requested_by
+      - crop_id
+      - crop_detected_on_device
+      - district
+      - season
+      - crop_stage
+      - status
+      - source
+      - confidence
+      - provisional
+      - can_buy
+      - cta
+      - message_key
+      - result
+      - final_problem_id
+      - out_of_scope_reason
+      - flagged
+      - model_versions
+      - corpus_version
+      - images
+      - captured_at
+      - answered_at
+      - reviewed_at
+      - created_at
+      - updated_at
+      - version
+      title: DiagnosisDetailOut
+      description: 'Reviewer view (agronomist / owner / director / tenant admin): provenance included.'
+    DiagnosisOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        subject:
+          type: string
+          title: Subject
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        crop_plot_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Plot Id
+        requested_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Requested By
+        crop_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+        crop_detected_on_device:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Crop Detected On Device
+        district:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: District
+        season:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Season
+        crop_stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Crop Stage
+        status:
+          $ref: '#/components/schemas/DiagnosisStatus'
+        source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source
+        confidence:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Confidence
+        provisional:
+          type: boolean
+          title: Provisional
+          description: Show 'provisional — expert will confirm' (FM-005).
+        can_buy:
+          type: boolean
+          title: Can Buy
+          description: False until corpus / agronomist confirmed (SPEC 3.4).
+        cta:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cta
+          description: '`buy` | `talk_to_field_officer` | `ask_expert`.'
+        message_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Key
+          description: i18n key of the headline message.
+        result:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Result
+        final_problem_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Final Problem Id
+        out_of_scope_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Out Of Scope Reason
+        flagged:
+          type: boolean
+          title: Flagged
+        model_versions:
+          additionalProperties: true
+          type: object
+          title: Model Versions
+        corpus_version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Corpus Version
+        images:
+          items:
+            $ref: '#/components/schemas/DiagnosisPhotoOut'
+          type: array
+          title: Images
+        captured_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Captured At
+        answered_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Answered At
+        reviewed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Reviewed At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - subject
+      - farmer_id
+      - crop_plot_id
+      - requested_by
+      - crop_id
+      - crop_detected_on_device
+      - district
+      - season
+      - crop_stage
+      - status
+      - source
+      - confidence
+      - provisional
+      - can_buy
+      - cta
+      - message_key
+      - result
+      - final_problem_id
+      - out_of_scope_reason
+      - flagged
+      - model_versions
+      - corpus_version
+      - images
+      - captured_at
+      - answered_at
+      - reviewed_at
+      - created_at
+      - updated_at
+      - version
+      title: DiagnosisOut
+      description: What the apps poll (``GET /v1/diagnoses/{id}``) and receive in the sync feed.
+    DiagnosisPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/DiagnosisOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: DiagnosisPage
+    DiagnosisPhotoIn:
+      properties:
+        blob_uri:
+          type: string
+          maxLength: 512
+          title: Blob Uri
+          description: From POST /v1/uploads/{id}/complete.
+        sha256:
+          anyOf:
+          - type: string
+            maxLength: 64
+            minLength: 64
+          - type: 'null'
+          title: Sha256
+        quality:
+          anyOf:
+          - $ref: '#/components/schemas/PhotoQualityIn'
+          - type: 'null'
+      type: object
+      required:
+      - blob_uri
+      title: DiagnosisPhotoIn
+    DiagnosisPhotoOut:
+      properties:
+        blob_uri:
+          type: string
+          title: Blob Uri
+        sha256:
+          type: string
+          title: Sha256
+        quality:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Quality
+        signed_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Signed Url
+      type: object
+      required:
+      - blob_uri
+      - sha256
+      title: DiagnosisPhotoOut
+    DiagnosisReviewOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        actor_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Actor Id
+        action:
+          type: string
+          title: Action
+        from_status:
+          type: string
+          title: From Status
+        to_status:
+          type: string
+          title: To Status
+        from_problem_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: From Problem Id
+        to_problem_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: To Problem Id
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+        add_to_corpus:
+          type: boolean
+          title: Add To Corpus
+        corpus_image_ids:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: Corpus Image Ids
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - actor_id
+      - action
+      - from_status
+      - to_status
+      - from_problem_id
+      - to_problem_id
+      - note
+      - add_to_corpus
+      - corpus_image_ids
+      - created_at
+      title: DiagnosisReviewOut
+    DiagnosisStatus:
+      type: string
+      enum:
+      - queued
+      - answered
+      - provisional
+      - confirmed
+      - corrected
+      - out_of_scope
+      title: DiagnosisStatus
     DoseUnit:
       type: string
       enum:
@@ -11614,6 +14052,14 @@ components:
       - version
       - env
       title: HealthResponse
+    ImagePart:
+      type: string
+      enum:
+      - leaf
+      - stem
+      - fruit
+      - whole
+      title: ImagePart
     ImportReport:
       properties:
         kind:
@@ -14666,6 +17112,37 @@ components:
       - resend_after
       - resends_left
       title: PhoneVerifySendResponse
+    PhotoQualityIn:
+      properties:
+        passed:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Passed
+          description: The device's own verdict.
+        blur_score:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Blur Score
+        brightness:
+          anyOf:
+          - type: number
+            maximum: 1.0
+            minimum: 0.0
+          - type: 'null'
+          title: Brightness
+        plant_present:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Plant Present
+          description: false = the device saw no leaf / plant (DX-010).
+      additionalProperties: false
+      type: object
+      title: PhotoQualityIn
+      description: What the on-device check (DX-001 / NF-004) measured on the photo.
     PnlMonthOut:
       properties:
         month:
@@ -15942,6 +18419,294 @@ components:
       - confirmed_at
       - photos
       title: ReplayVisitOut
+    ReviewAction:
+      type: string
+      enum:
+      - confirm
+      - correct
+      - not_diagnosable
+      title: ReviewAction
+    ReviewIn:
+      properties:
+        action:
+          $ref: '#/components/schemas/ReviewAction'
+        problem_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Problem Id
+          description: Corpus problem id; required to `correct`.
+        note:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Note
+        add_to_corpus:
+          type: boolean
+          title: Add To Corpus
+          description: Add the photos to the corpus as `reviewed` images.
+          default: false
+      type: object
+      required:
+      - action
+      - note
+      title: ReviewIn
+    ReviewQueueCounts:
+      properties:
+        total:
+          type: integer
+          title: Total
+        overdue:
+          type: integer
+          title: Overdue
+        by_confidence:
+          additionalProperties:
+            type: integer
+          type: object
+          title: By Confidence
+      type: object
+      required:
+      - total
+      - overdue
+      - by_confidence
+      title: ReviewQueueCounts
+    ReviewQueueItem:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        subject:
+          type: string
+          title: Subject
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        crop_plot_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Plot Id
+        requested_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Requested By
+        crop_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+        crop_detected_on_device:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Crop Detected On Device
+        district:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: District
+        season:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Season
+        crop_stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Crop Stage
+        status:
+          $ref: '#/components/schemas/DiagnosisStatus'
+        source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source
+        confidence:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Confidence
+        provisional:
+          type: boolean
+          title: Provisional
+          description: Show 'provisional — expert will confirm' (FM-005).
+        can_buy:
+          type: boolean
+          title: Can Buy
+          description: False until corpus / agronomist confirmed (SPEC 3.4).
+        cta:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cta
+          description: '`buy` | `talk_to_field_officer` | `ask_expert`.'
+        message_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Key
+          description: i18n key of the headline message.
+        result:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Result
+        final_problem_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Final Problem Id
+        out_of_scope_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Out Of Scope Reason
+        flagged:
+          type: boolean
+          title: Flagged
+        model_versions:
+          additionalProperties: true
+          type: object
+          title: Model Versions
+        corpus_version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Corpus Version
+        images:
+          items:
+            $ref: '#/components/schemas/DiagnosisPhotoOut'
+          type: array
+          title: Images
+        captured_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Captured At
+        answered_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Answered At
+        reviewed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Reviewed At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        deleted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deleted At
+        version:
+          type: integer
+          title: Version
+        scores:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Scores
+          description: DX-005 neighbours, votes, candidates, thresholds.
+        reviews:
+          items:
+            $ref: '#/components/schemas/DiagnosisReviewOut'
+          type: array
+          title: Reviews
+        reviewed_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Reviewed By
+        llm_used:
+          type: boolean
+          title: Llm Used
+          default: false
+        age_hours:
+          type: number
+          title: Age Hours
+        overdue:
+          type: boolean
+          title: Overdue
+          description: Older than the 18 h DX-006 alert threshold.
+      type: object
+      required:
+      - id
+      - subject
+      - farmer_id
+      - crop_plot_id
+      - requested_by
+      - crop_id
+      - crop_detected_on_device
+      - district
+      - season
+      - crop_stage
+      - status
+      - source
+      - confidence
+      - provisional
+      - can_buy
+      - cta
+      - message_key
+      - result
+      - final_problem_id
+      - out_of_scope_reason
+      - flagged
+      - model_versions
+      - corpus_version
+      - images
+      - captured_at
+      - answered_at
+      - reviewed_at
+      - created_at
+      - updated_at
+      - version
+      - age_hours
+      - overdue
+      title: ReviewQueueItem
+    ReviewQueuePage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ReviewQueueItem'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+        counts:
+          $ref: '#/components/schemas/ReviewQueueCounts'
+      type: object
+      required:
+      - items
+      - counts
+      title: ReviewQueuePage
     SamplingPatch:
       properties:
         moving_s:
@@ -16270,13 +19035,6 @@ components:
       type: object
       title: SettingsPatch
       description: Partial update; ranges are those of ``TenantSettings`` (see ``GET /v1/settings``).
-    Severity:
-      type: string
-      enum:
-      - high
-      - medium
-      - low
-      title: Severity
     SkuAvailabilityOut:
       properties:
         sku_id:
@@ -17181,6 +19939,7 @@ components:
           - payment
           - khata_entry
           - credit_approval_request
+          - diagnosis
           title: Entity
         action:
           type: string
@@ -17265,6 +20024,7 @@ components:
           - payment
           - khata_entry
           - credit_approval_request
+          - diagnosis
           title: Entity
         action:
           type: string
@@ -17532,6 +20292,110 @@ components:
           $ref: '#/components/schemas/Branding'
       type: object
       title: TenantSettings
+    ThresholdIn:
+      properties:
+        crop_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+          description: null = the tenant default.
+        t1:
+          type: number
+          maximum: 1.0
+          exclusiveMinimum: 0.0
+          title: T1
+        agreement:
+          type: number
+          maximum: 1.0
+          exclusiveMinimum: 0.0
+          title: Agreement
+        min_similarity:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Min Similarity
+        note:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Note
+      type: object
+      required:
+      - t1
+      - agreement
+      - min_similarity
+      title: ThresholdIn
+    ThresholdOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        crop_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Crop Id
+        t1:
+          type: number
+          title: T1
+        agreement:
+          type: number
+          title: Agreement
+        min_similarity:
+          type: number
+          title: Min Similarity
+        config_version:
+          type: integer
+          title: Config Version
+        set_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Set By
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - crop_id
+      - t1
+      - agreement
+      - min_similarity
+      - config_version
+      - set_by
+      - note
+      - created_at
+      title: ThresholdOut
+    ThresholdsOut:
+      properties:
+        defaults:
+          additionalProperties:
+            type: number
+          type: object
+          title: Defaults
+        items:
+          items:
+            $ref: '#/components/schemas/ThresholdOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - defaults
+      - items
+      title: ThresholdsOut
     TimelineEvent:
       properties:
         ts:
@@ -17792,6 +20656,7 @@ components:
       - receipt
       - diagnosis
       - profile
+      - corpus
       title: UploadPurpose
     UploadStatusOut:
       properties:
@@ -18917,6 +21782,13 @@ components:
       - code
       - name
       title: StoreBriefOut
+    farmerapp__diagnosis__models__Severity:
+      type: string
+      enum:
+      - low
+      - medium
+      - high
+      title: Severity
     farmerapp__duty__schemas__DeviceIntegrityIn:
       properties:
         is_mock:
@@ -19082,6 +21954,13 @@ components:
       - district
       - cluster_id
       title: StoreBriefOut
+    farmerapp__rules__schema__Severity:
+      type: string
+      enum:
+      - high
+      - medium
+      - low
+      title: Severity
     farmerapp__uploads__schemas__SignedUrlOut:
       properties:
         uri:

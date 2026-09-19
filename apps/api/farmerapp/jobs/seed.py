@@ -26,6 +26,9 @@ M3 (``farmerapp.jobs.seed_m3``): products, SKUs, price lists, the pest / disease
 label claims, stock batches and movements, orders, payments, webhook events, khata
 entries, credit limits and day closes (``SeedProfile.m3``).
 
+M6 (``farmerapp.jobs.seed_corpus``): the public bootstrap diagnosis corpus (approved problems
+per pilot crop with synthetic placeholder images, ``source = public``, corpus version 1).
+
 M2 (``farmerapp.jobs.seed_m2``): for every officer, ``SeedProfile.duty_days`` days of duty
 sessions ending on ``SEED_TODAY`` with location points, visits (photos, confirmations,
 VV-004 scores) and a policy acceptance. The daily ``location_point`` partitions for that
@@ -54,6 +57,7 @@ from farmerapp.db.base import Base
 from farmerapp.db.geo import ACRE_M2, offset, point_wkt, polygon_wkt
 from farmerapp.db.models import Tenant
 from farmerapp.db.session import get_session_factory, tenant_scope
+from farmerapp.diagnosis.encoder import ImageEncoder, build_encoder
 from farmerapp.farmers.models import (
     DEFAULT_CONSENT_VERSION,
     ConsentChannel,
@@ -70,10 +74,13 @@ from farmerapp.farmers.models import (
     Season,
     SoilType,
 )
+from farmerapp.jobs.seed_corpus import M6_FULL, M6_SMALL, CorpusSeeder, M6Profile
 from farmerapp.jobs.seed_m2 import M2Generator, M2Profile
 from farmerapp.jobs.seed_m3 import M3_FULL, M3_SMALL, M3Generator, M3Profile
 from farmerapp.location import partitions
+from farmerapp.settings import get_settings
 from farmerapp.tenants.models import Cluster, Store, Village
+from farmerapp.uploads.blobstore import BlobStore, build_blob_store
 
 DemoUser = tuple[str, str, UserRole, str]  # (phone, name, role, language)
 
@@ -148,6 +155,7 @@ class SeedProfile:
     sparse_tracks: bool = False  # M2: ~25 points a day instead of ~150 (fixtures)
     fixed_outcomes: bool = False  # M2: one verified + one partial visit per officer (fixtures)
     m3: M3Profile = M3_FULL  # M3: catalogue, stock, orders, payments, khata
+    m6: M6Profile = M6_FULL  # M6: public bootstrap diagnosis corpus
 
     @property
     def m2(self) -> M2Profile:
@@ -170,6 +178,7 @@ SMALL = SeedProfile(
     sparse_tracks=True,
     fixed_outcomes=True,
     m3=M3_SMALL,
+    m6=M6_SMALL,
 )
 
 DEMO_TENANT_NAME = "Future Crop Care"
@@ -320,7 +329,9 @@ SEEDED_TABLES = ("cluster", "store", "village", "crop", "farmer", "farm", "crop_
                  # M3 (dependency order)
                  "product", "sku", "price_list", "pest_or_disease", "label_claim",
                  "stock_batch", "stock_movement", "order", "order_line", "khata_entry",
-                 "payment", "webhook_event", "credit_limit", "day_close")  # fmt: skip
+                 "payment", "webhook_event", "credit_limit", "day_close",
+                 # M6 (seed_corpus): the public bootstrap corpus
+                 "corpus_problem", "corpus_image", "corpus_version")  # fmt: skip
 
 
 # --------------------------------------------------------------------------- generation
@@ -705,7 +716,12 @@ async def _existing_ids(session: AsyncSession, tenant_id: uuid.UUID) -> dict[str
 
 
 async def _seed_tenant(
-    session: AsyncSession, demo: DemoTenant, profile: SeedProfile, rng: random.Random
+    session: AsyncSession,
+    demo: DemoTenant,
+    profile: SeedProfile,
+    rng: random.Random,
+    encoder: ImageEncoder,
+    blobs: BlobStore | None,
 ) -> tuple[Tenant, int, dict[str, int], dict[str, int]]:
     tenant = await session.get(Tenant, demo.id)
     if tenant is None:
@@ -717,6 +733,17 @@ async def _seed_tenant(
 
     users, users_created = await _seed_users(session, demo, tenant)
     generated = _generate(demo, profile, users, rng)
+    # M6: the public bootstrap corpus, embedded with the configured encoder (DX-002).
+    await CorpusSeeder(
+        tenant.id,
+        profile.m6,
+        today=SEED_TODAY,
+        users=list(users.values()),
+        rows=generated.rows,
+        add=generated.add,
+        encoder=encoder,
+        blobs=blobs,
+    ).generate()
     # Daily partitions for the M2 tracks (UTC days around the IST duty days).
     await partitions.ensure_partitions(
         session,
@@ -735,7 +762,16 @@ async def _seed_tenant(
     return tenant, users_created, created, totals
 
 
-async def seed_demo(session: AsyncSession, profile: SeedProfile = FULL) -> SeedResult:
+async def seed_demo(
+    session: AsyncSession,
+    profile: SeedProfile = FULL,
+    *,
+    encoder: ImageEncoder | None = None,
+    blobs: BlobStore | None = None,
+) -> SeedResult:
+    """``encoder`` embeds the corpus images (default: the configured one); ``blobs`` receives
+    the seed images when given (``make seed``), tests pass none."""
+    encoder = encoder or build_encoder(get_settings())
     seeded: list[tuple[str, uuid.UUID]] = []
     users_created = 0
     created: dict[str, int] = dict.fromkeys(SEEDED_TABLES, 0)
@@ -745,7 +781,7 @@ async def seed_demo(session: AsyncSession, profile: SeedProfile = FULL) -> SeedR
         rng = random.Random(f"{RANDOM_SEED}:{demo.slug}")  # nosec B311
         with audit.actor_scope(audit.system_actor(demo.id)):
             async with tenant_scope(session, demo.id):
-                tenant, n, c, t = await _seed_tenant(session, demo, profile, rng)
+                tenant, n, c, t = await _seed_tenant(session, demo, profile, rng, encoder, blobs)
         seeded.append((demo.slug, tenant.id))
         users_created += n
         for table in SEEDED_TABLES:
@@ -763,6 +799,7 @@ async def seed_demo(session: AsyncSession, profile: SeedProfile = FULL) -> SeedR
 
 
 async def run_seed(profile: SeedProfile = FULL) -> SeedResult:
+    settings = get_settings()
     factory = get_session_factory()
     async with factory() as session, session.begin():
-        return await seed_demo(session, profile)
+        return await seed_demo(session, profile, blobs=build_blob_store(settings))

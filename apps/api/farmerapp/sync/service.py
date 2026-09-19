@@ -69,6 +69,9 @@ from farmerapp.auth.scope import (
     payment_filters,
     visit_filters,
 )
+from farmerapp.diagnosis.models import Diagnosis
+from farmerapp.diagnosis.schemas import DiagnosisOut
+from farmerapp.diagnosis.service import diagnosis_filters
 from farmerapp.duty import service as duty
 from farmerapp.duty.schemas import DutyEndIn, DutyStartIn
 from farmerapp.farmers import service as farmers
@@ -112,6 +115,7 @@ from farmerapp.visits.schemas import VisitConfirmationOut, VisitOut, VisitPhotoO
 
 if TYPE_CHECKING:
     from farmerapp.auth.deps import AuthServices
+    from farmerapp.diagnosis.services import DiagnosisServices
     from farmerapp.payments.service import PaymentServices
 
 log = get_logger("farmerapp.sync")
@@ -143,6 +147,9 @@ CONFLICT_RULES: dict[str, Strategy] = {
     "payment": Strategy.SERVER_WINS,
     "khata_entry": Strategy.SERVER_WINS,  # append-only ledger (FA-022)
     "credit_approval_request": Strategy.SERVER_WINS,  # decided by a cluster head (ST-007)
+    # M6: the device creates a diagnosis offline (photos uploaded first); the result is the
+    # server's (pipeline / agronomist) and arrives through the feed.
+    "diagnosis": Strategy.SERVER_WINS,
 }
 
 #: ``merge_fields`` entities: fields a device may never overwrite.
@@ -264,6 +271,7 @@ class OpContext:
     services: AuthServices | None = None
     blobs: BlobStore | None = None
     payments: PaymentServices | None = None  # FA-021 payment ops
+    diagnosis: DiagnosisServices | None = None  # M6 diagnosis create
 
     def visit_deps(self) -> tuple[AuthServices, BlobStore]:
         if self.services is None or self.blobs is None:
@@ -291,7 +299,26 @@ def _credit_blocked(op: SyncOpIn, decision: CreditDecision) -> SyncResult:
 
 
 # --------------------------------------------------------------------------- dispatch
+async def _create_diagnosis(
+    session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpContext
+) -> SyncResult:
+    """M6 offline crop doctor: the ``POST /v1/diagnoses`` body; the device sends the op only
+    once its photo uploads completed. A replayed id is a ``conflict`` with the server row."""
+    from farmerapp.diagnosis.schemas import DiagnosisCreate
+    from farmerapp.diagnosis.service import create_diagnosis
+
+    if ctx.diagnosis is None:
+        raise UnsupportedActionError("Diagnosis sync ops need the diagnosis services.")
+    body = DiagnosisCreate.model_validate(
+        {"captured_at": op.client_ts, **op.payload, "id": str(op.entity_id)}
+    )
+    row, created = await create_diagnosis(session, actor, body, services=ctx.diagnosis, now=ctx.now)
+    return (_applied if created else _conflict)(op, DiagnosisOut.from_row(row), row.version)
+
+
 async def _create(session: AsyncSession, actor: User, op: SyncOpIn, ctx: OpContext) -> SyncResult:
+    if op.entity == "diagnosis":
+        return await _create_diagnosis(session, actor, op, ctx)
     if op.entity == "payment":  # FA-021 officer offline cash / credit capture
         from farmerapp.payments import sync_ops as payment_sync
 
@@ -536,12 +563,20 @@ async def apply_ops(
     services: AuthServices | None = None,
     blobs: BlobStore | None = None,
     payments: PaymentServices | None = None,
+    diagnosis: DiagnosisServices | None = None,
 ) -> list[SyncResult]:
     """``now`` is the auth clock (phone verification tokens); defaults to the wall clock.
     ``services`` (OTP) and ``blobs`` (photo bytes) are needed by the visit ops, ``payments``
     by the FA-021 payment op."""
     now = now or datetime.now(UTC)
-    ctx = OpContext(settings=settings, now=now, services=services, blobs=blobs, payments=payments)
+    ctx = OpContext(
+        settings=settings,
+        now=now,
+        services=services,
+        blobs=blobs,
+        payments=payments,
+        diagnosis=diagnosis,
+    )
     results: list[SyncResult] = []
     # NF-005: the inline / event rules of every op run once for the whole batch, at its end.
     async with rules_engine.deferred(session):
@@ -681,6 +716,11 @@ def _scope(actor: User) -> Any:
                 select(CreditApprovalRequest.id).where(*credit_approval_feed_filters(actor))
             ),
         ),
+        # M6: the farmer's own diagnoses, an officer's farmers' ones (and what they asked).
+        and_(
+            SyncChange.entity == "diagnosis",
+            SyncChange.entity_id.in_(select(Diagnosis.id).where(*diagnosis_filters(actor))),
+        ),
     )
 
 
@@ -758,6 +798,7 @@ async def _current_state(
         ("payment", Payment, PaymentOut.model_validate),
         ("khata_entry", KhataEntry, KhataEntryOut.from_row),
         ("credit_approval_request", CreditApprovalRequest, CreditApprovalOut.model_validate),
+        ("diagnosis", Diagnosis, DiagnosisOut.from_row),
     )
     for entity, model, to_out in money:
         if ids.get(entity):

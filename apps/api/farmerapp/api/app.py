@@ -24,6 +24,9 @@ from farmerapp.auth.policy import install_policies
 from farmerapp.auth.scheduler import InProcessScheduler
 from farmerapp.catalog import router as catalog_routes
 from farmerapp.db import models as _models  # noqa: F401  (registers models + audit listener)
+from farmerapp.diagnosis import corpus_router as corpus_routes
+from farmerapp.diagnosis import router as diagnosis_routes
+from farmerapp.diagnosis.services import DiagnosisServices, build_diagnosis_services
 from farmerapp.duty import router as duty_routes
 from farmerapp.farmers import router as farmer_routes
 from farmerapp.flags import router as flag_routes
@@ -42,6 +45,7 @@ from farmerapp.payments import router as payment_routes
 from farmerapp.payments import webhooks as webhook_routes
 from farmerapp.payments.service import PaymentServices, build_payment_services
 from farmerapp.policies import router as policy_routes
+from farmerapp.privacy import router as privacy_routes
 from farmerapp.rules import events as rule_events
 from farmerapp.rules.loader import validate_rules
 from farmerapp.settings import Settings, get_settings
@@ -106,6 +110,7 @@ def create_app(
     blob_store: BlobStore | None = None,
     payment_services: PaymentServices | None = None,
     integrity_verifier: PlayIntegrityVerifier | None = None,
+    diagnosis_services: DiagnosisServices | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(level=settings.log_level, json_logs=settings.log_json, service="api")
@@ -159,6 +164,10 @@ def create_app(
     app.state.payments = payment_services or build_payment_services(settings)  # FA-021
     # SEC-024: Play Integrity token decoding (None = verification off, verdicts "unverified").
     app.state.integrity = integrity_verifier or build_verifier(settings)
+    # M6 (SPEC 3): encoder, LLM fallback client and diagnosis.requested delivery.
+    app.state.diagnosis = diagnosis_services or build_diagnosis_services(
+        settings, blobs=app.state.blobs
+    )
     order_payment_events.register()  # FA-020 x FA-021: a captured payment advances its order
     app.state.flag_counts = FLAG_TABLE_COUNTS  # AN-001 / AN-002: open flags in analytics
     validate_rules()  # VA-001: invalid rules/*.yaml refuse to start
@@ -201,6 +210,12 @@ def create_app(
     v1.include_router(flag_routes.router)
     # M4: analytics read API (AN-001 .. AN-003, AN-011, WC-001 .. WC-004).
     v1.include_router(analytics_routes.router)
+    # M6: diagnosis engine, agronomist queue, corpus manager (SPEC 3, WC-006, WC-007) and
+    # data-principal requests (FM-015, NF-013).
+    v1.include_router(diagnosis_routes.router)
+    v1.include_router(corpus_routes.router)
+    v1.include_router(privacy_routes.me_router)
+    v1.include_router(privacy_routes.admin_router)
     app.include_router(v1)
 
     # FA-002: refuse to start unless every route declares a role policy (or is public), and

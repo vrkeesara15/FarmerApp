@@ -49,6 +49,7 @@ async def sync(
         services=services,
         blobs=get_blob_store(request),
         payments=getattr(request.app.state, "payments", None),  # FA-021 payment ops
+        diagnosis=getattr(request.app.state, "diagnosis", None),  # M6 offline crop doctor
     )
     changes, cursor, has_more = await service.changes_since(
         session, actor, service.encode_cursor(since)

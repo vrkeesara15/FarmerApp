@@ -33,6 +33,11 @@ class NotificationKind(StrEnum):
     STORE_ZERO_SALES = "store_zero_sales"  # OPS-007: no sale on a working day
     STORE_DAY_NOT_CLOSED = "store_day_not_closed"  # OPS-007: not closed by 22:00 IST
     PAYMENT_RECONCILIATION = "payment_reconciliation"  # OPS-008: finance ticket
+    DIAGNOSIS_READY = "diagnosis_ready"  # FM-005: a result (answer / provisional) is in
+    DIAGNOSIS_REVIEWED = "diagnosis_reviewed"  # WC-006: the agronomist confirmed / corrected
+    DIAGNOSIS_QUEUE_AGED = "diagnosis_queue_aged"  # OPS-009 / DX-006: provisional > 18 h
+    DIAGNOSIS_LLM_RATE = "diagnosis_llm_rate"  # OPS-009: LLM fallback > 40 % in a day
+    DATA_REQUEST_RECEIVED = "data_request_received"  # FM-015 / NF-013: a ticket to handle
 
 
 class Notification(Base, TenantRow):

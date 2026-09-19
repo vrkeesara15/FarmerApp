@@ -53,6 +53,9 @@ farmerapp/
                   auto_end.py (VV-007 auto end + OPS-006 sync silence jobs)
   policies/       FA-011 / VV-010 location policy text (versioned JSON) + acceptance
   notifications/  notification table (FA-007 groundwork; rows written by the duty jobs)
+  diagnosis/      M6 diagnosis engine: corpus, encoder, kNN, decision rule, LLM fallback,
+                  treatments, review queue (see "Diagnosis engine")
+  privacy/        FM-015 / NF-013 data-principal requests (deletion, access, correction)
 alembic/          async Alembic env + migrations
 scripts/          export_openapi.py (writes/checks openapi.yaml)
 tests/            pytest (needs the compose db: `make db`; parallel, see "How the tests run")
@@ -815,6 +818,7 @@ VA-E01 flags failed ones.
 | `store-day-watch --tenant … [--date]` | 22:15 IST | OPS-007 zero sales on a working day / day not closed by 22:00 (tenant `working_days`, `holidays`, `day_close_deadline_local_time`) -> store managers + cluster heads |
 | `reconcile-payments --tenant-id … [--date]` | 06:00 IST | OPS-008 settlements vs paid payments; mismatches open an `OPS-008` flag (finance ticket, accountants watch it) |
 | `flags-sla-escalation --tenant …` | hourly | OPS-010 overdue flags one rung up, `flag_escalated` notification |
+| `diagnosis-queue-age --tenant … [--date]` | hourly | OPS-009 / DX-006 diagnoses waiting > 18 h for an agronomist (once each), daily LLM fallback rate (alert > 40 %), stale queued re-delivery |
 
 ## Latency suite (NF-005)
 
@@ -991,4 +995,48 @@ refresh answers `session_revoked` or `device_wipe_required`. Field officers are 
 device (409 `device_not_bound` until an admin binds the new one). In tests, send
 `X-Step-Up-Token` with the `step_up` fixture (`tests/authz/conftest.py`) or set
 `RouteFixture(step_up=True)` in the authz matrix.
+
+## Diagnosis engine (M6: DX-002 .. DX-010, WC-006, WC-007, OPS-009, FM-015)
+
+Alembic `0027`; contracts for the apps, the console, the `embed` service and the LLM prompt:
+`docs/prs/M6-diagnosis-api.md`. Package `farmerapp/diagnosis/`:
+
+| Module | What |
+|---|---|
+| `encoder.py` | `ImageEncoder` protocol (`encode(images) -> list[vector(768)]`, `EncoderInfo(name, version, dim)`); `FakeEncoder` (pixel DCT, deterministic) and `RemoteEncoder` (the `ml/embed` Cloud Run service). `DIAGNOSIS_ENCODER=fake\|remote`, pinned by `DIAGNOSIS_ENCODER_NAME` / `_VERSION`. |
+| `knn.py` | pgvector cosine kNN (HNSW `ix_corpus_image_embedding_hnsw`): approved images of approved problems, same crop and encoder, top 20, `SET LOCAL hnsw.ef_search`. |
+| `decision.py` | DX-003 rule (pure): high = top-1 >= T1 and >= 60 % of the top-10 agree; `replay(scores)` re-derives a stored decision (DX-005). |
+| `thresholds.py` | per-crop thresholds in `diagnosis_threshold`, versioned (`config_version`), audited. |
+| `llm.py` | DX-004 `LlmDiagnosisClient`; `ClaudeDiagnosisClient` (Anthropic SDK, `claude-opus-5`, structured JSON output, refusal / max_tokens / invalid-JSON handling). `DIAGNOSIS_LLM=claude\|fake\|off`. |
+| `pipeline.py` | `decide_case` (encode -> kNN -> decision -> LLM; writes nothing) and `process` (stores the result, provenance, LLM call log, notifications). |
+| `treatment.py` | DX-007/8/9: only `recommendable_skus`, ranked tier > own brand > stock > price, dose / PHI / PPE / safety. |
+| `service.py`, `router.py` | `POST/GET /v1/diagnoses`, review queue, review, thresholds; the `diagnosis` sync entity. |
+| `corpus.py`, `corpus_router.py` | WC-007 corpus manager, approvals, `corpus_version`. |
+| `worker.py` | `diagnosis.requested` handler (attempt counter, retry on an LLM outage, final attempt -> unknown). |
+
+```python
+# Tests never call a provider: DIAGNOSIS_LLM=fake / DIAGNOSIS_ENCODER=fake (tests/conftest.py);
+# a scripted LLM and a fake AsyncAnthropic live in tests/diagnosis/conftest.py.
+from farmerapp.diagnosis.pipeline import Case, decide_case
+
+case = Case(tenant_id=t, images=[(uri, sha, data)], crop=crop)
+verdict = await decide_case(session, services, case)
+verdict.status, verdict.problem, verdict.scores  # nothing is written
+```
+
+- Delivery: `DIAGNOSIS_DELIVERY=inline` (local: the pipeline runs in the request) or `pubsub`
+  (stg / prd: `diagnosis.requested` to the worker). `diagnosis-queue-age` re-delivers stale
+  queued rows.
+- SEC-027 / NF-011: the LLM gets EXIF-stripped JPEGs and crop / district / season / stage /
+  candidates only; every call is in `llm_call_log` (append-only, one year), without image bytes.
+- Seed: `jobs/seed_corpus.py` (public bootstrap corpus with synthetic images, `source =
+  public`; real field images are a human gate). `SMALL`: 3 paddy problems x 8 images.
+- Job: `python -m farmerapp.jobs diagnosis-queue-age --tenant …` (OPS-009: 18 h queue alert,
+  LLM fallback rate > 40 %, re-delivery of stale queued diagnoses).
+- FM-015: `POST/GET /v1/me/deletion-request`, `GET/PATCH /v1/admin/data-requests`
+  (`farmerapp/privacy/`, table `data_request`).
+- Benchmark (DX-002, not in the default run): `FARMERAPP_SLOW=1 uv run pytest -m slow
+  tests/diagnosis/test_knn_benchmark.py --no-cov -s` (results: docs/perf/M6-knn.md).
+- Evaluation: `uv run python ../../ml/eval/evaluate.py --manifest
+  ../../ml/eval/testset/ci/manifest.csv --tenant fcc` (JSON report in `ml/eval/reports/`).
 
