@@ -434,5 +434,62 @@ def diagnosis_queue_age(
         )
 
 
+@cli.command("deliver-notifications")
+def deliver_notifications(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+) -> None:
+    """FA-007: push the due pending notifications to the users' active devices (retries back
+    off per row; PUSH_PROVIDER). Every minute, next to the notify.send worker."""
+    from farmerapp.jobs.field_p1 import run_deliver_notifications
+
+    _setup()
+    for tenant_id, r in asyncio.run(run_deliver_notifications(_tenants(tenant))):
+        typer.echo(
+            f"deliver-notifications: tenant={tenant_id} delivered={r.delivered} "
+            f"no_device={r.no_device} retrying={r.retrying} failed={r.failed}"
+        )
+
+
+@cli.command("process-tracks")
+def process_tracks_command(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+) -> None:
+    """VV-006: (re-)process duty sessions ended in the last 3 days with the configured road
+    snapper (ROAD_SNAPPER; km, stops, gaps). Every 30 minutes."""
+    from farmerapp.jobs.field_p1 import run_process_tracks
+
+    _setup()
+    for r in asyncio.run(run_process_tracks(_tenants(tenant))):
+        typer.echo(
+            f"process-tracks: tenant={r.tenant_id} processed={r.processed} source={r.km_source}"
+        )
+
+
+@cli.command("generate-beat-plans")
+def generate_beat_plans(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+    day: str | None = typer.Option(None, "--date", help="IST day (YYYY-MM-DD); default today."),
+) -> None:
+    """FA-018: today's beat plan for every active field officer (existing plans are kept).
+    Daily at 06:00 IST."""
+    from datetime import date
+
+    from farmerapp.jobs.field_p1 import run_generate_beat_plans
+
+    _setup()
+    when = date.fromisoformat(day) if day else None
+    for r in asyncio.run(run_generate_beat_plans(_tenants(tenant), day=when)):
+        typer.echo(
+            f"generate-beat-plans: tenant={r.tenant_id} date={r.day} officers={r.officers} "
+            f"generated={r.generated}"
+        )
+
+
 def main() -> None:
     cli(prog_name="python -m farmerapp.jobs")

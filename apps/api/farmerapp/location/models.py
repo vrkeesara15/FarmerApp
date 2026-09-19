@@ -111,6 +111,12 @@ class DutySession(Base, BaseColumns):
     start_point: Mapped[Any] = _geo_point()
     end_point: Mapped[Any] = _geo_point()
     km: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)  # VV-006 / FA-023
+    # VV-006 (migration 0030): km before road snapping / jitter filtering (the plain haversine
+    # sum of the kept points), which snapper produced ``km`` (``haversine`` | ``google_roads``)
+    # and when the track was last processed (duty end, or the ``process-tracks`` job).
+    km_raw: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), nullable=True)
+    km_source: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     stops: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb")
     )

@@ -50,9 +50,19 @@ farmerapp/
                   purge-location-points = SPEC 2.6 location retention; auto-end-duty = VV-007;
                   officer-sync-silence = OPS-006); seed_m2.py = M2 rows
   duty/           FA-010 duty start / end service + /v1/duty routes, track.py (km, stops),
-                  auto_end.py (VV-007 auto end + OPS-006 sync silence jobs)
+                  auto_end.py (VV-007 auto end + OPS-006 sync silence jobs), processing.py +
+                  roads.py (VV-006 km / stops / gaps, RoadSnapper port), timeline.py (VV-008
+                  /v1/me/day and gap reasons), models.py (track_gap)
   policies/       FA-011 / VV-010 location policy text (versioned JSON) + acceptance
-  notifications/  notification table (FA-007 groundwork; rows written by the duty jobs)
+  notifications/  FA-007: notification rows (written by many jobs / write paths), push tokens,
+                  PushSender port (FCM HTTP v1 / fake / off), delivery + notify.send handler,
+                  inbox routes, the offline inbox in the sync feed (feed.py)
+  beat/           FA-018 daily beat plans (06:00 job, reasons, officer edits)
+  travel/         FA-023 travel allowance from processed km, expense claims, statement,
+                  TravelClaimSubmitted event (VA-E07 subscribes)
+  performance/    FA-024 /v1/me/performance (the console's officer_profile) + IncentivePort
+  demo_plots/     FA-026 demo plots, stage observations, yield entry
+  meetings/       FA-027 farmer meetings, attendance by OTP or the farmer app's QR
   diagnosis/      M6 diagnosis engine: corpus, encoder, kNN, decision rule, LLM fallback,
                   treatments, review queue (see "Diagnosis engine")
   privacy/        FM-015 / NF-013 data-principal requests (deletion, access, correction)
@@ -1040,3 +1050,38 @@ verdict.status, verdict.problem, verdict.scores  # nothing is written
 - Evaluation: `uv run python ../../ml/eval/evaluate.py --manifest
   ../../ml/eval/testset/ci/manifest.csv --tenant fcc` (JSON report in `ml/eval/reports/`).
 
+## Field P1 (M7: FA-007, VV-006, VV-008, FA-023, FA-018, FA-024, FA-026, FA-027)
+
+Alembic `0030_field_p1` (branch label `field_p1`); contracts for the apps:
+`docs/prs/M7-field-p1-api.md`.
+
+| Area | Where | Notes |
+|---|---|---|
+| Push + inbox (FA-007) | `notifications/` | `POST /v1/devices/me/push-token`, `GET /v1/notifications` (cursor, `unread`), `POST /v1/notifications/{id}/read`, `/read-all`. Rows start `pending`; `notify.send` (worker) and `deliver-notifications` (job) push them with a deep-link `route`. `PUSH_PROVIDER=fcm\|fake\|off` (default off). |
+| Track processing (VV-006) | `duty/processing.py`, `duty/roads.py` | At duty end (filter only) and in `process-tracks` (`ROAD_SNAPPER=google` + `GOOGLE_MAPS_API_KEY`; off by default). Stores `km`, `km_raw`, `km_source`, `stops`, `track_gap` rows. |
+| Day timeline (VV-008) | `duty/timeline.py` | `GET /v1/me/day?date=` = the console replay of the caller + the day's TA; `POST /v1/me/gaps/{gap_id}/reason`. Gap ids are stable (`gap_id`). |
+| Travel (FA-023) | `travel/` | `min(km, ta_daily_km_cap) x ta_rate_per_km_paise`; claims, approval, statement. |
+| Beat plan (FA-018) | `beat/` | `generate-beat-plans` at 06:00 IST; `GET/PUT /v1/me/beat?date=`. |
+| My performance (FA-024) | `performance/` | Same code path as `GET /v1/analytics/officers/{id}`. |
+| Demo plots (FA-026) | `demo_plots/` | `created -> active -> harvested -> reported`. |
+| Meetings (FA-027) | `meetings/` | Geofenced at the village meeting point; OTP (`meeting_attendance`) or QR (`GET /v1/me/attendance-qr`). |
+
+```python
+# Queue a notification from any write path or job (pushed later, listed in the inbox now).
+from farmerapp.notifications.service import notify
+
+notify(session, tenant_id=t, user_id=u, kind="beat_plan_ready", data={"date": "2026-09-21"})
+
+# VA-E07 (another agent) subscribes to claims with the km the processing computed.
+from farmerapp.travel import events
+
+events.bus.subscribe_async(events.TravelClaimSubmitted, handler)
+```
+
+- Sync entities: `notification`, `track_gap`, `beat_plan`, `travel_claim`, `demo_plot`,
+  `demo_observation`, `farmer_meeting`, `meeting_attendance` (`farmerapp/sync/field_p1.py`).
+- Jobs: `deliver-notifications` (every minute), `process-tracks` (every 30 min),
+  `generate-beat-plans` (06:00 IST), each `--tenant <id|slug>`.
+- Tests use `FakePushSender` and fixture routes with a known road distance
+  (`tests/duty/test_processing.py`); a real FCM push and a real Google Maps comparison are
+  human gates.

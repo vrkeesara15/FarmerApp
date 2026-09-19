@@ -29,8 +29,9 @@ from farmerapp.api.errors import NotFoundError
 from farmerapp.auth.models import User
 from farmerapp.db.geo import point_wkt
 from farmerapp.duty.errors import DutyAlreadyActiveError, NoActiveDutyError
+from farmerapp.duty.processing import apply_processing
 from farmerapp.duty.schemas import DutyEndIn, DutyPolicyOut, DutyStartIn, DutyStatusOut
-from farmerapp.duty.track import TrackPoint, summarise
+from farmerapp.duty.track import TrackPoint
 from farmerapp.location import events as location_events
 from farmerapp.location.models import DutyEndReason, DutySession, LocationPoint
 from farmerapp.location.schemas import DutySessionOut
@@ -118,16 +119,16 @@ async def close_session(
     """Set the end fields and the km / stops computed from the points up to ``end_at``."""
     end_at = max(aware(end_at), duty.start_at)
     points = await session_points(session, duty, until=end_at)
-    summary = summarise(points)
     duty.end_at = end_at
     duty.end_reason = str(end_reason)
-    duty.km = summary.km
-    duty.stops = summary.stops
     if end_point is not None:
         duty.end_point = point_wkt(end_point[1], end_point[0])
     elif points:
         last = points[-1]
         duty.end_point = point_wkt(last.lon, last.lat)
+    # VV-006: km (jitter-filtered; road snapping runs later in the process-tracks job),
+    # stops and gaps (track_gap rows) at the end of duty — one update of the session row.
+    summary = await apply_processing(session, duty, points, end=end_at)
     await session.flush()
     await session.refresh(duty)
     log.info(
@@ -137,6 +138,7 @@ async def close_session(
         end_reason=duty.end_reason,
         km=str(summary.km),
         stops=len(summary.stops),
+        gaps=len(summary.gaps),
         points=summary.kept,
     )
     return duty

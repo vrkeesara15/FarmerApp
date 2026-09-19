@@ -20,6 +20,9 @@ sampling.moving_s                   120          VV-001 location sample interval
 sampling.stationary_s               600          VV-001 interval while stationary
 sampling.upload_s                   900          VV-001 batch upload interval
 ta_rate_per_km_paise                300          FA-023 travel allowance per km (Rs 3; assumption)
+ta_daily_km_cap                     150          FA-023 most km paid for one day (assumption)
+beat_daily_target                   10           FA-018 stops on the generated beat plan
+beat_follow_up_days                 14           FA-018 a farmer is due a follow-up after this
 store_manager_max_credit_limit_paise 5000000     ST-007 most a store manager may set (Rs 50,000)
 credit_due_days                     90           FA-022 due date of a credit sale without harvest
 day_close_variance_threshold_paise  50000        ST-006 |variance| above it flags auditors
@@ -78,6 +81,8 @@ DEFAULT_STORE_MANAGER_MAX_CREDIT_LIMIT_PAISE = 5_000_000
 DEFAULT_CREDIT_DUE_DAYS = 90
 #: FA-023 assumption until the owner sets it: Rs 3 per km (two-wheeler rate).
 DEFAULT_TA_RATE_PER_KM_PAISE = 300
+#: FA-023 assumption until the owner sets it: at most 150 km of travel allowance a day.
+DEFAULT_TA_DAILY_KM_CAP = 150
 #: NF-008 launch languages (SPEC 0.3): Telugu, Kannada, Hindi, Marathi, English.
 Language = Literal["en", "te", "kn", "hi", "mr"]
 SUPPORTED_LANGUAGES: tuple[Language, ...] = ("en", "te", "kn", "hi", "mr")
@@ -96,6 +101,9 @@ SETTINGS_KEYS: Mapping[str, str] = {
     "location_policy_version": "FA-011 / VV-010 employee location policy version to accept",
     "sampling": "VV-001 sampling intervals: moving_s, stationary_s, upload_s",
     "ta_rate_per_km_paise": "FA-023 travel allowance rate per km, in paise",
+    "ta_daily_km_cap": "FA-023 most km paid as travel allowance for one day",
+    "beat_daily_target": "FA-018 how many stops the daily beat plan suggests",
+    "beat_follow_up_days": "FA-018 days after the last visit a farmer is due a follow-up",
     "store_manager_max_credit_limit_paise": "ST-007 store manager's maximum credit limit",
     "credit_due_days": "FA-022 due days of a credit sale without a known harvest",
     "day_close_variance_threshold_paise": "ST-006 cash variance that alerts auditors",
@@ -161,6 +169,9 @@ class TenantSettings(BaseModel):
     )
     sampling: SamplingSettings = Field(default_factory=SamplingSettings)
     ta_rate_per_km_paise: int = Field(default=DEFAULT_TA_RATE_PER_KM_PAISE, ge=0, le=10_000)
+    ta_daily_km_cap: int = Field(default=DEFAULT_TA_DAILY_KM_CAP, ge=1, le=1000)
+    beat_daily_target: int = Field(default=10, ge=1, le=50)
+    beat_follow_up_days: int = Field(default=14, ge=1, le=180)
     store_manager_max_credit_limit_paise: int = Field(
         default=DEFAULT_STORE_MANAGER_MAX_CREDIT_LIMIT_PAISE, ge=0, le=100_000_000_00
     )
@@ -282,6 +293,7 @@ __all__ = [
     "DEFAULT_CREDIT_DUE_DAYS",
     "DEFAULT_LOCATION_POLICY_VERSION",
     "DEFAULT_STORE_MANAGER_MAX_CREDIT_LIMIT_PAISE",
+    "DEFAULT_TA_DAILY_KM_CAP",
     "DEFAULT_TA_RATE_PER_KM_PAISE",
     "PUBLIC_KEYS",
     "SETTINGS_KEYS",

@@ -27,6 +27,14 @@ Entity = Literal[
     "khata_entry",
     "credit_approval_request",
     "diagnosis",
+    "notification",
+    "track_gap",
+    "beat_plan",
+    "travel_claim",
+    "demo_plot",
+    "demo_observation",
+    "farmer_meeting",
+    "meeting_attendance",
 ]
 Action = Literal["create", "update", "delete"]
 ResultStatus = Literal["applied", "duplicate", "conflict", "rejected"]

@@ -897,6 +897,11 @@ async def test_app_push_confirms_from_the_farmer_app(
     assert event.visit_id == uuid.UUID(body["id"]) and event.confirmation_id == uuid.UUID(
         resp.json()["confirmation"]["id"]
     )
+    # FA-007: the prompt reaches the farmer app as a push notification (inbox + deep link).
+    inbox = await client.get("/v1/notifications", headers=flow.mint(flow.farmer_user))
+    [prompt] = [n for n in inbox.json()["items"] if n["kind"] == "visit_confirm_request"]
+    assert prompt["route"] == f"/visits/{body['id']}/confirm"
+    assert prompt["data"]["token"] == event.token
     # The officer cannot complete a push confirmation, nor can another farmer.
     resp = await client.post(
         f"/v1/visits/{body['id']}/confirm",

@@ -344,6 +344,31 @@ class Settings(BaseSettings):
     )
     payment_qr_ttl_seconds: int = Field(default=900, description="UPI QR / link validity.")
 
+    # --- M7 field P1: push (FA-007), road snapping (VV-006), meeting QR (FA-027) -------
+    push_provider: Literal["fcm", "fake", "off"] = Field(
+        default="off",
+        description="FA-007 push delivery: 'fcm' = FCM HTTP v1 with the runtime service "
+        "account's token (no server key), 'fake' = in-memory (tests), 'off' = nothing is "
+        "pushed (rows stay pending; the in-app inbox still lists them).",
+    )
+    fcm_project: str | None = Field(
+        default=None, description="Firebase project id of FCM (default: GCP_PROJECT)."
+    )
+    notify_max_attempts: int = Field(
+        default=5, ge=1, le=20, description="FA-007 push attempts before a row is 'failed'."
+    )
+    road_snapper: Literal["off", "google"] = Field(
+        default="off",
+        description="VV-006: 'google' snaps tracks with the Roads API in the process-tracks "
+        "job (needs GOOGLE_MAPS_API_KEY from Secret Manager); 'off' = haversine + filters.",
+    )
+    google_maps_api_key: str | None = Field(
+        default=None, description="VV-006 Roads API key (Secret Manager; never in code)."
+    )
+    meeting_qr_ttl_seconds: int = Field(
+        default=300, ge=30, le=3600, description="FA-027 farmer attendance QR validity."
+    )
+
     # --- Auth: OTP (FA-001, SEC-021) --------------------------------------------
     otp_provider: Literal["mockserver", "fake"] = Field(
         default="mockserver",
@@ -404,6 +429,8 @@ class Settings(BaseSettings):
         "pii_kms_key_name",
         "db_instance_connection_name",
         "db_user",
+        "google_maps_api_key",
+        "fcm_project",
         mode="before",
     )
     @classmethod
@@ -463,6 +490,8 @@ class Settings(BaseSettings):
             problems.append("DIAGNOSIS_ENCODER=remote is required in prd (DX-002)")
         if self.diagnosis_llm == "fake":
             problems.append("DIAGNOSIS_LLM=fake is not allowed in prd")
+        if self.push_provider == "fake":
+            problems.append("PUSH_PROVIDER=fake is not allowed in prd")
         problems.extend(self._prd_database_problems(service))
         if problems:
             raise ValueError("; ".join(problems))

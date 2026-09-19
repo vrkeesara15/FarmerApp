@@ -65,8 +65,15 @@ async def on_location_batch(message: PubSubMessage) -> None:
 
 
 async def on_notify_send(message: PubSubMessage) -> None:
-    """M2+: SMS / WhatsApp / push delivery."""
-    await _todo(Topic.NOTIFY_SEND)
+    """FA-007: push the pending ``notification`` rows of a tenant (or one row) to the users'
+    active devices (``farmerapp.notifications.delivery``); retries back off per row."""
+    from farmerapp.notifications.delivery import handle_notify_message
+    from farmerapp.notifications.service import worker_push_sender
+    from farmerapp.settings import get_settings
+
+    await handle_notify_message(
+        message, sender=worker_push_sender(), max_attempts=get_settings().notify_max_attempts
+    )
 
 
 HANDLERS: dict[Topic, Handler] = {

@@ -143,7 +143,8 @@ async def test_worker_logs_with_the_publishers_trace_id(caplog: pytest.LogCaptur
     envelope = {
         "message": {
             "data": base64.b64encode(json.dumps({}).encode()).decode(),
-            "attributes": {"topic": "notify.send", "traceparent": f"00-{TRACE}-{PARENT}-01"},
+            # order.created still has the no-op handler (notify.send delivers pushes, FA-007).
+            "attributes": {"topic": "order.created", "traceparent": f"00-{TRACE}-{PARENT}-01"},
             "messageId": "m1",
         },
         "subscription": "",

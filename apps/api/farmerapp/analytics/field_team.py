@@ -229,6 +229,7 @@ async def officer_profile(
         )
         .limit(1)
     )
+    sales = await facts.sales_aggregate(session, one, start, end, [])
     store_name = (
         await session.scalar(select(Store.name).where(Store.id == officer.store_id))
         if officer.store_id
@@ -260,6 +261,8 @@ async def officer_profile(
             )
             for v, name in recent
         ],
+        sales_net_paise=sum(r.net_paise for r in sales),
+        sales_orders=sum(r.orders for r in sales),
     )
 
 

@@ -142,6 +142,11 @@ two URLs are used exactly as before.
 | `ANTHROPIC_API_KEY` | SM `anthropic-api-key` | Anthropic key (read by the SDK) | W | yes |
 | `DIAGNOSIS_EMBED_TIMEOUT_S` / `DIAGNOSIS_LLM_MAX_TOKENS` / `DIAGNOSIS_LLM_EFFORT` / `DIAGNOSIS_KNN_K` / `DIAGNOSIS_HNSW_EF_SEARCH` / `DIAGNOSIS_MAX_ATTEMPTS` | default | 20 / 16000 / `medium` / 20 / 40 / 5 | A W J | no |
 | `PLAY_INTEGRITY_MODE` / `PLAY_INTEGRITY_PACKAGE_NAMES` / `PLAY_INTEGRITY_TIMEOUT_S` | default | `off` / both app ids / 2.0 (`google` is a human gate, SEC-024) | A | no |
+| `PUSH_PROVIDER` | default (M7; TF wiring pending) | `off`; `fcm` once the Firebase project is set up (human gate; prd guard refuses `fake`) — FCM HTTP v1 with the runtime SA's OAuth token (role `cloudmessaging.messages.create`), no server key | W J | no |
+| `FCM_PROJECT` / `NOTIFY_MAX_ATTEMPTS` | default | `GCP_PROJECT` / 5 | W J | no |
+| `ROAD_SNAPPER` | default (M7) | `off` (haversine + filters); `google` = Roads API in the `process-tracks` job | J | no |
+| `GOOGLE_MAPS_API_KEY` | SM (to create when `ROAD_SNAPPER=google`; human gate) | Maps Platform key restricted to the Roads API | J | no |
+| `MEETING_QR_TTL_SECONDS` | default | 300 (FA-027 farmer attendance QR) | A | no |
 
 ## Auth and API edge (api)
 

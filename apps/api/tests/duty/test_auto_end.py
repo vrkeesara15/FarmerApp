@@ -359,9 +359,20 @@ async def test_sync_silence_without_a_cluster_head_records_the_silence_only(
 async def test_job_wrappers_run_per_tenant_in_their_own_session(accepted: DutyCtx) -> None:
     """The wrappers open a committed session; the test's uncommitted rows are invisible to
     them, so they see no open sessions — the point is the tenant binding and actor scope."""
+    from farmerapp.db import session as session_mod
+
+    # The cached engine may still be the one built at import from the local .env (the dev
+    # database, which may lag the migrations): use the test database, then reset.
+    session_mod.get_engine.cache_clear()
+    session_mod.get_session_factory.cache_clear()
     tenants = [accepted.tenant_id, accepted.world.b.tenant.id]
-    assert await run_auto_end(tenants, now=datetime(2026, 9, 21, 15, 0, tzinfo=UTC)) == []
-    assert await run_sync_silence(tenants, now=datetime(2026, 9, 21, 15, 0, tzinfo=UTC)) == []
+    try:
+        assert await run_auto_end(tenants, now=datetime(2026, 9, 21, 15, 0, tzinfo=UTC)) == []
+        assert await run_sync_silence(tenants, now=datetime(2026, 9, 21, 15, 0, tzinfo=UTC)) == []
+    finally:
+        await session_mod.get_engine().dispose()
+        session_mod.get_engine.cache_clear()
+        session_mod.get_session_factory.cache_clear()
 
 
 async def test_location_points_stay_off_duty_free_after_every_auto_end(

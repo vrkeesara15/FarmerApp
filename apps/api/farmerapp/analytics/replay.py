@@ -8,8 +8,8 @@ For one officer and one IST day:
 * ``stops`` — >= 5 minutes within 100 m (``farmerapp.duty.track.summarise``);
 * ``gaps`` — more than 30 minutes without a kept point while on duty (from the session start,
   between points, and up to the session end; an open session is measured up to now or the
-  end of the day). ``reason`` is the officer's explanation once VV-008 stores one; ``null``
-  until then;
+  end of the day). Each gap has a stable ``id`` (``farmerapp.duty.models.gap_id``) and
+  carries the officer's VV-008 ``reason`` / ``note`` once given (``null`` until then);
 * ``visits`` — pins with status colour (verified green, partial amber, unverified red, open
   grey), score, VV-004 components and the ProofChecklist rows;
 * ``timeline`` — duty start / end, check-ins / check-outs, stops and gaps sorted by time;
@@ -48,6 +48,7 @@ from farmerapp.analytics.schemas import (
 )
 from farmerapp.auth.models import User
 from farmerapp.db.geo import haversine_m
+from farmerapp.duty.models import TrackGap, gap_id
 from farmerapp.duty.track import MAX_ACCURACY_M, MAX_SPEED_MPS, TrackPoint, summarise
 from farmerapp.farmers.models import Farmer
 from farmerapp.location.models import DutySession, LocationPoint
@@ -136,6 +137,24 @@ def proof_items(components: dict[str, Any] | None) -> list[ProofItemOut]:
     ]
 
 
+async def attach_gap_reasons(
+    session: AsyncSession, tenant_id: uuid.UUID, gaps: Sequence[GapOut]
+) -> None:
+    """VV-008: the officer's stored reason / note of each gap (by its stable id)."""
+    ids = [g.id for g in gaps if g.id is not None]
+    if not ids:
+        return
+    rows = await session.execute(
+        select(TrackGap.id, TrackGap.reason, TrackGap.note).where(
+            TrackGap.tenant_id == tenant_id, TrackGap.id.in_(ids), TrackGap.deleted_at.is_(None)
+        )
+    )
+    found = {r[0]: (r[1], r[2]) for r in rows}
+    for gap in gaps:
+        if gap.id in found:
+            gap.reason, gap.note = found[gap.id]
+
+
 async def day_replay(
     session: AsyncSession,
     officer: User,
@@ -201,6 +220,9 @@ async def day_replay(
         lines.extend(split_lines(kept, spans))
         summary = summarise(TrackPoint(p.ts, p.lat, p.lon, p.accuracy_m) for p in kept)
         session_km = summary.km if kept else (ds.km or Decimal(0))
+        whole_day = ds.end_at is not None and ds.start_at >= day_start and ds.end_at < day_end
+        if ds.processed_at is not None and ds.km is not None and whole_day:
+            session_km = ds.km  # VV-006: the processed (filtered / road-snapped) km
         km += session_km
         for s in summary.stops:
             stop = StopOut(
@@ -224,7 +246,8 @@ async def day_replay(
                 end=b,
                 duration_s=int((b - a).total_seconds()),
                 duty_session_id=ds.id,
-                reason=None,  # TODO(VV-008): the officer's gap reason once the table exists
+                reason=None,  # VV-008: filled from track_gap below
+                id=gap_id(ds.id, a),
             )
             gaps.append(gap)
             timeline.append(
@@ -253,6 +276,8 @@ async def day_replay(
                     detail={"end_reason": ds.end_reason},
                 )
             )
+
+    await attach_gap_reasons(session, tid, gaps)
 
     photos = (
         select(func.count())
@@ -328,4 +353,12 @@ async def day_replay(
     )
 
 
-__all__ = ["GAP_MIN", "day_replay", "find_gaps", "proof_items", "split_lines", "usable"]
+__all__ = [
+    "GAP_MIN",
+    "attach_gap_reasons",
+    "day_replay",
+    "find_gaps",
+    "proof_items",
+    "split_lines",
+    "usable",
+]
