@@ -94,3 +94,5 @@ The push subscription existed with a DLQ, but it could not have delivered anythi
   (`DB_HOST`, `DB_NAME`, `ENV`) are not what `Settings` reads (`DATABASE_URL`,
   `MIGRATION_DATABASE_URL`, `APP_ENV`), and `OTEL_EXPORTER` / `BLOB_STORE` /
   `PII_*` are not set on the services. This needs its own infra change before the first stg deploy.
+  **Resolved** on `chore/deploy-config-alignment` (docs/prs/deploy-config-alignment.md,
+  docs/deploy/configuration.md).

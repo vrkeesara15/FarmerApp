@@ -33,6 +33,86 @@ DEV_RAZORPAY_WEBHOOK_HMAC_KEY = "test_webhook_secret"
 DEV_PII_LOCAL_KEK = "ZGV2LW9ubHktcGlpLWtlay1ub3QtYS1zZWNyZXQhISE="
 DEV_PII_HASH_PEPPER = "dev-only-pii-hash-pepper-not-a-secret"
 
+#: SEC-011: the Cloud SQL IAM user of the ``migrate`` job (service account
+#: ``farmerapp-migrate@<project>.iam.gserviceaccount.com``, infra/modules/iam). The only
+#: identity granted ``farmerapp_migrate``; no other process may log in as it.
+MIGRATE_DB_USER_PREFIX = "farmerapp-migrate@"
+
+# --- Cloud deployment contract ---------------------------------------------------------
+# Environment variable names every Cloud Run service / job must set (dev, stg and prd alike),
+# by SERVICE_NAME. Terraform sets exactly these (infra/envs/*/main.tf, checked by
+# preconditions in modules/run_service and modules/run_job) and tests/deploy/test_terraform_env.py
+# fails when the two drift apart. docs/deploy/configuration.md has the full table.
+_CLOUD_BASE_ENV = frozenset(
+    {
+        "APP_ENV",
+        "SERVICE_NAME",
+        "LOG_JSON",
+        "GCP_PROJECT",
+        "OTEL_EXPORTER",
+        "DB_IAM_AUTH",
+        "DB_INSTANCE_CONNECTION_NAME",
+        "DB_IP_TYPE",
+        "DB_USER",
+        "DB_NAME",
+    }
+)
+_CLOUD_RUNTIME_ENV = _CLOUD_BASE_ENV | {
+    "BLOB_STORE",
+    "PHOTOS_BUCKET",
+    "EXPORTS_BUCKET",
+    "PII_KEK_BACKEND",
+    "PII_KMS_KEY_NAME",
+    "PII_HASH_PEPPER",
+    "DIAGNOSIS_ENCODER",
+    "DIAGNOSIS_ENCODER_NAME",
+    "DIAGNOSIS_ENCODER_VERSION",
+    "DIAGNOSIS_EMBED_URL",
+    "DIAGNOSIS_LLM",
+    "DIAGNOSIS_LLM_MODEL",
+    "DIAGNOSIS_DELIVERY",
+    "PAYMENT_PROVIDER",
+    "PAYMENT_WEBHOOK_DELIVERY",
+    "RAZORPAY_BASE_URL",
+}
+_RAZORPAY_SECRETS = frozenset({"RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET"})
+CLOUD_REQUIRED_ENV: dict[str, frozenset[str]] = {
+    "api": _CLOUD_RUNTIME_ENV
+    | _RAZORPAY_SECRETS
+    | {
+        "JWT_SIGNING_KEY",
+        "OTP_PEPPER",
+        "OTP_PROVIDER",
+        "SMS_PROVIDER_URL",
+        "WHATSAPP_PROVIDER_URL",
+        "CORS_ORIGINS",
+        "GCS_SIGNING_SERVICE_ACCOUNT",
+    },
+    # ANTHROPIC_API_KEY is read by the Anthropic SDK (DX-004 fallback runs in the worker).
+    "worker": _CLOUD_RUNTIME_ENV | _RAZORPAY_SECRETS | {"ANTHROPIC_API_KEY"},
+    "jobs": _CLOUD_RUNTIME_ENV,
+    "migrate": _CLOUD_BASE_ENV,
+}
+#: Extra names for single Cloud Run jobs (``python -m farmerapp.jobs <command>``).
+CLOUD_REQUIRED_JOB_ENV: dict[str, frozenset[str]] = {
+    "reconcile-payments": frozenset({"RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET"}),
+}
+#: Local / dev-only names no Cloud Run service or job may set (emulators, mockserver, local KEK).
+CLOUD_FORBIDDEN_ENV = frozenset(
+    {
+        "PUBSUB_EMULATOR_HOST",
+        "STORAGE_EMULATOR_HOST",
+        "BLOB_LOCAL_DIR",
+        "PII_LOCAL_KEK",
+        "DATABASE_URL",
+        "MIGRATION_DATABASE_URL",
+        "MOCK_RAZORPAY_WEBHOOK_SECRET",
+        "MOCK_RAZORPAY_KEY_ID",
+    }
+)
+#: Additionally forbidden in stg / prd (allowed, but not set by Terraform, in dev).
+CLOUD_FORBIDDEN_ENV_STG_PRD = CLOUD_FORBIDDEN_ENV | {"OTP_DEV_CODE"}
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -44,7 +124,11 @@ class Settings(BaseSettings):
 
     # --- Runtime -----------------------------------------------------------
     app_env: Environment = Field(default="local", description="Deployment environment.")
-    service_name: str = Field(default="api", description="api | worker | jobs; used in logs.")
+    service_name: str = Field(
+        default="api",
+        description="api | worker | jobs | migrate; used in logs and to scope the prd guard "
+        "rails to what the process uses (unknown names get the api's full checks).",
+    )
     log_level: str = Field(default="INFO")
     log_json: bool = Field(default=True, description="JSON logs (Cloud Logging) vs console.")
 
@@ -68,6 +152,26 @@ class Settings(BaseSettings):
     migration_database_url: str = Field(
         default="postgresql+asyncpg://farmerapp:farmerapp@localhost:5432/farmerapp",
         description="Alembic URL: the owner/migrate role (DDL). Only the migrate job needs it.",
+    )
+    # Cloud SQL IAM database authentication (SEC-011; farmerapp.db.connect). When true the
+    # two URLs above are ignored: the Cloud SQL Python Connector logs in as DB_USER with an
+    # IAM token of the runtime service account.
+    db_iam_auth: bool = Field(
+        default=False,
+        description="Connect through the Cloud SQL Python Connector with IAM auth (Cloud Run); "
+        "false = DATABASE_URL / MIGRATION_DATABASE_URL (local, CI).",
+    )
+    db_instance_connection_name: str | None = Field(
+        default=None, description="Cloud SQL instance connection name project:region:instance."
+    )
+    db_user: str | None = Field(
+        default=None,
+        description="IAM database user: the runtime service account email without "
+        "'.gserviceaccount.com' (farmerapp-api@<project>.iam).",
+    )
+    db_name: str = Field(default="farmerapp", description="Database name (IAM mode).")
+    db_ip_type: Literal["private", "public", "psc"] = Field(
+        default="private", description="Cloud SQL address the connector uses (private IP)."
     )
     db_pool_size: int = Field(default=5)
     db_max_overflow: int = Field(default=10)
@@ -294,48 +398,90 @@ class Settings(BaseSettings):
     def is_local(self) -> bool:
         return self.app_env in ("local", "test")
 
-    @field_validator("otp_dev_code", "pii_local_kek", "pii_kms_key_name", mode="before")
+    @field_validator(
+        "otp_dev_code",
+        "pii_local_kek",
+        "pii_kms_key_name",
+        "db_instance_connection_name",
+        "db_user",
+        mode="before",
+    )
     @classmethod
     def _empty_is_none(cls, value: object) -> object:
         return None if value == "" else value
 
     @model_validator(mode="after")
     def _prd_guard_rails(self) -> Settings:
-        """Refuse to start in production with development-only auth settings."""
+        """Refuse to start in production with development-only settings.
+
+        Scoped by ``SERVICE_NAME`` to what the process uses, so the ``migrate`` job needs no
+        application secret and the worker no JWT key (least privilege, SEC-013); an unknown
+        service name gets every check.
+        """
         if self.app_env != "prd":
             return self
+        service = self.service_name if self.service_name in CLOUD_REQUIRED_ENV else "api"
+        needs = CLOUD_REQUIRED_ENV[service]
         problems: list[str] = []
         if self.otp_dev_code is not None:
             problems.append("OTP_DEV_CODE must be unset in prd")
-        if self.jwt_signing_key == DEV_JWT_SIGNING_KEY or len(self.jwt_signing_key) < 32:
+        if "JWT_SIGNING_KEY" in needs and (
+            self.jwt_signing_key == DEV_JWT_SIGNING_KEY or len(self.jwt_signing_key) < 32
+        ):
             problems.append("JWT_SIGNING_KEY must be a strong secret (>= 32 chars) in prd")
-        if self.otp_pepper == DEV_OTP_PEPPER or len(self.otp_pepper) < 32:
+        if "OTP_PEPPER" in needs and (
+            self.otp_pepper == DEV_OTP_PEPPER or len(self.otp_pepper) < 32
+        ):
             problems.append("OTP_PEPPER must be a strong secret (>= 32 chars) in prd")
         if self.otp_provider == "fake":
             problems.append("OTP_PROVIDER=fake is not allowed in prd")
         if self.payment_provider == "fake":
             problems.append("PAYMENT_PROVIDER=fake is not allowed in prd")
-        if self.razorpay_webhook_secret in ("", DEV_RAZORPAY_WEBHOOK_HMAC_KEY):
+        if "RAZORPAY_WEBHOOK_SECRET" in needs and self.razorpay_webhook_secret in (
+            "",
+            DEV_RAZORPAY_WEBHOOK_HMAC_KEY,
+        ):
             problems.append("RAZORPAY_WEBHOOK_SECRET must be set from Secret Manager in prd")
-        if self.razorpay_key_secret in ("", DEV_RAZORPAY_API_KEY_PLACEHOLDER):
+        if "RAZORPAY_KEY_SECRET" in needs and self.razorpay_key_secret in (
+            "",
+            DEV_RAZORPAY_API_KEY_PLACEHOLDER,
+        ):
             problems.append("RAZORPAY_KEY_SECRET must be set from Secret Manager in prd")
-        if self.pii_kek_backend != "kms" or not self.pii_kms_key_name:
+        if "PII_KMS_KEY_NAME" in needs and (
+            self.pii_kek_backend != "kms" or not self.pii_kms_key_name
+        ):
             problems.append("PII_KEK_BACKEND=kms with PII_KMS_KEY_NAME is required in prd")
         if self.pii_local_kek:
             problems.append("PII_LOCAL_KEK must be unset in prd (Cloud KMS wraps data keys)")
-        if self.pii_hash_pepper == DEV_PII_HASH_PEPPER or len(self.pii_hash_pepper) < 32:
+        if "PII_HASH_PEPPER" in needs and (
+            self.pii_hash_pepper == DEV_PII_HASH_PEPPER or len(self.pii_hash_pepper) < 32
+        ):
             problems.append("PII_HASH_PEPPER must be a strong secret (>= 32 chars) in prd")
-        if self.blob_store != "gcs":
+        if "BLOB_STORE" in needs and self.blob_store != "gcs":
             problems.append("BLOB_STORE=gcs is required in prd (SEC-016 signed URLs)")
-        if self.diagnosis_encoder != "remote":
+        if "DIAGNOSIS_ENCODER" in needs and self.diagnosis_encoder != "remote":
             problems.append("DIAGNOSIS_ENCODER=remote is required in prd (DX-002)")
         if self.diagnosis_llm == "fake":
             problems.append("DIAGNOSIS_LLM=fake is not allowed in prd")
-        if self.migration_database_url == self.database_url:
-            problems.append("MIGRATION_DATABASE_URL must use a different role than DATABASE_URL")
+        problems.extend(self._prd_database_problems(service))
         if problems:
             raise ValueError("; ".join(problems))
         return self
+
+    def _prd_database_problems(self, service: str) -> list[str]:
+        """SEC-011: the runtime and the migrations never share a database identity."""
+        if not self.db_iam_auth:
+            if self.migration_database_url == self.database_url:
+                return ["MIGRATION_DATABASE_URL must use a different role than DATABASE_URL"]
+            return []
+        if not self.db_instance_connection_name or not self.db_user:
+            return ["DB_IAM_AUTH=true needs DB_INSTANCE_CONNECTION_NAME and DB_USER in prd"]
+        is_migrate_user = self.db_user.startswith(MIGRATE_DB_USER_PREFIX)
+        if service == "migrate" and not is_migrate_user:
+            return [f"the migrate job must log in as {MIGRATE_DB_USER_PREFIX}… (SEC-011)"]
+        if service != "migrate" and is_migrate_user:
+            return [f"DB_USER {MIGRATE_DB_USER_PREFIX}… is reserved for the migrate job (SEC-011)"]
+        return []
 
 
 @lru_cache(maxsize=1)

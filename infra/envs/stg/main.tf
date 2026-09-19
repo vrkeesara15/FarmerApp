@@ -22,7 +22,8 @@ locals {
     "bigquery.googleapis.com",
     "datastream.googleapis.com",
     "storage.googleapis.com",
-    "iap.googleapis.com", # SEC-015 console IAP toggle (P1)
+    "iap.googleapis.com",      # SEC-015 console IAP toggle (P1)
+    "cloudkms.googleapis.com", # SEC-026 PII key-encryption key
   ]
 
   topics = [
@@ -35,40 +36,208 @@ locals {
     "notify.send",
   ]
 
-  # SEC-013: secret id → members that may read it. Values are added by an admin.
-  secrets = {
-    otp-provider            = ["serviceAccount:${module.iam.emails.api}", "serviceAccount:${module.iam.emails.worker}"]
-    razorpay-key-id         = ["serviceAccount:${module.iam.emails.api}", "serviceAccount:${module.iam.emails.worker}", "serviceAccount:${module.iam.emails.jobs}"]
-    razorpay-key-secret     = ["serviceAccount:${module.iam.emails.api}", "serviceAccount:${module.iam.emails.worker}", "serviceAccount:${module.iam.emails.jobs}"]
-    razorpay-webhook-secret = ["serviceAccount:${module.iam.emails.api}", "serviceAccount:${module.iam.emails.worker}"]
-    # DX-004 LLM fallback (Claude). Worker only: in stg / prd the diagnosis pipeline runs in
-    # the worker (DIAGNOSIS_DELIVERY=pubsub); the api never calls the LLM there.
-    anthropic-api-key = ["serviceAccount:${module.iam.emails.worker}"]
-    jwt-signing-key   = ["serviceAccount:${module.iam.emails.api}"]
+  # ---------------------------------------------------------------------------------------
+  # App settings of api / worker / jobs / migrate (apps/api/farmerapp/settings.py). The full
+  # table (name, source, per-env value, who needs it) is docs/deploy/configuration.md. Names
+  # here must be exactly what Settings reads: each service's module checks its env against
+  # local.required_env (preconditions in modules/run_service and modules/run_job), and
+  # apps/api/tests/deploy/test_terraform_env.py compares these maps with settings.py
+  # (CLOUD_REQUIRED_ENV) so the two cannot drift apart again.
+  # ---------------------------------------------------------------------------------------
+
+  # SEC-011: Cloud SQL IAM database users = service account email minus the domain suffix.
+  db_users = {
+    for svc in ["api", "worker", "jobs", "migrate"] :
+    svc => trimsuffix(module.iam.emails[svc], ".gserviceaccount.com")
   }
 
-  db_env = {
-    DB_HOST     = module.sql.private_ip
-    DB_NAME     = module.sql.database_name
-    DB_IAM_AUTH = "true"
-    ENV         = var.env
-    GCP_PROJECT = var.project_id
-    GCP_REGION  = var.region
+  # Plain env layers; local.env_layers lists which layers each process gets (merged in order).
+  env_parts = {
+    # Every process that loads Settings, the migrate job included.
+    base = {
+      APP_ENV           = var.env
+      GCP_PROJECT       = var.project_id
+      LOG_JSON          = "true"
+      LOG_LEVEL         = var.log_level
+      OTEL_EXPORTER     = "gcp" # NF-014 Cloud Trace (roles/cloudtrace.agent on every SA)
+      OTEL_SAMPLE_RATIO = tostring(var.otel_sample_ratio)
+      # SEC-011: Cloud SQL Python Connector, private IP, IAM login as DB_USER (no password).
+      DB_IAM_AUTH                 = "true"
+      DB_INSTANCE_CONNECTION_NAME = module.sql.connection_name
+      DB_IP_TYPE                  = "private"
+      DB_NAME                     = module.sql.database_name
+    }
+    # api, worker and jobs: blobs, PII cipher, payments.
+    runtime = {
+      BLOB_STORE     = "gcs" # SEC-016 V4 signed URLs through IAM signBlob
+      PHOTOS_BUCKET  = module.storage.bucket_names.photos
+      EXPORTS_BUCKET = module.storage.bucket_names.exports
+      # SEC-026: per-tenant data keys wrapped by Cloud KMS (the pepper is a secret below).
+      PII_KEK_BACKEND  = "kms"
+      PII_KMS_KEY_NAME = module.kms.pii_key_name
+      # FA-021 / SEC-023: Razorpay (test-mode keys outside prd); verified webhooks are applied
+      # by the worker (payment.webhook push subscription).
+      PAYMENT_PROVIDER         = "razorpay"
+      PAYMENT_WEBHOOK_DELIVERY = "pubsub"
+      RAZORPAY_BASE_URL        = var.razorpay_base_url
+    }
+    # M6 diagnosis engine (the prd guard rail refuses DIAGNOSIS_ENCODER=fake). The api (corpus
+    # uploads, WC-007) and the worker (diagnoses) call `embed` with an OIDC token.
+    diagnosis = {
+      DIAGNOSIS_ENCODER         = "remote"
+      DIAGNOSIS_ENCODER_NAME    = var.diagnosis_encoder_name
+      DIAGNOSIS_ENCODER_VERSION = var.diagnosis_encoder_version
+      DIAGNOSIS_EMBED_URL       = module.embed.uri
+      DIAGNOSIS_LLM             = var.diagnosis_llm
+      DIAGNOSIS_LLM_MODEL       = var.diagnosis_llm_model
+      DIAGNOSIS_DELIVERY        = "pubsub"
+    }
+    api = {
+      SERVICE_NAME = "api"
+      DB_USER      = local.db_users.api
+      # OTP over the generic HTTP adapter; the gateway URLs are secrets (they may embed the
+      # gateway's auth key). OTP_DEV_CODE is never set by Terraform.
+      OTP_PROVIDER = "mockserver"
+      CORS_ORIGINS = jsonencode(["https://console.${var.domain}"])
+      # SEC-016: signs V4 URLs as itself (Token Creator on itself, below).
+      GCS_SIGNING_SERVICE_ACCOUNT = module.iam.emails.api
+    }
+    worker = {
+      SERVICE_NAME = "worker"
+      DB_USER      = local.db_users.worker
+    }
+    jobs = {
+      SERVICE_NAME = "jobs"
+      DB_USER      = local.db_users.jobs
+    }
+    migrate = {
+      SERVICE_NAME = "migrate"
+      DB_USER      = local.db_users.migrate # SEC-011: the only farmerapp_migrate member
+    }
+  }
+  env_layers = {
+    api     = ["base", "runtime", "diagnosis", "api"]
+    worker  = ["base", "runtime", "diagnosis", "worker"]
+    jobs    = ["base", "runtime", "diagnosis", "jobs"]
+    migrate = ["base", "migrate"]
+  }
+  service_env = {
+    for svc, layers in local.env_layers : svc => merge([for layer in layers : local.env_parts[layer]]...)
   }
 
-  # M6 diagnosis engine settings (apps/api/farmerapp/settings.py, .env.example). Every
-  # process that loads Settings gets them (the prd guard rail refuses DIAGNOSIS_ENCODER=fake).
-  # DIAGNOSIS_EMBED_URL = the internal `embed` service; the api (corpus uploads, WC-007) and
-  # the worker (diagnoses) call it with an OIDC token and are its only invokers.
-  diagnosis_env = {
-    DIAGNOSIS_ENCODER         = "remote"
-    DIAGNOSIS_ENCODER_NAME    = var.diagnosis_encoder_name
-    DIAGNOSIS_ENCODER_VERSION = var.diagnosis_encoder_version
-    DIAGNOSIS_EMBED_URL       = module.embed.uri
-    DIAGNOSIS_LLM             = var.diagnosis_llm
-    DIAGNOSIS_LLM_MODEL       = var.diagnosis_llm_model
-    DIAGNOSIS_DELIVERY        = "pubsub"
+  # Env var name -> Secret Manager secret id, per process (mounted as `latest`). Accessors
+  # of every secret are derived from these maps (local.secrets), so a process can read
+  # exactly the secrets it mounts.
+  secret_env = {
+    api = {
+      JWT_SIGNING_KEY         = "jwt-signing-key"
+      OTP_PEPPER              = "otp-pepper"
+      PII_HASH_PEPPER         = "pii-hash-pepper"
+      SMS_PROVIDER_URL        = "otp-sms-provider-url"
+      WHATSAPP_PROVIDER_URL   = "otp-whatsapp-provider-url"
+      RAZORPAY_KEY_ID         = "razorpay-key-id"
+      RAZORPAY_KEY_SECRET     = "razorpay-key-secret"
+      RAZORPAY_WEBHOOK_SECRET = "razorpay-webhook-secret"
+    }
+    worker = {
+      PII_HASH_PEPPER         = "pii-hash-pepper"
+      RAZORPAY_KEY_ID         = "razorpay-key-id"
+      RAZORPAY_KEY_SECRET     = "razorpay-key-secret"
+      RAZORPAY_WEBHOOK_SECRET = "razorpay-webhook-secret"
+      # DX-004 LLM fallback, read by the Anthropic SDK. Worker only: with
+      # DIAGNOSIS_DELIVERY=pubsub the api never calls the LLM.
+      ANTHROPIC_API_KEY = "anthropic-api-key"
+    }
+    jobs = {
+      PII_HASH_PEPPER = "pii-hash-pepper"
+    }
+    migrate = {}
   }
+  # Extra secrets of single jobs (local.jobs keys).
+  job_secret_env = {
+    reconcile-payments = {
+      RAZORPAY_KEY_ID     = "razorpay-key-id"
+      RAZORPAY_KEY_SECRET = "razorpay-key-secret"
+    }
+  }
+
+  # Mirror of CLOUD_REQUIRED_ENV / CLOUD_REQUIRED_JOB_ENV in settings.py (the pytest keeps
+  # them equal); enforced per module by preconditions at plan time.
+  required_env = {
+    api = [
+      "APP_ENV", "SERVICE_NAME", "LOG_JSON", "GCP_PROJECT", "OTEL_EXPORTER",
+      "DB_IAM_AUTH", "DB_INSTANCE_CONNECTION_NAME", "DB_IP_TYPE", "DB_USER", "DB_NAME",
+      "BLOB_STORE", "PHOTOS_BUCKET", "EXPORTS_BUCKET",
+      "PII_KEK_BACKEND", "PII_KMS_KEY_NAME", "PII_HASH_PEPPER",
+      "DIAGNOSIS_ENCODER", "DIAGNOSIS_ENCODER_NAME", "DIAGNOSIS_ENCODER_VERSION",
+      "DIAGNOSIS_EMBED_URL", "DIAGNOSIS_LLM", "DIAGNOSIS_LLM_MODEL", "DIAGNOSIS_DELIVERY",
+      "PAYMENT_PROVIDER", "PAYMENT_WEBHOOK_DELIVERY", "RAZORPAY_BASE_URL",
+      "RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET",
+      "JWT_SIGNING_KEY", "OTP_PEPPER", "OTP_PROVIDER", "SMS_PROVIDER_URL", "WHATSAPP_PROVIDER_URL",
+      "CORS_ORIGINS", "GCS_SIGNING_SERVICE_ACCOUNT",
+    ]
+    worker = [
+      "APP_ENV", "SERVICE_NAME", "LOG_JSON", "GCP_PROJECT", "OTEL_EXPORTER",
+      "DB_IAM_AUTH", "DB_INSTANCE_CONNECTION_NAME", "DB_IP_TYPE", "DB_USER", "DB_NAME",
+      "BLOB_STORE", "PHOTOS_BUCKET", "EXPORTS_BUCKET",
+      "PII_KEK_BACKEND", "PII_KMS_KEY_NAME", "PII_HASH_PEPPER",
+      "DIAGNOSIS_ENCODER", "DIAGNOSIS_ENCODER_NAME", "DIAGNOSIS_ENCODER_VERSION",
+      "DIAGNOSIS_EMBED_URL", "DIAGNOSIS_LLM", "DIAGNOSIS_LLM_MODEL", "DIAGNOSIS_DELIVERY",
+      "PAYMENT_PROVIDER", "PAYMENT_WEBHOOK_DELIVERY", "RAZORPAY_BASE_URL",
+      "RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET",
+      "ANTHROPIC_API_KEY",
+    ]
+    jobs = [
+      "APP_ENV", "SERVICE_NAME", "LOG_JSON", "GCP_PROJECT", "OTEL_EXPORTER",
+      "DB_IAM_AUTH", "DB_INSTANCE_CONNECTION_NAME", "DB_IP_TYPE", "DB_USER", "DB_NAME",
+      "BLOB_STORE", "PHOTOS_BUCKET", "EXPORTS_BUCKET",
+      "PII_KEK_BACKEND", "PII_KMS_KEY_NAME", "PII_HASH_PEPPER",
+      "DIAGNOSIS_ENCODER", "DIAGNOSIS_ENCODER_NAME", "DIAGNOSIS_ENCODER_VERSION",
+      "DIAGNOSIS_EMBED_URL", "DIAGNOSIS_LLM", "DIAGNOSIS_LLM_MODEL", "DIAGNOSIS_DELIVERY",
+      "PAYMENT_PROVIDER", "PAYMENT_WEBHOOK_DELIVERY", "RAZORPAY_BASE_URL",
+    ]
+    migrate = [
+      "APP_ENV", "SERVICE_NAME", "LOG_JSON", "GCP_PROJECT", "OTEL_EXPORTER",
+      "DB_IAM_AUTH", "DB_INSTANCE_CONNECTION_NAME", "DB_IP_TYPE", "DB_USER", "DB_NAME",
+    ]
+  }
+  job_required_env = {
+    reconcile-payments = ["RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET"]
+  }
+  # CLOUD_FORBIDDEN_ENV (+ OTP_DEV_CODE outside dev): emulators, mockserver, local keys and
+  # password URLs are never deployed.
+  forbidden_env = concat(
+    [
+      "PUBSUB_EMULATOR_HOST", "STORAGE_EMULATOR_HOST", "BLOB_LOCAL_DIR", "PII_LOCAL_KEK",
+      "DATABASE_URL", "MIGRATION_DATABASE_URL", "MOCK_RAZORPAY_WEBHOOK_SECRET", "MOCK_RAZORPAY_KEY_ID",
+    ],
+    var.env == "dev" ? [] : ["OTP_DEV_CODE"],
+  )
+
+  # SEC-013: secret id -> members that may read it, derived from the mounts above. Values are
+  # added by an admin (`gcloud secrets versions add`); every mounted secret needs a version
+  # before the first apply of the services that mount it (Cloud Run resolves `latest`).
+  secret_readers = {
+    api    = module.iam.emails.api
+    worker = module.iam.emails.worker
+    jobs   = module.iam.emails.jobs
+  }
+  mounted_secret_ids = distinct(concat(
+    flatten([for svc, m in local.secret_env : values(m)]),
+    flatten([for job, m in local.job_secret_env : values(m)]),
+  ))
+  secrets = merge(
+    {
+      for id in local.mounted_secret_ids : id => distinct(concat(
+        [for svc, m in local.secret_env : "serviceAccount:${local.secret_readers[svc]}" if contains(values(m), id)],
+        [for job, m in local.job_secret_env : "serviceAccount:${module.iam.emails.jobs}" if contains(values(m), id)],
+      ))
+    },
+    # Reserved for the DLT SMS / WhatsApp gateway adapter's config (docs/runbooks/
+    # otp-provider-outage.md); not mounted until that adapter exists (OTP_PROVIDER is
+    # mockserver | fake today).
+    { otp-provider = ["serviceAccount:${module.iam.emails.api}"] },
+  )
 
   # Scheduled Cloud Run Jobs: one per `python -m farmerapp.jobs <command>` of
   # apps/api/farmerapp/jobs/cli.py, run from the jobs image (deploy.yml). Cron in IST
@@ -186,9 +355,27 @@ module "sql" {
     module.iam.emails.api,
     module.iam.emails.worker,
     module.iam.emails.jobs,
+    module.iam.emails.migrate, # SEC-011: granted farmerapp_migrate only
   ]
 
   depends_on = [module.network]
+}
+
+# --- Cloud KMS (SEC-026 PII key-encryption key) ------------------------------
+
+module "kms" {
+  source = "../../modules/kms"
+
+  project_id = var.project_id
+  env        = var.env
+  region     = var.region
+  encrypter_decrypters = [
+    "serviceAccount:${module.iam.emails.api}",
+    "serviceAccount:${module.iam.emails.worker}",
+    "serviceAccount:${module.iam.emails.jobs}",
+  ]
+
+  depends_on = [google_project_service.apis]
 }
 
 # --- Secrets (created empty) -------------------------------------------------
@@ -276,20 +463,12 @@ module "api" {
   container_port        = 8000 # apps/api/Dockerfile (uvicorn --port 8000)
   startup_probe_path    = "/v1/health"
   deletion_protection   = var.deletion_protection
-  env = merge(local.db_env, local.diagnosis_env, {
-    PHOTOS_BUCKET  = module.storage.bucket_names.photos
-    EXPORTS_BUCKET = module.storage.bucket_names.exports
-    PUBLIC_URL     = "https://api.${var.domain}"
-  })
-  secret_env = {
-    JWT_SIGNING_KEY         = module.secrets.secret_ids.jwt-signing-key
-    OTP_PROVIDER            = module.secrets.secret_ids.otp-provider
-    RAZORPAY_KEY_ID         = module.secrets.secret_ids.razorpay-key-id
-    RAZORPAY_KEY_SECRET     = module.secrets.secret_ids.razorpay-key-secret
-    RAZORPAY_WEBHOOK_SECRET = module.secrets.secret_ids.razorpay-webhook-secret
-  }
+  env                   = local.service_env.api
+  secret_env            = { for name, id in local.secret_env.api : name => module.secrets.secret_ids[id] }
+  required_env          = local.required_env.api
+  forbidden_env         = local.forbidden_env
 
-  depends_on = [module.secrets]
+  depends_on = [module.secrets, module.kms]
 }
 
 module "console" {
@@ -343,19 +522,12 @@ module "worker" {
   concurrency           = 20
   deletion_protection   = var.deletion_protection
   invoker_members       = ["serviceAccount:${module.iam.emails.pubsub-push}"]
-  env = merge(local.db_env, local.diagnosis_env, {
-    PHOTOS_BUCKET = module.storage.bucket_names.photos
-    CORPUS_BUCKET = module.storage.bucket_names.corpus
-  })
-  secret_env = {
-    OTP_PROVIDER            = module.secrets.secret_ids.otp-provider
-    RAZORPAY_KEY_ID         = module.secrets.secret_ids.razorpay-key-id
-    RAZORPAY_KEY_SECRET     = module.secrets.secret_ids.razorpay-key-secret
-    RAZORPAY_WEBHOOK_SECRET = module.secrets.secret_ids.razorpay-webhook-secret
-    ANTHROPIC_API_KEY       = module.secrets.secret_ids.anthropic-api-key # read by the Anthropic SDK
-  }
+  env                   = local.service_env.worker
+  secret_env            = { for name, id in local.secret_env.worker : name => module.secrets.secret_ids[id] }
+  required_env          = local.required_env.worker
+  forbidden_env         = local.forbidden_env
 
-  depends_on = [module.secrets]
+  depends_on = [module.secrets, module.kms]
 }
 
 module "embed" {
@@ -376,9 +548,12 @@ module "embed" {
   concurrency           = 4
   timeout_seconds       = 120
   deletion_protection   = var.deletion_protection
+  # Every process with DIAGNOSIS_EMBED_URL (local.env_parts.diagnosis) calls it with an OIDC
+  # token (tests/deploy/test_terraform_env.py keeps the two lists equal).
   invoker_members = [
-    "serviceAccount:${module.iam.emails.worker}",
-    "serviceAccount:${module.iam.emails.api}", # WC-007 corpus uploads are embedded by the api
+    "serviceAccount:${module.iam.emails.worker}", # diagnoses (diagnosis.requested)
+    "serviceAccount:${module.iam.emails.api}",    # WC-007 corpus uploads are embedded by the api
+    "serviceAccount:${module.iam.emails.jobs}",   # corpus seed / corpus image attach jobs
   ]
   env = {
     ENV           = var.env
@@ -398,14 +573,17 @@ module "migrate" {
   name                  = "migrate"
   region                = var.region
   image                 = var.bootstrap_image
-  args                  = ["alembic", "upgrade", "head"]
-  service_account_email = module.iam.emails.jobs
+  args                  = ["alembic", "upgrade", "head"] # api image (alembic/ + alembic.ini)
+  service_account_email = module.iam.emails.migrate      # SEC-011: DDL identity, nothing else
   vpc_name              = module.network.vpc_name
   subnet_name           = module.network.subnet_name
   timeout_seconds       = 900
   max_retries           = 0
   deletion_protection   = var.deletion_protection
-  env                   = merge(local.db_env, { DB_ROLE = "migrator" }) # SEC-011: DDL role separate from app role
+  env                   = local.service_env.migrate
+  secret_env            = { for name, id in local.secret_env.migrate : name => module.secrets.secret_ids[id] }
+  required_env          = local.required_env.migrate
+  forbidden_env         = local.forbidden_env
 }
 
 module "job" {
@@ -426,17 +604,15 @@ module "job" {
   time_zone                       = "Asia/Kolkata"
   scheduler_service_account_email = module.iam.emails.scheduler
   deletion_protection             = var.deletion_protection
-  env = merge(local.db_env, local.diagnosis_env, {
-    PHOTOS_BUCKET  = module.storage.bucket_names.photos
-    EXPORTS_BUCKET = module.storage.bucket_names.exports
-    CORPUS_BUCKET  = module.storage.bucket_names.corpus
-  })
-  secret_env = each.key == "reconcile-payments" ? {
-    RAZORPAY_KEY_ID     = module.secrets.secret_ids.razorpay-key-id
-    RAZORPAY_KEY_SECRET = module.secrets.secret_ids.razorpay-key-secret
-  } : {}
+  env                             = local.service_env.jobs
+  secret_env = {
+    for name, id in merge(local.secret_env.jobs, lookup(local.job_secret_env, each.key, {})) :
+    name => module.secrets.secret_ids[id]
+  }
+  required_env  = distinct(concat(local.required_env.jobs, lookup(local.job_required_env, each.key, [])))
+  forbidden_env = local.forbidden_env
 
-  depends_on = [module.secrets]
+  depends_on = [module.secrets, module.kms]
 }
 
 # --- Pub/Sub ---------------------------------------------------------------------

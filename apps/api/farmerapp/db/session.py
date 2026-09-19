@@ -29,9 +29,9 @@ from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
     async_sessionmaker,
-    create_async_engine,
 )
 
+from farmerapp.db.connect import create_engine
 from farmerapp.settings import get_settings
 
 _SET_TENANT = text("SELECT set_config('app.tenant_id', :tid, true)")
@@ -41,8 +41,9 @@ _GET_TENANT = text("SELECT current_setting('app.tenant_id', true)")
 @lru_cache(maxsize=1)
 def get_engine() -> AsyncEngine:
     settings = get_settings()
-    return create_async_engine(
-        settings.database_url,
+    # DATABASE_URL locally; the Cloud SQL connector with IAM auth when DB_IAM_AUTH=true.
+    return create_engine(
+        settings,
         echo=settings.db_echo,
         pool_size=settings.db_pool_size,
         max_overflow=settings.db_max_overflow,

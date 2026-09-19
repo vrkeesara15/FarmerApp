@@ -49,7 +49,22 @@ resource "google_cloud_run_v2_job" "job" {
     }
   }
 
-  lifecycle { ignore_changes = [template[0].template[0].containers[0].image, client, client_version] }
+  lifecycle {
+    ignore_changes = [template[0].template[0].containers[0].image, client, client_version]
+
+    precondition {
+      condition     = length(local.missing_env) == 0
+      error_message = "${var.name}: required app settings missing from env / secret_env: ${join(", ", local.missing_env)} (apps/api/farmerapp/settings.py CLOUD_REQUIRED_ENV, docs/deploy/configuration.md)."
+    }
+    precondition {
+      condition     = length(local.forbidden_set) == 0
+      error_message = "${var.name}: dev-only settings must not be deployed: ${join(", ", local.forbidden_set)}."
+    }
+    precondition {
+      condition     = length(local.duplicate_names) == 0
+      error_message = "${var.name}: names set both as plain env and from Secret Manager: ${join(", ", local.duplicate_names)}."
+    }
+  }
 }
 
 # Optional Cloud Scheduler trigger (nightly jobs, SPEC 8.1).

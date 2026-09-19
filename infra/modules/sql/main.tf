@@ -106,15 +106,21 @@ resource "google_sql_database" "app" {
   instance = google_sql_database_instance.main.name
 }
 
-# IAM database users (SEC-011). Postgres role name = SA email without ".gserviceaccount.com".
-# They are created with no privileges. Migration 0003 (run by the migrate job as the owner)
-# creates the NOLOGIN groups; an admin then runs once per environment, as the instance's
-# postgres user:
-#   GRANT farmerapp_app     TO "farmerapp-api@<project>.iam", "farmerapp-worker@<project>.iam",
+# IAM database users (SEC-011). Postgres role name = SA email without ".gserviceaccount.com";
+# the app connects as that name (DB_USER) through the Cloud SQL Python Connector with IAM auth
+# (apps/api/farmerapp/db/connect.py). They are created with no privileges. Once per environment
+# (docs/deploy/configuration.md "First deploy"), as the instance's built-in postgres user:
+#   1. before the first migrate run, make the migrate job's identity the owner:
+#        GRANT cloudsqlsuperuser TO "farmerapp-migrate@<project>.iam";   -- extensions, roles
+#        ALTER DATABASE farmerapp OWNER TO "farmerapp-migrate@<project>.iam";
+#        GRANT ALL ON SCHEMA public TO "farmerapp-migrate@<project>.iam";
+#   2. run the migrate job: migration 0003 creates the NOLOGIN groups and makes the migrating
+#      user a member of farmerapp_migrate;
+#   3. GRANT farmerapp_app TO "farmerapp-api@<project>.iam", "farmerapp-worker@<project>.iam",
 #                              "farmerapp-jobs@<project>.iam";
-#   GRANT farmerapp_migrate TO "<migrate SA>@<project>.iam";   -- the SA of the migrate job only
 # (`make db-roles` is the local equivalent). The app role has DML only and cannot bypass RLS;
-# a runtime SA must never be a member of farmerapp_migrate.
+# a runtime SA must never be a member of farmerapp_migrate (the prd guard rails also refuse a
+# runtime process whose DB_USER is the migrate identity).
 resource "google_sql_user" "iam" {
   for_each = toset(var.iam_service_accounts)
 

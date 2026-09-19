@@ -24,8 +24,14 @@ variable "service_accounts" {
       project_roles = ["roles/cloudsql.client", "roles/cloudsql.instanceUser", "roles/pubsub.publisher"]
     }
     jobs = {
-      display_name  = "jobs (batch, migrations)"
+      display_name  = "jobs (batch)"
       project_roles = ["roles/cloudsql.client", "roles/cloudsql.instanceUser", "roles/pubsub.publisher"]
+    }
+    # SEC-011: the only identity granted farmerapp_migrate (DDL). Runs the migrate job alone;
+    # no Secret Manager or KMS access, no Pub/Sub.
+    migrate = {
+      display_name  = "migrate (Alembic, DDL)"
+      project_roles = ["roles/cloudsql.client", "roles/cloudsql.instanceUser"]
     }
     console = {
       display_name  = "console (Next.js)"

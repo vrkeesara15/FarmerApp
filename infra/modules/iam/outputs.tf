@@ -1,5 +1,5 @@
 output "emails" {
-  description = "Service account emails keyed by short name (api, worker, jobs, console, embed, pubsub-push, scheduler)."
+  description = "Service account emails keyed by short name (api, worker, jobs, migrate, console, embed, pubsub-push, scheduler)."
   value       = { for k, sa in google_service_account.sa : k => sa.email }
 }
 
