@@ -1,0 +1,15 @@
+description: >
+  Nightly batch: three small variances (Rs 20 short, Rs 15 short, Rs 30 over; each under the
+  threshold) by the same store manager within 14 days, plus yesterday's close Rs 800 short
+  that the event missed. Two flags about the store manager.
+mode: batch
+seed:
+  day_closes:
+    - {ref: dc1, closed_by: store_manager, at: -9d, expected: 500000, counted: 498000}
+    - {ref: dc2, closed_by: store_manager, at: -6d, expected: 500000, counted: 498500}
+    - {ref: dc3, closed_by: store_manager, at: -3d, expected: 500000, counted: 503000}
+    - {ref: dc4, closed_by: store_manager, at: -1d, expected: 500000, counted: 420000}
+expect:
+  flags:
+    - {subject: store_manager, severity: medium, owner: cluster_head, reasons: [repeated_small_variances]}
+    - {subject: store_manager, severity: medium, owner: cluster_head, reasons: [variance_above_threshold]}

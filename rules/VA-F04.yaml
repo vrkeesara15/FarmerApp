@@ -1,0 +1,18 @@
+# VA-F04 (SPEC 6.2): farm location plausibility — the farm centroid lies outside the tenant's
+# service districts (tenant setting `service_area`), or on a road, water body or built-up
+# area (land-cover layer through `LandCoverPort`; human gate: no dataset loaded yet, so the
+# null adapter classifies nothing and only the district check runs).
+id: VA-F04
+version: 1
+title: Farm location plausibility
+subject: farmer
+mode: batch
+severity: medium
+owner_role: store_manager
+sla_hours: 72
+enabled: true
+params:
+  check_service_area: true     # needs tenant setting service_area.districts (empty: skipped)
+  check_land_cover: true       # needs a LandCoverPort adapter (null adapter: skipped)
+  implausible_cover: [built_up, water, road]
+tenant_overrides: {}

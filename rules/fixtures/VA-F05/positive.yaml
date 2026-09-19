@@ -1,0 +1,20 @@
+description: >
+  With the Telangana crop calendar: cotton recorded as a rabi crop (Telangana grows it only in
+  kharif) and kharif paddy "sown" on 1 April, six weeks before the window (1 June - 15 August,
+  15 days tolerance). Two low severity flags for the store manager.
+mode: batch
+seed:
+  crop_calendar: telangana
+  farmers:
+    - {ref: cotton_rabi, name: Ramesh, at: -300d}
+    - {ref: early_paddy, name: Suresh, at: -300d}
+  farms:
+    - {ref: farm1, farmer: cotton_rabi, area_acres: 1.0, square: {east_m: 0, north_m: 0, side_m: 64}}
+    - {ref: farm2, farmer: early_paddy, area_acres: 1.0, square: {east_m: 500, north_m: 0, side_m: 64}}
+  crop_plots:
+    - {ref: plot1, farm: farm1, crop: cotton, season: rabi, sown: 2025-12-01}
+    - {ref: plot2, farm: farm2, crop: paddy, season: kharif, sown: 2026-04-01}
+expect:
+  flags:
+    - {subject: cotton_rabi, severity: low, owner: store_manager, watchers: [], reasons: [season_mismatch]}
+    - {subject: early_paddy, severity: low, owner: store_manager, watchers: [], reasons: [sowing_outside_window]}

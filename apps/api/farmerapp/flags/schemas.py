@@ -4,11 +4,18 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from farmerapp.flags.models import Flag, FlagComment, FlagEvent, FlagStatus
+from farmerapp.flags.models import (
+    Flag,
+    FlagComment,
+    FlagEvent,
+    FlagStatus,
+    FlagSummary,
+    SummaryStatus,
+)
 
 
 class FlagOut(BaseModel):
@@ -130,6 +137,34 @@ class FlagCommentOut(BaseModel):
         return cls.model_validate(row)
 
 
+class AutomatedSummaryOut(BaseModel):
+    """VA-004: the review agent's summary. The console shows it under ``label_key``
+    ("Automated summary — verify evidence"); ``summary_lines`` is null unless ``status`` is
+    ``done`` (``refused`` / ``invalid`` / ``error``: no summary, the reviewer reads the
+    evidence)."""
+
+    label_key: str
+    status: SummaryStatus
+    summary_lines: list[str] | None
+    suggested_action: str | None
+    cited_record_ids: list[str]
+    model: str | None
+    completed_at: datetime | None
+
+    @classmethod
+    def from_row(cls, row: FlagSummary, *, label_key: str) -> AutomatedSummaryOut:
+        done = row.status == SummaryStatus.DONE.value
+        return cls(
+            label_key=label_key,
+            status=SummaryStatus(row.status),
+            summary_lines=list(row.summary_lines or []) if done else None,
+            suggested_action=row.suggested_action if done else None,
+            cited_record_ids=list(row.cited_record_ids or []) if done else [],
+            model=row.model,
+            completed_at=row.completed_at,
+        )
+
+
 class FlagDetailOut(FlagOut):
     """C71: the flag with its evidence bundle, history and comment thread."""
 
@@ -137,6 +172,96 @@ class FlagDetailOut(FlagOut):
     events: list[FlagEventOut]
     comments: list[FlagCommentOut]
     allowed_transitions: list[FlagStatus]
+    automated_summary: AutomatedSummaryOut | None = Field(
+        default=None, description="VA-004 review agent summary (reviewers only)."
+    )
+
+
+# --------------------------------------------------------------------------- VA-005
+SubjectState = Literal["open", "in_review", "resolved"]
+
+
+class SubjectOutcome(BaseModel):
+    """How a flag about the caller was resolved (only once it is resolved)."""
+
+    status: FlagStatus
+    label: str | None = Field(description="true_positive | false_positive (VA-006)")
+    note: str | None
+    resolved_at: datetime
+
+
+class SubjectFlagOut(BaseModel):
+    """VA-005: a flag about the caller, as the caller sees it — no owner, no reviewer notes,
+    no escalations; the outcome only after resolution."""
+
+    id: uuid.UUID
+    rule_id: str
+    rule_title: str | None
+    severity: str
+    title: str
+    state: SubjectState
+    created_at: datetime
+    can_explain: bool
+    outcome: SubjectOutcome | None
+    explanations: list[FlagCommentOut]
+
+
+class SubjectFlagDetailOut(SubjectFlagOut):
+    evidence: EvidenceOut
+
+
+class SubjectFlagPage(BaseModel):
+    items: list[SubjectFlagOut]
+    next_cursor: str | None = None
+
+
+class ExplanationIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    body: str = Field(min_length=1, max_length=2000)
+
+
+# --------------------------------------------------------------------------- VA-006
+class RulePrecisionOut(BaseModel):
+    true_positive: int
+    false_positive: int
+    resolved: int
+    precision: float | None
+
+
+class RuleQualityOut(BaseModel):
+    rule_id: str
+    version: int | None
+    title: str | None
+    enabled: bool
+    disabled_reason: str | None
+    week: RulePrecisionOut
+    four_weeks: RulePrecisionOut
+    raised_this_week: int
+    open_now: int
+
+
+class RuleQualityList(BaseModel):
+    items: list[RuleQualityOut]
+    precision_floor: float
+    window_weeks: int
+
+
+class RuleEnableIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reason: str = Field(min_length=3, max_length=1000)
+
+
+class RuleOverrideOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    rule_id: str
+    enabled: bool
+    source: str
+    reason: str
+    set_by: uuid.UUID | None
+    set_at: datetime
 
 
 class TransitionIn(BaseModel):
@@ -161,15 +286,27 @@ class AssignIn(BaseModel):
 
 __all__ = [
     "AssignIn",
+    "AutomatedSummaryOut",
     "CommentIn",
     "EvidenceOut",
     "EvidencePhoto",
     "EvidenceRecord",
+    "ExplanationIn",
     "FlagCommentOut",
     "FlagCounts",
     "FlagDetailOut",
     "FlagEventOut",
     "FlagOut",
     "FlagPage",
+    "RuleEnableIn",
+    "RuleOverrideOut",
+    "RulePrecisionOut",
+    "RuleQualityList",
+    "RuleQualityOut",
+    "SubjectFlagDetailOut",
+    "SubjectFlagOut",
+    "SubjectFlagPage",
+    "SubjectOutcome",
+    "SubjectState",
     "TransitionIn",
 ]

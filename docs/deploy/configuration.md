@@ -141,6 +141,7 @@ two URLs are used exactly as before.
 | `DIAGNOSIS_DELIVERY` | TF | `pubsub` (worker runs the pipeline) | A W J | yes |
 | `ANTHROPIC_API_KEY` | SM `anthropic-api-key` | Anthropic key (read by the SDK) | W | yes |
 | `DIAGNOSIS_EMBED_TIMEOUT_S` / `DIAGNOSIS_LLM_MAX_TOKENS` / `DIAGNOSIS_LLM_EFFORT` / `DIAGNOSIS_KNN_K` / `DIAGNOSIS_HNSW_EF_SEARCH` / `DIAGNOSIS_MAX_ATTEMPTS` | default | 20 / 16000 / `medium` / 20 / 40 / 5 | A W J | no |
+| `FLAG_SUMMARY_LLM` / `FLAG_SUMMARY_LLM_MODEL` / `FLAG_SUMMARY_LLM_MAX_TOKENS` | default (TF to add, M7 human gate) | `off` / `claude-opus-5` / 4000; stg / prd set `claude` on worker and jobs (VA-004 review agent; jobs then also need `ANTHROPIC_API_KEY`) | W J | no |
 | `PLAY_INTEGRITY_MODE` / `PLAY_INTEGRITY_PACKAGE_NAMES` / `PLAY_INTEGRITY_TIMEOUT_S` | default | `off` / both app ids / 2.0 (`google` is a human gate, SEC-024) | A | no |
 
 ## Auth and API edge (api)

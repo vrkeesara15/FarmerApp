@@ -404,6 +404,53 @@ def flags_sla_escalation(
             typer.echo(f"  flag={e.flag_id} rule={e.rule_id} -> {e.to_role} {e.to_owner_id}")
 
 
+@cli.command("flags-summarise")
+def flags_summarise(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+    max_age_days: int = typer.Option(7, min=1, help="Only flags raised in the last N days."),
+    limit: int = typer.Option(200, min=1, help="At most this many flags per tenant and run."),
+) -> None:
+    """VA-004: the review agent summarises every recent flag that has no summary yet (flags
+    raised on the API path). Needs FLAG_SUMMARY_LLM (off: nothing happens). Every 10 min."""
+    from farmerapp.flags.review_agent import summarise_pending
+
+    _setup()
+    for r in asyncio.run(
+        summarise_pending(_tenants(tenant), max_age_days=max_age_days, limit=limit)
+    ):
+        typer.echo(
+            f"flags-summarise: tenant={r.tenant_id} done={r.done} other={r.other} "
+            f"deferred={r.deferred}"
+        )
+
+
+@cli.command("rules-quality-report")
+def rules_quality_report(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+) -> None:
+    """VA-006: the weekly rule-quality report (precision per rule, last week and four weeks)
+    to the tenant admins; rules under 30 % precision over four weeks are auto-disabled
+    pending review (audited). Weekly, Monday 03:00 IST."""
+    from farmerapp.flags.precision import run_quality_reports
+
+    _setup()
+    for r in asyncio.run(run_quality_reports(_tenants(tenant))):
+        typer.echo(
+            f"rules-quality-report: tenant={r.tenant_id} rules={len(r.rules)} "
+            f"auto_disabled={','.join(r.auto_disabled) or '-'} notified={len(r.notified)}"
+        )
+        for q in r.rules:
+            p = q.four_weeks.precision
+            typer.echo(
+                f"  {q.rule_id} enabled={q.enabled} 4w_resolved={q.four_weeks.resolved} "
+                f"4w_precision={'-' if p is None else f'{p:.0%}'}"
+            )
+
+
 @cli.command("diagnosis-queue-age")
 def diagnosis_queue_age(
     tenant: list[str] = typer.Option(  # noqa: B008

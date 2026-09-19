@@ -6785,6 +6785,274 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+  /v1/flags/mine:
+    get:
+      tags:
+      - flags
+      summary: 'Flags about the caller: outcome once resolved, explanations while open (VA-005)'
+      operationId: listMyFlags
+      parameters:
+      - name: state
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^(open|resolved)$
+          - type: 'null'
+          description: 'open: not yet resolved'
+          title: State
+        description: 'open: not yet resolved'
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Opaque cursor from `next_cursor`.
+          title: Cursor
+        description: Opaque cursor from `next_cursor`.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          description: Page size.
+          default: 50
+          title: Limit
+        description: Page size.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectFlagPage'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: '`invalid_cursor`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/flags/mine/{id}:
+    get:
+      tags:
+      - flags
+      summary: A flag about the caller with its evidence (ids and metrics only; VA-005)
+      operationId: getMyFlag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubjectFlagDetailOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/flags/mine/{id}/explanations:
+    post:
+      tags:
+      - flags
+      summary: Add the caller's explanation to an open flag about them (VA-005)
+      operationId: explainMyFlag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExplanationIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagCommentOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`flag_resolved`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/flags/rules:
+    get:
+      tags:
+      - flags
+      summary: Every validation rule with its precision and tenant state (VA-006)
+      operationId: listRuleQuality
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuleQualityList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - director
+      - owner
+      - tenant_admin
+  /v1/flags/rules/{rule_id}/enable:
+    post:
+      tags:
+      - flags
+      summary: Re-enable a rule the tenant auto-disabled (step-up required; audited; VA-006)
+      operationId: enableRule
+      parameters:
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^VA-[FE][0-9]{2}$
+          title: Rule Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleEnableIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuleOverrideOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`rule_not_disabled`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - owner
+      - tenant_admin
   /v1/flags/{id}:
     get:
       tags:
@@ -9429,6 +9697,58 @@ components:
       - trace_id
       - created_at
       title: AuditLogOut
+    AutomatedSummaryOut:
+      properties:
+        label_key:
+          type: string
+          title: Label Key
+        status:
+          $ref: '#/components/schemas/SummaryStatus'
+        summary_lines:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Summary Lines
+        suggested_action:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Suggested Action
+        cited_record_ids:
+          items:
+            type: string
+          type: array
+          title: Cited Record Ids
+        model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model
+        completed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Completed At
+      type: object
+      required:
+      - label_key
+      - status
+      - summary_lines
+      - suggested_action
+      - cited_record_ids
+      - model
+      - completed_at
+      title: AutomatedSummaryOut
+      description: 'VA-004: the review agent''s summary. The console shows it under ``label_key``
+
+        ("Automated summary — verify evidence"); ``summary_lines`` is null unless ``status`` is
+
+        ``done`` (``refused`` / ``invalid`` / ``error``: no summary, the reviewer reads the
+
+        evidence).'
     BarcodeLookupOut:
       properties:
         id:
@@ -12634,6 +12954,18 @@ components:
       - type
       - id
       title: EvidenceRecord
+    ExplanationIn:
+      properties:
+        body:
+          type: string
+          maxLength: 2000
+          minLength: 1
+          title: Body
+      additionalProperties: false
+      type: object
+      required:
+      - body
+      title: ExplanationIn
     FarmCreate:
       properties:
         id:
@@ -13988,6 +14320,11 @@ components:
             $ref: '#/components/schemas/FlagStatus'
           type: array
           title: Allowed Transitions
+        automated_summary:
+          anyOf:
+          - $ref: '#/components/schemas/AutomatedSummaryOut'
+          - type: 'null'
+          description: VA-004 review agent summary (reviewers only).
       type: object
       required:
       - id
@@ -19087,6 +19424,138 @@ components:
       - items
       - counts
       title: ReviewQueuePage
+    RuleEnableIn:
+      properties:
+        reason:
+          type: string
+          maxLength: 1000
+          minLength: 3
+          title: Reason
+      additionalProperties: false
+      type: object
+      required:
+      - reason
+      title: RuleEnableIn
+    RuleOverrideOut:
+      properties:
+        rule_id:
+          type: string
+          title: Rule Id
+        enabled:
+          type: boolean
+          title: Enabled
+        source:
+          type: string
+          title: Source
+        reason:
+          type: string
+          title: Reason
+        set_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Set By
+        set_at:
+          type: string
+          format: date-time
+          title: Set At
+      type: object
+      required:
+      - rule_id
+      - enabled
+      - source
+      - reason
+      - set_by
+      - set_at
+      title: RuleOverrideOut
+    RulePrecisionOut:
+      properties:
+        true_positive:
+          type: integer
+          title: True Positive
+        false_positive:
+          type: integer
+          title: False Positive
+        resolved:
+          type: integer
+          title: Resolved
+        precision:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Precision
+      type: object
+      required:
+      - true_positive
+      - false_positive
+      - resolved
+      - precision
+      title: RulePrecisionOut
+    RuleQualityList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/RuleQualityOut'
+          type: array
+          title: Items
+        precision_floor:
+          type: number
+          title: Precision Floor
+        window_weeks:
+          type: integer
+          title: Window Weeks
+      type: object
+      required:
+      - items
+      - precision_floor
+      - window_weeks
+      title: RuleQualityList
+    RuleQualityOut:
+      properties:
+        rule_id:
+          type: string
+          title: Rule Id
+        version:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Version
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        enabled:
+          type: boolean
+          title: Enabled
+        disabled_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Disabled Reason
+        week:
+          $ref: '#/components/schemas/RulePrecisionOut'
+        four_weeks:
+          $ref: '#/components/schemas/RulePrecisionOut'
+        raised_this_week:
+          type: integer
+          title: Raised This Week
+        open_now:
+          type: integer
+          title: Open Now
+      type: object
+      required:
+      - rule_id
+      - version
+      - title
+      - enabled
+      - disabled_reason
+      - week
+      - four_weeks
+      - raised_this_week
+      - open_now
+      title: RuleQualityOut
     SamplingPatch:
       properties:
         moving_s:
@@ -19269,6 +19738,67 @@ components:
       - end
       - value
       title: SeriesPoint
+    ServiceArea:
+      properties:
+        districts:
+          items:
+            $ref: '#/components/schemas/ServiceDistrict'
+          type: array
+          maxItems: 200
+          title: Districts
+      type: object
+      title: ServiceArea
+      description: 'VA-F04: the districts a tenant serves (empty: the check is off).'
+    ServiceDistrict:
+      properties:
+        code:
+          type: string
+          maxLength: 32
+          minLength: 1
+          title: Code
+        name:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Name
+        state:
+          anyOf:
+          - type: string
+            maxLength: 80
+          - type: 'null'
+          title: State
+        bbox:
+          anyOf:
+          - items:
+              type: number
+            type: array
+            maxItems: 4
+            minItems: 4
+          - type: 'null'
+          title: Bbox
+        polygon:
+          anyOf:
+          - items:
+              items:
+                type: number
+              type: array
+            type: array
+            maxItems: 5000
+            minItems: 4
+          - type: 'null'
+          title: Polygon
+      type: object
+      required:
+      - code
+      - name
+      title: ServiceDistrict
+      description: 'VA-F04: one district the tenant serves. ``bbox`` is ``[min_lon, min_lat, max_lon,
+
+        max_lat]``; ``polygon`` an outer ring ``[[lon, lat], ...]`` (wins over ``bbox``). The demo
+
+        tenants carry generous bounding boxes around their stores; real district boundaries
+
+        (Survey of India / LGD) are a human gate (docs/prs/M7-rules.md).'
     SettingsPatch:
       properties:
         consent_version:
@@ -19415,6 +19945,23 @@ components:
           anyOf:
           - $ref: '#/components/schemas/BrandingPatch'
           - type: 'null'
+        service_area:
+          anyOf:
+          - $ref: '#/components/schemas/ServiceArea'
+          - type: 'null'
+          description: VA-F04 service districts (replaces the whole list).
+        discount_policy_max_bps:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Discount Policy Max Bps
+          description: VA-E09 0-10000 bp.
+        incentive_cutoff_day:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Incentive Cutoff Day
+          description: VA-E09 day 1-28.
       additionalProperties: false
       type: object
       title: SettingsPatch
@@ -20303,6 +20850,178 @@ components:
       - store
       - tenant
       title: Subject
+    SubjectFlagDetailOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        rule_id:
+          type: string
+          title: Rule Id
+        rule_title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Rule Title
+        severity:
+          type: string
+          title: Severity
+        title:
+          type: string
+          title: Title
+        state:
+          type: string
+          enum:
+          - open
+          - in_review
+          - resolved
+          title: State
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        can_explain:
+          type: boolean
+          title: Can Explain
+        outcome:
+          anyOf:
+          - $ref: '#/components/schemas/SubjectOutcome'
+          - type: 'null'
+        explanations:
+          items:
+            $ref: '#/components/schemas/FlagCommentOut'
+          type: array
+          title: Explanations
+        evidence:
+          $ref: '#/components/schemas/EvidenceOut'
+      type: object
+      required:
+      - id
+      - rule_id
+      - rule_title
+      - severity
+      - title
+      - state
+      - created_at
+      - can_explain
+      - outcome
+      - explanations
+      - evidence
+      title: SubjectFlagDetailOut
+    SubjectFlagOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        rule_id:
+          type: string
+          title: Rule Id
+        rule_title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Rule Title
+        severity:
+          type: string
+          title: Severity
+        title:
+          type: string
+          title: Title
+        state:
+          type: string
+          enum:
+          - open
+          - in_review
+          - resolved
+          title: State
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        can_explain:
+          type: boolean
+          title: Can Explain
+        outcome:
+          anyOf:
+          - $ref: '#/components/schemas/SubjectOutcome'
+          - type: 'null'
+        explanations:
+          items:
+            $ref: '#/components/schemas/FlagCommentOut'
+          type: array
+          title: Explanations
+      type: object
+      required:
+      - id
+      - rule_id
+      - rule_title
+      - severity
+      - title
+      - state
+      - created_at
+      - can_explain
+      - outcome
+      - explanations
+      title: SubjectFlagOut
+      description: 'VA-005: a flag about the caller, as the caller sees it — no owner, no reviewer notes,
+
+        no escalations; the outcome only after resolution.'
+    SubjectFlagPage:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/SubjectFlagOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      title: SubjectFlagPage
+    SubjectOutcome:
+      properties:
+        status:
+          $ref: '#/components/schemas/FlagStatus'
+        label:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Label
+          description: true_positive | false_positive (VA-006)
+        note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Note
+        resolved_at:
+          type: string
+          format: date-time
+          title: Resolved At
+      type: object
+      required:
+      - status
+      - label
+      - note
+      - resolved_at
+      title: SubjectOutcome
+      description: How a flag about the caller was resolved (only once it is resolved).
+    SummaryStatus:
+      type: string
+      enum:
+      - pending
+      - done
+      - refused
+      - invalid
+      - error
+      - disabled
+      title: SummaryStatus
+      description: 'VA-004: where the review agent''s summary of a flag stands.'
     SyncChangeOut:
       properties:
         entity:
@@ -20674,6 +21393,20 @@ components:
           default: en
         features:
           $ref: '#/components/schemas/FeatureSettings'
+        service_area:
+          $ref: '#/components/schemas/ServiceArea'
+        discount_policy_max_bps:
+          type: integer
+          maximum: 10000.0
+          minimum: 0.0
+          title: Discount Policy Max Bps
+          default: 1000
+        incentive_cutoff_day:
+          type: integer
+          maximum: 28.0
+          minimum: 1.0
+          title: Incentive Cutoff Day
+          default: 25
         branding:
           $ref: '#/components/schemas/Branding'
       type: object

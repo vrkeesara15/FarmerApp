@@ -1,0 +1,17 @@
+# VA-E07 (SPEC 6.3): a TA claim's km differ from the km computed from the duty track by more
+# than `max_difference_share`. Claims (FA-023) arrive through `TravelClaimPort`; the travel
+# package emits `ta.claim.submitted` (in-process or Pub/Sub) when one is submitted.
+id: VA-E07
+version: 1
+title: TA claim differs from the computed km
+subject: employee
+mode: event
+triggers: [ta.claim.submitted]
+severity: medium
+owner_role: cluster_head
+sla_hours: 72
+enabled: true
+params:
+  max_difference_share: 0.15   # |claimed - computed| / computed
+  min_difference_km: 1.0       # ignore differences smaller than this
+tenant_overrides: {}

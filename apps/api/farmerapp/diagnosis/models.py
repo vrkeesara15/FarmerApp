@@ -420,12 +420,17 @@ class LlmCallLog(Base, TenantRow):
     __tablename__ = "llm_call_log"
     __table_args__ = (
         Index("ix_llm_call_log_diagnosis_id", "diagnosis_id"),
+        Index("ix_llm_call_log_flag_id", "flag_id"),
         Index("ix_llm_call_log_tenant_created", "tenant_id", "created_at"),
     )
     __audit__ = False  # it *is* the audit record of the call
 
     diagnosis_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("diagnosis.id", ondelete="SET NULL"), nullable=True
+    )
+    #: M7 (0029): the flag a VA-004 review-agent summary call was about (NULL for DX-004).
+    flag_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("flag.id", ondelete="SET NULL"), nullable=True
     )
     provider: Mapped[str] = mapped_column(String(32), nullable=False)
     model: Mapped[str] = mapped_column(String(64), nullable=False)

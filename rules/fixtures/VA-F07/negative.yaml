@@ -1,0 +1,20 @@
+description: >
+  Farmers registered 90 days ago with a purchase, with a confirmed visit, or with a farmer app
+  login, and a farmer registered only 30 days ago. No flag.
+mode: batch
+seed:
+  farmers:
+    - {ref: buyer, name: Ramesh, at: -90d}
+    - {ref: visited, name: Suresh, at: -90d}
+    - {ref: app_user, name: Venkatesh, at: -90d}
+    - {ref: new, name: Narsimha, at: -30d}
+  orders:
+    - {ref: o1, farmer: buyer, at: -85d, subtotal: 50000, status: handed_over}
+  visits:
+    - {ref: visit1, farmer: visited, at: -85d, minutes: 20}
+  confirmations:
+    - {ref: c1, visit: visit1, channel: sms_otp, at: -85d, phone: "+919876500011"}
+  farmer_logins:
+    - {farmer: app_user, at: -70d}
+expect:
+  flags: []

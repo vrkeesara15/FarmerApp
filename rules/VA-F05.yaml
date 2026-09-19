@@ -1,0 +1,17 @@
+# VA-F05 (SPEC 6.2): crop plausibility — a crop plot's crop and sowing date do not fit the
+# season and the district crop calendar (`crop_calendar`: district row, else the state row).
+# Crops the calendar does not know for the farmer's state are not judged.
+id: VA-F05
+version: 1
+title: Crop plausibility
+subject: farmer
+mode: batch
+severity: low
+owner_role: store_manager
+sla_hours: 168
+enabled: true
+params:
+  tolerance_days: 15           # sowing this many days either side of the window is fine
+  max_future_days: 30          # a sowing date further ahead than this is implausible
+  lookback_days: 400           # plots sown in the last ~13 months are checked
+tenant_overrides: {}

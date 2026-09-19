@@ -33,6 +33,10 @@ day_close_deadline_local_time       "22:00"      OPS-007 a working day not close
 languages_enabled                   all five     NF-008 languages the apps offer
 default_language                    "en"         language of a new user
 features.on_device_crop_guess       false        DX-001 apps pre-select the on-device crop guess
+service_area.districts              []           VA-F04 districts the tenant serves (code, name,
+                                                 state, bbox or polygon); empty = not checked
+discount_policy_max_bps             1000         VA-E09 most discount on a sale (bp of subtotal)
+incentive_cutoff_day                25           VA-E09 day of month the incentive is computed
 branding.*                          see Branding C102 app names, colour, logo, support phone
 =================================== ============ ==============================================
 
@@ -109,6 +113,9 @@ SETTINGS_KEYS: Mapping[str, str] = {
     "languages_enabled": "NF-008 languages offered in the apps",
     "default_language": "Language of new users",
     "features": "App feature flags: on_device_crop_guess (DX-001 crop hint, default off)",
+    "service_area": "VA-F04 service districts: [{code, name, state, bbox | polygon}]",
+    "discount_policy_max_bps": "VA-E09 largest discount on a sale, basis points of subtotal",
+    "incentive_cutoff_day": "VA-E09 day of month the officer incentive is computed (1-28)",
     "branding": "C102 app names, primary colour, logo and support phone (tenant.branding)",
 }
 
@@ -131,6 +138,54 @@ class FeatureSettings(BaseModel):
         description="DX-001: send and pre-select the on-device crop guess. Off until the "
         "field-accuracy gate passes (ml/ondevice/INTEGRATION.md section 7).",
     )
+
+
+class ServiceDistrict(BaseModel):
+    """VA-F04: one district the tenant serves. ``bbox`` is ``[min_lon, min_lat, max_lon,
+    max_lat]``; ``polygon`` an outer ring ``[[lon, lat], ...]`` (wins over ``bbox``). The demo
+    tenants carry generous bounding boxes around their stores; real district boundaries
+    (Survey of India / LGD) are a human gate (docs/prs/M7-rules.md)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    code: str = Field(min_length=1, max_length=32)
+    name: str = Field(min_length=1, max_length=80)
+    state: str | None = Field(default=None, max_length=80)
+    bbox: list[float] | None = Field(default=None, min_length=4, max_length=4)
+    polygon: list[list[float]] | None = Field(default=None, min_length=4, max_length=5000)
+
+    def contains(self, lon: float, lat: float) -> bool:
+        if self.polygon:
+            return _point_in_ring(lon, lat, self.polygon)
+        if self.bbox:
+            min_lon, min_lat, max_lon, max_lat = self.bbox
+            return min_lon <= lon <= max_lon and min_lat <= lat <= max_lat
+        return False
+
+
+def _point_in_ring(lon: float, lat: float, ring: list[list[float]]) -> bool:
+    """Ray casting (even-odd) on a lon / lat ring: fine at district scale."""
+    inside = False
+    n = len(ring)
+    for i in range(n):
+        x1, y1 = ring[i][0], ring[i][1]
+        x2, y2 = ring[(i + 1) % n][0], ring[(i + 1) % n][1]
+        if (y1 > lat) != (y2 > lat):
+            cross = x1 + (lat - y1) * (x2 - x1) / (y2 - y1)
+            if lon < cross:
+                inside = not inside
+    return inside
+
+
+class ServiceArea(BaseModel):
+    """VA-F04: the districts a tenant serves (empty: the check is off)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    districts: list[ServiceDistrict] = Field(default_factory=list, max_length=200)
+
+    def district_of(self, lon: float, lat: float) -> ServiceDistrict | None:
+        return next((d for d in self.districts if d.contains(lon, lat)), None)
 
 
 class Branding(BaseModel):
@@ -182,6 +237,9 @@ class TenantSettings(BaseModel):
     )
     default_language: Language = "en"
     features: FeatureSettings = Field(default_factory=FeatureSettings)
+    service_area: ServiceArea = Field(default_factory=ServiceArea)
+    discount_policy_max_bps: int = Field(default=1000, ge=0, le=10_000)
+    incentive_cutoff_day: int = Field(default=25, ge=1, le=28)
     branding: Branding = Field(default_factory=Branding)
 
     def auto_duty_end_time(self) -> time:
@@ -289,6 +347,8 @@ __all__ = [
     "Branding",
     "FeatureSettings",
     "SamplingSettings",
+    "ServiceArea",
+    "ServiceDistrict",
     "TenantSettings",
     "get_tenant_settings",
     "parse_settings",

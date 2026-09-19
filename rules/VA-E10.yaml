@@ -1,0 +1,20 @@
+# VA-E10 (SPEC 6.3): cash variance at day close above the tenant threshold
+# (`day_close_variance_threshold_paise`; event on `day_close.variance`, raised by the ST-006
+# day close through `CashVarianceDetected`), and repeated small variances (batch: at least
+# `min_small_variances` non-zero variances within `window_days` by one closer).
+id: VA-E10
+version: 1
+title: Cash variance at day close
+subject: employee
+mode: [event, batch]
+triggers: [day_close.variance]
+severity: medium
+owner_role: cluster_head
+sla_hours: 72
+enabled: true
+params:
+  window_days: 14
+  min_small_variances: 3
+  min_variance_paise: 100      # |variance| under Rs 1 is rounding, not a variance
+  lookback_days: 2             # batch: closes of the last two days for the threshold check
+tenant_overrides: {}

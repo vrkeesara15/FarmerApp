@@ -69,6 +69,13 @@ async def on_notify_send(message: PubSubMessage) -> None:
     await _todo(Topic.NOTIFY_SEND)
 
 
+async def on_flag_created(message: PubSubMessage) -> None:
+    """M7 VA-004: the review agent summarises one new flag from its evidence bundle."""
+    from farmerapp.flags.review_agent import handle_flag_created_message
+
+    await handle_flag_created_message(message)
+
+
 HANDLERS: dict[Topic, Handler] = {
     Topic.VISIT_CREATED: on_visit_created,
     Topic.FARMER_REGISTERED: on_farmer_registered,
@@ -77,6 +84,7 @@ HANDLERS: dict[Topic, Handler] = {
     Topic.ORDER_CREATED: on_order_created,
     Topic.LOCATION_BATCH: on_location_batch,
     Topic.NOTIFY_SEND: on_notify_send,
+    Topic.FLAG_CREATED: on_flag_created,
 }
 
 

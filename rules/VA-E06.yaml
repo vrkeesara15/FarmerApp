@@ -1,0 +1,18 @@
+# VA-E06 (SPEC 6.3): duty with no activity — more than `max_idle_hours` on duty without a
+# visit (check-in / check-out, meetings included), an arrival at or departure from a stop, or
+# any movement of `min_movement_m` (location points with accuracy <= `max_accuracy_m`).
+id: VA-E06
+version: 1
+title: Duty with no activity
+subject: employee
+mode: batch
+severity: low
+owner_role: cluster_head
+sla_hours: 168
+enabled: true
+params:
+  max_idle_hours: 3
+  min_movement_m: 100          # the duty track's stop radius (duty/track.py)
+  max_accuracy_m: 100
+  lookback_hours: 26           # duty sessions overlapping the last night's window
+tenant_overrides: {}

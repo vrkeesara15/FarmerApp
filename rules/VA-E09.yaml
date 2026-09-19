@@ -1,0 +1,18 @@
+# VA-E09 (SPEC 6.3): sales anomalies — a discount above the tenant policy
+# (`discount_policy_max_bps`), a sale to a farmer whose phone is a staff phone (hash match),
+# or frequent cancellations, after the incentive cut-off (`incentive_cutoff_day`), of orders
+# placed in the incentive period that just closed.
+id: VA-E09
+version: 1
+title: Sales anomalies
+subject: employee
+mode: batch
+severity: high
+owner_role: cluster_head
+sla_hours: 48
+enabled: true
+params:
+  lookback_hours: 26           # orders placed since the previous nightly run (overlap)
+  min_cancellations_after_cutoff: 3
+  cancellation_lookback_days: 35
+tenant_overrides: {}

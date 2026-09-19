@@ -1,0 +1,17 @@
+description: >
+  The segment member consented to marketing (withdrew once, then granted again); the farmer
+  who withdrew is in no segment. No flag.
+mode: batch
+seed:
+  farmers:
+    - {ref: member, name: Ramesh, at: -60d}
+    - {ref: outsider, name: Suresh, at: -60d}
+  consents:
+    - {farmer: member, purpose: marketing, granted: -60d}
+    - {farmer: member, purpose: marketing, withdrawn: -20d}
+    - {farmer: member, purpose: marketing, granted: -5d}
+    - {farmer: outsider, purpose: marketing, withdrawn: -2d}
+  segment_members:
+    - {farmer: member, segment: cotton-growers}
+expect:
+  flags: []

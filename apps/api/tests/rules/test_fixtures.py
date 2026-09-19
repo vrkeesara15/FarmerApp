@@ -16,6 +16,7 @@ from farmerapp.rules.loader import DEFAULT_RULES_DIR, load_rules
 from farmerapp.rules.registry import implementations
 from farmerapp.rules.schema import Mode
 from tests.rules.harness import (
+    ALL_RULES,
     CASES,
     FIXTURES_DIR,
     P0_RULES,
@@ -33,9 +34,11 @@ PAIRS = [(rule_id, case) for rule_id in RULE_IDS for case in fixture_cases(rule_
 
 
 def test_rules_exist() -> None:
-    """All eleven P0 rules of SPEC 6.2 / 6.3 (M4) are configured and implemented."""
-    assert set(RULE_SET.rules) >= P0_RULES
-    assert set(implementations()) >= P0_RULES
+    """Every rule of SPEC 6.2 / 6.3 — the eleven P0 rules of M4 and the ten of M7 — is
+    configured and implemented, and nothing else is."""
+    assert len(ALL_RULES) == 21 and P0_RULES <= ALL_RULES
+    assert set(RULE_SET.rules) == ALL_RULES
+    assert set(implementations()) == ALL_RULES
 
 
 @pytest.mark.parametrize("rule_id", RULE_IDS)
@@ -67,6 +70,8 @@ def test_extra_fixture_cases_are_named_by_sign() -> None:
         for path in (FIXTURES_DIR / rule_id).glob("*"):
             assert path.stem in fixture_cases(rule_id), f"unrecognised fixture {path}"
     assert "positive-farm-photo" in fixture_cases("VA-F08")
+    assert "negative-no-campaigns" in fixture_cases("VA-F09")
+    assert "positive-repeated" in fixture_cases("VA-E10")
 
 
 @pytest.mark.parametrize(("rule_id", "case"), PAIRS, ids=[f"{r}-{c}" for r, c in PAIRS])

@@ -1,0 +1,10 @@
+description: >
+  A day close Rs 300 short, under the Rs 500 threshold: the event runs the rule, no flag.
+mode: event
+trigger: day_close.variance
+subjects: [dc1]
+seed:
+  day_closes:
+    - {ref: dc1, closed_by: store_manager, at: -2h, expected: 1000000, counted: 970000}
+expect:
+  flags: []

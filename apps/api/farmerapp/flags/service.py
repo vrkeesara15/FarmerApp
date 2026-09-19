@@ -34,6 +34,7 @@ from farmerapp.flags.errors import (
     AssigneeInvalidError,
     FlagClosedError,
     InvalidTransitionError,
+    SubjectCannotReviewError,
 )
 from farmerapp.flags.models import (
     LABELS,
@@ -327,6 +328,26 @@ def is_subject(actor: User, flag: Flag) -> bool:
     return flag.subject_type == Subject.EMPLOYEE.value and flag.subject_id == actor.id
 
 
+def about_me(actor: User) -> list[ColumnElement[bool]]:
+    """VA-005: flags about ``actor`` as an employee (any staff role may be a subject)."""
+    return [
+        Flag.tenant_id == actor.tenant_id,
+        Flag.deleted_at.is_(None),
+        Flag.subject_type == Subject.EMPLOYEE.value,
+        Flag.subject_id == actor.id,
+    ]
+
+
+async def own_flag(session: AsyncSession, actor: User, flag_id: uuid.UUID) -> Flag:
+    """A flag about the caller (404 otherwise, whatever their review scope)."""
+    flag = (
+        await session.execute(select(Flag).where(Flag.id == flag_id, *about_me(actor)))
+    ).scalar_one_or_none()
+    if flag is None:
+        raise NotFoundError("Flag not found.")
+    return flag
+
+
 def is_reviewer(actor: User) -> bool:
     return UserRole(actor.role) in REVIEWER_ROLES
 
@@ -354,6 +375,8 @@ async def transition(
     now: datetime,
 ) -> Flag:
     current = FlagStatus(flag.status)
+    if is_subject(actor, flag):  # VA-005: the subject explains, never reviews
+        raise SubjectCannotReviewError("A flag about you is reviewed by someone else.")
     if to not in TRANSITIONS[current]:
         raise InvalidTransitionError(
             f"A flag in '{current.value}' cannot move to '{to.value}'.",
@@ -567,6 +590,7 @@ __all__ = [
     "FINANCE_RULES",
     "REVIEWER_ROLES",
     "Escalation",
+    "about_me",
     "add_comment",
     "assign",
     "dedupe_key",
@@ -575,6 +599,7 @@ __all__ = [
     "flag_filters",
     "is_reviewer",
     "is_subject",
+    "own_flag",
     "raise_flag",
     "raise_system_flag",
     "transition",

@@ -1,0 +1,15 @@
+description: >
+  The officer's duty session yesterday measured 40 km; the TA claim for that day (a
+  TravelClaimPort fake standing in for FA-023) says 60 km, 50 % more. The claim's submission
+  (`ta.claim.submitted`) raises one medium flag for the cluster head.
+mode: event
+trigger: ta.claim.submitted
+subjects: [claim1]
+seed:
+  duty:
+    - {ref: d1, officer: officer, start: -30h, end: -22h, km: 40.0}
+  travel_claims:
+    - {ref: claim1, officer: officer, day: -26h, km: 60.0}
+expect:
+  flags:
+    - {subject: officer, severity: medium, owner: cluster_head, watchers: [], reasons: [ta_km_mismatch]}

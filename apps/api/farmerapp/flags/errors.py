@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from farmerapp.api.errors import AppError, ConflictError
+from farmerapp.api.errors import AppError, ConflictError, ForbiddenError
 
 
 class InvalidTransitionError(ConflictError):
@@ -22,4 +22,15 @@ class AssigneeInvalidError(AppError):
     code = "assignee_invalid"
 
 
-__all__ = ["AssigneeInvalidError", "FlagClosedError", "InvalidTransitionError"]
+class SubjectCannotReviewError(ForbiddenError):
+    """VA-005: the employee a flag is about may explain it, never move it."""
+
+    code = "subject_cannot_review"
+
+
+__all__ = [
+    "AssigneeInvalidError",
+    "FlagClosedError",
+    "InvalidTransitionError",
+    "SubjectCannotReviewError",
+]

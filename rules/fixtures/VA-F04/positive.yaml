@@ -1,0 +1,22 @@
+description: >
+  The tenant serves one district (a bounding box around the village). One farm lies 100 km
+  east, outside every service district; another sits inside the district but the land-cover
+  layer (LandCoverPort fake) says water. Two medium flags for the store manager.
+mode: batch
+seed:
+  tenant_settings:
+    service_area:
+      districts:
+        - {code: TG-WGL, name: Warangal, state: Telangana, bbox: [79.2, 17.7, 79.9, 18.4]}
+  farmers:
+    - {ref: far, name: Ramesh, at: -10d}
+    - {ref: wet, name: Suresh, at: -10d}
+  farms:
+    - {ref: farm_far, farmer: far, area_acres: 1.0, square: {east_m: 100000, north_m: 0, side_m: 64}}
+    - {ref: farm_wet, farmer: wet, area_acres: 1.0, square: {east_m: 0, north_m: 0, side_m: 64}}
+  land_cover:
+    - {farm: farm_wet, class: water}
+expect:
+  flags:
+    - {subject: far, severity: medium, owner: store_manager, watchers: [], reasons: [outside_service_area]}
+    - {subject: wet, severity: medium, owner: store_manager, watchers: [], reasons: [land_cover_water]}

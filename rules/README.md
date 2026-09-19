@@ -75,6 +75,8 @@ and `tests/rules/test_loader.py`).
 | `location.batch`     | batch ingest (REST + sync): `LocationBatchIngested`      | yes              | duty session       | VA-E01, VA-E02           |
 | `payment.captured`   | payments bus: `PaymentCaptured`                          | —                | payment            | (none yet)               |
 | `payment.webhook`    | —                                                        | yes              | payment            | (none yet)               |
+| `day_close.variance` | ST-006 day close: `CashVarianceDetected` (payments bus, `dispatch`) | —          | day close          | VA-E10                   |
+| `ta.claim.submitted` | FA-023 claim submit: `rules.events.on_travel_claim_submitted` | (topic TBD) | TA claim         | VA-E07                   |
 
 The visits and location buses are synchronous for plain subscribers; database work hangs off
 `subscribe_async` + `await bus.dispatch(session, event)`, which runs each subscriber in the
@@ -155,6 +157,49 @@ seed:
                    phone: "+919876500001", device: OFFICER-PHONE}]
 ```
 
+M7 records (`tests/rules/harness_m7.py` has every key):
+
+```yaml
+seed:
+  tenant_settings: {service_area: {districts: [{code: TG-WGL, name: Warangal,
+                    bbox: [79.2, 17.7, 79.9, 18.4]}]}, discount_policy_max_bps: 1000}
+  crop_calendar: [telangana, {district: Warangal, crop: tomato, season: kharif,
+                              start: "05-01", end: "05-31"}]
+  crop_plots: [{ref: plot1, farm: farm1, crop: paddy, season: kharif, sown: 2026-06-20}]
+  consents:   [{farmer: f1, purpose: marketing, granted: -60d}, {farmer: f1, withdrawn: -2d}]
+  farmer_logins: [{farmer: f1, at: -70d}]
+  orders: [{ref: o1, placed_by: officer, farmer: f1, at: -3h, subtotal: 100000, discount: 20000,
+            cancelled: -1d}]
+  khata:  [{ref: d1, farmer: f1, type: debit, amount: 500000, at: -60d, due: -10d}]
+  day_closes: [{ref: dc1, closed_by: store_manager, at: -2h, expected: 1000000, counted: 900000}]
+  duty: [{ref: d1, start: -30h, end: -22h, km: 40.0}]            # km for VA-E07
+  visits: [{ref: v1, farmer: f1, at: -3d, minutes: 20, status: verified}]   # VA-E11
+  # port fakes (farmerapp.rules.ports), installed for the run:
+  segment_members: [{farmer: f1, segment: paddy-growers, campaign: cmp-1}]  # VA-F09
+  travel_claims: [{ref: claim1, officer: officer, day: -26h, km: 60.0}]    # VA-E07
+  land_cover: [{farm: farm1, class: water}]                                 # VA-F04
+```
+
+## Ports (data the rules cannot read yet)
+
+Three M7 rules read data through `farmerapp.rules.ports` (null adapter = no rows = no flag,
+until the owning package registers a real adapter with `set_ports(...)` at startup):
+
+| Port | Rule | Real adapter | Until then |
+|------|------|--------------|------------|
+| `SegmentMembershipPort` | VA-F09 | WC-008 campaigns (segment members) | no members: nothing flagged |
+| `TravelClaimPort` | VA-E07 | FA-023 TA claims (travel package), which also calls `on_travel_claim_submitted` | no claims |
+| `LandCoverPort` | VA-F04 (road / water / built-up half) | **human gate**: ESA WorldCover (plus a road layer) loaded into PostGIS | only the service-district check runs |
+
+## Runtime switch (VA-006)
+
+`rule_tenant_override` switches one rule off for one tenant at runtime, on top of the YAML
+(which still wins: an override never turns on a rule the YAML disabled). The weekly
+`python -m farmerapp.jobs rules-quality-report` job disables a rule whose four-week
+precision (confirmed / resolved) is under 30 % with at least 5 resolutions, pending review;
+an owner or tenant admin re-enables it with `POST /v1/flags/rules/{id}/enable` (step-up,
+audited). Tune the rule through a config PR (bump `version`) before re-enabling it.
+
 Fixtures never read the wall clock: `now` is fixed and every time is relative to it. Location
 points live in daily partitions keyed by the **UTC** day; the harness creates the partitions
 of the days a fixture touches before inserting its points. Quote pHash values (a hex string
@@ -176,4 +221,27 @@ of digits only would otherwise parse as a number).
 | VA-E05 | one OTP phone confirming ≥ 3 farmers, or one farmer-side device (push / QR) confirming ≥ 3 farmers, in 7 days | batch | cluster head (+ auditors) |
 | VA-E08 | photo EXIF time / GPS inconsistent with the check-in (`photo_flags`), or the same sha256 / pHash on another visit; one flag per visit | event (`visit.photo`, `visit.checked_out`, `visit.created`) | cluster head (+ auditors) |
 
-All eleven P0 rules of M4 are in place; `tests/rules/test_fixtures.py::test_rules_exist` lists them.
+| VA-F04 | farm centroid outside the tenant's `service_area` districts, or on water / built-up / road (`LandCoverPort`) | batch | store manager |
+| VA-F05 | crop and sowing date vs season and the district crop calendar (`crop_calendar`, district row else state row; ±15 days) | batch | store manager |
+| VA-F07 | ghost farmer: registered ≥ 60 days ago, never a confirmed visit, purchase or app login | batch | store manager |
+| VA-F09 | in a campaign segment (`SegmentMembershipPort`) without marketing consent, or withdrawn | batch | store manager (+ auditors) |
+| VA-F10 | khata debit overdue > 90 days, or a new credit sale while a debit was overdue | batch | store manager |
+| VA-E06 | > 3 h of a duty session without a visit, a stop boundary or movement ≥ 100 m | batch | cluster head |
+| VA-E07 | TA claim km vs the duty track's km differ by > 15 % (`TravelClaimPort`) | event (`ta.claim.submitted`) | cluster head |
+| VA-E09 | discount above `discount_policy_max_bps`, sale to a staff phone (hash), ≥ 3 cancellations after the `incentive_cutoff_day` of orders placed in the period | batch | cluster head (+ auditors) |
+| VA-E10 | day close variance above `day_close_variance_threshold_paise`; ≥ 3 small variances in 14 days by one closer | event (`day_close.variance`), batch | cluster head |
+| VA-E11 | verified visits down > 30 % week on week for two complete IST weeks (coaching) | batch | cluster head |
+
+All 21 rules of SPEC 6.2 / 6.3 are in place (eleven P0 rules of M4, ten of M7);
+`tests/rules/test_fixtures.py::test_rules_exist` lists them and fails on any other set.
+
+## Review agent (VA-004)
+
+Every new flag gets a three-line plain summary and a suggested action written by an LLM from
+the flag's evidence bundle **only** (`farmerapp/flags/review_agent.py`): rule, severity,
+subject, record ids, scrubbed metrics (no names, phones masked, no coordinates, no photos,
+not the flag title). The answer must cite record ids of the bundle and nothing else
+(rejected and retried once otherwise). So write evidence that stands on its own: cite every
+record id in `records`, put the numbers a reviewer needs in `metrics`, and never put names
+or phone numbers in `metrics` (they are dropped from the prompt, and the reviewer sees the
+record summaries anyway).

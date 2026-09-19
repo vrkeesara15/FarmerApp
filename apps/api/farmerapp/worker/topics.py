@@ -13,3 +13,4 @@ class Topic(StrEnum):
     ORDER_CREATED = "order.created"
     LOCATION_BATCH = "location.batch"
     NOTIFY_SEND = "notify.send"
+    FLAG_CREATED = "flag.created"  # M7 VA-004 review agent (payload tenant_id, flag_id)

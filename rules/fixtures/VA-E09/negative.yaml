@@ -1,0 +1,17 @@
+description: >
+  A discount of exactly 10 % (the policy), a sale to an ordinary farmer, two cancellations
+  after the August cut-off (fewer than three) and three cancellations before it. No flag.
+mode: batch
+seed:
+  farmers:
+    - {ref: f1, at: -30d}
+  orders:
+    - {ref: o1, placed_by: officer, farmer: f1, at: -3h, subtotal: 100000, discount: 10000}
+    - {ref: o2, placed_by: officer, farmer: f1, at: -2h, subtotal: 50000}
+    - {ref: o3, placed_by: officer2, farmer: f1, at: -30d, subtotal: 80000, cancelled: -20d}
+    - {ref: o4, placed_by: officer2, farmer: f1, at: -29d, subtotal: 60000, cancelled: -20d}
+    - {ref: o5, placed_by: officer, farmer: f1, at: -34d, subtotal: 70000, cancelled: -29d}
+    - {ref: o6, placed_by: officer, farmer: f1, at: -33d, subtotal: 70000, cancelled: -29d}
+    - {ref: o7, placed_by: officer, farmer: f1, at: -32d, subtotal: 70000, cancelled: -28d}
+expect:
+  flags: []

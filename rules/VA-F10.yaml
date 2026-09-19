@@ -1,0 +1,17 @@
+# VA-F10 (SPEC 6.2): credit risk — a khata debit overdue more than `max_overdue_days`, or a
+# new credit sale (debit) written while the farmer already had an overdue debit at the store.
+# Ageing as FA-022 (`khata.aging`: credits settle the oldest due debits first).
+id: VA-F10
+version: 1
+title: Credit risk
+subject: farmer
+mode: batch
+severity: medium
+owner_role: store_manager
+sla_hours: 72
+enabled: true
+params:
+  max_overdue_days: 90         # a debit overdue more than this many days
+  min_overdue_days_for_new_credit: 1  # "overdue" at the moment the new credit was written
+  lookback_days: 7             # new credit sales of the last week are checked
+tenant_overrides: {}

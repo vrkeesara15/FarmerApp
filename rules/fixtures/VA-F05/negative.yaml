@@ -1,0 +1,21 @@
+description: >
+  Kharif paddy sown on 20 June; rabi paddy sown on 10 January (the window 1 November - 31
+  January wraps the new year); kharif groundnut sown on 20 May (12 days early, within the
+  tolerance); kharif tomato sown on 10 May, which the state window would reject but the
+  Warangal district row (1 - 31 May) allows. No flag.
+mode: batch
+seed:
+  crop_calendar:
+    - telangana
+    - {district: Warangal, crop: tomato, season: kharif, start: "05-01", end: "05-31"}
+  farmers:
+    - {ref: f1, name: Ramesh, at: -300d}
+  farms:
+    - {ref: farm1, farmer: f1, area_acres: 4.0, square: {east_m: 0, north_m: 0, side_m: 128}}
+  crop_plots:
+    - {ref: plot1, farm: farm1, crop: paddy, season: kharif, sown: 2026-06-20}
+    - {ref: plot2, farm: farm1, crop: paddy, season: rabi, sown: 2026-01-10}
+    - {ref: plot3, farm: farm1, crop: groundnut, season: kharif, sown: 2026-05-20}
+    - {ref: plot4, farm: farm1, crop: tomato, season: kharif, sown: 2026-05-10}
+expect:
+  flags: []
