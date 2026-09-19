@@ -69,3 +69,31 @@ def test_every_key_is_documented() -> None:
 def test_auto_end_as_time() -> None:
     assert TenantSettings().auto_duty_end_time().strftime("%H:%M") == "20:00"
     assert TenantSettings(auto_duty_end_local_time="07:05").auto_duty_end_time().hour == 7
+
+
+def test_ops_007_working_day_calendar() -> None:
+    from datetime import date, time
+
+    from pydantic import ValidationError
+
+    default = TenantSettings()
+    assert default.working_days == [1, 2, 3, 4, 5, 6]
+    assert default.day_close_deadline() == time(22, 0)
+    assert default.is_working_day(date(2026, 10, 5))  # Monday
+    assert not default.is_working_day(date(2026, 10, 4))  # Sunday
+    custom = TenantSettings.model_validate(
+        {"holidays": ["2026-10-02"], "working_days": [1, 2, 3, 4, 5, 6, 7]}
+    )
+    assert not custom.is_working_day(date(2026, 10, 2)) and custom.is_working_day(date(2026, 10, 4))
+    invalid: list[dict[str, object]] = [
+        {"working_days": [0]},
+        {"working_days": []},
+        {"holidays": ["2026-13-01"]},
+        {"day_close_deadline_local_time": "24:00"},
+    ]
+    for bad in invalid:
+        try:
+            TenantSettings.model_validate(bad)
+        except ValidationError:
+            continue
+        raise AssertionError(f"accepted {bad}")

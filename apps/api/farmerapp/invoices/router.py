@@ -21,6 +21,7 @@ from farmerapp.api.errors import problem_responses
 from farmerapp.auth.deps import DbSession, Services
 from farmerapp.auth.models import User
 from farmerapp.auth.policy import Role, require_roles
+from farmerapp.integrity.deps import integrity_for
 from farmerapp.invoices.ports import OrderPort
 from farmerapp.invoices.schemas import (
     InvoiceOut,
@@ -77,6 +78,7 @@ router = APIRouter(prefix="/invoices", tags=["invoices"])
 @pos_router.post(
     "/{id}/pos/sales",
     operation_id="createPosSale",
+    dependencies=[Depends(integrity_for("payment_collection"))],  # SEC-024: never blocks
     summary="Counter sale with GST invoice and payment (ST-001)",
     status_code=status.HTTP_201_CREATED,
     response_model=PosSaleOut,

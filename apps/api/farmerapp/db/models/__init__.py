@@ -18,6 +18,7 @@ from farmerapp.location.models import DutySession, LocationDailyAgg, LocationPoi
 from farmerapp.notifications.models import Notification
 from farmerapp.orders.models import Order, OrderLine, OrderStatusEvent
 from farmerapp.payments.models import DayClose, Payment, WebhookEvent
+from farmerapp.pii.models import TenantDataKey
 from farmerapp.stock.models import StockBatch, StockMovement, StockReservation
 from farmerapp.sync.models import SyncChange, SyncOp
 from farmerapp.tenants.models import Cluster, Store, Village
@@ -68,6 +69,7 @@ __all__ = [
     "SyncChange",
     "SyncOp",
     "Tenant",
+    "TenantDataKey",
     "UploadChunk",
     "UploadSession",
     "User",

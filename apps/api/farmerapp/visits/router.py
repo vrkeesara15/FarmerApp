@@ -91,7 +91,7 @@ async def visit_detail(
     for photo in await service.photos_of(session, visit):
         url = expires = None
         if blobs is not None and now is not None:
-            signed = blobs.signed_url(
+            signed = await blobs.signed_url(
                 photo.blob_uri, ttl=timedelta(seconds=signed_url_ttl_s), now=now
             )
             url, expires = signed.url, signed.expires_at
@@ -246,7 +246,7 @@ async def add_visit_photo(
     photo = await service.add_photo(
         session, actor, visit, body, blobs=get_blob_store(request), now=services.clock.now()
     )
-    signed = get_blob_store(request).signed_url(
+    signed = await get_blob_store(request).signed_url(
         photo.blob_uri,
         ttl=timedelta(seconds=services.settings.signed_url_ttl_seconds),
         now=services.clock.now(),

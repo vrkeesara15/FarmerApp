@@ -379,6 +379,14 @@ async def check_in(
     session.add(visit)
     await session.flush()
     await session.refresh(visit)  # load checkin_lat / checkin_lon and the server defaults
+    # Business metric ``farmerapp_visits_created`` (REST and sync; replays return earlier).
+    log.info(
+        "visit_created",
+        tenant_id=str(tenant_id),
+        visit_id=str(visit.id),
+        officer_id=str(actor.id),
+        geofence_result=result.value,
+    )
 
     if issues:
         log.warning(

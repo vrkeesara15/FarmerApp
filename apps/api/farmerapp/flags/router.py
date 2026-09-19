@@ -55,6 +55,7 @@ from farmerapp.flags.schemas import (
     FlagPage,
     TransitionIn,
 )
+from farmerapp.payments.models import Payment
 from farmerapp.rules.schema import Severity, Subject
 from farmerapp.tenants.models import Store
 from farmerapp.uploads.blobstore import BlobStore
@@ -69,7 +70,9 @@ REVIEW_ROLES = (
     Role.STORE_MANAGER,
     Role.TENANT_ADMIN,
 )
-READ_ROLES = (*REVIEW_ROLES, Role.FIELD_OFFICER)
+#: Field officers read flags about themselves (VA-005); accountants the OPS-008 finance
+#: tickets they watch.
+READ_ROLES = (*REVIEW_ROLES, Role.FIELD_OFFICER, Role.ACCOUNTANT)
 
 router = APIRouter(prefix="/flags", tags=["flags"])
 
@@ -118,6 +121,17 @@ async def _summary(session: AsyncSession, kind: str, record_id: uuid.UUID) -> di
         case "store":
             store = await session.get(Store, record_id)
             return {"code": store.code, "name": store.name} if store is not None else {}
+        case "payment":
+            payment = await session.get(Payment, record_id)
+            if payment is None:
+                return {}
+            return {
+                "mode": payment.mode,
+                "status": payment.status,
+                "amount_paise": payment.amount_paise,
+                "store_id": str(payment.store_id),
+                "provider_ref": payment.provider_ref,
+            }
     return {}
 
 
@@ -145,7 +159,7 @@ async def _evidence(
     photos: list[EvidencePhoto] = []
     for uri in raw.get("photos") or []:
         try:
-            signed = blobs.signed_url(str(uri), ttl=timedelta(seconds=ttl_s), now=now)
+            signed = await blobs.signed_url(str(uri), ttl=timedelta(seconds=ttl_s), now=now)
         except ValueError:
             photos.append(EvidencePhoto(blob_uri=str(uri)))
             continue

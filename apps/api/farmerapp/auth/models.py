@@ -19,6 +19,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     String,
     UniqueConstraint,
     text,
@@ -27,6 +28,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from farmerapp.db.base import Base, BaseColumns
 from farmerapp.db.geo import SRID
+from farmerapp.pii.fields import EncryptedField, mask_phone
 
 
 class UserRole(StrEnum):
@@ -97,12 +99,23 @@ class User(Base, BaseColumns):
     __tablename__ = "user"
     __table_args__ = (
         UniqueConstraint("tenant_id", "phone"),
+        # SEC-026: the searchable hash is unique per tenant; login looks it up across tenants.
+        UniqueConstraint("tenant_id", "phone_hash", name="uq_user_tenant_id_phone_hash"),
         CheckConstraint(f"role IN ({_in(UserRole)})", name="role"),
         CheckConstraint(f"status IN ({_in(UserStatus)})", name="status"),
         Index("ix_user_phone", "phone"),
+        Index("ix_user_phone_hash", "phone_hash"),
     )
 
-    phone: Mapped[str] = mapped_column(String(16), nullable=False)
+    # SEC-026: ``phone`` is encrypted (``phone_enc``) with a searchable ``phone_hash``; the
+    # legacy plain column (``phone_plain``, SQL ``phone``) is read only until the backfill /
+    # contract steps (farmerapp/pii). Query by ``farmerapp.pii.lookup.phone_match``.
+    phone_plain: Mapped[str | None] = mapped_column("phone", String(16), nullable=True)
+    phone_enc: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    phone_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    phone: EncryptedField[str] = EncryptedField(
+        plain="phone_plain", enc="phone_enc", hash_attr="phone_hash", mask=mask_phone
+    )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     role: Mapped[str] = mapped_column(String(32), nullable=False)
     store_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)

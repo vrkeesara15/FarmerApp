@@ -101,6 +101,7 @@ from farmerapp.payments.models import Payment
 from farmerapp.payments.schemas import PaymentOut
 from farmerapp.policies import service as policies
 from farmerapp.policies.schemas import PolicyAcceptIn
+from farmerapp.rules import engine as rules_engine
 from farmerapp.settings import Settings
 from farmerapp.sync.models import SyncChange, SyncOp
 from farmerapp.sync.schemas import SyncChangeOut, SyncError, SyncOpIn, SyncResult
@@ -542,6 +543,20 @@ async def apply_ops(
     now = now or datetime.now(UTC)
     ctx = OpContext(settings=settings, now=now, services=services, blobs=blobs, payments=payments)
     results: list[SyncResult] = []
+    # NF-005: the inline / event rules of every op run once for the whole batch, at its end.
+    async with rules_engine.deferred(session):
+        await _apply_all(session, actor, ops, ctx, device_id, results)
+    return results
+
+
+async def _apply_all(
+    session: AsyncSession,
+    actor: User,
+    ops: list[SyncOpIn],
+    ctx: OpContext,
+    device_id: str,
+    results: list[SyncResult],
+) -> None:
     for op in ops:
         stored = (
             await session.execute(
@@ -566,17 +581,43 @@ async def apply_ops(
         )
         await session.flush()
         results.append(result)
+
+
+def batch_status(results: list[SyncResult]) -> str:
+    """``empty`` (a pull), ``ok`` (every op applied or a replay), ``partial`` (some ops
+    rejected or in conflict) or ``failed`` (none applied)."""
+    if not results:
+        return "empty"
+    bad = sum(r.status in ("rejected", "conflict") for r in results)
+    if bad == 0:
+        return "ok"
+    return "failed" if bad == len(results) else "partial"
+
+
+def log_sync_batch(
+    actor: User,
+    *,
+    device_id: str | None,
+    results: list[SyncResult],
+    changes: int,
+    has_more: bool,
+) -> None:
+    """One ``sync_batch`` line per ``POST /v1/sync`` (docs/runbooks/observability.md)."""
     log.info(
-        "sync_ops_applied",
+        "sync_batch",
+        tenant_id=str(actor.tenant_id),
         actor_id=str(actor.id),
+        role=str(actor.role),
         device_id=device_id,
-        ops=len(ops),
+        status=batch_status(results),
+        ops=len(results),
         applied=sum(r.status == "applied" for r in results),
         rejected=sum(r.status == "rejected" for r in results),
         conflicts=sum(r.status == "conflict" for r in results),
         duplicates=sum(r.status == "duplicate" for r in results),
+        changes=changes,
+        has_more=has_more,
     )
-    return results
 
 
 # --------------------------------------------------------------------------- changes feed

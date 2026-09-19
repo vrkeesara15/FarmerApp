@@ -26,6 +26,7 @@ class Subject(StrEnum):
     EMPLOYEE = "employee"
     VISIT = "visit"
     STORE = "store"
+    TENANT = "tenant"  # OPS monitors about the whole tenant (OPS-008 finance ticket)
 
 
 class Mode(StrEnum):

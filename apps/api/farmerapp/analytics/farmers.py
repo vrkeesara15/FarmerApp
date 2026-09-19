@@ -3,7 +3,8 @@
 Both read the live tables, so a profile reflects the latest sync the moment it is merged
 (WC-003 "profile reflects latest sync"; SPEC 5.3: P0 reads Postgres, not the marts).
 
-Directory: search ``q`` (name contains; a 4-digit ``q`` also matches the phone's last four;
+Directory: search ``q`` (name contains; a 4-digit ``q`` also matches the phone's last four, a
+whole phone number its SEC-026 hash;
 village name contains), filters ``district``, ``stage`` (a live crop plot at that stage),
 ``credit_risk`` (``low`` / ``medium`` / ``high``, see ``kpi.credit_risk``), ``last_visit``
 (``7d`` / ``30d`` / ``90d`` = a visit in the last N days up to ``to``; ``over_90d``; ``never``)
@@ -73,6 +74,7 @@ from farmerapp.khata.ledger import credit_settings
 from farmerapp.khata.models import CreditLimit, EntryType, KhataEntry
 from farmerapp.orders.models import Order, OrderLine
 from farmerapp.payments.models import Payment, PaymentMode
+from farmerapp.pii.crypto import normalise_phone, phone_hash
 from farmerapp.tenants.models import Village
 from farmerapp.visits.models import Visit
 
@@ -107,6 +109,18 @@ def decode_offset(token: str | None) -> int:
 
 def mask_phone(phone: str) -> str:
     return "*" * max(len(phone) - 4, 0) + phone[-4:]
+
+
+def mask_last4(last4: str) -> str:
+    """The directory mask of an E.164 Indian mobile (13 characters) from its last four."""
+    return "*" * 9 + last4
+
+
+def _as_phone(term: str) -> str | None:
+    try:
+        return normalise_phone(term)
+    except ValueError:
+        return None
 
 
 def _due_date(due_days: int) -> Any:
@@ -213,7 +227,8 @@ def _directory_rows(scope: Scope, due_days: int) -> Any:
         select(
             Farmer.id.label("id"),
             Farmer.name.label("name"),
-            Farmer.phone.label("phone"),
+            Farmer.phone_hash.label("phone_hash"),  # SEC-026: search by hash, never decrypt
+            Farmer.phone_plain.label("phone_plain"),  # legacy rows until the backfill
             Farmer.village_id.label("village_id"),
             Village.name.label("village"),
             Village.district.label("district"),
@@ -268,6 +283,9 @@ async def directory(
         conds = [rows.c.name.ilike(like), rows.c.village.ilike(like)]
         if term.isdigit() and len(term) == 4:
             conds.append(rows.c.phone_last4 == term)
+        full = _as_phone(term)
+        if full is not None:  # a whole number: the SEC-026 hash (legacy rows: plain)
+            conds.append(or_(rows.c.phone_hash == phone_hash(full), rows.c.phone_plain == full))
         where.append(or_(*conds))
     if district:
         where.append(func.lower(rows.c.district) == district.lower())
@@ -315,7 +333,7 @@ async def directory(
         FarmerRow(
             id=r.id,
             name=r.name,
-            phone_masked=mask_phone(r.phone),
+            phone_masked=mask_last4(r.phone_last4),
             village_id=r.village_id,
             village=r.village,
             district=r.district,

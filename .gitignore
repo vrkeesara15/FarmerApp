@@ -39,3 +39,6 @@ build/
 .vscode/
 # Claude Code agent worktrees
 .claude/worktrees/
+
+# NF-005 latency suite output (make perf-api)
+apps/api/perf-report.md

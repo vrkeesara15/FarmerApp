@@ -47,6 +47,7 @@ from farmerapp.visits.scoring import status_for
 from tests.auth.conftest import last_code
 from tests.authz.conftest import World
 from tests.farmers.write_fixtures import BASE_LAT, BASE_LON, WriteCtx
+from tests.logcontract import assert_fields, capture, json_events, one_event
 from tests.sync.conftest import op, sync
 
 T0 = datetime(2026, 9, 18, 5, 0, tzinfo=UTC)  # 10:30 IST
@@ -1430,3 +1431,19 @@ async def test_sync_farmer_posts_a_scanned_qr_token(client: AsyncClient, flow: F
         replay["results"][0]["status"] == "conflict"
         and replay["results"][0]["server"]["status"] == "confirmed"
     )
+
+
+# ------------------------------------------------------------------ NF-014 log contract
+async def test_visit_created_log_contract(
+    client: AsyncClient, flow: Flow, caplog: pytest.LogCaptureFixture
+) -> None:
+    """``farmerapp_visits_created`` (business-ops dashboard) counts ``visit_created``."""
+    capture(caplog)
+    body = await _visit(client, flow)
+    line = one_event(caplog, "visit_created")
+    assert_fields(line, tenant_id=str, visit_id=str, officer_id=str, geofence_result=str)
+    assert line["visit_id"] == body["id"] and line["officer_id"] == str(flow.officer.id)
+    # A replay (same id) returns the existing visit and logs nothing new.
+    before = len(json_events(caplog, "visit_created"))
+    await _check_in(client, flow, id=body["id"])
+    assert len(json_events(caplog, "visit_created")) == before

@@ -11,7 +11,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from sqlalchemy import Index, String, Uuid
+from sqlalchemy import Index, String, Uuid, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -32,6 +32,13 @@ class AuditLog(Base, TenantRow):
         ),
         # GET /v1/audit-logs listing + purge by age.
         Index("ix_audit_log_tenant_created", "tenant_id", "created_at", "id"),
+        # VA-F06 shared devices: farmer registrations by device (NF-005; Alembic 0026).
+        Index(
+            "ix_audit_log_farmer_create_device",
+            "tenant_id",
+            "device_id",
+            postgresql_where=text("action = 'farmer.create'"),
+        ),
     )
     __audit__ = False  # the trail does not audit itself
 
@@ -46,3 +53,6 @@ class AuditLog(Base, TenantRow):
     device_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     user_agent: Mapped[str | None] = mapped_column(String(512), nullable=True)
     trace_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    # SEC-024: Play Integrity verdict of the request that wrote the row (login and sensitive
+    # actions; NULL otherwise). ``{status, actions, reasons, package, app_verdict, ...}``.
+    integrity: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)

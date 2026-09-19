@@ -21,7 +21,6 @@ Params: ``min_farmers_per_phone``, ``min_farmers_per_device``, ``window_days``.
 
 from __future__ import annotations
 
-import hashlib
 import uuid
 from collections import Counter
 from dataclasses import dataclass
@@ -32,6 +31,7 @@ from sqlalchemy import Select, select
 
 from farmerapp.auth.models import OtpChallenge
 from farmerapp.auth.providers import mask_phone
+from farmerapp.pii.crypto import phone_hash
 from farmerapp.rules.checks.common import IST
 from farmerapp.rules.registry import Evidence, Finding, RuleContext, record, rule
 from farmerapp.rules.schema import Subject
@@ -124,7 +124,7 @@ async def _same_phone(ctx: RuleContext, since: datetime) -> list[Finding]:
         farmers = {r.farmer for r in rows}
         if len(farmers) < minimum:
             continue
-        digest = hashlib.sha256(phone.encode()).hexdigest()[:16]
+        digest = phone_hash(phone)[:16]  # SEC-026 peppered hash: not reversible offline
         findings.append(
             _finding(
                 rows,

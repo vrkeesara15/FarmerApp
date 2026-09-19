@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 
 from farmerapp import __version__
+from tests.logcontract import assert_fields, capture, one_event
 
 
 async def test_health_ok(client: AsyncClient) -> None:
@@ -68,3 +69,20 @@ async def test_lifespan_runs_the_scheduler_loop(
     n = len(calls)
     await asyncio.sleep(0.05)
     assert len(calls) == n  # loop stopped with the app
+
+
+# ---------------------------------------------------------------- NF-014 access log contract
+async def test_access_log_line_carries_the_metric_fields(
+    client: AsyncClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    """``farmerapp_api_read_latency`` / ``_write_latency`` / ``_sync_*`` read these fields."""
+    capture(caplog)
+    trace = "4bf92f3577b34da6a3ce929d0e0e4736"
+    resp = await client.get(
+        "/v1/health", headers={"traceparent": f"00-{trace}-00f067aa0ba902b7-01"}
+    )
+    assert resp.headers["X-Request-Id"] == trace  # W3C trace context wins over X-Request-Id
+    line = one_event(caplog, "request")
+    assert_fields(line, method=str, path=str, status=int, duration_ms=float, trace_id=str)
+    assert line["method"] == "GET" and line["path"] == "/v1/health" and line["status"] == 200
+    assert line["trace_id"] == trace and line["severity"] == "INFO"

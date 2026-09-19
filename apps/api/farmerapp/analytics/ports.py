@@ -69,6 +69,12 @@ class FlagCountsPort(Protocol):
         self, session: AsyncSession, query: FlagQuery, limit: int
     ) -> list[FlagSummary]: ...
 
+    async def open_totals(
+        self, session: AsyncSession, query: FlagQuery, instants: list[datetime]
+    ) -> list[int]:
+        """``open_total`` as of each instant (a trend) in one round trip."""
+        ...
+
 
 class NullFlagCounts:
     """Until the flags branch lands: no flags anywhere."""
@@ -80,6 +86,11 @@ class NullFlagCounts:
         self, session: AsyncSession, query: FlagQuery, limit: int
     ) -> list[FlagSummary]:
         return []
+
+    async def open_totals(
+        self, session: AsyncSession, query: FlagQuery, instants: list[datetime]
+    ) -> list[int]:
+        return [0 for _ in instants]
 
 
 NULL_FLAG_COUNTS = NullFlagCounts()

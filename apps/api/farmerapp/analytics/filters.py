@@ -381,7 +381,7 @@ async def _stores(session: AsyncSession, tenant_id: uuid.UUID) -> list[StoreInfo
 
 async def _officers(session: AsyncSession, tenant_id: uuid.UUID) -> list[OfficerInfo]:
     rows = await session.execute(
-        select(User.id, User.name, User.phone, User.store_id, User.cluster_id, User.status)
+        select(User)
         .where(
             User.tenant_id == tenant_id,
             User.role == UserRole.FIELD_OFFICER.value,
@@ -389,7 +389,10 @@ async def _officers(session: AsyncSession, tenant_id: uuid.UUID) -> list[Officer
         )
         .order_by(User.name, User.id)
     )
-    return [OfficerInfo(*r) for r in rows]
+    return [
+        OfficerInfo(u.id, u.name, u.phone, u.store_id, u.cluster_id, u.status)  # SEC-026 decrypt
+        for u in rows.scalars()
+    ]
 
 
 async def resolve_scope(session: AsyncSession, actor: User, filters: AnalyticsFilters) -> Scope:

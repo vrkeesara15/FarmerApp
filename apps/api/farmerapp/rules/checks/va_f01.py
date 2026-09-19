@@ -19,6 +19,8 @@ from sqlalchemy import select
 
 from farmerapp.auth.models import User, UserRole
 from farmerapp.farmers.models import Farmer
+from farmerapp.pii.crypto import phone_hash
+from farmerapp.pii.lookup import phone_in
 from farmerapp.rules.registry import Evidence, Finding, RuleContext, record, rule
 from farmerapp.rules.schema import Subject
 
@@ -34,24 +36,23 @@ async def check(ctx: RuleContext) -> list[Finding]:
     farmers = (await ctx.session.execute(stmt)).scalars().all()
     if not farmers:
         return []
-    staff = set(
-        (
-            await ctx.session.execute(
-                select(User.phone).where(
-                    User.tenant_id == ctx.tenant_id,
-                    User.role != UserRole.FARMER.value,
-                    User.deleted_at.is_(None),
-                    User.phone.in_([f.phone for f in farmers]),
-                )
-            )
-        ).scalars()
+    staff_rows = await ctx.session.execute(
+        select(User.phone_hash, User.phone_plain).where(
+            User.tenant_id == ctx.tenant_id,
+            User.role != UserRole.FARMER.value,
+            User.deleted_at.is_(None),
+            phone_in(User, [f.phone for f in farmers]),  # SEC-026: by hash
+        )
     )
+    staff: set[str] = set()
+    for hashed, plain in staff_rows.tuples():
+        staff.add(hashed or phone_hash(plain or ""))
     findings: list[Finding] = []
     for farmer in farmers:
         reasons: list[str] = []
         if not pattern.fullmatch(farmer.phone):
             reasons.append("phone_format")
-        if farmer.phone in staff:
+        if phone_hash(farmer.phone) in staff:
             reasons.append("staff_phone")
         if farmer.phone in blocklist:
             reasons.append("blocklisted_phone")

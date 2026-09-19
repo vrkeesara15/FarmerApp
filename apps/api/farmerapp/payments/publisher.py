@@ -9,6 +9,10 @@
 * ``RecordingPublisher`` — keeps messages in memory (tests; the test then runs the worker
   handler in-process with the recorded message).
 
+Every message carries the W3C ``traceparent`` of the publishing request as a message
+attribute (NF-014, ``farmerapp.telemetry.inject_trace_attributes``); the worker continues
+that trace (``farmerapp.worker.app``).
+
 ``payment_webhook_delivery = inline`` (the local / dev default) publishes nothing: the
 verified event is applied in the request transaction (``farmerapp.payments.webhooks``).
 """
@@ -23,6 +27,7 @@ from typing import Any, Protocol
 
 import httpx
 
+from farmerapp.telemetry import inject_trace_attributes
 from farmerapp.worker.messages import PubSubMessage
 from farmerapp.worker.topics import Topic
 
@@ -37,6 +42,13 @@ class Publisher(Protocol):
 
 def encode(data: dict[str, Any]) -> str:
     return base64.b64encode(json.dumps(data, separators=(",", ":")).encode()).decode()
+
+
+def message_attributes(topic: Topic) -> dict[str, str]:
+    """``topic`` plus the trace context (``traceparent``) of the current request."""
+    attributes = {"topic": str(topic)}
+    inject_trace_attributes(attributes)
+    return attributes
 
 
 class PubSubRestPublisher:
@@ -62,7 +74,7 @@ class PubSubRestPublisher:
             token = await self._token_provider()
             if token:
                 headers["Authorization"] = f"Bearer {token}"
-        body = {"messages": [{"data": encode(data), "attributes": {"topic": str(topic)}}]}
+        body = {"messages": [{"data": encode(data), "attributes": message_attributes(topic)}]}
         try:
             if self._client is not None:
                 resp = await self._client.post(url, json=body, headers=headers)
@@ -79,20 +91,29 @@ class PubSubRestPublisher:
 @dataclass
 class RecordingPublisher:
     messages: list[tuple[Topic, dict[str, Any]]] = field(default_factory=list)
+    attributes: list[dict[str, str]] = field(default_factory=list)
     fail: bool = False
 
     async def publish(self, topic: Topic, data: dict[str, Any]) -> str:
         if self.fail:
             raise PublishError("recording publisher set to fail")
         self.messages.append((topic, data))
+        self.attributes.append(message_attributes(topic))
         return str(len(self.messages))
 
     def message(self, index: int = -1) -> PubSubMessage:
         """The recorded message as the worker would receive it (push envelope ``message``)."""
-        topic, data = self.messages[index]
+        _, data = self.messages[index]
         return PubSubMessage(
-            data=encode(data), attributes={"topic": str(topic)}, message_id=str(index)
+            data=encode(data), attributes=dict(self.attributes[index]), message_id=str(index)
         )
 
 
-__all__ = ["PubSubRestPublisher", "PublishError", "Publisher", "RecordingPublisher", "encode"]
+__all__ = [
+    "PubSubRestPublisher",
+    "PublishError",
+    "Publisher",
+    "RecordingPublisher",
+    "encode",
+    "message_attributes",
+]

@@ -61,6 +61,7 @@ from farmerapp.farmers.models import Farmer
 from farmerapp.khata.credit import CreditDecision, check_and_reserve_credit
 from farmerapp.khata.ledger import post_credit
 from farmerapp.khata.models import EntryRef, EntryType, KhataEntry
+from farmerapp.logging import get_logger
 from farmerapp.notifications.models import Notification
 from farmerapp.orders.models import (
     FULFILLED_STATUSES,
@@ -96,6 +97,8 @@ from farmerapp.stock.service import (
 )
 from farmerapp.tenants.models import Store, Village
 from farmerapp.uploads.blobstore import BlobStore
+
+log = get_logger("farmerapp.orders")
 
 NOTIFICATION_KIND = "order_status"
 NOTIFICATION_TITLE_KEY = "order.status.title"
@@ -398,6 +401,17 @@ async def _farmer_user(session: AsyncSession, order: Order) -> uuid.UUID | None:
 
 
 # --------------------------------------------------------------------------- place
+def log_order_created(order: Order) -> None:
+    """Business metric ``farmerapp_orders_created`` (docs/runbooks/observability.md)."""
+    log.info(
+        "order_created",
+        tenant_id=str(order.tenant_id),
+        order_id=str(order.id),
+        channel=str(order.channel),
+        total_paise=order.total_paise,
+    )
+
+
 async def place_order(
     session: AsyncSession, actor: User, body: OrderCreate, *, today: date
 ) -> PlaceResult:
@@ -443,6 +457,7 @@ async def place_order(
     )
     session.add(order)
     await session.flush()
+    log_order_created(order)
     lines: list[OrderLine] = []
     for p, allocation in zip(priced, allocations, strict=True):
         line = OrderLine(

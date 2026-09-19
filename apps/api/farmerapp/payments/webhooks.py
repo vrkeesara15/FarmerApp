@@ -140,13 +140,17 @@ async def apply_webhook_event(
     result = await _apply(session, row, provider=provider, ledger=ledger, now=now)
     row.status, row.error, row.processed_at = result.status.value, result.error, now
     await session.flush()
+    # OPS / SLO "payment webhook 99.9% within 2 min": processed_at - received_at in ms.
+    processing_ms = max(0, int((now - row.received_at).total_seconds() * 1000))
     log.info(
         "webhook_applied",
+        tenant_id=str(row.tenant_id),
         event_id=row.event_id,
         event_type=row.event_type,
         status=result.status.value,
         error=result.error,
         payment_id=str(result.payment_id) if result.payment_id else None,
+        processing_ms=processing_ms,
     )
     return result
 

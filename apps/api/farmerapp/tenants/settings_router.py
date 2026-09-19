@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Annotated, Any
 
 from fastapi import APIRouter
@@ -112,6 +113,13 @@ class SettingsPatch(BaseModel):
     legal_name: str | None = None
     gstin_by_state: dict[str, str] | None = None
     invoice_prefix: str | None = None
+    working_days: list[int] | None = Field(
+        default=None, description="OPS-007 ISO weekdays 1 (Mon) - 7 (Sun)."
+    )
+    holidays: list[date] | None = Field(default=None, description="OPS-007 YYYY-MM-DD dates.")
+    day_close_deadline_local_time: str | None = Field(
+        default=None, description="OPS-007 HH:MM (IST)."
+    )
     languages_enabled: list[Language] | None = None
     default_language: Language | None = None
     branding: BrandingPatch | None = None
@@ -167,7 +175,7 @@ async def update_settings(
 ) -> TenantSettings:
     tenant = await session.get_one(Tenant, actor.tenant_id)
     before = settings_from_tenant(tenant)
-    patch = body.model_dump(exclude_unset=True)
+    patch = body.model_dump(exclude_unset=True, mode="json")
     branding_patch = patch.pop("branding", None)
     sampling_patch = patch.pop("sampling", None)
 

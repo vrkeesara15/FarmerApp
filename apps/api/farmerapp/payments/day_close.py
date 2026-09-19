@@ -33,6 +33,7 @@ from farmerapp.auth.deps import DbSession, Services
 from farmerapp.auth.models import User, UserRole, UserStatus
 from farmerapp.auth.policy import Role, require_roles
 from farmerapp.auth.scope import visible_store_filters
+from farmerapp.integrity.deps import integrity_for
 from farmerapp.logging import get_logger
 from farmerapp.notifications.models import Notification
 from farmerapp.payments.config import IST
@@ -396,6 +397,7 @@ async def get_day_summary(
 @router.post(
     "/{id}/day-close",
     operation_id="closeStoreDay",
+    dependencies=[Depends(integrity_for("day_close"))],  # SEC-024: never blocks
     summary="Close the store's day: cash count, variance, deposit slip (ST-006)",
     status_code=201,
     response_model=DayCloseOut,

@@ -27,6 +27,9 @@ webhook_replay_window_s             300          SEC-023 reject webhooks older t
 legal_name                          tenant name  ST-001 seller on the GST invoice
 gstin_by_state                      placeholder  ST-001 seller GSTIN per state (TODO-HUMAN)
 invoice_prefix                      slug upper   ST-001 first segment of the invoice number
+working_days                        [1..6]       OPS-007 ISO weekdays stores trade (Mon-Sat)
+holidays                            []           OPS-007 dates (YYYY-MM-DD) no store trades
+day_close_deadline_local_time       "22:00"      OPS-007 a working day not closed by then alerts
 languages_enabled                   all five     NF-008 languages the apps offer
 default_language                    "en"         language of a new user
 branding.*                          see Branding C102 app names, colour, logo, support phone
@@ -44,10 +47,11 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Mapping
-from datetime import time
+from datetime import date, time
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
+from sqlalchemy import inspect
 
 from farmerapp.farmers.models import DEFAULT_CONSENT_VERSION
 from farmerapp.logging import get_logger
@@ -98,6 +102,9 @@ SETTINGS_KEYS: Mapping[str, str] = {
     "legal_name": "ST-001 seller legal name on invoices",
     "gstin_by_state": "ST-001 seller GSTIN per state",
     "invoice_prefix": "ST-001 invoice number prefix",
+    "working_days": "OPS-007 ISO weekdays the stores trade (1 = Monday .. 7 = Sunday)",
+    "holidays": "OPS-007 dates (YYYY-MM-DD) on which no store trades",
+    "day_close_deadline_local_time": "OPS-007 local time (HH:MM, IST) by which a day is closed",
     "languages_enabled": "NF-008 languages offered in the apps",
     "default_language": "Language of new users",
     "branding": "C102 app names, primary colour, logo and support phone (tenant.branding)",
@@ -151,6 +158,11 @@ class TenantSettings(BaseModel):
     legal_name: str | None = Field(default=None, min_length=1, max_length=200)
     gstin_by_state: dict[str, Gstin] = Field(default_factory=dict)
     invoice_prefix: str | None = Field(default=None, max_length=8, pattern=r"^[A-Z0-9]+$")
+    working_days: list[Annotated[int, Field(ge=1, le=7)]] = Field(
+        default_factory=lambda: [1, 2, 3, 4, 5, 6], min_length=1, max_length=7
+    )
+    holidays: list[date] = Field(default_factory=list, max_length=366)
+    day_close_deadline_local_time: str = Field(default="22:00", pattern=_HHMM)
     languages_enabled: list[Language] = Field(
         default_factory=lambda: list(SUPPORTED_LANGUAGES), min_length=1
     )
@@ -160,6 +172,14 @@ class TenantSettings(BaseModel):
     def auto_duty_end_time(self) -> time:
         hour, minute = self.auto_duty_end_local_time.split(":")
         return time(int(hour), int(minute))
+
+    def day_close_deadline(self) -> time:
+        hour, minute = self.day_close_deadline_local_time.split(":")
+        return time(int(hour), int(minute))
+
+    def is_working_day(self, day: date) -> bool:
+        """OPS-007 tenant calendar: a working weekday that is not a holiday."""
+        return day.isoweekday() in self.working_days and day not in self.holidays
 
     @property
     def meeting_point_default_radius_m(self) -> int:
@@ -211,11 +231,35 @@ def settings_from_tenant(tenant: Tenant | None) -> TenantSettings:
     return parse_settings(tenant.settings, tenant.branding)
 
 
+_CACHE = "tenant_settings"
+
+
 async def get_tenant_settings(session: AsyncSession, tenant_id: uuid.UUID) -> TenantSettings:
-    """The one accessor for tenant settings (a missing row means the defaults)."""
+    """The one accessor for tenant settings (a missing row means the defaults).
+
+    Cached per session (NF-005: a sync batch re-read the tenant row for every op, the session's
+    identity map holding it only weakly). The cache keeps the row and its ``version``: a change
+    made in this session (a settings PATCH, tests) bumps the version on flush, or leaves the row
+    modified before it, and either one reloads."""
     from farmerapp.db.models.tenant import Tenant
 
-    return settings_from_tenant(await session.get(Tenant, tenant_id))
+    cache: dict[uuid.UUID, tuple[Any, int, TenantSettings]] = session.info.setdefault(_CACHE, {})
+    hit = cache.get(tenant_id)
+    if hit is not None:
+        row, version, settings = hit
+        state = inspect(row)
+        fresh = (
+            state.persistent
+            and not state.modified
+            and not ({"version", "settings", "branding"} & state.expired_attributes)
+        )
+        if fresh and row.version == version:
+            return settings
+    tenant = await session.get(Tenant, tenant_id)
+    settings = settings_from_tenant(tenant)
+    if tenant is not None:
+        cache[tenant_id] = (tenant, tenant.version, settings)
+    return settings
 
 
 __all__ = [

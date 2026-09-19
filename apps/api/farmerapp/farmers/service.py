@@ -72,6 +72,7 @@ from farmerapp.farmers.schemas import (
     FarmUpdate,
     GeoJsonPolygon,
 )
+from farmerapp.pii.lookup import phone_match
 from farmerapp.rules import engine as rules_engine
 from farmerapp.rules.schema import Subject
 from farmerapp.settings import Settings
@@ -207,7 +208,9 @@ async def _validate(
 # --------------------------------------------------------------------------- VA-F01
 async def _check_phone(session: AsyncSession, tenant_id: uuid.UUID, phone: str) -> None:
     exists = await session.scalar(
-        select(Farmer.id).where(Farmer.tenant_id == tenant_id, Farmer.phone == phone).limit(1)
+        select(Farmer.id)
+        .where(Farmer.tenant_id == tenant_id, phone_match(Farmer, phone))  # SEC-026 hash
+        .limit(1)
     )
     if exists is not None:
         raise FarmerPhoneExistsError("A farmer with this phone is already registered.")
@@ -215,7 +218,7 @@ async def _check_phone(session: AsyncSession, tenant_id: uuid.UUID, phone: str) 
         select(User.id)
         .where(
             User.tenant_id == tenant_id,
-            User.phone == phone,
+            phone_match(User, phone),
             User.role != UserRole.FARMER,
             User.deleted_at.is_(None),
         )

@@ -21,6 +21,7 @@ from farmerapp.auth.deps import DbSession, Services
 from farmerapp.auth.models import User
 from farmerapp.auth.policy import Role, require_roles
 from farmerapp.auth.scope import payment_filters
+from farmerapp.integrity.deps import integrity_for
 from farmerapp.khata.credit import credit_blocked_response
 from farmerapp.payments.models import Payment, PaymentMode, PaymentStatus
 from farmerapp.payments.schemas import (
@@ -114,6 +115,7 @@ COLLECT_ROLES = (
 @router.post(
     "",
     operation_id="createPayment",
+    dependencies=[Depends(integrity_for("payment_collection"))],  # SEC-024: never blocks
     summary="Collect a payment for an order or khata dues (UPI QR, link, cash, card, credit)",
     status_code=status.HTTP_201_CREATED,
     response_model=PaymentCreated,

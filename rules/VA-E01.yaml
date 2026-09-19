@@ -1,8 +1,9 @@
 # VA-E01 (SPEC 6.3): mock location, rooted device or clock drift above the limit while on
-# duty — from the duty start, location batches and visit check-in integrity signals (FA-028).
+# duty — from the duty start, location batches and visit check-in integrity signals (FA-028),
+# plus failed Play Integrity verdicts of the officer's requests that day (SEC-024, v2).
 # One flag per officer and IST day.
 id: VA-E01
-version: 1
+version: 2
 title: Device integrity on duty
 subject: employee
 mode: event

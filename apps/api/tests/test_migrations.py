@@ -14,6 +14,8 @@ BASE_COLUMNS = {"id", "tenant_id", "created_at", "updated_at", "deleted_at", "ve
 TENANT_COLUMNS = BASE_COLUMNS | {"name", "plan", "branding", "settings", "slug"}
 USER_COLUMNS = BASE_COLUMNS | {
     "phone",
+    "phone_enc",  # SEC-026 (Alembic 0025)
+    "phone_hash",
     "name",
     "role",
     "store_id",

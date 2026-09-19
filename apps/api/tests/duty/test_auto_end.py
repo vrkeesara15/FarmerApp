@@ -7,11 +7,12 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime, time, timedelta
 
+import pytest
 from httpx import AsyncClient
 from sqlalchemy import cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from farmerapp.auth.models import UserRole
+from farmerapp.auth.models import User, UserRole, UserStatus
 from farmerapp.db.geo import haversine_m, offset, point_wkt
 from farmerapp.duty.auto_end import (
     auto_end_duty,
@@ -37,6 +38,7 @@ from tests.duty.conftest import (
     set_tenant_settings,
     start_duty,
 )
+from tests.logcontract import assert_fields, capture, one_event
 
 IST = timedelta(hours=5, minutes=30)
 
@@ -388,3 +390,66 @@ async def test_location_points_stay_off_duty_free_after_every_auto_end(
         and duty.start_at - timedelta(minutes=2) <= ts <= duty.end_at + timedelta(minutes=2)
         for ts, sid in rows
     )
+
+
+# ------------------------------------------------------------------ OPS-006 more / ops_snapshot
+async def test_sync_silence_only_notifies_active_heads_of_the_officers_cluster(
+    client: AsyncClient, accepted: DutyCtx, db_session: AsyncSession
+) -> None:
+    head = accepted.cluster_head
+    accepted.officer.cluster_id = head.cluster_id
+    other_cluster = uuid.uuid4()
+    others = [
+        User(
+            tenant_id=accepted.tenant_id,
+            phone=phone,
+            name=name,
+            role=UserRole.CLUSTER_HEAD.value,
+            cluster_id=cluster,
+            status=status,
+        )
+        for phone, name, cluster, status in (
+            ("+919811100001", "Other cluster head", other_cluster, UserStatus.ACTIVE.value),
+            ("+919811100002", "Disabled head", head.cluster_id, UserStatus.DISABLED.value),
+        )
+    ]
+    db_session.add_all(others)
+    await db_session.flush()
+    await start_duty(client, accepted, start_at=ist(7, 0).isoformat())
+    results = await officer_sync_silence(db_session, tenant_id=accepted.tenant_id, now=ist(9, 5))
+    assert [r.notified for r in results] == [[head.id]]
+    for other in others:
+        assert await _notifications(db_session, other.id) == []
+
+
+async def test_sync_silence_ignores_ended_sessions(
+    client: AsyncClient, accepted: DutyCtx, db_session: AsyncSession
+) -> None:
+    head = accepted.cluster_head
+    accepted.officer.cluster_id = head.cluster_id
+    await db_session.flush()
+    await start_duty(client, accepted, start_at=ist(7, 0).isoformat())
+    accepted.clock.advance(ist(8, 0) - accepted.now)
+    resp = await client.post(
+        "/v1/duty/end",
+        json=accepted.end_body(end_at=ist(8, 0).isoformat()),
+        headers=accepted.headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert await officer_sync_silence(db_session, tenant_id=accepted.tenant_id, now=ist(11)) == []
+
+
+async def test_ops_snapshot_log_contract(
+    client: AsyncClient,
+    accepted: DutyCtx,
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """``farmerapp_officers_on_duty`` / ``farmerapp_open_flags`` gauges, one line per tenant."""
+    capture(caplog)
+    await start_duty(client, accepted, start_at=ist(7, 0).isoformat())
+    await officer_sync_silence(db_session, tenant_id=accepted.tenant_id, now=ist(7, 30))
+    line = one_event(caplog, "ops_snapshot")
+    assert_fields(line, tenant_id=str, officers_on_duty=int, open_flags=int)
+    assert line["officers_on_duty"] == 1 and line["tenant_id"] == str(accepted.tenant_id)
+    assert line["open_flags"] >= 0

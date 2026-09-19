@@ -195,11 +195,8 @@ async def owner_home(session: AsyncSession, scope: Scope, flags: FlagCountsPort)
         officer_only=scope.own_officer_id is not None,
     )
     flag_counts = await flags.counts(session, fq)
-    flag_trend = []
-    for b in bs:
-        at = ist_start(b.end + timedelta(days=1))
-        bucket_query = replace(fq, opened_before=at)
-        flag_trend.append(float((await flags.counts(session, bucket_query)).open_total))
+    instants = [ist_start(b.end + timedelta(days=1)) for b in bs]
+    flag_trend = [float(n) for n in await flags.open_totals(session, fq, instants)]
     ly_flags = await flags.counts(session, replace(fq, opened_before=ly_end))
     high = await flags.open_high_severity(session, fq, 10)
 

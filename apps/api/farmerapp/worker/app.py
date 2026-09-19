@@ -9,11 +9,12 @@ Response semantics: 2xx acks; 4xx/5xx nacks and Pub/Sub retries, then dead-lette
 
 from __future__ import annotations
 
+import structlog
 from fastapi import APIRouter, FastAPI, Response, status
 
-from farmerapp import __version__
+from farmerapp import __version__, telemetry
 from farmerapp.api.errors import AppError, install_error_handlers
-from farmerapp.api.middleware import TraceMiddleware
+from farmerapp.api.middleware import TraceMiddleware, trace_log_fields
 from farmerapp.api.routes import health
 from farmerapp.logging import configure_logging
 from farmerapp.settings import Settings, get_settings
@@ -37,18 +38,28 @@ async def receive_push(envelope: PushEnvelope) -> Response:
             f"Cannot resolve topic from subscription {envelope.subscription!r} "
             "or attributes; set the 'topic' attribute."
         )
-    await dispatch(topic, envelope.message)
+    # NF-014: continue the publisher's trace (W3C traceparent in the message attributes), so
+    # the API request, this delivery and its SQL share one trace id in logs and Cloud Trace.
+    with telemetry.consumer_span(f"pubsub.process {topic}", envelope.message.attributes) as tid:
+        if tid is not None:
+            structlog.contextvars.bind_contextvars(**trace_log_fields(tid))
+        await dispatch(topic, envelope.message)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(level=settings.log_level, json_logs=settings.log_json, service="worker")
+    telemetry.configure_tracing(settings, service="worker")
     from farmerapp.rules.loader import validate_rules
 
     validate_rules()  # VA-001: the event rules the worker runs must load
     app = FastAPI(title="FarmerApp worker", version=__version__, docs_url=None, redoc_url=None)
     app.add_middleware(TraceMiddleware)
+    telemetry.instrument_app(app)
+    from farmerapp.db.session import get_engine
+
+    telemetry.instrument_engine(get_engine())
     install_error_handlers(app)
     v1 = APIRouter(prefix="/v1")
     v1.include_router(health.router)

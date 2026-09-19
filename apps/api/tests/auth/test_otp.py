@@ -22,6 +22,7 @@ from farmerapp.auth.providers import FakeProvider
 from farmerapp.auth.scheduler import InProcessScheduler
 from farmerapp.settings import get_settings
 from tests.auth.conftest import DEVICE, OFFICER_PHONE, last_code, login, send_otp
+from tests.logcontract import assert_fields, capture, one_event
 
 pytestmark = pytest.mark.usefixtures("officer")
 
@@ -408,3 +409,44 @@ async def test_scheduler_tick_runs_due_tasks(
     clock.advance(31)
     assert await tick(scheduler, provider) == 1
     assert len(whatsapp.sent) == 1
+
+
+# ---------------------------------------------------------------- NF-014 log contract
+async def test_otp_sent_and_delivered_log_contract(
+    client: AsyncClient,
+    sms: FakeProvider,
+    clock: FakeClock,
+    scheduler: InProcessScheduler,
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """``farmerapp_otp_sent{channel}`` / ``farmerapp_otp_delivered`` (OTP delivery SLO)."""
+    capture(caplog)
+    await send_otp(client)
+    sent = one_event(caplog, "otp_sent")
+    assert_fields(sent, channel=str, purpose=str, tenant_id=str, phone=str)
+    assert sent["channel"] == "sms" and sent["purpose"] == "login"
+    assert sent["phone"] == "+91******0004"  # masked, never the number
+    clock.advance(31)
+    assert await scheduler.run_due(db_session) == 1
+    delivered = one_event(caplog, "otp_delivered")
+    assert_fields(delivered, channel=str, tenant_id=str, challenge_id=str)
+    assert delivered["tenant_id"] == sent["tenant_id"]
+    assert delivered["challenge_id"] == sent["challenge_id"]
+
+
+async def test_otp_whatsapp_fallback_log_contract(
+    client: AsyncClient,
+    sms: FakeProvider,
+    clock: FakeClock,
+    scheduler: InProcessScheduler,
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    capture(caplog)
+    sms.auto_deliver = False
+    await send_otp(client)
+    clock.advance(31)
+    await scheduler.run_due(db_session)
+    fallback = one_event(caplog, "otp_fallback_whatsapp")
+    assert_fields(fallback, challenge_id=str, phone=str)

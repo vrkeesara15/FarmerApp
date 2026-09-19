@@ -15,6 +15,7 @@ from farmerapp.auth.models import UserRole
 from farmerapp.db.models import AuditLog, Tenant
 from farmerapp.db.session import tenant_scope
 from farmerapp.farmers.models import ConsentRecord, CropPlot, Farm, Farmer
+from farmerapp.pii.lookup import phone_match
 from tests.authz.conftest import Bearer
 from tests.farmers.write_fixtures import BASE_LAT, BASE_LON, WriteCtx, bowtie, square
 
@@ -249,10 +250,10 @@ async def test_idempotency_key_replays_the_original_response(
     assert second.status_code == 201 and second.json() == first.json()
     async with tenant_scope(db_session, ctx.tenant_id):
         n = await db_session.scalar(
-            select(Farmer.id).where(Farmer.phone == payload["phone"]).limit(2)
+            select(Farmer.id).where(phone_match(Farmer, payload["phone"])).limit(2)
         )
         rows = (
-            await db_session.execute(select(Farmer).where(Farmer.phone == payload["phone"]))
+            await db_session.execute(select(Farmer).where(phone_match(Farmer, payload["phone"])))
         ).all()
     assert n is not None and len(rows) == 1
     # Same key, different body -> 422 idempotency_key_reuse.

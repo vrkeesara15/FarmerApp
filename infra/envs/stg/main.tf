@@ -99,6 +99,11 @@ locals {
       args        = concat(["purge-expired"], local.tenant_args)
       description = "NF-003 expired upload sessions and idempotency keys, hourly"
     }
+    store-day-watch = {
+      schedule    = "15 22 * * *", tenants = true, owner = "ops-lead"
+      args        = concat(["store-day-watch"], local.tenant_args)
+      description = "OPS-007 stores with zero sales / day not closed by 22:00, daily 22:15 IST"
+    }
     reconcile-payments = {
       schedule    = "0 6 * * *", tenants = true, owner = "finance-lead"
       args        = concat(["reconcile-payments"], local.tenant_args)

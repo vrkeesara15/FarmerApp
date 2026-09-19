@@ -19,6 +19,7 @@ from farmerapp.payments.publisher import RecordingPublisher
 from farmerapp.payments.worker import WebhookEventNotFoundError, handle_payment_webhook
 from farmerapp.worker.messages import PubSubMessage
 from farmerapp.worker.topics import Topic
+from tests.logcontract import assert_fields, capture, one_event
 from tests.payments.helpers import PayWorld, same_session
 
 URL = "/v1/webhooks/razorpay"
@@ -350,3 +351,71 @@ async def test_concurrent_duplicate_insert_is_a_duplicate(pw: PayWorld) -> None:
         select(func.count()).select_from(WebhookEvent).where(WebhookEvent.event_id == "evt_race")
     )
     assert count == 1
+
+
+# ---------------------------------------------------------------- NF-014 log contract
+async def test_webhook_applied_and_payment_captured_log_contract(
+    client: AsyncClient, pw: PayWorld, caplog: pytest.LogCaptureFixture
+) -> None:
+    """``farmerapp_webhook_processing`` (webhook SLO) reads ``processing_ms``;
+    ``farmerapp_payments_captured`` counts ``payment_captured`` by ``mode``."""
+    capture(caplog)
+    order = await pw.order(50_000)
+    payment = await _qr(client, pw, {"order_id": str(order.id)})
+    body, headers = pw.webhook(
+        "payment.captured", payment=pw.captured(payment.id, 50_000), event_id="evt_log"
+    )
+    resp = await client.post(URL, content=body, headers=headers)
+    assert resp.status_code == 200, resp.text
+    applied = one_event(caplog, "webhook_applied")
+    assert_fields(
+        applied, processing_ms=int, status=str, event_type=str, event_id=str, tenant_id=str
+    )
+    assert applied["processing_ms"] >= 0 and applied["status"] == "processed"
+    assert applied["event_id"] == "evt_log" and applied["tenant_id"] == str(pw.tenant_id)
+    captured = one_event(caplog, "payment_captured")
+    assert_fields(captured, tenant_id=str, mode=str, payment_id=str, amount_paise=int)
+    assert captured["mode"] == "upi_qr" and captured["payment_id"] == str(payment.id)
+
+
+async def test_processing_ms_is_received_to_processed(pw: PayWorld) -> None:
+    """Delivered later through Pub/Sub: the time in the queue counts."""
+    from farmerapp.payments.webhooks import apply_webhook_event
+
+    order = await pw.order(20_000)
+    payment = Payment(
+        tenant_id=pw.tenant_id,
+        order_id=order.id,
+        store_id=pw.store.id,
+        mode="upi_qr",
+        provider="razorpay",
+        amount_paise=20_000,
+        status="pending",
+    )
+    pw.session.add(payment)
+    await pw.session.flush()
+    received = datetime.now(UTC) - timedelta(seconds=3)
+    row = WebhookEvent(
+        tenant_id=pw.tenant_id,
+        provider="razorpay",
+        event_id="evt_queued",
+        event_type="payment.captured",
+        signature_ok=True,
+        status="received",
+        payload={},
+        received_at=received,
+    )
+    pw.session.add(row)
+    await pw.session.flush()
+    import structlog
+
+    with structlog.testing.capture_logs() as logs:
+        await apply_webhook_event(
+            pw.session,
+            row,
+            provider=pw.provider,
+            ledger=pw.ledger,
+            now=received + timedelta(milliseconds=2_500),
+        )
+    applied = next(e for e in logs if e["event"] == "webhook_applied")
+    assert applied["processing_ms"] == 2_500

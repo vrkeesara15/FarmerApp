@@ -1,11 +1,14 @@
 """VA-F02 — duplicate farmer: the same phone, or a similar name in the same village with farm
 centroids within ``centroid_distance_m``.
 
-``(tenant, phone)`` is unique, so "same phone" means the same last ten digits written
-differently (an import with ``9876543210`` next to ``+919876543210``). The fuzzy branch pairs
-farmers of one village whose ``pg_trgm`` ``similarity(name, name) >= name_similarity`` and
-then looks for their two closest farms with ``ST_DWithin`` on the generated ``farm.centroid``
-(GiST index). Pairing inside a village keeps the nightly batch linear in practice.
+``(tenant, phone_hash)`` is unique (SEC-026: the hash is taken over the normalised E.164
+number), so "same phone" only remains for legacy rows written before the hash: the same last
+ten digits written differently in their plain columns (an import with ``9876543210`` next to
+``+919876543210``), or equal hashes where the constraint was not yet in place. The fuzzy
+branch pairs farmers of one village whose ``pg_trgm`` ``similarity(name, name) >=
+name_similarity`` and then looks for their two closest farms with ``ST_DWithin`` on the
+generated ``farm.centroid`` (GiST index). Pairing inside a village keeps the nightly batch
+linear in practice.
 
 One flag per pair (the dedupe key is the sorted pair), about the more recently registered
 farmer — the likely duplicate — with both farmers and the two closest farms as evidence.
@@ -87,22 +90,33 @@ async def check(ctx: RuleContext) -> list[Finding]:
     a, b = aliased(Farmer), aliased(Farmer)
     findings: dict[str, Finding] = {}
 
-    same_phone = _scoped(
-        select(a, b).join(
-            b,
-            and_(
-                b.tenant_id == a.tenant_id,
-                b.id != a.id,
-                b.deleted_at.is_(None),
-                _digits10(b.phone) == _digits10(a.phone),
-            ),
-        ),
-        a,
-        ctx,
+    # Two joins instead of one OR (NF-005): the hash join uses the (tenant_id, phone_hash)
+    # index; the legacy branch only looks at rows that still carry a plain phone.
+    same_hash = and_(a.phone_hash.is_not(None), b.phone_hash == a.phone_hash)
+    same_digits = and_(
+        a.phone_plain.is_not(None),
+        b.phone_plain.is_not(None),
+        _digits10(b.phone_plain) == _digits10(a.phone_plain),
     )
-    for first, second in (await ctx.session.execute(same_phone)).tuples():
-        newer, older, key = _pair(first, second)
-        findings.setdefault(key, _finding(newer, older, key, reason="same_phone", similarity=None))
+    for condition in (same_hash, same_digits):
+        same_phone = _scoped(
+            select(a, b).join(
+                b,
+                and_(
+                    b.tenant_id == a.tenant_id,
+                    b.id != a.id,
+                    b.deleted_at.is_(None),
+                    condition,
+                ),
+            ),
+            a,
+            ctx,
+        )
+        for first, second in (await ctx.session.execute(same_phone)).tuples():
+            newer, older, key = _pair(first, second)
+            findings.setdefault(
+                key, _finding(newer, older, key, reason="same_phone", similarity=None)
+            )
 
     fa, fb = aliased(Farm), aliased(Farm)
     similarity = func.similarity(a.name, b.name)

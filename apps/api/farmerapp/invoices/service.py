@@ -69,6 +69,7 @@ from farmerapp.payments.service import (
     actor_of,
     create_payment,
 )
+from farmerapp.pii.lookup import phone_match
 from farmerapp.tenants.models import Store, Village
 from farmerapp.tenants.settings import settings_from_tenant
 from farmerapp.uploads.blobstore import BlobStore
@@ -119,11 +120,10 @@ async def _buyer(session: AsyncSession, actor: User, store: Store, body: PosSale
         stmt = select(Farmer).where(
             Farmer.tenant_id == actor.tenant_id, Farmer.deleted_at.is_(None)
         )
-        stmt = stmt.where(
-            Farmer.id == body.farmer_id
-            if body.farmer_id is not None
-            else Farmer.phone == body.farmer_phone
-        )
+        if body.farmer_id is not None:
+            stmt = stmt.where(Farmer.id == body.farmer_id)
+        elif body.farmer_phone is not None:
+            stmt = stmt.where(phone_match(Farmer, body.farmer_phone))  # SEC-026: by hash
         farmer = (await session.execute(stmt.limit(1))).scalar_one_or_none()
         if farmer is None:
             raise FarmerNotFoundError("No farmer with that id / phone in this tenant.")
@@ -333,7 +333,7 @@ async def pdf_url(
     invoice: Invoice, blobs: BlobStore, *, ttl_seconds: int, now: datetime
 ) -> SignedUrlOut:
     uri = await ensure_pdf(invoice, blobs)
-    signed = blobs.signed_url(uri, ttl=timedelta(seconds=ttl_seconds), now=now)
+    signed = await blobs.signed_url(uri, ttl=timedelta(seconds=ttl_seconds), now=now)
     return SignedUrlOut(url=signed.url, expires_at=signed.expires_at)
 
 

@@ -73,14 +73,9 @@ async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
     demo = next(t for t in DEMO_TENANTS if t.slug == slug)
     async with tenant_scope(session, demo.id):  # RLS: rows are only visible in their tenant
         tenant = (await session.execute(select(Tenant).where(Tenant.slug == slug))).scalar_one()
-        users = (
-            (
-                await session.execute(
-                    select(User).where(User.tenant_id == tenant.id).order_by(User.phone)
-                )
-            )
-            .scalars()
-            .all()
+        users = sorted(  # SEC-026: phones are encrypted, so order in Python
+            (await session.execute(select(User).where(User.tenant_id == tenant.id))).scalars(),
+            key=lambda u: u.phone,
         )
         farmers = (
             (

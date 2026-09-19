@@ -52,12 +52,15 @@ def _open_at(at: datetime | None) -> ColumnElement[bool]:
     return and_(Flag.created_at < at, or_(Flag.resolved_at.is_(None), Flag.resolved_at >= at))
 
 
-def _where(query: FlagQuery, officer: ColumnElement[uuid.UUID | None]) -> list[ColumnElement[bool]]:
+def _where(
+    query: FlagQuery, officer: ColumnElement[uuid.UUID | None], *, open_filter: bool = True
+) -> list[ColumnElement[bool]]:
     where: list[ColumnElement[bool]] = [
         Flag.tenant_id == query.tenant_id,
         Flag.deleted_at.is_(None),
-        _open_at(query.opened_before),
     ]
+    if open_filter:
+        where.append(_open_at(query.opened_before))
     if query.viewer is not None:
         if query.viewer.tenant_id != query.tenant_id:
             return [*where, false()]
@@ -95,6 +98,17 @@ class FlagTableCounts:
             if officer_id is not None:
                 by_officer[officer_id] += n
         return FlagCounts(open_total=total, open_high=high, by_officer=dict(by_officer))
+
+    async def open_totals(
+        self, session: AsyncSession, query: FlagQuery, instants: list[datetime]
+    ) -> list[int]:
+        """Open flags as of each instant, in one query (the owner-home trend; NF-005)."""
+        if not instants:
+            return []
+        where = _where(query, _officer(), open_filter=False)  # "open as of T" per FILTER
+        columns = [func.count().filter(_open_at(at)) for at in instants]
+        row = (await session.execute(select(*columns).where(*where))).one()
+        return [int(n or 0) for n in row]
 
     async def open_high_severity(
         self, session: AsyncSession, query: FlagQuery, limit: int

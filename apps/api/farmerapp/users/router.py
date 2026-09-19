@@ -39,6 +39,7 @@ from farmerapp.auth.stepup import STEP_UP_OPENAPI, StepUp, check_step_up
 from farmerapp.db import audit
 from farmerapp.db.audit import DEVICE_HEADER
 from farmerapp.logging import get_logger
+from farmerapp.pii.lookup import phone_match
 from farmerapp.tenants.models import Cluster, Store
 from farmerapp.tenants.settings import get_tenant_settings
 from farmerapp.users.schemas import (
@@ -201,7 +202,7 @@ async def create_user(
     _guard_owner(actor, None, body.role)
     await _check_assignment(session, body.store_id, body.cluster_id)
     taken = await session.scalar(
-        select(User.id).where(User.tenant_id == actor.tenant_id, User.phone == body.phone)
+        select(User.id).where(User.tenant_id == actor.tenant_id, phone_match(User, body.phone))
     )
     if taken is not None:
         raise PhoneTakenError("A user with this phone number already exists.")

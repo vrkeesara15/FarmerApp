@@ -25,7 +25,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.invoices.ports import PosOrderDraft
 from farmerapp.orders.models import Fulfilment, Order, OrderChannel, OrderLine, OrderStatus
-from farmerapp.orders.service import _record_status, assert_lines_recommendable
+from farmerapp.orders.service import (
+    _record_status,
+    assert_lines_recommendable,
+    log_order_created,
+)
 from farmerapp.payments.config import IST
 from farmerapp.stock.service import LineDemand, allocate_fefo, consume_order, hold_allocations
 
@@ -61,6 +65,7 @@ class OrdersPosPort:
         )
         session.add(order)
         await session.flush()
+        log_order_created(order)
         lines: list[OrderLine] = []
         for line, allocation in zip(draft.lines, allocations, strict=True):
             row = OrderLine(

@@ -18,6 +18,7 @@ commands, verification, communication, follow-up. Rehearse each one in stg befor
 | [Mass location anomaly](mass-location-anomaly.md) | Mobile lead | Sev 2 | OPS-006 sync-silence spike, officers-on-duty drop |
 | [Data subject erasure request](data-subject-erasure.md) | Data protection owner | Sev 3 (SLA-bound) | Request received (support / grievance officer) |
 | [Suspected data breach (DPDP notification)](suspected-data-breach.md) | Security owner | Sev 1 | SCC HIGH/CRITICAL (SEC-019), Cloud Armor spike, audit-log anomaly, report |
+| [PII field encryption: setup, backfill, contract, rotation (SEC-026)](pii-encryption.md) | Platform lead | Sev 2 | `pii_data_key_unavailable`, `pii_backfill_conflict`, 500s on encrypted reads |
 
 Reference: [observability.md](observability.md) — channels, severities, SLOs, dashboards and the
 structured-log field contract the log-based metrics rely on.

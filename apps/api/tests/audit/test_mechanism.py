@@ -249,6 +249,7 @@ def test_audit_log_model_is_lean() -> None:
         "device_id",
         "user_agent",
         "trace_id",
+        "integrity",  # SEC-024: Play Integrity verdict of the request (Alembic 0024)
         "created_at",
     }
     assert getattr(AuditLog, "__audit__", True) is False

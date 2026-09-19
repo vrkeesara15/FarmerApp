@@ -17,7 +17,9 @@ point past ``end_at + 2 min``: no tracking beyond auto end.
 
 ``officer-sync-silence`` flags officers on duty whose last location batch arrived more than
 two hours ago (``received_at``; the session start counts as the first contact) with a
-``notification`` to the cluster head(s) of their cluster, once per session.
+``notification`` to the cluster head(s) of their cluster, once per session. Every run also
+logs one ``ops_snapshot`` line per tenant (``officers_on_duty``, ``open_flags``) for the
+business-ops dashboard (docs/runbooks/observability.md).
 """
 
 from __future__ import annotations
@@ -35,6 +37,7 @@ from farmerapp.db.geo import haversine_m
 from farmerapp.db.session import job_session
 from farmerapp.duty.service import close_session, session_points
 from farmerapp.duty.track import MAX_ACCURACY_M, TrackPoint
+from farmerapp.flags.models import UNRESOLVED, Flag
 from farmerapp.location.models import _POINT_GEOM, DutyEndReason, DutySession, LocationPoint
 from farmerapp.logging import get_logger
 from farmerapp.notifications.models import Notification, NotificationKind
@@ -264,7 +267,8 @@ async def officer_sync_silence(
     """Notify cluster heads of officers on duty with no location batch for ``silence``."""
     now = now or datetime.now(UTC)
     results: list[SilenceResult] = []
-    for duty in await _open_sessions(session, tenant_id):
+    open_sessions = await _open_sessions(session, tenant_id)
+    for duty in open_sessions:
         last = await _last_contact(session, duty)
         if now - last < silence or await _already_flagged(session, duty):
             continue
@@ -310,7 +314,34 @@ async def officer_sync_silence(
         silent=len(results),
         notified=sum(len(r.notified) for r in results),
     )
+    await log_ops_snapshot(
+        session, tenant_id, officers_on_duty=len({d.officer_id for d in open_sessions})
+    )
     return results
+
+
+async def log_ops_snapshot(
+    session: AsyncSession, tenant_id: uuid.UUID, *, officers_on_duty: int
+) -> int:
+    """``ops_snapshot``: officers on duty and unresolved flags of the tenant right now
+    (gauges ``farmerapp_officers_on_duty`` / ``farmerapp_open_flags``). Returns open flags."""
+    open_flags = int(
+        await session.scalar(
+            select(func.count(Flag.id)).where(
+                Flag.tenant_id == tenant_id,
+                Flag.deleted_at.is_(None),
+                Flag.status.in_([s.value for s in UNRESOLVED]),
+            )
+        )
+        or 0
+    )
+    log.info(
+        "ops_snapshot",
+        tenant_id=str(tenant_id),
+        officers_on_duty=officers_on_duty,
+        open_flags=open_flags,
+    )
+    return open_flags
 
 
 # --------------------------------------------------------------------------- jobs
@@ -347,6 +378,7 @@ __all__ = [
     "auto_time_cutoff",
     "home_of",
     "idle_since",
+    "log_ops_snapshot",
     "officer_sync_silence",
     "run_auto_end",
     "run_sync_silence",

@@ -42,6 +42,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.base import instance_state
 
 from farmerapp.db.models.audit_log import AuditLog
+from farmerapp.pii.fields import audit_values, pii_columns
+from farmerapp.pii.fields import install_listeners as install_pii_listeners
 
 SYSTEM_ROLE = "system"
 
@@ -90,6 +92,11 @@ class Actor:
 
 
 _actor: contextvars.ContextVar[Actor | None] = contextvars.ContextVar("audit_actor", default=None)
+#: SEC-024: the Play Integrity verdict of the current request (``farmerapp.integrity.deps``),
+#: copied into every audit row the request writes (``audit_log.integrity``).
+_integrity: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
+    "audit_integrity", default=None
+)
 
 
 def current_actor() -> Actor | None:
@@ -103,6 +110,16 @@ def bind_actor(actor: Actor) -> contextvars.Token[Actor | None]:
 
 def clear_actor() -> None:
     _actor.set(None)
+    _integrity.set(None)
+
+
+def bind_integrity(verdict: dict[str, Any] | None) -> None:
+    """Attach a Play Integrity verdict to the audit rows of the rest of the request."""
+    _integrity.set(verdict)
+
+
+def current_integrity() -> dict[str, Any] | None:
+    return _integrity.get()
 
 
 @contextlib.contextmanager
@@ -223,6 +240,7 @@ def record(
         device_id=who.device_id,
         user_agent=who.user_agent,
         trace_id=who.trace_id or _trace_id(),
+        integrity=current_integrity(),
         created_at=datetime.now(UTC),
     )
     session.add(row)
@@ -332,8 +350,10 @@ def pending_changes(session: Session) -> list[Change]:
         if not is_audited(obj):
             continue
         _ensure_ids(obj)
-        snapshot = {k: v for k, v in _current_values(obj).items() if v is not None}
-        changes.append(Change(obj=obj, action="create", before=None, after=redact(snapshot)))
+        pii = pii_columns(obj)
+        snapshot = {k: v for k, v in _current_values(obj).items() if v is not None and k not in pii}
+        after = {**redact(snapshot), **audit_values(obj, created=True)[1]}
+        changes.append(Change(obj=obj, action="create", before=None, after=after))
     for obj in list(session.dirty):
         if not is_audited(obj) or not session.is_modified(obj):
             continue
@@ -341,6 +361,10 @@ def pending_changes(session: Session) -> list[Change]:
         if diff is None:
             continue
         before, after = diff
+        pii = pii_columns(obj)
+        pii_before, pii_after = audit_values(obj, created=False)
+        before = {k: v for k, v in before.items() if k not in pii}
+        after = {k: v for k, v in after.items() if k not in pii}
         soft_deleted = (
             "deleted_at" in after
             and after["deleted_at"] is not None
@@ -348,15 +372,24 @@ def pending_changes(session: Session) -> list[Change]:
         )
         action = "delete" if soft_deleted else "update"
         before["id"] = after["id"] = obj.id
-        changes.append(Change(obj=obj, action=action, before=redact(before), after=redact(after)))
+        changes.append(
+            Change(
+                obj=obj,
+                action=action,
+                before={**redact(before), **pii_before},
+                after={**redact(after), **pii_after},
+            )
+        )
     for obj in list(session.deleted):
         if not is_audited(obj):
             continue
+        pii = pii_columns(obj)
+        values = {k: v for k, v in _current_values(obj).items() if k not in pii}
         changes.append(
             Change(
                 obj=obj,
                 action="delete",
-                before=redact(_current_values(obj)),
+                before={**redact(values), **audit_values(obj, created=True)[1]},
                 after=None,
                 hard_delete=True,
             )
@@ -384,6 +417,7 @@ def _new_row(session: Session, obj: Any, *, action: str, before: Any, after: Any
             device_id=who.device_id,
             user_agent=who.user_agent,
             trace_id=who.trace_id or _trace_id(),
+            integrity=current_integrity(),
             created_at=datetime.now(UTC),
         )
     )
@@ -407,6 +441,9 @@ def install_audit_listener() -> None:
     global _INSTALLED
     if _INSTALLED:
         return
+    # SEC-026 first (``insert=True``): PII values are encrypted before the diff is taken, so
+    # a changed landmark is a changed row here too.
+    install_pii_listeners()
     event.listen(Session, "before_flush", _before_flush)
     # Local import: the hook module imports this one (``on_change`` / ``Change``).
     from farmerapp.sync.changes import record_change
@@ -429,9 +466,11 @@ __all__ = [
     "actor_from_request",
     "actor_scope",
     "bind_actor",
+    "bind_integrity",
     "clear_actor",
     "client_ip",
     "current_actor",
+    "current_integrity",
     "install_audit_listener",
     "is_audited",
     "jsonable",
