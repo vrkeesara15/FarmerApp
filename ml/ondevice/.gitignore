@@ -1,0 +1,18 @@
+# Datasets and derived data are never committed (download with `make data`).
+data/raw/
+data/cache/
+data/manifest.csv
+# Training runs, checkpoints, SavedModels.
+runs/
+*.keras
+*.h5
+saved_model/
+# Only the small, reviewed artefacts in artifacts/ are committed (crop_quality_v1.tflite < 8 MB,
+# metadata.json, eval + bench reports). Anything else there stays local.
+artifacts/*
+!artifacts/crop_quality_v1.tflite
+!artifacts/metadata.json
+!artifacts/eval_tflite.md
+!artifacts/eval_tflite.json
+!artifacts/bench_mac.json
+.venv/

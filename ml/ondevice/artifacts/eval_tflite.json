@@ -1,0 +1,233 @@
+{
+  "model": "artifacts/crop_quality_v1.tflite",
+  "test_rows": 2066,
+  "seconds": 26.6,
+  "plant": {
+    "accuracy": 0.9941916747337851,
+    "balanced_accuracy": 0.9954899444988137,
+    "n": 2066,
+    "labels": [
+      "not_plant",
+      "plant"
+    ],
+    "per_class": {
+      "not_plant": {
+        "recall": 0.9979,
+        "precision": 0.977,
+        "support": 469
+      },
+      "plant": {
+        "recall": 0.9931,
+        "precision": 0.9994,
+        "support": 1597
+      }
+    },
+    "confusion": [
+      [
+        468,
+        1
+      ],
+      [
+        11,
+        1586
+      ]
+    ]
+  },
+  "crop": {
+    "accuracy": 0.9724483406386976,
+    "balanced_accuracy": 0.9769108900019604,
+    "n": 1597,
+    "labels": [
+      "paddy",
+      "cotton",
+      "chilli",
+      "maize",
+      "tomato",
+      "groundnut",
+      "other"
+    ],
+    "per_class": {
+      "paddy": {
+        "recall": 0.9774,
+        "precision": 0.9863,
+        "support": 221
+      },
+      "cotton": {
+        "recall": 0.992,
+        "precision": 0.9803,
+        "support": 251
+      },
+      "chilli": {
+        "recall": 1.0,
+        "precision": 0.9452,
+        "support": 69
+      },
+      "maize": {
+        "recall": 0.9669,
+        "precision": 0.9474,
+        "support": 242
+      },
+      "tomato": {
+        "recall": 0.9524,
+        "precision": 0.9852,
+        "support": 210
+      },
+      "groundnut": {
+        "recall": 0.9952,
+        "precision": 0.9952,
+        "support": 209
+      },
+      "other": {
+        "recall": 0.9544,
+        "precision": 0.9617,
+        "support": 395
+      }
+    },
+    "confusion": [
+      [
+        216,
+        0,
+        0,
+        5,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        249,
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        69,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        234,
+        1,
+        0,
+        6
+      ],
+      [
+        0,
+        0,
+        1,
+        2,
+        200,
+        0,
+        7
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        208,
+        1
+      ],
+      [
+        2,
+        5,
+        3,
+        6,
+        2,
+        0,
+        377
+      ]
+    ],
+    "at_threshold": {
+      "crop_min": 0.6,
+      "coverage": 0.9636819035691923,
+      "accuracy_when_confident": 0.9883040935672515
+    }
+  },
+  "quality": {
+    "accuracy": 0.9801390268123138,
+    "balanced_accuracy": 0.979839747092288,
+    "n": 6042,
+    "labels": [
+      "ok",
+      "blurry",
+      "dark"
+    ],
+    "per_class": {
+      "ok": {
+        "recall": 0.9949,
+        "precision": 0.9499,
+        "support": 1980
+      },
+      "blurry": {
+        "recall": 0.9484,
+        "precision": 0.9936,
+        "support": 1977
+      },
+      "dark": {
+        "recall": 0.9962,
+        "precision": 0.9981,
+        "support": 2085
+      }
+    },
+    "confusion": [
+      [
+        1970,
+        9,
+        1
+      ],
+      [
+        99,
+        1875,
+        3
+      ],
+      [
+        5,
+        3,
+        2077
+      ]
+    ]
+  },
+  "retake_gate": {
+    "accuracy": 0.9812842852533075,
+    "balanced_accuracy": 0.9837145745860971,
+    "n": 6198,
+    "labels": [
+      "use",
+      "retake"
+    ],
+    "per_class": {
+      "use": {
+        "recall": 0.9887,
+        "precision": 0.9416,
+        "support": 1597
+      },
+      "retake": {
+        "recall": 0.9787,
+        "precision": 0.996,
+        "support": 4601
+      }
+    },
+    "confusion": [
+      [
+        1579,
+        18
+      ],
+      [
+        98,
+        4503
+      ]
+    ],
+    "false_retake_rate_on_good_plant_photos": 0.011271133375078271
+  }
+}
