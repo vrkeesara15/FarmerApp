@@ -356,7 +356,7 @@ async def test_pubsub_rest_publisher() -> None:
         client=httpx.AsyncClient(transport=httpx.MockTransport(handler)),
     )
     assert await publisher.publish(Topic.PAYMENT_WEBHOOK, {"a": 1}) == "42"
-    assert str(seen[0].url) == "http://localhost:8085/v1/projects/p/topics/payment-webhook:publish"
+    assert str(seen[0].url) == "http://localhost:8085/v1/projects/p/topics/payment.webhook:publish"
     assert seen[0].headers["authorization"] == "Bearer tok"
     message = json.loads(seen[0].content)["messages"][0]
     assert message["data"] == encode({"a": 1})

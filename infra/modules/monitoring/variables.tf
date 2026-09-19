@@ -204,6 +204,26 @@ variable "lock_audit_bucket" {
   default     = false
 }
 
+# --- OPS-009 ---
+
+variable "diagnosis_alerts_enabled" {
+  description = "Create the OPS-009 diagnosis alerts (review queue age, LLM fallback rate)."
+  type        = bool
+  default     = true
+}
+
+variable "diagnosis_queue_age_hours" {
+  description = "OPS-009 / DX-006: alert when the oldest diagnosis in the review queue is older than this (hours)."
+  type        = number
+  default     = 18
+}
+
+variable "diagnosis_llm_rate_percent" {
+  description = "OPS-009: LLM fallback share of a day's answers that the job alerts on (documentation; the job applies it)."
+  type        = number
+  default     = 40
+}
+
 # --- 12.4 ---
 
 variable "dashboard_enabled" {

@@ -67,7 +67,8 @@ class PubSubRestPublisher:
         self._client = client
 
     async def publish(self, topic: Topic, data: dict[str, Any]) -> str:
-        name = str(topic).replace(".", "-")
+        # The topic ids Terraform creates (infra/envs/*/main.tf, SPEC 9.2): ``payment.webhook``.
+        name = str(topic)
         url = f"{self._base}/v1/projects/{self._project}/topics/{name}:publish"
         headers: dict[str, str] = {}
         if self._token_provider is not None:

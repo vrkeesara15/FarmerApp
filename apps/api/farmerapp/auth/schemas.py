@@ -68,6 +68,28 @@ class UserOut(BaseModel):
         return cls.model_validate(user)
 
 
+class AssignedOfficerOut(BaseModel):
+    """FM-011 / F62: the farmer's field officer (call / WhatsApp from the farmer app).
+
+    ``phone`` is the decrypted number (SEC-026 field cipher) for the farmer themself, the
+    officer themself and the roles that read user profiles (``GET /v1/users``); masked
+    (``+91******3210``) for every other reader.
+    """
+
+    id: uuid.UUID
+    name: str
+    phone: str
+
+
+class MeOut(UserOut):
+    """``GET /v1/me``: the profile plus, for a farmer login, their field officer (FM-011)."""
+
+    officer: AssignedOfficerOut | None = Field(
+        default=None,
+        description="Farmer logins only: who registered them, else their village store's officer.",
+    )
+
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str

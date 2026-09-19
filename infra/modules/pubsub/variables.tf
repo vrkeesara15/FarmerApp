@@ -20,7 +20,7 @@ variable "retention" {
 }
 
 variable "push_endpoint_base" {
-  description = "Base URL of the worker (e.g. https://worker-xyz-el.a.run.app). Push endpoint = <base>/pubsub/<topic>. Empty = pull subscriptions only."
+  description = "Base URL of the worker (e.g. https://worker-xyz-el.a.run.app). Push endpoint = <base>/push (one route; the worker dispatches on the topic attribute). Empty = pull subscriptions only."
   type        = string
   default     = ""
 }
@@ -40,6 +40,15 @@ variable "publishers" {
   description = "Members allowed to publish on every topic (api, worker, jobs SAs)."
   type        = list(string)
   default     = []
+}
+
+variable "subscription_overrides" {
+  description = "Per-topic ack deadline / max delivery attempts of the worker subscription (unset = the module defaults)."
+  type = map(object({
+    ack_deadline_seconds  = optional(number)
+    max_delivery_attempts = optional(number)
+  }))
+  default = {}
 }
 
 variable "max_delivery_attempts" {

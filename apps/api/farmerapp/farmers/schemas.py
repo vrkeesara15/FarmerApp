@@ -20,7 +20,7 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from farmerapp.api.pagination import PageOut
-from farmerapp.auth.schemas import Phone
+from farmerapp.auth.schemas import AssignedOfficerOut, Phone
 from farmerapp.db.audit import mask_phone
 from farmerapp.farmers.models import (
     ConsentPurpose,
@@ -214,6 +214,14 @@ class FarmerDetailOut(FarmerOut):
     farms: list[FarmOut] = Field(default_factory=list)
     consents: list[ConsentRecordOut] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+    officer: AssignedOfficerOut | None = Field(
+        default=None,
+        description=(
+            "FM-011 / F62 (reads only): the registering field officer while active, else the "
+            "active field officer of the village's store; phone masked unless the reader is "
+            "the farmer, the officer or a user-profile reader role."
+        ),
+    )
 
 
 FarmerPage = PageOut[FarmerOut]

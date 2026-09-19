@@ -63,7 +63,7 @@ cd infra/envs/dev
 terraform init
 terraform apply
 openssl rand -base64 48 | gcloud secrets versions add jwt-signing-key --project farmerapp-dev --data-file=-
-# … repeat for otp-provider, razorpay-key-id, razorpay-key-secret, razorpay-webhook-secret, llm-api-key
+# … repeat for otp-provider, razorpay-key-id, razorpay-key-secret, razorpay-webhook-secret, anthropic-api-key
 ```
 
 Point DNS `api.dev.farmerapp.in` and `console.dev.farmerapp.in` at `terraform output lb_ip`; the managed
@@ -89,7 +89,7 @@ tools that are missing so it still passes locally; CI always runs all four.
 | VPC, subnet, Cloud NAT, PSA, deny-all ingress | `network` | Direct VPC egress from Cloud Run, no connector |
 | Per-service SAs + observability roles | `iam` | api, worker, jobs, console, embed, pubsub-push, scheduler |
 | Postgres 16, private IP only, TLS `ENCRYPTED_ONLY`, IAM auth (`cloudsql.iam_authentication=on`, `google_sql_user` per SA), logical decoding, PITR/HA in prd, replica in prd | `sql` | SPEC 9.4 verbatim; SEC-011 |
-| Secrets, created empty | `secrets` | otp-provider, razorpay-*, llm-api-key, jwt-signing-key |
+| Secrets, created empty | `secrets` | otp-provider, razorpay-*, anthropic-api-key (worker only), jwt-signing-key |
 | photos / exports / corpus buckets with 9.2 lifecycle rules | `storage` | private, uniform access |
 | api, console, worker, embed | `run_service` | ingress internal-LB (api/console, invoker IAM disabled: the LB is the only path, SEC-015) or internal-only (worker/embed); min 1/1 api/console in prd (NF-006) |
 | migrate + 9 jobs (`python -m farmerapp.jobs <command>`) | `run_job` | Cloud Scheduler in Asia/Kolkata: run-rules 02:00, flags-sla hourly, sync-silence /15 min, auto-end-duty /10 min, ensure-partitions 00:30, purge-location-points 04:00 (`--apply` prd only), purge-expired hourly, reconcile-payments 06:00, backfill-farm-photo-phash manual. Per-tenant jobs need `job_tenant_ids` |

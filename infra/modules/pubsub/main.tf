@@ -24,13 +24,16 @@ resource "google_pubsub_topic" "dlq" {
 }
 
 # Main subscription: push to the worker when an endpoint is configured, else pull.
+# The worker serves one route for every topic, POST /push (apps/api/farmerapp/worker/app.py),
+# and dispatches on the `topic` message attribute the publishers set (falling back to this
+# subscription's name, `<topic>.worker`).
 resource "google_pubsub_subscription" "main" {
   for_each = local.topics
 
   project                    = var.project_id
   name                       = "${each.value}.worker"
   topic                      = google_pubsub_topic.t[each.value].id
-  ack_deadline_seconds       = var.ack_deadline_seconds
+  ack_deadline_seconds       = coalesce(try(var.subscription_overrides[each.value].ack_deadline_seconds, null), var.ack_deadline_seconds)
   message_retention_duration = var.retention
 
   expiration_policy {
@@ -44,13 +47,13 @@ resource "google_pubsub_subscription" "main" {
 
   dead_letter_policy {
     dead_letter_topic     = google_pubsub_topic.dlq[each.value].id
-    max_delivery_attempts = var.max_delivery_attempts
+    max_delivery_attempts = coalesce(try(var.subscription_overrides[each.value].max_delivery_attempts, null), var.max_delivery_attempts)
   }
 
   dynamic "push_config" {
     for_each = var.push_endpoint_base != "" ? [1] : []
     content {
-      push_endpoint = "${var.push_endpoint_base}/pubsub/${each.value}"
+      push_endpoint = "${var.push_endpoint_base}/push"
       oidc_token {
         service_account_email = var.push_service_account
         audience              = var.push_endpoint_base

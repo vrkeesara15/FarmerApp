@@ -41,8 +41,10 @@ locals {
     razorpay-key-id         = ["serviceAccount:${module.iam.emails.api}", "serviceAccount:${module.iam.emails.worker}", "serviceAccount:${module.iam.emails.jobs}"]
     razorpay-key-secret     = ["serviceAccount:${module.iam.emails.api}", "serviceAccount:${module.iam.emails.worker}", "serviceAccount:${module.iam.emails.jobs}"]
     razorpay-webhook-secret = ["serviceAccount:${module.iam.emails.api}", "serviceAccount:${module.iam.emails.worker}"]
-    llm-api-key             = ["serviceAccount:${module.iam.emails.worker}"]
-    jwt-signing-key         = ["serviceAccount:${module.iam.emails.api}"]
+    # DX-004 LLM fallback (Claude). Worker only: in stg / prd the diagnosis pipeline runs in
+    # the worker (DIAGNOSIS_DELIVERY=pubsub); the api never calls the LLM there.
+    anthropic-api-key = ["serviceAccount:${module.iam.emails.worker}"]
+    jwt-signing-key   = ["serviceAccount:${module.iam.emails.api}"]
   }
 
   db_env = {
@@ -52,6 +54,20 @@ locals {
     ENV         = var.env
     GCP_PROJECT = var.project_id
     GCP_REGION  = var.region
+  }
+
+  # M6 diagnosis engine settings (apps/api/farmerapp/settings.py, .env.example). Every
+  # process that loads Settings gets them (the prd guard rail refuses DIAGNOSIS_ENCODER=fake).
+  # DIAGNOSIS_EMBED_URL = the internal `embed` service; the api (corpus uploads, WC-007) and
+  # the worker (diagnoses) call it with an OIDC token and are its only invokers.
+  diagnosis_env = {
+    DIAGNOSIS_ENCODER         = "remote"
+    DIAGNOSIS_ENCODER_NAME    = var.diagnosis_encoder_name
+    DIAGNOSIS_ENCODER_VERSION = var.diagnosis_encoder_version
+    DIAGNOSIS_EMBED_URL       = module.embed.uri
+    DIAGNOSIS_LLM             = var.diagnosis_llm
+    DIAGNOSIS_LLM_MODEL       = var.diagnosis_llm_model
+    DIAGNOSIS_DELIVERY        = "pubsub"
   }
 
   # Scheduled Cloud Run Jobs: one per `python -m farmerapp.jobs <command>` of
@@ -103,6 +119,11 @@ locals {
       schedule    = "15 22 * * *", tenants = true, owner = "ops-lead"
       args        = concat(["store-day-watch"], local.tenant_args)
       description = "OPS-007 stores with zero sales / day not closed by 22:00, daily 22:15 IST"
+    }
+    diagnosis-queue-age = {
+      schedule    = "5 * * * *", tenants = true, owner = "agronomist-lead"
+      args        = concat(["diagnosis-queue-age"], local.tenant_args)
+      description = "OPS-009 / DX-006 review queue > 18 h, LLM fallback rate, re-publish stuck diagnoses, hourly"
     }
     reconcile-payments = {
       schedule    = "0 6 * * *", tenants = true, owner = "finance-lead"
@@ -255,7 +276,7 @@ module "api" {
   container_port        = 8000 # apps/api/Dockerfile (uvicorn --port 8000)
   startup_probe_path    = "/v1/health"
   deletion_protection   = var.deletion_protection
-  env = merge(local.db_env, {
+  env = merge(local.db_env, local.diagnosis_env, {
     PHOTOS_BUCKET  = module.storage.bucket_names.photos
     EXPORTS_BUCKET = module.storage.bucket_names.exports
     PUBLIC_URL     = "https://api.${var.domain}"
@@ -322,17 +343,16 @@ module "worker" {
   concurrency           = 20
   deletion_protection   = var.deletion_protection
   invoker_members       = ["serviceAccount:${module.iam.emails.pubsub-push}"]
-  env = merge(local.db_env, {
+  env = merge(local.db_env, local.diagnosis_env, {
     PHOTOS_BUCKET = module.storage.bucket_names.photos
     CORPUS_BUCKET = module.storage.bucket_names.corpus
-    EMBED_URL     = module.embed.uri
   })
   secret_env = {
     OTP_PROVIDER            = module.secrets.secret_ids.otp-provider
     RAZORPAY_KEY_ID         = module.secrets.secret_ids.razorpay-key-id
     RAZORPAY_KEY_SECRET     = module.secrets.secret_ids.razorpay-key-secret
     RAZORPAY_WEBHOOK_SECRET = module.secrets.secret_ids.razorpay-webhook-secret
-    LLM_API_KEY             = module.secrets.secret_ids.llm-api-key
+    ANTHROPIC_API_KEY       = module.secrets.secret_ids.anthropic-api-key # read by the Anthropic SDK
   }
 
   depends_on = [module.secrets]
@@ -348,7 +368,7 @@ module "embed" {
   service_account_email = module.iam.emails.embed
   vpc_name              = module.network.vpc_name
   subnet_name           = module.network.subnet_name
-  ingress               = "INGRESS_TRAFFIC_INTERNAL_ONLY" # called by worker only
+  ingress               = "INGRESS_TRAFFIC_INTERNAL_ONLY" # called by the worker and the api only
   min_instances         = var.min_instances.embed
   max_instances         = var.max_instances.embed
   cpu                   = "2"
@@ -356,10 +376,16 @@ module "embed" {
   concurrency           = 4
   timeout_seconds       = 120
   deletion_protection   = var.deletion_protection
-  invoker_members       = ["serviceAccount:${module.iam.emails.worker}"]
+  invoker_members = [
+    "serviceAccount:${module.iam.emails.worker}",
+    "serviceAccount:${module.iam.emails.api}", # WC-007 corpus uploads are embedded by the api
+  ]
   env = {
     ENV           = var.env
     CORPUS_BUCKET = module.storage.bucket_names.corpus
+    # ml/embed contract (docs/prs/M6-diagnosis-api.md): refuse any other model / version.
+    EMBED_MODEL   = var.diagnosis_encoder_name
+    EMBED_VERSION = var.diagnosis_encoder_version
   }
 }
 
@@ -400,7 +426,7 @@ module "job" {
   time_zone                       = "Asia/Kolkata"
   scheduler_service_account_email = module.iam.emails.scheduler
   deletion_protection             = var.deletion_protection
-  env = merge(local.db_env, {
+  env = merge(local.db_env, local.diagnosis_env, {
     PHOTOS_BUCKET  = module.storage.bucket_names.photos
     EXPORTS_BUCKET = module.storage.bucket_names.exports
     CORPUS_BUCKET  = module.storage.bucket_names.corpus
@@ -424,6 +450,13 @@ module "pubsub" {
   push_endpoint_base   = module.worker.uri
   push_service_account = module.iam.emails.pubsub-push
   pubsub_service_agent = module.iam.pubsub_service_agent
+  # diagnosis.requested -> worker POST /push: the LLM fallback can take minutes (worker
+  # timeout 300 s), and the worker gives up on its own after DIAGNOSIS_MAX_ATTEMPTS (5)
+  # deliveries (case -> "unknown", agronomist queue), so the DLQ only catches what that
+  # could not handle (7 deliveries).
+  subscription_overrides = {
+    "diagnosis.requested" = { ack_deadline_seconds = 300, max_delivery_attempts = 7 }
+  }
   publishers = [
     "serviceAccount:${module.iam.emails.api}",
     "serviceAccount:${module.iam.emails.worker}",
@@ -502,6 +535,11 @@ module "monitoring" {
     { for k, j in local.jobs : k => { owner = j.owner, description = j.description } },
     { migrate = { owner = "platform-lead", description = "Alembic upgrade head before each deploy" } },
   )
+
+  # OPS-009 diagnosis review queue and LLM fallback rate (log-based, diagnosis-queue-age job)
+  diagnosis_alerts_enabled   = var.diagnosis_alerts_enabled
+  diagnosis_queue_age_hours  = 18
+  diagnosis_llm_rate_percent = 40
 
   # SLOs (12.1) and SEC-017
   availability_goal = var.availability_goal
