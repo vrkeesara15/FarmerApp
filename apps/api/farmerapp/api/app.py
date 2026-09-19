@@ -23,6 +23,7 @@ from farmerapp.auth.deps import AuthServices, build_auth_services, tick
 from farmerapp.auth.policy import install_policies
 from farmerapp.auth.scheduler import InProcessScheduler
 from farmerapp.beat import router as beat_routes
+from farmerapp.campaigns import membership as campaign_membership
 from farmerapp.campaigns import router as campaign_routes
 from farmerapp.catalog import router as catalog_routes
 from farmerapp.db import models as _models  # noqa: F401  (registers models + audit listener)
@@ -38,6 +39,7 @@ from farmerapp.farmers import router as farmer_routes
 from farmerapp.flags import router as flag_routes
 from farmerapp.flags.analytics import FLAG_TABLE_COUNTS
 from farmerapp.incentives import router as incentive_routes
+from farmerapp.incentives.performance_port import SERVICE_INCENTIVES
 from farmerapp.integrity.deps import build_verifier
 from farmerapp.integrity.verifier import PlayIntegrityVerifier
 from farmerapp.invoices import router as invoice_routes
@@ -54,7 +56,7 @@ from farmerapp.payments import router as payment_routes
 from farmerapp.payments import webhooks as webhook_routes
 from farmerapp.payments.service import PaymentServices, build_payment_services
 from farmerapp.performance import router as performance_routes
-from farmerapp.performance.ports import NULL_INCENTIVES, IncentivePort
+from farmerapp.performance.ports import IncentivePort
 from farmerapp.policies import router as policy_routes
 from farmerapp.privacy import router as privacy_routes
 from farmerapp.rules import events as rule_events
@@ -187,10 +189,11 @@ def create_app(
     )
     order_payment_events.register()  # FA-020 x FA-021: a captured payment advances its order
     app.state.flag_counts = FLAG_TABLE_COUNTS  # AN-001 / AN-002: open flags in analytics
-    app.state.incentives = incentives or NULL_INCENTIVES  # FA-024: WC-009 plugs in here
+    app.state.incentives = incentives or SERVICE_INCENTIVES  # FA-024 reads WC-009 here
     validate_rules()  # VA-001: invalid rules/*.yaml refuse to start
     rule_events.register()  # SPEC 6.1: event rules on the in-process buses
     travel_rules_port.register()  # VA-E07 reads FA-023 claims through TravelClaimPort
+    campaign_membership.register()  # VA-F09 reads WC-008 audiences through SegmentMembershipPort
 
     v1 = APIRouter(prefix=API_PREFIX)
     v1.include_router(health.router)

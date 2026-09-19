@@ -21,7 +21,8 @@ reviewing role (``owner``, ``auditor``, ``cluster_head`` of ``c1``, ``store_mana
                 | {ref, farmer, area_acres, ring: [[east_m, north_m], ...]}]
       villages: [{ref, meeting_point: {east_m, north_m}, radius_m?}]   # edits v1 / v2
       farm_photos: [{ref, farm, sha256?, phash?, blob?}]
-      duty:    [{ref, officer?, start, end?, integrity?: {is_mock, is_rooted, clock_drift_s}}]
+      duty:    [{ref, officer?, start, end?, km?, processed?: -2h,
+                 integrity?: {is_mock, is_rooted, clock_drift_s}}]
       points:  [{duty, at, east_m, north_m, accuracy_m?, is_mock?, is_rooted?, clock_drift_s?}]
       visits:  [{ref, officer?, farmer, farm?, at, minutes?, east_m?, north_m?, geofence?,
                  purpose?, integrity?}]
@@ -373,6 +374,7 @@ async def add_duty(
         end_at=end,
         end_reason="manual" if end is not None else None,
         km=Decimal(str(spec["km"])) if spec.get("km") is not None else None,
+        processed_at=when(spec["processed"], now) if spec.get("processed") else None,
         start_point=_point(spec),
         policy_version="1",
         device_integrity=_integrity(spec.get("integrity")),

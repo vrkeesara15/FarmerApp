@@ -1,0 +1,20 @@
+description: >
+  Two tracking gaps, neither flagged: the first (four hours, two days ago) was explained
+  through VV-008 the same evening ("network"), and the second (four hours this morning, on a
+  processed session whose fixes show movement either side) is still inside the 24 h the
+  officer has to explain it.
+mode: batch
+seed:
+  duty:
+    - {ref: d1, officer: officer, start: -50h, end: -44h, km: 18.0}
+    - {ref: d2, officer: officer2, start: -8h, end: -2h, km: 22.0, processed: -2h}
+  points:
+    - {duty: d2, at: -7.9h, east_m: 0, north_m: 0}
+    - {duty: d2, at: -7.5h, east_m: 500, north_m: 0}
+    - {duty: d2, at: -2.9h, east_m: 1000, north_m: 0}
+    - {duty: d2, at: -2.5h, east_m: 1500, north_m: 0}
+  track_gaps:
+    - {ref: g1, duty: d1, start: -49h, end: -45h, reason: network, reason_at: -44h}
+    - {ref: g2, duty: d2, start: -7.5h, end: -2.9h}
+expect:
+  flags: []

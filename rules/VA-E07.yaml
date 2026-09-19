@@ -1,8 +1,11 @@
 # VA-E07 (SPEC 6.3): a TA claim's km differ from the km computed from the duty track by more
 # than `max_difference_share`. Claims (FA-023) arrive through `TravelClaimPort`; the travel
 # package emits `ta.claim.submitted` (in-process or Pub/Sub) when one is submitted.
+# Only vehicle claims (`vehicle_claim_types`) are compared with the track: a fare — a bus
+# ticket and the like — pays for a ride, not for the distance the officer drove, so its
+# amount says nothing about the km and it is never judged here.
 id: VA-E07
-version: 1
+version: 2
 title: TA claim differs from the computed km
 subject: employee
 mode: event
@@ -14,4 +17,5 @@ enabled: true
 params:
   max_difference_share: 0.15   # |claimed - computed| / computed
   min_difference_km: 1.0       # ignore differences smaller than this
+  vehicle_claim_types: [fuel, own_vehicle]   # claim types whose amount is distance-based
 tenant_overrides: {}

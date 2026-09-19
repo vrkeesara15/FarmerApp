@@ -1,0 +1,18 @@
+description: >
+  A duty session two days ago carries a four-hour VV-006 tracking gap (no kept fix while on
+  duty). Two days later the officer still has not said why (VV-008 records the reason), so
+  the gap is past the 24 h grace: one low-severity coaching flag for the cluster head. The
+  session itself ended before the idle lookback window, so the idle half of VA-E06 is quiet.
+mode: batch
+seed:
+  duty:
+    - {ref: d1, officer: officer, start: -50h, end: -44h, km: 18.0}
+  track_gaps:
+    - {ref: g1, duty: d1, start: -49h, end: -45h}
+expect:
+  flags:
+    - subject: officer
+      severity: low
+      owner: cluster_head
+      watchers: []
+      reasons: [unexplained_track_gap]

@@ -10,6 +10,7 @@ import time
 import uuid
 from decimal import Decimal
 
+import pytest
 from geoalchemy2 import Geometry
 from sqlalchemy import cast, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,6 +39,10 @@ async def _count(session: AsyncSession, model: type) -> int:
     return int(await session.scalar(select(func.count()).select_from(model)) or 0)
 
 
+# Timing-sensitive (SPEC 10.5: the full seed under 30 s): it measures wall clock, so it runs
+# in the serial phase, alone on the machine — under the parallel phase's ten xdist workers the
+# same seed takes over 30 s on a busy laptop without anything being wrong.
+@pytest.mark.serial
 async def test_full_seed_counts_and_duration(db_session: AsyncSession) -> None:
     started = time.perf_counter()
     result = await seed_demo(db_session, FULL)

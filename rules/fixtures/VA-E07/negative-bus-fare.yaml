@@ -1,0 +1,15 @@
+description: >
+  The same 40 km duty day as the positive fixture, but the claim is a bus fare: its amount
+  pays for tickets at the operator's tariff, not for the distance the officer drove, so the
+  60 km it would imply are never compared with the track. No flag (only `fuel` and
+  `own_vehicle` claims are judged, VA-E07 `vehicle_claim_types`).
+mode: event
+trigger: ta.claim.submitted
+subjects: [claim1]
+seed:
+  duty:
+    - {ref: d1, officer: officer, start: -30h, end: -22h, km: 40.0}
+  travel_claims:
+    - {ref: claim1, officer: officer, day: -26h, km: 60.0, type: bus}
+expect:
+  flags: []

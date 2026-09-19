@@ -77,7 +77,7 @@ async def test_numbers_match_the_console(client: AsyncClient, bearer: Bearer, mi
     assert perf["sales_net_paise"] == 2 * 1000 + 800 and perf["sales_orders"] == 2
     assert perf["collections_paise"] == 1_500
     assert perf["duty_days"] == 2 and perf["km_per_day"] == pytest.approx(25.25)
-    assert perf["incentive_earned_paise"] is None  # WC-009 not configured yet
+    assert perf["incentive_earned_paise"] is None  # WC-009 port: no active rule set here
     assert perf["from"] == str(FROM) and perf["filters"]["scope"] == "own"
 
 

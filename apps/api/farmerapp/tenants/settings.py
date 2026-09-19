@@ -23,6 +23,7 @@ ta_rate_per_km_paise                300          FA-023 travel allowance per km 
 ta_daily_km_cap                     150          FA-023 most km paid for one day (assumption)
 beat_daily_target                   10           FA-018 stops on the generated beat plan
 beat_follow_up_days                 14           FA-018 a farmer is due a follow-up after this
+unexplained_gap_hours               3            VA-E06 tracking gap on duty that needs a reason
 store_manager_max_credit_limit_paise 5000000     ST-007 most a store manager may set (Rs 50,000)
 credit_due_days                     90           FA-022 due date of a credit sale without harvest
 day_close_variance_threshold_paise  50000        ST-006 |variance| above it flags auditors
@@ -118,6 +119,7 @@ SETTINGS_KEYS: Mapping[str, str] = {
     "ta_daily_km_cap": "FA-023 most km paid as travel allowance for one day",
     "beat_daily_target": "FA-018 how many stops the daily beat plan suggests",
     "beat_follow_up_days": "FA-018 days after the last visit a farmer is due a follow-up",
+    "unexplained_gap_hours": "VA-E06 tracking gap on duty (hours) the officer must explain",
     "store_manager_max_credit_limit_paise": "ST-007 store manager's maximum credit limit",
     "credit_due_days": "FA-022 due days of a credit sale without a known harvest",
     "day_close_variance_threshold_paise": "ST-006 cash variance that alerts auditors",
@@ -296,6 +298,13 @@ class TenantSettings(BaseModel):
     ta_daily_km_cap: int = Field(default=DEFAULT_TA_DAILY_KM_CAP, ge=1, le=1000)
     beat_daily_target: int = Field(default=10, ge=1, le=50)
     beat_follow_up_days: int = Field(default=14, ge=1, le=180)
+    unexplained_gap_hours: int = Field(
+        default=3,
+        ge=1,
+        le=24,
+        description="VA-E06: a duty tracking gap (VV-006) at least this long raises a "
+        "coaching flag when it still carries no reason a day later.",
+    )
     store_manager_max_credit_limit_paise: int = Field(
         default=DEFAULT_STORE_MANAGER_MAX_CREDIT_LIMIT_PAISE, ge=0, le=100_000_000_00
     )

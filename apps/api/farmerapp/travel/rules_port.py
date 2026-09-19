@@ -74,6 +74,7 @@ class DbTravelClaims:
                     day=row.claim_date,
                     claimed_km=km,
                     submitted_at=row.created_at,
+                    claim_type=row.type,
                 )
             )
         return out

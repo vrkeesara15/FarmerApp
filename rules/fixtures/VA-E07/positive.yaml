@@ -9,7 +9,7 @@ seed:
   duty:
     - {ref: d1, officer: officer, start: -30h, end: -22h, km: 40.0}
   travel_claims:
-    - {ref: claim1, officer: officer, day: -26h, km: 60.0}
+    - {ref: claim1, officer: officer, day: -26h, km: 60.0, type: fuel}
 expect:
   flags:
     - {subject: officer, severity: medium, owner: cluster_head, watchers: [], reasons: [ta_km_mismatch]}

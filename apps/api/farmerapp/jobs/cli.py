@@ -23,6 +23,13 @@ cli = typer.Typer(help="FarmerApp batch jobs.", no_args_is_help=True, add_comple
 def _setup() -> None:
     settings = get_settings()
     configure_logging(level=settings.log_level, json_logs=settings.log_json, service="jobs")
+    # Rule ports the jobs process needs: the nightly `run-rules` batch reads WC-008 campaign
+    # audiences (VA-F09) and FA-023 travel claims (VA-E07) through them.
+    from farmerapp.campaigns import membership as campaign_membership
+    from farmerapp.travel import rules_port as travel_rules_port
+
+    campaign_membership.register()
+    travel_rules_port.register()
 
 
 @cli.command()

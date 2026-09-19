@@ -1,5 +1,5 @@
 """VA-E06 — duty with no activity: more than ``max_idle_hours`` of a duty session without a
-visit, a stop boundary or movement.
+visit, a stop boundary or movement, plus the unexplained tracking gaps of a duty day.
 
 The activity timeline of a session is its start, its end (or ``now`` while it is open),
 every check-in and check-out of the officer's visits in it (meetings included), and every
@@ -22,8 +22,18 @@ Processed sessions (VV-006, ``duty_session.processed_at`` set at duty end or by 
 
 Unprocessed sessions (open, or ended before VV-006) keep the raw-point pass above.
 
-Batch (nightly): sessions overlapping the last ``lookback_hours``. One flag per session
-(key ``idle:<session>``), low severity, for the cluster head.
+**Unexplained tracking gaps** (second check, coaching). A gap is a tracking outage, not
+idle time, so it never feeds the idle span above — but an outage nobody explains is its own
+signal. A stored ``track_gap`` (VV-006: > 30 min without a kept fix while on duty) at least
+``unexplained_gap_hours`` long (tenant setting, default 3) that still has no VV-008 reason
+``reason_grace_hours`` (24 h) after it ended raises one low-severity coaching flag for the
+cluster head (key ``gap:<gap>``, reason ``unexplained_track_gap``). Recording a reason
+afterwards does not reopen it: the flag is resolved by the cluster head, and the dedupe key
+keeps the nightly run from raising a second one.
+
+Batch (nightly): sessions overlapping the last ``lookback_hours``, gaps that ended within
+the last ``gap_lookback_hours``. One flag per session (key ``idle:<session>``) and one per
+unexplained gap, low severity, for the cluster head.
 """
 
 from __future__ import annotations
@@ -41,11 +51,16 @@ from farmerapp.location.models import DutySession, LocationPoint
 from farmerapp.rules.checks.common import geo_point
 from farmerapp.rules.registry import Evidence, Finding, RuleContext, record, rule
 from farmerapp.rules.schema import Subject
+from farmerapp.tenants.settings import get_tenant_settings
 from farmerapp.visits.models import Visit
 
 
 @rule("VA-E06")
 async def check(ctx: RuleContext) -> list[Finding]:
+    return await _idle_on_duty(ctx) + await _unexplained_gaps(ctx)
+
+
+async def _idle_on_duty(ctx: RuleContext) -> list[Finding]:
     max_idle = timedelta(hours=float(ctx.param("max_idle_hours")))
     min_move = float(ctx.param("min_movement_m"))
     max_accuracy = float(ctx.param("max_accuracy_m"))
@@ -164,6 +179,67 @@ async def check(ctx: RuleContext) -> list[Finding]:
                         "visits_in_session": sum(1 for i in instants if i[1] == "visit"),
                         "track_processed": processed,
                         "gap_minutes_excluded": int(outage.total_seconds() // 60),
+                    },
+                ),
+            )
+        )
+    return findings
+
+
+async def _unexplained_gaps(ctx: RuleContext) -> list[Finding]:
+    """Tracking gaps of a duty session, long enough to matter and still unexplained a day
+    after they ended (VV-008 is where the officer records the reason)."""
+    settings = await get_tenant_settings(ctx.session, ctx.tenant_id)
+    min_gap = timedelta(hours=float(settings.unexplained_gap_hours))
+    grace = timedelta(hours=float(ctx.param("reason_grace_hours")))
+    since = ctx.now - timedelta(hours=float(ctx.param("gap_lookback_hours")))
+    stmt = (
+        select(
+            TrackGap.id,
+            TrackGap.officer_id,
+            TrackGap.duty_session_id,
+            TrackGap.start_at,
+            TrackGap.end_at,
+            TrackGap.duration_s,
+        )
+        .join(DutySession, DutySession.id == TrackGap.duty_session_id)
+        .where(
+            TrackGap.tenant_id == ctx.tenant_id,
+            TrackGap.deleted_at.is_(None),
+            TrackGap.reason.is_(None),
+            TrackGap.duration_s >= int(min_gap.total_seconds()),
+            TrackGap.end_at <= ctx.now - grace,
+            TrackGap.end_at >= since,
+            DutySession.deleted_at.is_(None),
+        )
+        .order_by(TrackGap.start_at, TrackGap.id)
+    )
+    if ctx.subject_ids is not None:
+        stmt = stmt.where(TrackGap.duty_session_id.in_(ctx.subject_ids))
+    findings: list[Finding] = []
+    for gap_id, officer, duty_id, start, end, duration_s in (
+        await ctx.session.execute(stmt)
+    ).tuples():
+        hours = duration_s / 3600
+        findings.append(
+            Finding(
+                subject_type=Subject.EMPLOYEE,
+                subject_id=officer,
+                key=f"gap:{gap_id}",
+                title=f"{hours:.1f} h without tracking on duty, still unexplained",
+                evidence=Evidence(
+                    records=[
+                        record("user", officer),
+                        record("duty_session", duty_id),
+                        record("track_gap", gap_id),
+                    ],
+                    metrics={
+                        "reason": "unexplained_track_gap",
+                        "gap_from": start.isoformat(),
+                        "gap_to": end.isoformat(),
+                        "gap_minutes": duration_s // 60,
+                        "unexplained_gap_hours": float(settings.unexplained_gap_hours),
+                        "reason_grace_hours": float(ctx.param("reason_grace_hours")),
                     },
                 ),
             )

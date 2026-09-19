@@ -268,7 +268,8 @@ async def test_claim_submit_raises_va_e07_end_to_end(
     """VA-E07 through the real claim endpoint: ``TravelClaimSubmitted`` -> the rules'
     subscriber -> ``DbTravelClaims`` (km implied by the amount at the tenant's TA rate,
     300 paise / km) vs the processed duty km of the day. 40 km driven: a 150 rupee claim
-    (50 km, +25 %) is flagged for the cluster head, a 130 rupee claim (43.33 km, +8 %) is not."""
+    (50 km, +25 %) is flagged for the cluster head, a 130 rupee claim (43.33 km, +8 %) is not.
+    A bus fare is never compared with the track, however far off its implied km are."""
     await mini.duty("o1", ist(DAY, 9), ist(DAY, 18), km="40.00")
     o1 = mini.user("o1")
     ids: dict[int, str] = {}
@@ -285,6 +286,19 @@ async def test_claim_submit_raises_va_e07_end_to_end(
         )
         assert resp.status_code == 201, resp.text
         ids[amount] = resp.json()["id"]
+    # A 300 rupee bus fare would imply 100 km, but a ticket's price is the operator's
+    # tariff, not the officer's distance: fares are outside VA-E07 (vehicle_claim_types).
+    fare = await client.post(
+        "/v1/travel/claims",
+        json={
+            "claim_date": str(DAY),
+            "type": "bus",
+            "amount_paise": 30_000,
+            "receipt_uri": await receipt(app, mini.tid),
+        },
+        headers=bearer(o1),
+    )
+    assert fare.status_code == 201, fare.text
     flags = (
         (
             await db_session.execute(

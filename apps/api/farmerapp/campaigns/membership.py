@@ -2,8 +2,10 @@
 
 VA-F09 ("consent missing or withdrawn but farmer in a campaign segment", batch, high) lives
 in the rules package and reads campaign audiences only through a port; this module is the
-real adapter over ``campaign`` / ``campaign_recipient``. The parent wires an instance
-(``CAMPAIGN_SEGMENT_MEMBERSHIP``) into the rule's port.
+real adapter over ``campaign`` / ``campaign_recipient``. ``register()`` wires the instance
+(``CAMPAIGN_SEGMENT_MEMBERSHIP``) onto ``farmerapp.rules.ports`` at startup: the API app,
+the worker's event path and every job process (``farmerapp.jobs.cli``, so the nightly
+``run-rules`` batch sees real audiences).
 
 A farmer is **in a segment** while they are a recipient of a live campaign (``scheduled`` /
 ``sending``, or ``sent`` within ``recent_days``) in the target arm and not yet skipped. The
@@ -15,6 +17,7 @@ was written without consent at all).
 from __future__ import annotations
 
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -29,6 +32,7 @@ from farmerapp.campaigns.models import (
     RecipientStatus,
 )
 from farmerapp.campaigns.segments import has_marketing_consent
+from farmerapp.rules import ports
 
 RECENT_DAYS = 30
 _LIVE = (CampaignStatus.SCHEDULED.value, CampaignStatus.SENDING.value)
@@ -91,6 +95,27 @@ class CampaignSegmentMembership:
         rows = await session.execute(stmt)
         return [SegmentMembership(*row) for row in rows.tuples()]
 
+    async def members(
+        self,
+        session: AsyncSession,
+        tenant_id: uuid.UUID,
+        farmer_ids: Sequence[uuid.UUID] | None = None,
+    ) -> list[ports.SegmentMember]:
+        """The rules package's ``SegmentMembershipPort``: a campaign's frozen audience is the
+        segment, so the segment id is the campaign id."""
+        rows = await self.memberships(
+            session, tenant_id, farmer_ids=list(farmer_ids) if farmer_ids is not None else None
+        )
+        return [
+            ports.SegmentMember(
+                tenant_id=tenant_id,
+                farmer_id=m.farmer_id,
+                segment_id=str(m.campaign_id),
+                campaign_id=str(m.campaign_id),
+            )
+            for m in rows
+        ]
+
     async def farmers_in_segments(
         self, session: AsyncSession, tenant_id: uuid.UUID, *, now: datetime | None = None
     ) -> set[uuid.UUID]:
@@ -108,11 +133,19 @@ class CampaignSegmentMembership:
         return [m for m in members if m.farmer_id not in consented]
 
 
-#: The instance the parent registers as the VA-F09 ``SegmentMembershipPort``.
+#: The instance registered as the VA-F09 ``SegmentMembershipPort``.
 CAMPAIGN_SEGMENT_MEMBERSHIP = CampaignSegmentMembership()
+
+
+def register() -> None:
+    """Register the adapter process-wide (idempotent; tests swap it with ``override_ports``)."""
+    if not isinstance(ports.get_ports().segments, CampaignSegmentMembership):
+        ports.set_ports(segments=CAMPAIGN_SEGMENT_MEMBERSHIP)
+
 
 __all__ = [
     "CAMPAIGN_SEGMENT_MEMBERSHIP",
     "CampaignSegmentMembership",
     "SegmentMembership",
+    "register",
 ]

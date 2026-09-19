@@ -88,8 +88,13 @@ class InMemorySegments:
 # --------------------------------------------------------------------------- VA-E07 TA claims
 @dataclass(frozen=True)
 class TravelClaim:
-    """A submitted travel-allowance claim (FA-023): the officer, the IST day, the km
-    claimed and, when the app sent them, the duty sessions it covers."""
+    """A submitted travel-allowance claim (FA-023): the officer, the IST day, the kind of
+    claim, the km claimed and, when the app sent them, the duty sessions it covers.
+
+    ``claim_type`` is the FA-023 type (``fuel`` / ``bus`` / ``other``; a tenant may add
+    ``own_vehicle``). VA-E07 only compares a *vehicle* claim with the computed km: a fare
+    (bus and the like) pays for a ticket, not for the distance the officer drove, so it says
+    nothing about the track."""
 
     tenant_id: uuid.UUID
     id: uuid.UUID
@@ -98,6 +103,7 @@ class TravelClaim:
     claimed_km: Decimal
     submitted_at: datetime
     duty_session_ids: tuple[uuid.UUID, ...] = ()
+    claim_type: str = "fuel"
 
 
 class TravelClaimPort(Protocol):

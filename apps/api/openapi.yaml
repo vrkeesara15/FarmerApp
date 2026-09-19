@@ -27372,6 +27372,14 @@ components:
           minimum: 1.0
           title: Beat Follow Up Days
           default: 14
+        unexplained_gap_hours:
+          type: integer
+          maximum: 24.0
+          minimum: 1.0
+          title: Unexplained Gap Hours
+          description: 'VA-E06: a duty tracking gap (VV-006) at least this long raises a coaching flag
+            when it still carries no reason a day later.'
+          default: 3
         store_manager_max_credit_limit_paise:
           type: integer
           maximum: 10000000000.0

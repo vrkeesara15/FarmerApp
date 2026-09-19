@@ -19,10 +19,12 @@ async def _todo(topic: Topic) -> None:
 
 async def _rules(topic: Topic, message: PubSubMessage) -> None:
     """M4: the event validation rules subscribed to ``topic`` (SPEC 6.1)."""
+    from farmerapp.campaigns import membership as campaign_membership
     from farmerapp.rules.events import handle_event_message
     from farmerapp.travel import rules_port as travel_rules_port
 
     travel_rules_port.register()  # VA-E07 (ta.claim.submitted) reads FA-023 claims
+    campaign_membership.register()  # VA-F09 reads WC-008 campaign audiences
     await handle_event_message(str(topic), message)
 
 

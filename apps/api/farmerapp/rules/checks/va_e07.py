@@ -10,6 +10,12 @@ A claim whose sessions are still open (no km yet) is not judged. Differences und
 ``min_difference_km`` are ignored; a claim with no computed km at all is flagged when it
 claims at least ``min_difference_km``.
 
+Only **vehicle** claims are compared: the claim type must be one of ``vehicle_claim_types``
+(``fuel``, ``own_vehicle``). A fare — a bus ticket and the like — buys a ride whose price
+follows the operator's tariff, not the officer's own distance, so comparing its implied km
+with the duty track would flag honest claims; ``bus`` / ``other`` claims are left to the
+cluster head's approval (FA-023).
+
 Event mode (``subject_ids`` = claim ids). One flag per claim (key ``claim:<id>``).
 """
 
@@ -32,11 +38,14 @@ async def check(ctx: RuleContext) -> list[Finding]:
         return []  # event rule: the event names the claims
     max_share = float(ctx.param("max_difference_share"))
     min_km = float(ctx.param("min_difference_km"))
+    vehicle_types = {str(t) for t in ctx.param("vehicle_claim_types")}
     claims = await get_ports().travel_claims.claims(
         ctx.session, ctx.tenant_id, claim_ids=ctx.subject_ids
     )
     findings: list[Finding] = []
     for claim in claims:
+        if claim.claim_type not in vehicle_types:
+            continue  # a fare (bus and the like) is not distance-based: never judged here
         stmt = select(DutySession.id, DutySession.km, DutySession.end_at).where(
             DutySession.tenant_id == ctx.tenant_id,
             DutySession.officer_id == claim.officer_id,
@@ -70,6 +79,7 @@ async def check(ctx: RuleContext) -> list[Finding]:
                     metrics={
                         "reason": "ta_km_mismatch",
                         "day": claim.day.isoformat(),
+                        "claim_type": claim.claim_type,
                         "claimed_km": float(claimed),
                         "computed_km": float(computed),
                         "difference_km": float(diff),

@@ -13,7 +13,8 @@
       khata:  [{ref, farmer, type: debit|credit, amount, at, due?: -100d}]
       day_closes: [{ref, closed_by?, at, expected, counted, status?}]
       segment_members: [{farmer, segment, campaign?}]          # SegmentMembershipPort fake
-      travel_claims: [{ref, officer?, day: -1d, km, sessions?: [d1]}]   # TravelClaimPort fake
+      travel_claims: [{ref, officer?, day: -1d, km, type?: fuel, sessions?: [d1]}]  # port fake
+      track_gaps: [{ref, duty, officer?, start: -30h, end: -26h, reason?, reason_at?}]  # VV-006
       land_cover: [{farm, class: water|built_up|road|cropland}]         # LandCoverPort fake
 
 Crops (the six pilot crops) are created on first use. Amounts are paise. ``day`` / ``due``
@@ -33,8 +34,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from farmerapp.auth.models import RefreshToken, User, UserRole
 from farmerapp.catalog.crops import PILOT_CROPS, Crop
 from farmerapp.db.models import Tenant
+from farmerapp.duty.models import TrackGap, gap_id
 from farmerapp.farmers.models import ConsentChannel, ConsentRecord, ConsentSubject, CropPlot, Farmer
 from farmerapp.khata.models import EntryRef, EntryType, KhataEntry
+from farmerapp.location.models import DutySession
 from farmerapp.orders.models import Order, OrderChannel, OrderStatus, OrderStatusEvent
 from farmerapp.payments.models import DayClose, DayCloseStatus
 from farmerapp.rules.checks.common import IST
@@ -200,8 +203,27 @@ async def seed_m7(
                 claimed_km=Decimal(str(spec["km"])),
                 submitted_at=when(spec.get("at"), now),
                 duty_session_ids=tuple(world.refs[r] for r in spec.get("sessions") or []),
+                claim_type=str(spec.get("type", "fuel")),
             )
         )
+    for spec in records.get("track_gaps") or []:
+        duty = await session.get_one(DutySession, world.refs[spec["duty"]])
+        start, end = when(spec["start"], now), when(spec["end"], now)
+        gap = TrackGap(
+            id=gap_id(duty.id, start),
+            tenant_id=world.tenant_id,
+            duty_session_id=duty.id,
+            officer_id=duty.officer_id,
+            start_at=start,
+            end_at=end,
+            duration_s=int((end - start).total_seconds()),
+            reason=spec.get("reason"),
+            note=spec.get("note"),
+            reason_at=when(spec["reason_at"], now) if spec.get("reason_at") else None,
+        )
+        session.add(gap)
+        await session.flush()
+        world.refs[spec["ref"]] = gap.id
     for spec in records.get("land_cover") or []:
         world.land_cover.by_farm[world.refs[spec["farm"]]] = LandCover(spec["class"])
 
