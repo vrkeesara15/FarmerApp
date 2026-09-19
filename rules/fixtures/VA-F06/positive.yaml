@@ -1,0 +1,23 @@
+description: >
+  An officer registers nine farmers in 24 minutes (more than 8 in under 30), and one phone
+  (device D1) registers farmers for two officers. Both are high severity employee flags for
+  the cluster head, watched by the auditor.
+mode: batch
+seed:
+  farmers:
+    - {ref: b1, registered_by: officer, at: -24m}
+    - {ref: b2, registered_by: officer, at: -21m}
+    - {ref: b3, registered_by: officer, at: -18m}
+    - {ref: b4, registered_by: officer, at: -15m}
+    - {ref: b5, registered_by: officer, at: -12m}
+    - {ref: b6, registered_by: officer, at: -9m}
+    - {ref: b7, registered_by: officer, at: -6m}
+    - {ref: b8, registered_by: officer, at: -3m}
+    - {ref: b9, registered_by: officer, at: -1m}
+    - {ref: d1, registered_by: officer2, at: -6h, device: D1}
+    - {ref: d2, registered_by: officer2, at: -5h, device: D1}
+    - {ref: d3, registered_by: officer, at: -10h, device: D1}
+expect:
+  flags:
+    - {subject: officer, severity: high, owner: cluster_head, watchers: [auditor], reasons: [registration_burst]}
+    - {subject: officer2, severity: high, owner: cluster_head, watchers: [auditor], reasons: [shared_device]}

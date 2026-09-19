@@ -1,0 +1,18 @@
+# VA-F06 (SPEC 6.2): registration burst — an officer registers more than N farmers in under
+# M minutes, or one device registers farmers for several officers.
+id: VA-F06
+version: 1
+title: Registration burst
+subject: employee
+mode: [event, batch]
+triggers: [farmer.registered]
+severity: high
+owner_role: cluster_head
+sla_hours: 48
+enabled: true
+params:
+  max_registrations: 8        # more than this many farmers ...
+  window_minutes: 30          # ... in less than this many minutes
+  max_officers_per_device: 1  # a device used by more officers than this is shared
+  lookback_hours: 26          # nightly batch overlaps the previous run by two hours
+tenant_overrides: {}

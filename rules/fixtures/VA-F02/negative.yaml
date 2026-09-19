@@ -1,0 +1,19 @@
+description: >
+  Near-namesakes in one village whose farms are 500 m apart, namesakes with adjacent farms
+  in different villages, and different people with adjacent farms. No flag.
+mode: batch
+seed:
+  farmers:
+    - {ref: a, name: Mallesh Goud, village: v1, at: -10d}
+    - {ref: b, name: Malesh Goud, village: v1, at: -1h}
+    - {ref: c, name: Komuraiah Yadav, village: v1, at: -3d}
+    - {ref: d, name: Komuraiah Yadav, village: v2, at: -2d}
+    - {ref: e, name: Lakshmi Bai, village: v1, at: -2d}
+  farms:
+    - {ref: farm_a, farmer: a, area_acres: 1.0, square: {east_m: 0, north_m: 0, side_m: 64}}
+    - {ref: farm_b, farmer: b, area_acres: 1.0, square: {east_m: 500, north_m: 0, side_m: 64}}
+    - {ref: farm_c, farmer: c, area_acres: 1.0, square: {east_m: 0, north_m: 300, side_m: 64}}
+    - {ref: farm_d, farmer: d, area_acres: 1.0, square: {east_m: 10, north_m: 300, side_m: 64}}
+    - {ref: farm_e, farmer: e, area_acres: 1.0, square: {east_m: 10, north_m: 10, side_m: 64}}
+expect:
+  flags: []

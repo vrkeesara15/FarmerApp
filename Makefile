@@ -59,10 +59,11 @@ openapi: $(API_DIR)/.venv/.synced ## Export apps/api/openapi.yaml from the app (
 test-api: db $(API_DIR)/.venv/.synced ## pytest with coverage (starts db)
 	$(UV_RUN) pytest
 
-check-api: $(API_DIR)/.venv/.synced ## ruff, mypy strict, pytest, openapi diff, bandit, pip-audit
+check-api: $(API_DIR)/.venv/.synced ## ruff, mypy strict, rules, pytest, openapi diff, bandit, pip-audit
 	$(UV_RUN) ruff check .
 	$(UV_RUN) ruff format --check .
 	$(UV_RUN) mypy
+	$(UV_RUN) python -m farmerapp.jobs validate-rules  # VA-001 / VA-007: YAML valid, fixtures present
 	$(MAKE) test-api
 	$(UV_RUN) python scripts/export_openapi.py --check
 	$(UV_RUN) bandit -q -c pyproject.toml -r farmerapp

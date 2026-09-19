@@ -1,0 +1,15 @@
+# VA-F02 (SPEC 6.2): duplicate farmer — same phone (last ten digits), or a similar name in the
+# same village with farm centroids within centroid_distance_m.
+id: VA-F02
+version: 1
+title: Duplicate farmer
+subject: farmer
+mode: [inline, batch]
+severity: medium
+owner_role: store_manager
+sla_hours: 72
+enabled: true
+params:
+  name_similarity: 0.6      # pg_trgm similarity(name, name), 0..1
+  centroid_distance_m: 50   # farm centroids at most this far apart
+tenant_overrides: {}

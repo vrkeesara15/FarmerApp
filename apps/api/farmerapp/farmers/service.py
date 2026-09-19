@@ -15,6 +15,12 @@ Inline checks (SPEC 6.2, cheap ones only — the batch agents come in M4):
   measured acres outside ±30 % -> warning ``area_mismatch``; overlap with another farmer's
   farm above 20 % -> warning ``farm_overlap``. Warnings never reject: the console review
   queue picks them up.
+
+M4: after every registration and farm write the inline rules of the engine run on the
+farmer in the same transaction (``_validate``: VA-F01, VA-F02, VA-F03 raise flags for the
+store manager next to the warnings above) and a registration emits ``farmer.registered``
+for the event rules (VA-F06). The engine isolates each rule in a savepoint: a failing rule
+never fails the write.
 """
 
 from __future__ import annotations
@@ -67,6 +73,8 @@ from farmerapp.farmers.schemas import (
     FarmUpdate,
     GeoJsonPolygon,
 )
+from farmerapp.rules import engine as rules_engine
+from farmerapp.rules.schema import Subject
 from farmerapp.settings import Settings
 from farmerapp.tenants.models import Village
 from farmerapp.uploads.blobstore import parse_uri
@@ -182,6 +190,19 @@ def _check_version(row: Any, expected: int | None) -> None:
             f"Version {expected} is stale; the current version is {row.version}.",
             extra={"current_version": row.version},
         )
+
+
+# --------------------------------------------------------------------------- M4 rules
+FARMER_REGISTERED = "farmer.registered"
+
+
+async def _validate(
+    session: AsyncSession, tenant_id: uuid.UUID, farmer_id: uuid.UUID, *, registered: bool = False
+) -> None:
+    """Inline rules on the farmer (and ``farmer.registered`` event rules for a new one)."""
+    await rules_engine.run_inline(session, tenant_id, Subject.FARMER, [farmer_id])
+    if registered:
+        await rules_engine.emit(session, tenant_id, FARMER_REGISTERED, [farmer_id])
 
 
 # --------------------------------------------------------------------------- VA-F01
@@ -472,6 +493,7 @@ async def create_farmer(
             session, actor, farmer, consent, version=consent_version, touch_farmer=False
         )
     await session.flush()
+    await _validate(session, tenant_id, farmer.id, registered=True)
     return await farmer_detail(session, farmer, warnings=warnings)
 
 
@@ -485,6 +507,8 @@ async def update_farmer(
     for key, value in changes.items():
         setattr(farmer, key, value)
     await session.flush()
+    if {"name", "village_id"} & set(changes):
+        await _validate(session, farmer.tenant_id, farmer.id)
     await session.refresh(farmer)
     return FarmerOut.from_row(farmer)
 
@@ -536,6 +560,7 @@ async def add_farm(session: AsyncSession, actor: User, farmer: Farmer, body: Far
     if _is_farmer(actor) and farmer.user_id != actor.id:
         raise NotFoundError("Farmer not found.")
     farm, warnings = await _add_farm(session, farmer, body)
+    await _validate(session, farmer.tenant_id, farmer.id)
     return await farm_out(session, farm, warnings)
 
 
@@ -567,6 +592,8 @@ async def update_farm(session: AsyncSession, actor: User, farm: Farm, body: Farm
         new_uris = [u for u in body.photos if u not in known]
         session.add_all(await _photo_rows(session, farm.tenant_id, farm.id, new_uris))
     await session.flush()
+    if boundary_set or "area_acres" in changes:
+        await _validate(session, farm.tenant_id, farm.farmer_id)
     return await farm_out(session, farm, warnings)
 
 

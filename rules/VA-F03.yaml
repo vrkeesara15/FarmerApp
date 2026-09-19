@@ -1,0 +1,15 @@
+# VA-F03 (SPEC 6.2): farm polygon sanity — measured vs declared area, self-intersection,
+# overlap with another farmer's farm. Inline it turns the FA-012 warnings into flags.
+id: VA-F03
+version: 1
+title: Farm polygon sanity
+subject: farmer
+mode: [inline, batch]
+severity: medium
+owner_role: store_manager
+sla_hours: 72
+enabled: true
+params:
+  area_tolerance: 0.30   # |measured - declared| / declared above this -> flag
+  max_overlap: 0.20      # share of the farm covered by another farmer's farm
+tenant_overrides: {}

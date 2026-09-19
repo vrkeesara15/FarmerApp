@@ -473,6 +473,19 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
         path_params=lambda ctx: {"id": str(ctx.target.store_id), "close_id": NO_SUCH_ID},
         body=lambda _ctx: {"reason": "matrix"},
     ),
+    # WC-010 / VA-002: an unknown flag is a 404 for every allowed role; scope, the state
+    # machine and routing are tested in tests/flags and tests/rules.
+    "GET /v1/flags/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "POST /v1/flags/{id}/transition": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"to": "in_review"}
+    ),
+    "POST /v1/flags/{id}/comments": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"body": "matrix"}
+    ),
+    "POST /v1/flags/{id}/assign": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID},
+        body=lambda ctx: {"user_id": str(ctx.target.owner.id)},
+    ),
     "POST /v1/policies/location/accept": RouteFixture(
         body=lambda _ctx: {
             "version": "2026-09-v1",

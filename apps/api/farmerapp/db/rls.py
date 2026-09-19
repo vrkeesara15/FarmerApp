@@ -49,8 +49,8 @@ NON_TENANT_TABLES = frozenset({"alembic_version", "spatial_ref_sys"})
 #: Append-only tenant tables: the app role may SELECT and INSERT but never UPDATE or DELETE
 #: (FA-006 audit trail; FM-002 consent records — a withdrawal is a new row; FA-025 sync
 #: change log; FA-011 / VV-010 location policy acceptances; ST-003 stock movement ledger;
-#: FA-022 khata ledger — a correction is a new entry; ST-005 order status history). Purging
-#: past retention is the migrate role's job (NF-012).
+#: FA-022 khata ledger — a correction is a new entry; ST-005 order status history; VA-002 flag
+#: history). Purging past retention is the migrate role's job (NF-012).
 APPEND_ONLY_TABLES = frozenset(
     {
         "audit_log",
@@ -60,6 +60,7 @@ APPEND_ONLY_TABLES = frozenset(
         "stock_movement",
         "khata_entry",
         "order_status_event",
+        "flag_event",  # VA-002 flag history (M4)
     }
 )
 

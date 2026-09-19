@@ -94,6 +94,13 @@ class Settings(BaseSettings):
         "scan offline and post the token when back online.",
     )
 
+    # --- Validation agents (VA-001) -------------------------------------------------
+    rules_dir: str | None = Field(
+        default=None,
+        description="Directory of the rule YAML files (VA-001). Default: the monorepo's "
+        "rules/ next to apps/; containers set it to the copied rules directory.",
+    )
+
     # --- Providers (base URLs only; keys come from Secret Manager) -----------
     sms_provider_url: str = Field(default="http://localhost:8090/sms")
     whatsapp_provider_url: str = Field(default="http://localhost:8090/whatsapp")

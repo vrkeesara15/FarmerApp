@@ -1,0 +1,26 @@
+description: >
+  Eight registrations in 24 minutes (the limit, not above it), eight more spread over a
+  morning, and a device another officer used only outside the 26 h look-back. No flag.
+mode: batch
+seed:
+  farmers:
+    - {ref: b1, registered_by: officer, at: -24m}
+    - {ref: b2, registered_by: officer, at: -21m}
+    - {ref: b3, registered_by: officer, at: -18m}
+    - {ref: b4, registered_by: officer, at: -15m}
+    - {ref: b5, registered_by: officer, at: -12m}
+    - {ref: b6, registered_by: officer, at: -9m}
+    - {ref: b7, registered_by: officer, at: -6m}
+    - {ref: b8, registered_by: officer, at: -3m}
+    - {ref: m1, registered_by: officer2, at: -5h}
+    - {ref: m2, registered_by: officer2, at: -4.5h}
+    - {ref: m3, registered_by: officer2, at: -4h}
+    - {ref: m4, registered_by: officer2, at: -3.5h}
+    - {ref: m5, registered_by: officer2, at: -3h}
+    - {ref: m6, registered_by: officer2, at: -2.5h}
+    - {ref: m7, registered_by: officer2, at: -2h}
+    - {ref: m8, registered_by: officer2, at: -1.5h}
+    - {ref: old, registered_by: officer, at: -30h, device: D1}
+    - {ref: new, registered_by: officer2, at: -1h, device: D1}
+expect:
+  flags: []

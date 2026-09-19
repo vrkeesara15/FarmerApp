@@ -1,0 +1,70 @@
+"""VA-007: every rule ships a positive and a negative golden fixture, and both pass.
+
+``test_every_rule_has_both_fixtures`` enumerates the rule YAML files *and* the registered
+implementations, so a new rule without ``rules/fixtures/<id>/{positive,negative}.yaml``
+fails CI. ``test_golden_fixture`` seeds each fixture into a fresh tenant, runs the rule
+through the real engine and compares the flags with ``expect``; a batch fixture is run twice
+to prove re-runs never duplicate an open flag.
+"""
+
+from __future__ import annotations
+
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from farmerapp.rules.loader import DEFAULT_RULES_DIR, load_rules
+from farmerapp.rules.registry import implementations
+from farmerapp.rules.schema import Mode
+from tests.rules.harness import (
+    CASES,
+    FIXTURES_DIR,
+    assert_expected,
+    fixture_path,
+    load_fixture,
+    run_fixture,
+)
+
+RULE_SET = load_rules(DEFAULT_RULES_DIR)
+RULE_IDS = sorted(set(RULE_SET.rules) | set(implementations()))
+PAIRS = [(rule_id, case) for rule_id in RULE_IDS for case in CASES]
+
+
+def test_rules_exist() -> None:
+    assert {"VA-F01", "VA-F02", "VA-F03", "VA-F06"} <= set(RULE_IDS)
+
+
+@pytest.mark.parametrize("rule_id", RULE_IDS)
+def test_every_rule_has_both_fixtures(rule_id: str) -> None:
+    for case in CASES:
+        assert fixture_path(rule_id, case).is_file(), (
+            f"{rule_id} has no {case} fixture: add rules/fixtures/{rule_id}/{case}.yaml (VA-007)"
+        )
+
+
+def test_no_orphan_fixtures() -> None:
+    orphans = [p.name for p in FIXTURES_DIR.iterdir() if p.is_dir() and p.name not in RULE_IDS]
+    assert orphans == []
+
+
+@pytest.mark.parametrize("rule_id", RULE_IDS)
+def test_fixture_expectations_have_the_right_sign(rule_id: str) -> None:
+    assert load_fixture(rule_id, "positive")["expect"]["flags"], "a positive case must flag"
+    assert load_fixture(rule_id, "negative")["expect"]["flags"] == [], "a negative must not"
+
+
+@pytest.mark.parametrize(("rule_id", "case"), PAIRS, ids=[f"{r}-{c}" for r, c in PAIRS])
+async def test_golden_fixture(db_session: AsyncSession, rule_id: str, case: str) -> None:
+    data = load_fixture(rule_id, case)
+    world, outcome = await run_fixture(db_session, rule_id, data, rule_set=RULE_SET)
+    assert rule_id in outcome.report.rules_run
+    assert_expected(world, data, outcome)
+    for flag in outcome.flags:
+        assert flag.rule_version == RULE_SET.get(rule_id).version
+        assert flag.evidence["records"], "every flag cites the records it is about"
+        assert flag.sla_due_at > flag.created_at
+    if Mode(data.get("mode", "batch")) == Mode.BATCH:
+        _world, rerun = await run_fixture(
+            db_session, rule_id, {**data, "seed": {}}, rule_set=RULE_SET, world=world
+        )
+        assert rerun.report.total_raised == 0
+        assert len(rerun.flags) == len(outcome.flags)

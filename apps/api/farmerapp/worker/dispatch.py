@@ -17,14 +17,21 @@ async def _todo(topic: Topic) -> None:
     log.info("handler_noop", topic=str(topic))
 
 
+async def _rules(topic: Topic, message: PubSubMessage) -> None:
+    """M4: the event validation rules subscribed to ``topic`` (SPEC 6.1)."""
+    from farmerapp.rules.events import handle_event_message
+
+    await handle_event_message(str(topic), message)
+
+
 async def on_visit_created(message: PubSubMessage) -> None:
-    """M2/M4: event validation agents for a new visit (VA-E*)."""
-    await _todo(Topic.VISIT_CREATED)
+    """M4: event validation agents for a new visit (VA-E*)."""
+    await _rules(Topic.VISIT_CREATED, message)
 
 
 async def on_farmer_registered(message: PubSubMessage) -> None:
-    """M1/M4: registration burst / duplicate checks (VA-F06)."""
-    await _todo(Topic.FARMER_REGISTERED)
+    """M4: registration burst (VA-F06) and other ``farmer.registered`` rules."""
+    await _rules(Topic.FARMER_REGISTERED, message)
 
 
 async def on_diagnosis_requested(message: PubSubMessage) -> None:
@@ -40,6 +47,7 @@ async def on_payment_webhook(message: PubSubMessage) -> None:
 
     payment_events.register()  # a paid order moves on in the same transaction (ST-005)
     await handle_payment_webhook(message)
+    await _rules(Topic.PAYMENT_WEBHOOK, message)  # M4: event rules on payments (none yet)
 
 
 async def on_order_created(message: PubSubMessage) -> None:
