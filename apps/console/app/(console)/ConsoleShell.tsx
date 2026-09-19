@@ -9,16 +9,20 @@ import {
   Home,
   Leaf,
   Package,
+  ScrollText,
   Settings,
   Store,
   Users,
   UserSquare2,
+  UserCog,
   Palette,
 } from "lucide-react";
 import { SideNav, type SideNavItem } from "@/components/ds/SideNav";
 import { TopBar } from "@/components/ds/TopBar";
 import type { DateRange } from "@/components/ds/DateRangePicker";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { AUDIT_ROLES, SETTINGS_ROLES, USER_READ_ROLES } from "@/lib/admin";
+import { FLAG_READ_ROLES } from "@/lib/flags";
 import { useT } from "@/lib/i18n-client";
 import { SessionProvider, useSession } from "@/lib/session-context";
 
@@ -37,6 +41,14 @@ const ROLE_KEYS = [
 type RoleKey = (typeof ROLE_KEYS)[number];
 const roleKey = (role: string): RoleKey =>
   (ROLE_KEYS as readonly string[]).includes(role) ? (role as RoleKey) : "owner";
+
+/** Nav entries limited by role (SPEC 2.6); entries not listed are shown to every role. */
+const NAV_ROLES: Readonly<Record<string, ReadonlyArray<string>>> = {
+  "/flags": FLAG_READ_ROLES,
+  "/admin/users": USER_READ_ROLES,
+  "/settings": SETTINGS_ROLES,
+  "/admin/audit": AUDIT_ROLES,
+};
 
 const NAV_STORAGE_KEY = "farmerapp.console.nav.collapsed";
 
@@ -92,9 +104,14 @@ function Shell({ children }: { children: React.ReactNode }) {
     { href: "/products/prices", label: t("nav.prices"), icon: <BadgeIndianRupee /> },
     { href: "/agronomist", label: t("nav.agronomist"), icon: <Leaf /> },
     { href: "/flags", label: t("nav.flags"), icon: <Flag /> },
+    { href: "/admin/users", label: t("nav.users"), icon: <UserCog /> },
     { href: "/settings", label: t("nav.settings"), icon: <Settings /> },
+    { href: "/admin/audit", label: t("nav.audit"), icon: <ScrollText /> },
     { href: "/design", label: t("nav.design"), icon: <Palette /> },
-  ];
+  ].filter((item) => {
+    const roles = NAV_ROLES[item.href];
+    return !session.role || !roles || roles.includes(session.role);
+  });
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">

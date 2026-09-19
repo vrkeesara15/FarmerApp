@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
+import { SettingsView } from "@/components/admin/SettingsView";
 import { t } from "@/lib/i18n";
-import { PlaceholderPage } from "../PlaceholderPage";
 
 export const metadata: Metadata = { title: t("settings.title") };
 
-/** C102 */
+/** C102 Settings with the branding preview of both apps (WC-012). */
 export default function Page() {
-  return <PlaceholderPage screenId="C102" titleKey="settings.title" emptyKey="settings.empty" />;
+  return <SettingsView />;
 }

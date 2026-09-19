@@ -24,6 +24,12 @@ export interface FlagCardProps {
   onAssign?: (id: string) => void;
   loading?: boolean;
   className?: string;
+  /** Owner of the flag (WC-010: every flag has an owner); shown in the footer. */
+  ownerName?: string;
+  /** Custom SLA node (e.g. a live countdown); replaces `slaMinutesLeft`. */
+  sla?: React.ReactNode;
+  /** Extra badges next to the severity (e.g. the review status). */
+  badges?: React.ReactNode;
 }
 
 function slaText(minutes: number): string {
@@ -45,6 +51,9 @@ export function FlagCard({
   onAssign,
   loading,
   className,
+  ownerName,
+  sla,
+  badges,
 }: FlagCardProps) {
   const t = useT();
   if (loading) {
@@ -81,11 +90,14 @@ export function FlagCard({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <SeverityBadge severity={severity} />
+          {badges}
           <span className="text-small text-text-muted">
             {t("flagCard.rule")}: <span className="font-semibold text-text-secondary">{rule}</span>
           </span>
         </div>
-        {slaMinutesLeft !== undefined ? (
+        {sla !== undefined ? (
+          sla
+        ) : slaMinutesLeft !== undefined ? (
           <span
             className={cn(
               "tnum inline-flex items-center gap-1 text-small font-semibold",
@@ -107,6 +119,15 @@ export function FlagCard({
           {officerName ? (
             <>
               {t("flagCard.officer")}: <span className="text-text-secondary">{officerName}</span>{" "}
+              ·{" "}
+            </>
+          ) : null}
+          {ownerName ? (
+            <>
+              {t("flagCard.owner")}:{" "}
+              <span className="text-text-secondary" data-testid="flag-owner">
+                {ownerName}
+              </span>{" "}
               ·{" "}
             </>
           ) : null}

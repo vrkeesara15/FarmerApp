@@ -50,7 +50,9 @@
     "expand": "Expand navigation",
     "primary": "Primary navigation",
     "labelClaims": "Label claims",
-    "prices": "Price lists"
+    "prices": "Price lists",
+    "users": "Users and roles",
+    "audit": "Audit log"
   },
   "topbar": {
     "searchPlaceholder": "Search farmer phone or name, officer, order id",
@@ -180,11 +182,154 @@
   },
   "flags": {
     "title": "Flags",
-    "empty": "Validation flags will appear here."
+    "empty": "Validation flags will appear here.",
+    "subtitle": "Flags raised by the validation agents, grouped by severity and rule.",
+    "emptyTitle": "No open flags",
+    "emptyFilteredTitle": "No flags match these filters",
+    "emptyFiltered": "Change or clear the filters to see more flags.",
+    "total": "{n} flags",
+    "groupSeverity": "{severity} · {n}",
+    "groupRule": "{rule} · {n}",
+    "ruleVersion": "{rule} v{version}",
+    "subjectLine": "About: {subject}",
+    "unassigned": "Unassigned",
+    "ownerYou": "You ({role})",
+    "ownerNamed": "{name} ({role})",
+    "loadMore": "Load more flags",
+    "filters": {
+      "label": "Flag filters",
+      "status": "Status",
+      "unresolved": "Unresolved",
+      "severity": "Severity",
+      "rule": "Rule",
+      "subject": "Subject",
+      "mine": "Assigned to me",
+      "overdue": "Overdue only"
+    },
+    "status": {
+      "open": "Open",
+      "in_review": "In review",
+      "escalated": "Escalated",
+      "resolved_valid": "Resolved: data valid",
+      "resolved_fixed": "Resolved: corrected",
+      "resolved_action": "Resolved: action taken"
+    },
+    "subject": {
+      "farmer": "Farmer",
+      "employee": "Employee",
+      "visit": "Visit",
+      "store": "Store"
+    },
+    "sla": {
+      "dueIn": "Due in {n}",
+      "overdue": "Overdue by {n}",
+      "resolved": "SLA closed",
+      "dueAt": "SLA due {at}"
+    }
   },
   "settings": {
     "title": "Settings",
-    "empty": "Tenant settings will appear here."
+    "empty": "Tenant settings will appear here.",
+    "subtitle": "Tenant rules for visits, duty, credit, languages and branding. Every change is audited.",
+    "save": "Save settings",
+    "discard": "Discard changes",
+    "noChanges": "No unsaved changes.",
+    "pendingChanges": "{n} setting groups changed",
+    "fixErrors": "Fix the highlighted fields before saving.",
+    "savedAudited": "Saved and audited.",
+    "viewAudit": "View in the audit log",
+    "addGstin": "Add a state GSTIN",
+    "removeGstin": "Remove the GSTIN for state {state}",
+    "groups": {
+      "visits": "Visits and geofence",
+      "visitsHelp": "How close and how long a visit must be to count as verified.",
+      "duty": "Duty and location",
+      "dutyHelp": "When duty ends on its own and how often the agent app records location while on duty.",
+      "money": "Credit and money",
+      "moneyHelp": "Travel allowance, credit limits and cash checks. Amounts in rupees.",
+      "languages": "Languages",
+      "languagesHelp": "Languages offered in both apps and the default for new accounts.",
+      "branding": "Branding",
+      "brandingHelp": "App names, colour, logo and support number shown in both apps."
+    },
+    "fields": {
+      "geofence": "Geofence radius",
+      "meetingPoint": "Default meeting-point radius",
+      "minVisit": "Minimum visit time",
+      "consentVersion": "Consent text version",
+      "autoDutyEnd": "Auto duty end (IST)",
+      "idleEnd": "End duty after idle",
+      "samplingMoving": "Location interval while moving",
+      "samplingStationary": "Location interval while stationary",
+      "samplingUpload": "Upload interval",
+      "locationPolicy": "Location policy version",
+      "taRate": "Travel allowance per km",
+      "creditLimit": "Store manager credit limit",
+      "creditDueDays": "Credit due after",
+      "variance": "Day-close variance alert",
+      "webhookWindow": "Payment webhook replay window",
+      "legalName": "Legal name",
+      "invoicePrefix": "Invoice prefix",
+      "gstin": "GSTIN by state",
+      "stateCode": "State code",
+      "gstinNumber": "GSTIN",
+      "languagesEnabled": "Languages enabled",
+      "defaultLanguage": "Default language",
+      "appNameAgent": "Field agent app name",
+      "appNameFarmer": "Farmer app name",
+      "primaryColour": "Primary colour",
+      "colourPicker": "Pick the primary colour",
+      "supportPhone": "Support phone",
+      "logo": "Logo URI"
+    },
+    "help": {
+      "range": "{min} to {max} {unit}",
+      "meetingPoint": "Leave empty to use the geofence radius.",
+      "minVisit": "0 to 1440 minutes; decimals allowed (1.5 = 90 seconds).",
+      "ist": "24-hour clock, India Standard Time.",
+      "rupees": "₹0 to ₹{max}, up to 2 decimals.",
+      "invoicePrefix": "Capital letters and digits, up to 8.",
+      "appNameDefault": "Leave empty to use “{name}”.",
+      "colour": "Hex colour, for example #1F6B3A.",
+      "logo": "A blob URI from an upload or an https image link; https links show in the preview."
+    },
+    "units": {
+      "metres": "m",
+      "minutes": "min",
+      "seconds": "s",
+      "days": "days"
+    },
+    "errors": {
+      "intRange": "Enter a whole number from {min} to {max} {unit}.",
+      "minutesRange": "Enter minutes from {min} to {max}, up to 2 decimals.",
+      "rupeeRange": "Enter rupees from ₹{min} to ₹{max}, up to 2 decimals.",
+      "time": "Enter a time as HH:MM (24-hour).",
+      "length": "Use {min} to {max} characters.",
+      "invoicePrefix": "Use capital letters and digits only, up to 8.",
+      "stateCode": "Use a unique 2-digit state code.",
+      "gstin": "This is not a valid 15-character GSTIN.",
+      "languages": "Enable at least one language.",
+      "defaultLanguage": "The default language must be enabled.",
+      "colour": "Enter a colour as #RRGGBB.",
+      "phone": "Enter 8 to 15 digits, optionally starting with +.",
+      "server": "Rejected by the server: {msg}"
+    },
+    "preview": {
+      "title": "Live preview",
+      "help": "How the home screens of both apps look with these settings. Updates as you type.",
+      "label": "Preview of the field agent app and the farmer app",
+      "agentApp": "Field agent app",
+      "farmerApp": "Farmer app",
+      "greeting": "Good morning",
+      "startDuty": "Start duty",
+      "todayVisits": "Today's visits",
+      "nearbyFarmers": "Farmers nearby",
+      "farmerGreeting": "Namaste",
+      "scanCrop": "Check my crop",
+      "myFarms": "My farms",
+      "support": "Help: {phone}",
+      "supportMissing": "Support number not set"
+    }
   },
   "emptyState": {
     "defaultTitle": "Nothing here yet",
@@ -253,7 +398,8 @@
     "slaDue": "Due in {n}",
     "slaBreached": "SLA breached",
     "open": "Open flag",
-    "assign": "Assign"
+    "assign": "Assign",
+    "owner": "Owner"
   },
   "kpi": {
     "target": "Target {value}",
@@ -426,7 +572,21 @@
     "unauthenticated": "Your session has ended. Sign in again.",
     "notFound": "This record no longer exists.",
     "network": "Cannot reach the server. Check your connection.",
-    "default": "Something went wrong. Try again."
+    "default": "Something went wrong. Try again.",
+    "stepUpRequired": "This action needs a one-time code.",
+    "otpInvalid": "That code is not correct.",
+    "otpExpired": "This code has expired. Request a new one.",
+    "otpLocked": "Too many wrong codes. Try again later.",
+    "otpRateLimited": "Too many codes requested. Try again later.",
+    "otpNotFound": "Request a new code first.",
+    "invalidTransition": "This move is not allowed from the flag's current state, or a note is missing.",
+    "flagResolved": "This flag is already resolved.",
+    "assigneeInvalid": "Choose an active reviewer.",
+    "phoneTaken": "Another account already uses this mobile number.",
+    "invalidAssignment": "Choose an existing store or cluster.",
+    "roleNotGrantable": "Only an owner can grant or change the owner role.",
+    "cannotModifySelf": "You cannot change your own role or status.",
+    "invalidSettings": "Some settings are out of range. Check the highlighted fields."
   },
   "validation": {
     "required": "Required",
@@ -444,5 +604,256 @@
     "claimCategory": "Only pesticides, fungicides, herbicides and growth promoters can carry a pest or disease claim",
     "date": "Enter a date",
     "dateOrder": "The end date is before the start date"
+  },
+  "admin": {
+    "subnav": "Administration sections",
+    "forbiddenTitle": "Not available for your role",
+    "forbiddenHelp": "Your role cannot open this screen. Ask an owner or director if you need access."
+  },
+  "stepUp": {
+    "title": "Confirm it is you",
+    "sending": "Sending a code to your phone…",
+    "sentTo": "Enter the 6-digit code we sent to {phone}.",
+    "why": "Admin actions need a fresh code. It stays valid for 5 minutes on this page only.",
+    "verify": "Verify and continue",
+    "codeInvalid": "Enter the 6-digit code.",
+    "attemptsLeft": "{n} attempts left.",
+    "cancelled": "Cancelled. Nothing was changed."
+  },
+  "flagDetail": {
+    "title": "Flag detail",
+    "back": "Back to the inbox",
+    "owner": "Owner",
+    "watchers": "Watchers",
+    "sla": "SLA",
+    "subject": "Subject",
+    "raised": "Raised",
+    "mode": "Raised by the {mode} check",
+    "escalationLevel": "Escalation level",
+    "resolved": "Resolved",
+    "resolutionNote": "Resolution note",
+    "you": "You",
+    "system": "System",
+    "someone": "A team member",
+    "note": "Note (required)",
+    "noteOptional": "Note (optional)",
+    "noteRequired": "Add a note that explains the decision.",
+    "moved": "Flag moved to {status}",
+    "reassign": "Reassign to",
+    "chooseReviewer": "Choose a reviewer",
+    "assign": "Reassign",
+    "reassigned": "Flag reassigned",
+    "actions": {
+      "in_review": "Start review",
+      "resolved_valid": "Data is valid",
+      "resolved_fixed": "Data corrected",
+      "escalated": "Escalate",
+      "resolved_action": "Action taken"
+    },
+    "actionHelp": {
+      "in_review": "You take the flag into review. The SLA keeps running.",
+      "resolved_valid": "The data is correct and the rule was wrong. This is recorded as a false positive for the rule.",
+      "resolved_fixed": "The data was wrong and has been corrected.",
+      "escalated": "Hand the flag to an auditor or HR. Explain why.",
+      "resolved_action": "Action has been taken with the person involved."
+    },
+    "summary": {
+      "title": "Automated summary — verify evidence",
+      "unavailable": "An automated summary is not available yet. Review the evidence below before deciding."
+    },
+    "map": {
+      "title": "Map",
+      "empty": "No locations in this evidence bundle.",
+      "label": "Evidence map with {points} points and {polygons} areas",
+      "point": "Point {n}",
+      "polygon": "Area {n}"
+    },
+    "records": {
+      "title": "Records",
+      "empty": "No records in this evidence bundle."
+    },
+    "photos": {
+      "title": "Photos",
+      "empty": "No photos in this evidence bundle.",
+      "alt": "Evidence photo {n}",
+      "open": "Open evidence photo {n}",
+      "unavailable": "Photo unavailable",
+      "expires": "This link expires at {at}."
+    },
+    "metrics": {
+      "title": "Metrics",
+      "empty": "No metrics recorded.",
+      "name": "Metric",
+      "value": "Value"
+    },
+    "thread": {
+      "title": "Discussion",
+      "empty": "No comments yet.",
+      "explanation": "Explanation from the person flagged",
+      "commentLabel": "Add a comment",
+      "comment": "Post comment",
+      "explainLabel": "Explain what happened",
+      "explain": "Send explanation",
+      "closed": "This flag is resolved; the discussion is closed."
+    },
+    "history": {
+      "title": "History",
+      "created": "Flag raised and assigned to {owner}",
+      "transition": "{actor} moved it from {from} to {to}",
+      "assigned": "{actor} reassigned it to {owner}",
+      "slaEscalated": "SLA passed; moved up to {owner}",
+      "falsePositive": "Counted as a false positive",
+      "truePositive": "Counted as a true positive"
+    }
+  },
+  "users": {
+    "title": "Users and roles",
+    "detailTitle": "User",
+    "subtitle": "Staff accounts, roles, store and cluster assignments, devices and sign-outs.",
+    "searchPlaceholder": "Name or phone",
+    "create": "New user",
+    "createTitle": "New staff account",
+    "createHelp": "Farmers sign up in the farmer app. Creating an account needs a one-time code.",
+    "createConfirm": "Create user",
+    "created": "{name} can now sign in",
+    "emptyTitle": "No users match these filters",
+    "tenantWide": "Whole tenant",
+    "clusterShort": "Cluster …{id}",
+    "createdAt": "Created",
+    "back": "Back to users",
+    "storeRequired": "Choose the store for this role.",
+    "clusterRequired": "Choose the cluster for this role.",
+    "selfNote": "This is your own account. Another admin must change your role or status.",
+    "ownerLocked": "Only an owner can change an owner's account.",
+    "stepUpNote": "You will be asked for a one-time code sent to your phone.",
+    "columns": {
+      "name": "Name",
+      "phone": "Phone",
+      "role": "Role",
+      "assignment": "Store / cluster",
+      "status": "Status",
+      "device": "Device"
+    },
+    "fields": {
+      "phone": "Mobile number",
+      "name": "Full name",
+      "role": "Role",
+      "status": "Status",
+      "store": "Store",
+      "cluster": "Cluster",
+      "language": "App language",
+      "languageDefault": "Tenant default"
+    },
+    "status": {
+      "active": "Active",
+      "disabled": "Disabled"
+    },
+    "edit": {
+      "title": "Role and assignment",
+      "confirmTitle": "Change {name}'s access?",
+      "confirmBody": "The role becomes {role}. The change applies on their next request and is audited.",
+      "confirm": "Confirm change",
+      "saved": "Changes saved and audited"
+    },
+    "forceLogout": {
+      "action": "Force logout",
+      "title": "Sign {name} out everywhere?",
+      "body": "All sessions on every device end at once. Unsynced work on their phone is kept; they sign in again to continue.",
+      "confirm": "Sign out everywhere",
+      "done": "{name} was signed out of every device"
+    },
+    "deactivate": {
+      "action": "Deactivate",
+      "title": "Deactivate {name}?",
+      "body": "The account is disabled, every session ends and their apps wipe local data. You can reactivate the account later.",
+      "confirm": "Deactivate account",
+      "done": "{name} is deactivated"
+    }
+  },
+  "devices": {
+    "title": "Devices",
+    "help": "Devices this person has signed in from.",
+    "helpOfficer": "Field officers work from one bound phone. A sign-in from a new phone waits here as pending until you bind it.",
+    "emptyTitle": "No devices yet",
+    "emptyHelp": "Devices appear after the first sign-in from the app.",
+    "unknownModel": "Unknown device",
+    "columns": {
+      "device": "Device",
+      "platform": "Platform · app",
+      "status": "Status",
+      "lastSeen": "Last seen",
+      "bound": "Bound",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Bound",
+      "pending": "Waiting for approval",
+      "revoked": "Unbound",
+      "lost": "Reported lost",
+      "none": "No device"
+    },
+    "bind": {
+      "action": "Bind this device",
+      "title": "Bind {device}?",
+      "body": "This device will be allowed to sign in for this person.",
+      "bodyOfficer": "This phone becomes the officer's only device. Their current phone is unbound and signed out.",
+      "confirm": "Bind device",
+      "done": "Device bound"
+    },
+    "lost": {
+      "action": "Report lost",
+      "title": "Report {device} lost?",
+      "body": "Sessions on this device end and the app wipes its local data the next time it connects.",
+      "confirm": "Report lost",
+      "done": "Device reported lost"
+    }
+  },
+  "audit": {
+    "title": "Audit log",
+    "subtitle": "Who changed what and when. Rows cannot be edited or deleted.",
+    "filters": "Audit log filters",
+    "export": "Export CSV",
+    "exported": "Audit log exported (the export itself is audited)",
+    "istNote": "Dates and times are in IST.",
+    "emptyTitle": "No audit rows match these filters",
+    "loadMore": "Load older rows",
+    "system": "System",
+    "more": "+{n} more",
+    "showChanges": "Show changes of {action}",
+    "hideChanges": "Hide changes of {action}",
+    "fields": {
+      "entity": "Entity",
+      "entityId": "Entity id",
+      "actor": "Actor",
+      "role": "Actor role",
+      "action": "Action",
+      "actionHelp": "End with a dot for a prefix, e.g. user.",
+      "from": "From",
+      "to": "To"
+    },
+    "columns": {
+      "time": "Time (IST)",
+      "action": "Action",
+      "entity": "Entity",
+      "actor": "Actor",
+      "changes": "Changed fields"
+    },
+    "diff": {
+      "field": "Field",
+      "before": "Before",
+      "after": "After",
+      "absent": "not set",
+      "none": "No field changes recorded.",
+      "changed": "changed"
+    },
+    "meta": {
+      "ip": "IP address",
+      "device": "Device",
+      "userAgent": "User agent",
+      "trace": "Trace id"
+    },
+    "errors": {
+      "entityId": "Use the id or its first characters (0-9, a-f and -)."
+    }
   }
 }
