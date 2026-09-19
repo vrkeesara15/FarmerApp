@@ -44,6 +44,9 @@ resource "google_project" "env" {
   folder_id       = var.parent_folder_id != "" ? var.parent_folder_id : null
   org_id          = var.parent_folder_id == "" ? var.org_id : null
   labels          = { app = "farmerapp", env = each.key }
+
+  # No default VPC: envs create their own (modules/network, deny-all ingress). CKV_GCP_27.
+  auto_create_network = false
 }
 
 # --- Terraform state --------------------------------------------------------

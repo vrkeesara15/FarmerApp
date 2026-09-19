@@ -46,6 +46,48 @@ resource "google_sql_database_instance" "main" {
       name  = "cloudsql.logical_decoding" # needed for Datastream CDC
       value = "on"
     }
+    # SEC-017 / CIS PostgreSQL logging: connections, lock waits, checkpoints, DDL and role
+    # changes (pgAudit). Statement durations come from Query Insights, not log_duration.
+    database_flags {
+      name  = "log_checkpoints"
+      value = "on"
+    }
+    database_flags {
+      name  = "log_connections"
+      value = "on"
+    }
+    database_flags {
+      name  = "log_disconnections"
+      value = "on"
+    }
+    database_flags {
+      name  = "log_lock_waits"
+      value = "on"
+    }
+    database_flags {
+      name  = "log_hostname"
+      value = "on"
+    }
+    database_flags {
+      name  = "log_min_messages"
+      value = "warning"
+    }
+    database_flags {
+      name  = "log_min_error_statement"
+      value = "error"
+    }
+    database_flags {
+      name  = "log_statement"
+      value = "ddl"
+    }
+    database_flags {
+      name  = "cloudsql.enable_pgaudit"
+      value = "on"
+    }
+    database_flags {
+      name  = "pgaudit.log"
+      value = "ddl,role"
+    }
     insights_config { query_insights_enabled = true }
 
     maintenance_window {
@@ -102,6 +144,47 @@ resource "google_sql_database_instance" "replica" {
       ipv4_enabled    = false
       private_network = var.vpc_id
       ssl_mode        = "ENCRYPTED_ONLY"
+    }
+    # Same logging flags as the primary (replicas do not inherit flags).
+    database_flags {
+      name  = "log_checkpoints"
+      value = "on"
+    }
+    database_flags {
+      name  = "log_connections"
+      value = "on"
+    }
+    database_flags {
+      name  = "log_disconnections"
+      value = "on"
+    }
+    database_flags {
+      name  = "log_lock_waits"
+      value = "on"
+    }
+    database_flags {
+      name  = "log_hostname"
+      value = "on"
+    }
+    database_flags {
+      name  = "log_min_messages"
+      value = "warning"
+    }
+    database_flags {
+      name  = "log_min_error_statement"
+      value = "error"
+    }
+    database_flags {
+      name  = "log_statement"
+      value = "ddl"
+    }
+    database_flags {
+      name  = "cloudsql.enable_pgaudit"
+      value = "on"
+    }
+    database_flags {
+      name  = "pgaudit.log"
+      value = "ddl,role"
     }
     insights_config { query_insights_enabled = true }
 

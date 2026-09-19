@@ -1,6 +1,10 @@
-# Global external HTTPS load balancer in front of api and console
-# (Cloud Run ingress = INTERNAL_LOAD_BALANCER, SEC-015), managed certificates,
-# HTTP→HTTPS redirect and an optional Cloud Armor policy (SEC-014).
+# Global external HTTPS load balancer in front of api and console, managed certificates,
+# HTTP->HTTPS redirect, Cloud Armor (SEC-014) and optional IAP on the console (SEC-015).
+#
+# SEC-015: api and console run with ingress INTERNAL_LOAD_BALANCER (envs/*/main.tf), so the
+# run.app URLs refuse direct traffic and every request passes this LB and its Cloud Armor
+# policy. Invoker IAM is disabled on those two services instead of granting allUsers (which
+# domain-restricted sharing, SEC-018, forbids); ingress is the gate.
 
 locals {
   api_host     = "api.${var.domain}"
@@ -70,6 +74,15 @@ resource "google_compute_backend_service" "console" {
 
   backend {
     group = google_compute_region_network_endpoint_group.console.id
+  }
+
+  # SEC-015 (P1): Identity-Aware Proxy in front of the console for staff SSO. Off by default;
+  # uses the Google-managed OAuth client, so no client secret is stored in state.
+  dynamic "iap" {
+    for_each = var.console_iap_enabled ? [1] : []
+    content {
+      enabled = true
+    }
   }
 
   log_config {
@@ -147,126 +160,3 @@ resource "google_compute_global_forwarding_rule" "http" {
   load_balancing_scheme = "EXTERNAL_MANAGED"
 }
 
-# --- Cloud Armor (SEC-014) -------------------------------------------------
-# preview = true logs what would have been blocked without enforcing (stg).
-# TODO(SEC-014): bot management on OTP endpoints needs reCAPTCHA Enterprise
-# keys; add a redirect/challenge rule once the keys exist.
-
-resource "google_compute_security_policy" "armor" {
-  count = var.cloud_armor_enabled ? 1 : 0
-
-  project     = var.project_id
-  name        = "farmerapp-${var.env}-armor"
-  description = "OWASP CRS, rate limits and India geo allow-list for FarmerApp ${var.env}"
-
-  adaptive_protection_config {
-    layer_7_ddos_defense_config {
-      enable = true
-    }
-  }
-
-  # OWASP CRS preconfigured WAF rules
-  rule {
-    action      = "deny(403)"
-    priority    = 1000
-    description = "OWASP: SQL injection"
-    preview     = local.preview
-    match {
-      expr {
-        expression = "evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 1})"
-      }
-    }
-  }
-
-  rule {
-    action      = "deny(403)"
-    priority    = 1001
-    description = "OWASP: XSS"
-    preview     = local.preview
-    match {
-      expr {
-        expression = "evaluatePreconfiguredWaf('xss-v33-stable', {'sensitivity': 1})"
-      }
-    }
-  }
-
-  rule {
-    action      = "deny(403)"
-    priority    = 1002
-    description = "OWASP: LFI / RFI / RCE"
-    preview     = local.preview
-    match {
-      expr {
-        expression = "evaluatePreconfiguredWaf('lfi-v33-stable', {'sensitivity': 1}) || evaluatePreconfiguredWaf('rfi-v33-stable', {'sensitivity': 1}) || evaluatePreconfiguredWaf('rce-v33-stable', {'sensitivity': 1})"
-      }
-    }
-  }
-
-  # Rate limits: OTP send 5/min/IP, login 10/min/IP. (3 / 15 min / phone is enforced in the API.)
-  rule {
-    action      = "throttle"
-    priority    = 2000
-    description = "Rate limit OTP send: 5/min/IP"
-    preview     = local.preview
-    match {
-      expr {
-        expression = "request.path.matches('${var.otp_send_path_regex}')"
-      }
-    }
-    rate_limit_options {
-      conform_action = "allow"
-      exceed_action  = "deny(429)"
-      enforce_on_key = "IP"
-      rate_limit_threshold {
-        count        = 5
-        interval_sec = 60
-      }
-    }
-  }
-
-  rule {
-    action      = "throttle"
-    priority    = 2001
-    description = "Rate limit login: 10/min/IP"
-    preview     = local.preview
-    match {
-      expr {
-        expression = "request.path.matches('${var.login_path_regex}')"
-      }
-    }
-    rate_limit_options {
-      conform_action = "allow"
-      exceed_action  = "deny(429)"
-      enforce_on_key = "IP"
-      rate_limit_threshold {
-        count        = 10
-        interval_sec = 60
-      }
-    }
-  }
-
-  # Geo allow-list: farmer/agent APIs only from India.
-  rule {
-    action      = "deny(403)"
-    priority    = 3000
-    description = "Geo allow-list India for farmer/agent APIs"
-    preview     = local.preview
-    match {
-      expr {
-        expression = "origin.region_code != 'IN' && request.path.matches('${var.india_only_path_regex}')"
-      }
-    }
-  }
-
-  rule {
-    action      = "allow"
-    priority    = 2147483647
-    description = "default allow"
-    match {
-      versioned_expr = "SRC_IPS_V1"
-      config {
-        src_ip_ranges = ["*"]
-      }
-    }
-  }
-}

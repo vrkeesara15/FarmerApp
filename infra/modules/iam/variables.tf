@@ -46,6 +46,12 @@ variable "service_accounts" {
   }
 }
 
+variable "push_service_account_key" {
+  description = "Key in service_accounts of the identity Pub/Sub push subscriptions use (OIDC tokens minted by the Pub/Sub service agent)."
+  type        = string
+  default     = "pubsub-push"
+}
+
 variable "common_roles" {
   description = "Roles every service account gets (observability)."
   type        = list(string)

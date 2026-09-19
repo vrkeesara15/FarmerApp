@@ -6,7 +6,10 @@ resource "google_cloud_run_v2_service" "svc" {
   location            = var.region
   ingress             = var.ingress
   deletion_protection = var.deletion_protection
-  labels              = merge({ app = "farmerapp", service = var.name }, var.labels)
+  # SEC-015 / SEC-018: LB-fronted services skip the invoker IAM check instead of granting
+  # allUsers (blocked by domain-restricted sharing); ingress = internal LB is the gate.
+  invoker_iam_disabled = var.invoker_iam_disabled
+  labels               = merge({ app = "farmerapp", service = var.name }, var.labels)
 
   template {
     service_account                  = var.service_account_email

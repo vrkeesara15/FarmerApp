@@ -71,6 +71,30 @@ variable "deployer_project_roles" {
   ]
 }
 
+variable "org_policies_enabled" {
+  description = "SEC-018: create the project-level org policies (resource locations, no public SQL IP, OS Login, domain-restricted sharing). Needs roles/orgpolicy.policyAdmin for the person applying."
+  type        = bool
+  default     = true
+}
+
+variable "allowed_resource_locations" {
+  description = "SEC-018: gcp.resourceLocations allowed values on the env projects (India only)."
+  type        = list(string)
+  default     = ["in:asia-south1-locations", "in:asia-south2-locations"]
+}
+
+variable "allowed_policy_member_customer_ids" {
+  description = "SEC-018: Cloud Identity / Workspace customer ids (e.g. C0abc123) allowed in IAM policies (iam.allowedPolicyMemberDomains). Empty = constraint not set."
+  type        = list(string)
+  default     = []
+}
+
+variable "scc_notifications_enabled" {
+  description = "SEC-019: create the SCC notification config (org-level; needs SCC Standard activated and org_id) routing HIGH/CRITICAL findings to the scc-findings topic in the ops project."
+  type        = bool
+  default     = false
+}
+
 variable "tfstate_keep_versions" {
   description = "Number of non-current object versions to keep in the state bucket."
   type        = number

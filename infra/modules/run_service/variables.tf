@@ -35,13 +35,13 @@ variable "subnet_name" {
 }
 
 variable "ingress" {
-  description = "Ingress setting. LB-fronted services use INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER (SEC-015); internal-only services use INGRESS_TRAFFIC_INTERNAL."
+  description = "Ingress setting. LB-fronted services use INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER (SEC-015); internal-only services use INGRESS_TRAFFIC_INTERNAL_ONLY."
   type        = string
   default     = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
 
   validation {
-    condition     = contains(["INGRESS_TRAFFIC_ALL", "INGRESS_TRAFFIC_INTERNAL", "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"], var.ingress)
-    error_message = "ingress must be one of INGRESS_TRAFFIC_ALL, INGRESS_TRAFFIC_INTERNAL, INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER."
+    condition     = contains(["INGRESS_TRAFFIC_ALL", "INGRESS_TRAFFIC_INTERNAL_ONLY", "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"], var.ingress)
+    error_message = "ingress must be one of INGRESS_TRAFFIC_ALL, INGRESS_TRAFFIC_INTERNAL_ONLY, INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER."
   }
 }
 
@@ -133,4 +133,10 @@ variable "labels" {
   description = "Extra labels."
   type        = map(string)
   default     = {}
+}
+
+variable "invoker_iam_disabled" {
+  description = "Disable the Cloud Run invoker IAM check (LB-fronted api / console with ingress INTERNAL_LOAD_BALANCER). Replaces an allUsers invoker binding, which domain-restricted sharing (SEC-018) rejects."
+  type        = bool
+  default     = false
 }

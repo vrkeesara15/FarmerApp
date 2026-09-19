@@ -10,6 +10,10 @@
 # Each deployable has apps/<name>/Dockerfile built with the repo root as context (worker
 # and jobs import the api domain package; api / worker / jobs copy the monorepo rules/ and
 # set RULES_DIR=/app/rules; the root .dockerignore admits only apps/api and rules/).
+# The console image (M5) uses apps/console/Dockerfile.dockerignore (BuildKit per-Dockerfile
+# ignore file: apps/console + design/tokens.json) and bakes NEXT_PUBLIC_API_URL into the
+# browser bundle, so its image is per environment (dev URL here; stg / prd promotion must
+# rebuild the console with their API URL).
 name: deploy
 
 on:
@@ -74,6 +78,9 @@ jobs:
           file: apps/${{ matrix.name }}/Dockerfile
           push: ${{ vars.WIF_PROVIDER != '' }}
           load: ${{ vars.WIF_PROVIDER == '' }}
+          # Only the console reads it (Next inlines NEXT_PUBLIC_* at build time).
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ env.DEV_API_URL }}
           tags: ${{ env.REGISTRY }}/${{ matrix.name }}:${{ steps.meta.outputs.tag }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,scope=${{ matrix.name }},mode=max
@@ -150,12 +157,15 @@ jobs:
           project_id: ${{ env.DEV_PROJECT }}
           image: ${{ env.REGISTRY }}/console:${{ needs.build.outputs.tag }}
 
-      # Nightly jobs share the api image; point them at the new tag too.
-      - name: Update nightly job images
+      # Scheduled / manual jobs (infra/envs/*/main.tf local.jobs) run from the jobs image;
+      # Terraform sets `python -m farmerapp.jobs <command> ...` and ignores image changes.
+      - name: Update job images
         run: |
-          for job in nightly-validation nightly-evaluation exports retention-purge beat-plan; do
+          for job in run-rules-batch flags-sla-escalation officer-sync-silence auto-end-duty \
+                     ensure-partitions purge-location-points purge-expired reconcile-payments \
+                     backfill-farm-photo-phash; do
             gcloud run jobs update "$job" --region "$REGION" --project "$DEV_PROJECT" \
-              --image "${REGISTRY}/api:${{ needs.build.outputs.tag }}" --quiet
+              --image "${REGISTRY}/jobs:${{ needs.build.outputs.tag }}" --quiet
           done
 
       - name: Smoke tests

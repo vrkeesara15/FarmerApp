@@ -24,12 +24,6 @@ variable "domain" {
   type        = string
 }
 
-variable "image_registry" {
-  description = "Artifact Registry prefix from bootstrap."
-  type        = string
-  default     = "asia-south1-docker.pkg.dev/farmerapp-ops/apps"
-}
-
 variable "bootstrap_image" {
   description = "Placeholder image used when a service/job is first created; CI replaces it and Terraform ignores later image changes."
   type        = string
@@ -109,7 +103,69 @@ variable "notification_email" {
 }
 
 variable "extra_notification_channels" {
-  description = "Existing notification channel resource names (Slack/PagerDuty)."
+  description = "Existing notification channel ids attached to every alert."
+  type        = list(string)
+  default     = []
+}
+
+variable "page_channels" {
+  description = "SPEC 12.3 Sev 1 paging channel ids (PagerDuty / SMS), created by a human (they hold tokens)."
+  type        = list(string)
+  default     = []
+}
+
+variable "ticket_channels" {
+  description = "SPEC 12.3 Sev 1 + Sev 2 channel ids (Slack #farmerapp-ops), created by a human."
+  type        = list(string)
+  default     = []
+}
+
+variable "digest_channels" {
+  description = "SPEC 12.3 Sev 3 channel ids (daily digest)."
+  type        = list(string)
+  default     = []
+}
+
+variable "runbook_base_url" {
+  description = "Base URL of docs/runbooks linked from every alert (set to the GitHub blob URL once the remote exists)."
+  type        = string
+  default     = "docs/runbooks"
+}
+
+variable "availability_goal" {
+  description = "API availability SLO (NF-006: 0.995 pilot, 0.999 SaaS)."
+  type        = number
+  default     = 0.995
+}
+
+variable "sql_max_connections" {
+  description = "Effective max_connections of the Cloud SQL primary (`SHOW max_connections`); OPS-003 alerts at 80%."
+  type        = number
+  default     = 100
+}
+
+# --- Jobs ---
+variable "job_tenant_ids" {
+  description = "Tenant ids passed as --tenant-id to the per-tenant jobs. Empty = per-tenant jobs are created but not scheduled."
+  type        = list(string)
+  default     = []
+}
+
+variable "location_purge_apply" {
+  description = "purge-location-points runs with --apply (aggregate + drop partitions past 180 days). true only in prd; dry run elsewhere."
+  type        = bool
+  default     = false
+}
+
+# --- SEC-015 (P1) ---
+variable "console_iap_enabled" {
+  description = "Identity-Aware Proxy in front of the console for staff SSO (P1). Off by default."
+  type        = bool
+  default     = false
+}
+
+variable "console_iap_members" {
+  description = "Principals allowed through IAP to the console (group:...)."
   type        = list(string)
   default     = []
 }
