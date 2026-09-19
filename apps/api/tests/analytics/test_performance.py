@@ -8,6 +8,10 @@ timed end to end through the ASGI app (auth, scope, every query, serialisation).
 The timed requests run with the coverage tracer paused: under ``make check`` (pytest-cov) line
 tracing alone adds ~1.5 s to this request, which measured the tracer rather than the endpoint
 (~1.2 s untraced, 2.9-3.3 s traced on the dev Mac). The budget is unchanged.
+
+``serial``: a wall-clock budget is meaningless while other pytest-xdist workers saturate the
+CPU and the database (4.1 s measured under ``-n 10``), so ``make test-api`` runs the parallel
+phase with ``-m "not serial"`` and then this test on its own (``-m serial --cov-append``).
 """
 
 from __future__ import annotations
@@ -18,6 +22,7 @@ from contextlib import contextmanager
 from datetime import date, timedelta
 
 import coverage
+import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,6 +48,7 @@ def _untraced() -> Iterator[None]:
         cov.start()
 
 
+@pytest.mark.serial
 async def test_owner_home_under_3_seconds_for_50_stores(
     client: AsyncClient, bearer: Bearer, db_session: AsyncSession
 ) -> None:

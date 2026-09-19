@@ -12,7 +12,7 @@ UV        := uv
 UV_RUN    := cd $(API_DIR) && $(UV) run
 CORE_SERVICES := db pubsub gcs mockserver
 
-.PHONY: help up down db db-roles seed migrate openapi test-api test-console test-mobile \
+.PHONY: help up down db db-roles seed migrate openapi test-api test-api-fast test-console test-mobile \
         check-api check-console check-mobile check-infra check plan-dev logs
 
 help: ## Show this help
@@ -56,8 +56,25 @@ seed: db $(API_DIR)/.venv/.synced ## Load the demo tenants (runs as the app role
 openapi: $(API_DIR)/.venv/.synced ## Export apps/api/openapi.yaml from the app (commit it)
 	$(UV_RUN) python scripts/export_openapi.py
 
-test-api: db $(API_DIR)/.venv/.synced ## pytest with coverage (starts db)
-	$(UV_RUN) pytest
+# pytest-xdist workers, each with its own database cloned from a migrated template
+# (apps/api/tests/conftest.py). `auto` = one per CPU core; API_TEST_WORKERS=0 runs the first
+# phase serially against farmerapp_test as before. --dist worksteal: idle workers take queued
+# tests from busy ones, so the slow seed / synthetic-data tests do not leave a long tail.
+# Two phases: everything but `serial` in parallel, then the `serial` (wall-clock budget) tests
+# alone on an idle machine (-n 1: its own database); coverage is appended across both phases
+# and the --cov-fail-under=80 gate (pyproject addopts) applies to the combined total.
+API_TEST_WORKERS ?= auto
+PYTEST_PARALLEL   = pytest -n $(API_TEST_WORKERS) --dist worksteal -m "not serial"
+PYTEST_SERIAL     = pytest -n 1 -m serial
+CHECK_API_STARTED := $(shell date +%s)
+
+test-api: db $(API_DIR)/.venv/.synced ## pytest in parallel with coverage >= 80% (starts db)
+	$(UV_RUN) $(PYTEST_PARALLEL) --cov-report= --cov-fail-under=0
+	$(UV_RUN) $(PYTEST_SERIAL) --cov-append
+
+test-api-fast: db $(API_DIR)/.venv/.synced ## pytest in parallel without coverage (local iteration)
+	$(UV_RUN) $(PYTEST_PARALLEL) --no-cov
+	$(UV_RUN) $(PYTEST_SERIAL) --no-cov
 
 check-api: $(API_DIR)/.venv/.synced ## ruff, mypy strict, rules, pytest, openapi diff, bandit, pip-audit
 	$(UV_RUN) ruff check .
@@ -69,6 +86,8 @@ check-api: $(API_DIR)/.venv/.synced ## ruff, mypy strict, rules, pytest, openapi
 	$(UV_RUN) bandit -q -c pyproject.toml -r farmerapp
 	@if [ "$(SKIP_AUDIT)" = "1" ]; then echo "check-api: SKIP_AUDIT=1, skipping pip-audit"; \
 	else $(UV_RUN) pip-audit --skip-editable --progress-spinner off; fi
+	@secs=$$(( $$(date +%s) - $(CHECK_API_STARTED) )); \
+	  printf 'check-api: wall clock %dm%02ds\n' $$((secs / 60)) $$((secs % 60))
 
 # ---------------------------------------------------------------- console / mobile / infra
 test-console: ## Console tests (npm run check)

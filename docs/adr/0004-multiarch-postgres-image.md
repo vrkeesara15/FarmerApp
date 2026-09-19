@@ -39,3 +39,42 @@ exact patch pins would break builds); the resolved versions are recorded in the 
   118 s with coverage vs 50 s with `--no-cov`, `tests/rls` 21 s vs 7 s. Speeding up the suite
   further means working on the pytest side (e.g. `--no-cov` for local iteration,
   pytest-xdist with per-worker databases), not the database image.
+
+## Follow-up (2026-09-19): parallel API suite
+
+Done on the pytest side as suggested above (branch `chore/parallel-api-tests`):
+
+- **pytest-xdist, one database per worker.** `make test-api` / `check-api` run
+  `pytest -n auto --dist worksteal -m "not serial"` (`API_TEST_WORKERS`, default `auto` = 10 on
+  this Mac, 4 on GitHub runners). Each worker clones its own database
+  `farmerapp_test_<checkout key>_gwN` from a migrated template `farmerapp_test_<checkout key>_template`
+  (`CREATE DATABASE … TEMPLATE`, ~0.15 s) and drops it at the end. The template is built once,
+  by the first worker, under a Postgres advisory lock, and rebuilt whenever a file under
+  `alembic/` changes (fingerprint stored as the database comment). The only database-level
+  grant (`CONNECT` for `farmerapp_app`) is re-applied to each clone; everything inside the
+  database (RLS, policies, grants, default privileges) comes with the copy. Tests still run as
+  the app role and set up as the migrate role. The checkout key (hash of the checkout path)
+  keeps concurrent worktrees apart. A plain `pytest` (no `-n`) still uses `farmerapp_test`.
+- **`serial` marker.** The WC-001 owner-home 3 s budget measured 4.1 s while nine other
+  workers loaded the CPU and database, so it runs afterwards, alone (`pytest -n 1 -m serial
+  --cov-append`; 0.98 s untraced). Budget unchanged. No other test needed changes: every
+  fixture is function-scoped inside a rolled-back transaction, the few committing tests clean
+  up their own tenant, and the pool test only kills backends of its own database. There are no
+  migration round-trip tests (Alembic only runs in the fixture), and the mockserver / fake GCS
+  tests only read from shared services.
+- **Coverage.** pytest-cov combines the workers' data; the report and `--cov-fail-under=80`
+  apply to both phases combined. `COVERAGE_CORE=sysmon` is not usable: on Python 3.12
+  coverage.py cannot measure branches with sys.monitoring (3.14+) and never supports
+  `concurrency = greenlet`, so it would silently fall back to the C tracer. Branch coverage and
+  the tracer stay as they were.
+- `make test-api-fast` is the same without coverage (about 4.5 min for the whole suite).
+  More workers do not help: `-n 14` took 10:47 against 9:31 for `-n 10`.
+
+Result (`SKIP_AUDIT=1 make check-api`, this Mac, three runs in a row, all green): **10m11s,
+10m22s, 10m15s** against 54.4 min before (pytest 9:07 / 9:19 / 9:11 + 42 s serial phase;
+2783 passed, 1 skipped, as before). Coverage 97.20% on the run that rebuilt the template (the
+migrations, and so `db/rls.py`'s Alembic helpers, ran in-process; identical to the 97.20%
+before) and 97.16% when the template is reused (the same as a serial run against an
+already-migrated `farmerapp_test`). The remaining cost is dominated by `tests/authz/test_matrix.py`
+(1,615 of 2,784 tests, each seeding both demo tenants, ~2 s traced); seeding that world once per
+worker would be the next step if the suite needs to get faster.

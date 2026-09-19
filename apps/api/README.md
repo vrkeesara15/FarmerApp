@@ -48,7 +48,7 @@ farmerapp/
   notifications/  notification table (FA-007 groundwork; rows written by the duty jobs)
 alembic/          async Alembic env + migrations
 scripts/          export_openapi.py (writes/checks openapi.yaml)
-tests/            pytest (needs the compose db: `make db`)
+tests/            pytest (needs the compose db: `make db`; parallel, see "How the tests run")
 ```
 
 ## Everyday commands (from repo root)
@@ -57,12 +57,44 @@ tests/            pytest (needs the compose db: `make db`)
 make up          # db, pubsub, gcs, mockserver (also creates the farmerapp_app login, `make db-roles`)
 make migrate     # alembic upgrade head as the owner (MIGRATION_DATABASE_URL)
 make seed        # demo tenants, as the app role under RLS (DATABASE_URL)
-make test-api    # pytest with coverage
-make check-api   # ruff, mypy strict, pytest, openapi diff, bandit, pip-audit
+make test-api    # pytest in parallel (pytest-xdist) with coverage >= 80%
+make test-api-fast  # the same without coverage, for quick local iteration
+make check-api   # ruff, mypy strict, pytest, openapi diff, bandit, pip-audit (prints wall clock)
 make openapi     # regenerate apps/api/openapi.yaml (commit it)
 ```
 
 Inside this directory: `uv sync`, then `uv run <cmd>`.
+
+### How the tests run (ADR 0004)
+
+`make test-api` / `make check-api` run pytest in two phases:
+
+1. `pytest -n $(API_TEST_WORKERS) --dist worksteal -m "not serial"`: pytest-xdist, one worker
+   per core by default (`API_TEST_WORKERS=auto`; override e.g. `make test-api API_TEST_WORKERS=6`,
+   `0` runs this phase serially). Every worker has its **own database**
+   `farmerapp_test_<checkout key>_gw0`, `…_gw1`, … created at worker start with
+   `CREATE DATABASE … TEMPLATE farmerapp_test_<checkout key>_template` (a file copy, well under a
+   second) and dropped at the end. The first worker that needs the template creates it and runs
+   `alembic upgrade head` into it as the migrate role, under a Postgres advisory lock; the
+   template is rebuilt from scratch whenever a file under `alembic/` changes (a fingerprint is
+   kept as the database comment). The clone keeps everything inside the database (RLS policies,
+   the `farmerapp_app` / `farmerapp_migrate` / `farmerapp_auth` grants and default privileges);
+   the only database-level grant, `CONNECT` for the app role, is re-applied to each clone. The
+   checkout key is a short hash of the checkout path, so worktrees on different branches never
+   share (or drop) each other's databases. Tests use exactly the same two roles as before: the
+   app role (RLS applies) for sessions and the app, the migrate role for setup only.
+2. `pytest -n 1 -m serial --cov-append`: tests marked `serial` (the WC-001 3 s owner-home
+   budget) run alone on an idle machine; a wall-clock budget is meaningless while other
+   workers saturate the CPU. The coverage report and the 80% gate apply to the data of both
+   phases combined (pytest-cov combines the workers' data).
+
+A plain `uv run pytest` (no `-n`) still runs everything serially against `farmerapp_test`,
+migrated in place, as before. `uv run pytest -n 8 --no-cov tests/visits` works for a subset.
+
+Coverage stays on the C tracer with `branch = true` and `concurrency = ["greenlet", "thread"]`:
+`COVERAGE_CORE=sysmon` cannot be used on Python 3.12 (coverage.py only supports branch
+measurement with sys.monitoring from 3.14, and never with `concurrency = greenlet`), so it
+silently falls back to the tracer. The speed-up comes from the workers.
 
 ### Local database image (ADR 0004)
 
