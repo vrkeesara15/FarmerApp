@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, date, datetime, timedelta
+from itertools import pairwise
 from typing import Any
 
 import pytest
@@ -29,6 +30,12 @@ from farmerapp.location.models import (
     LocationDailyAgg,
     LocationPoint,
 )
+
+
+def _utc_today() -> date:
+    """Partitions are keyed by UTC day; the host local date can differ."""
+    return datetime.now(UTC).date()
+
 
 DAY = date(2025, 1, 15)  # far from today: never overlaps the migration's own partitions
 OLD_DAY = date(2025, 1, 1)
@@ -88,11 +95,15 @@ async def test_migration_created_the_parent_and_the_current_window(
         )
     )
     assert strategy == "r"  # RANGE (ts)
-    names = await _partitions(db_session)
-    today = date.today()
-    assert partitions.partition_name(today) in names
-    assert partitions.partition_name(today + timedelta(days=7)) in names
-    assert partitions.partition_name(today - timedelta(days=1)) in names
+    # The migration creates [migration day - 1, migration day + 7]. The test database keeps its
+    # partitions between runs (and the daily ensure-partitions job rolls the window forward in
+    # production), so assert the guaranteed shape: a run of at least nine consecutive UTC days.
+    days = sorted(p.day for p in await partitions.list_partitions(db_session))
+    longest = run = 1
+    for prev, cur in pairwise(days):
+        run = run + 1 if cur - prev == timedelta(days=1) else 1
+        longest = max(longest, run)
+    assert longest >= 9
 
 
 async def test_ensure_creates_missing_daily_partitions_idempotently(
@@ -116,7 +127,7 @@ async def test_ensure_creates_missing_daily_partitions_idempotently(
 async def test_ensure_ahead_covers_yesterday_to_today_plus_days(db_session: AsyncSession) -> None:
     await db_session.execute(text("SELECT ensure_location_partitions(9)"))
     names = await _partitions(db_session)
-    today = date.today()
+    today = _utc_today()
     for delta in range(-1, 10):
         assert partitions.partition_name(today + timedelta(days=delta)) in names
 
@@ -321,7 +332,7 @@ async def test_purge_dry_run_reports_and_drops_nothing(db_session: AsyncSession)
     async with tenant_scope(db_session, tid):
         assert await db_session.scalar(select(func.count()).select_from(LocationDailyAgg)) == 0
     # Recent partitions are never listed.
-    assert not any(r.day >= date.today() - timedelta(days=180) for r in report)
+    assert not any(r.day >= _utc_today() - timedelta(days=180) for r in report)
 
 
 async def test_purge_apply_aggregates_then_drops(db_session: AsyncSession) -> None:
