@@ -95,6 +95,8 @@ class RouteFixture:
     query: dict[str, str] = field(default_factory=dict)
     # Raw body + extra headers (signed webhooks): used instead of ``body`` when set.
     raw: Callable[[Ctx], tuple[bytes, dict[str, str]]] | None = None
+    # SEC-028: send a valid ``X-Step-Up-Token`` for the actor (admin actions).
+    step_up: bool = False
 
 
 def _target_owner_id(ctx: Ctx) -> dict[str, str]:
@@ -183,7 +185,37 @@ def _store_id(ctx: Ctx) -> dict[str, str]:
     return {"id": str(ctx.target.store_id)}
 
 
+def _step_up_headers(actor: User) -> dict[str, str]:
+    from datetime import UTC, datetime
+
+    from farmerapp.auth.stepup import STEP_UP_HEADER, issue_step_up_token
+    from farmerapp.settings import get_settings
+
+    return {STEP_UP_HEADER: issue_step_up_token(get_settings(), actor, datetime.now(UTC))}
+
+
+def _officer_device(ctx: Ctx) -> dict[str, str]:
+    return {"id": str(ctx.target.user(UserRole.FIELD_OFFICER).id), "device_id": "matrix-device"}
+
+
 ROUTE_FIXTURES: dict[str, RouteFixture] = {
+    # WC-011 / WC-012 / WC-103 admin actions (step-up); outcomes in tests/admin.
+    "POST /v1/users": RouteFixture(
+        body=lambda _ctx: {"phone": "+919000188001", "name": "Matrix User", "role": "agronomist"},
+        step_up=True,
+    ),
+    "POST /v1/users/{id}/deactivate": RouteFixture(path_params=_target_officer_id, step_up=True),
+    "POST /v1/users/{id}/force-logout": RouteFixture(path_params=_target_officer_id, step_up=True),
+    "GET /v1/users/{id}/devices": RouteFixture(path_params=_target_officer_id),
+    "POST /v1/users/{id}/devices/{device_id}/bind": RouteFixture(
+        path_params=_officer_device, step_up=True
+    ),
+    "POST /v1/users/{id}/devices/{device_id}/report-lost": RouteFixture(
+        path_params=_officer_device, step_up=True
+    ),
+    "PATCH /v1/settings": RouteFixture(body=lambda _ctx: {"geofence_radius_m": 160}, step_up=True),
+    "GET /v1/audit-logs/export": RouteFixture(step_up=True),
+    "POST /v1/auth/step-up": RouteFixture(body=lambda _ctx: {"code": "000000"}),
     "GET /v1/users/{id}": RouteFixture(path_params=_target_owner_id),
     "PATCH /v1/users/{id}": RouteFixture(
         path_params=_target_owner_id, body=lambda _ctx: {"name": "Renamed by test"}
@@ -502,6 +534,8 @@ async def call(
     path_params: dict[str, str] | None = None,
 ) -> Response:
     fx = _fixture_for(op)
+    if fx.step_up and headers:
+        headers = {**headers, **_step_up_headers(ctx.actor)}
     params = path_params if path_params is not None else fx.path_params(ctx)
     url = op.path.format(**params)
     if fx.raw is not None:

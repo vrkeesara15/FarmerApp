@@ -5,7 +5,7 @@ Importing this package also installs the FA-006 audit listener (``farmerapp.db.a
 
 import farmerapp.db.audit  # noqa: F401  (registers the session listener)
 from farmerapp.api.idempotency import IdempotencyKey
-from farmerapp.auth.models import OtpChallenge, RefreshToken, User
+from farmerapp.auth.models import Device, OtpChallenge, RefreshToken, User
 from farmerapp.catalog.crops import Crop
 from farmerapp.catalog.models import LabelClaim, PestOrDisease, PriceList, Product, Sku
 from farmerapp.db.models.audit_log import AuditLog
@@ -32,6 +32,7 @@ __all__ = [
     "Crop",
     "CropPlot",
     "DayClose",
+    "Device",
     "DutySession",
     "Farm",
     "FarmPhoto",

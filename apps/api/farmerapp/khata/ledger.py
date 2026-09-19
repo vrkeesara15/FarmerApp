@@ -30,17 +30,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from farmerapp.api.errors import AppError
 from farmerapp.auth.models import User
 from farmerapp.db.audit import Actor as AuditActor
-from farmerapp.db.models.tenant import Tenant
 from farmerapp.farmers.models import CropPlot, Farm
 from farmerapp.khata.models import EntryRef, EntryType, KhataEntry
+from farmerapp.tenants.settings import (
+    DEFAULT_CREDIT_DUE_DAYS,
+    DEFAULT_STORE_MANAGER_MAX_CREDIT_LIMIT_PAISE,
+    get_tenant_settings,
+)
 
 #: Who is writing: the request's user, or an audit actor (system jobs, webhooks).
 Actor = User | AuditActor
-
-#: ₹50,000: the most a store manager may set as a farmer's limit without a cluster head.
-DEFAULT_STORE_MANAGER_MAX_CREDIT_LIMIT_PAISE = 5_000_000
-#: Due date of a credit sale when the farmer has no upcoming harvest on record.
-DEFAULT_CREDIT_DUE_DAYS = 90
 
 
 class InvalidKhataEntryError(AppError):
@@ -69,8 +68,12 @@ def credit_settings(raw: Mapping[str, Any] | None) -> CreditSettings:
 
 
 async def tenant_credit_settings(session: AsyncSession, tenant_id: uuid.UUID) -> CreditSettings:
-    tenant = await session.get(Tenant, tenant_id)
-    return credit_settings(tenant.settings if tenant is not None else None)
+    """The credit keys of the tenant, read through ``get_tenant_settings`` (WC-012)."""
+    settings = await get_tenant_settings(session, tenant_id)
+    return CreditSettings(
+        store_manager_max_credit_limit_paise=settings.store_manager_max_credit_limit_paise,
+        credit_due_days=settings.credit_due_days,
+    )
 
 
 def actor_user_id(actor: Actor | None) -> uuid.UUID | None:

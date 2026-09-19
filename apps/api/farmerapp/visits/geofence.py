@@ -5,7 +5,8 @@ A check-in point is
 * ``inside`` when it lies within the farm's registration polygon buffered by the tenant's
   ``geofence_radius_m`` (default 150 m; ``ST_DWithin`` on ``geography``, spheroid metres);
 * ``meeting_point`` when it lies within the village meeting point's radius
-  (``village.meeting_point_radius_m``, or the tenant default when NULL);
+  (``village.meeting_point_radius_m``, else the tenant's ``meeting_point_radius_m``, else
+  ``geofence_radius_m``);
 * ``outside`` otherwise. The result carries the distance to the nearest allowed target and
   which target it was, so the app can explain ("320 m from the farm boundary") and the
   officer can ask for an override with a note.
@@ -61,6 +62,7 @@ async def evaluate(
     farm: Farm | None,
     village: Village | None,
     default_radius_m: int,
+    meeting_point_radius_m: int | None = None,
 ) -> GeofenceCheck:
     """VV-003: test the point against the farm polygon, then the village meeting point."""
     point = func.ST_GeogFromText(point_wkt(lon, lat))
@@ -83,7 +85,7 @@ async def evaluate(
             )
         )
     if village is not None and village.meeting_point is not None:
-        radius = village.meeting_point_radius_m or default_radius_m
+        radius = village.meeting_point_radius_m or meeting_point_radius_m or default_radius_m
         row = (
             await session.execute(
                 select(

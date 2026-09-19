@@ -16,22 +16,20 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.auth.models import User
-from farmerapp.db.models.tenant import Tenant
 from farmerapp.location.models import LOCATION_POLICY_KEY, PolicyAcceptance
 from farmerapp.location.schemas import PolicyAcceptanceOut
 from farmerapp.logging import get_logger
 from farmerapp.policies.errors import PolicyNotAcceptedError, PolicyVersionStaleError
 from farmerapp.policies.location_policy import LocationPolicy, policy_for
 from farmerapp.policies.schemas import PolicyAcceptIn
-from farmerapp.tenants.settings import TenantSettings, tenant_settings
+from farmerapp.tenants.settings import TenantSettings, get_tenant_settings
 
 log = get_logger("farmerapp.policies")
 
 
 async def settings_for(session: AsyncSession, tenant_id: uuid.UUID) -> TenantSettings:
     """The typed settings of the bound tenant (a missing row means the defaults)."""
-    tenant = await session.get(Tenant, tenant_id)
-    return tenant_settings(tenant.settings if tenant is not None else None)
+    return await get_tenant_settings(session, tenant_id)
 
 
 async def current_policy(session: AsyncSession, tenant_id: uuid.UUID) -> LocationPolicy:

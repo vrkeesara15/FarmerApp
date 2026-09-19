@@ -54,7 +54,7 @@ from farmerapp.invoices.schemas import (
 from farmerapp.invoices.words import amount_in_words
 from farmerapp.logging import get_logger
 from farmerapp.orders.models import Order, OrderLine
-from farmerapp.payments.config import IST, payment_settings, state_code
+from farmerapp.payments.config import IST, state_code
 from farmerapp.payments.day_close import visible_store
 from farmerapp.payments.models import PaymentMode
 from farmerapp.payments.schemas import PaymentCreate
@@ -70,6 +70,7 @@ from farmerapp.payments.service import (
     create_payment,
 )
 from farmerapp.tenants.models import Store, Village
+from farmerapp.tenants.settings import settings_from_tenant
 from farmerapp.uploads.blobstore import BlobStore
 
 log = get_logger("farmerapp.invoices")
@@ -191,7 +192,7 @@ async def issue_invoice(
     blobs: BlobStore,
     now: datetime,
 ) -> Invoice:
-    settings = payment_settings(tenant.settings)
+    settings = settings_from_tenant(tenant)
     fy = financial_year(now.astimezone(IST).date())
     seq = await next_seq(session, tenant_id=tenant.id, store_id=store.id, fy=fy)
     prefix = settings.invoice_prefix or (tenant.slug or "INV").upper()[:8]
@@ -411,7 +412,7 @@ async def pos_preview(
     number, credit check or payment (ST-001 tablet preview)."""
     draft = await draft_sale(session, actor, store_id, body, now)
     store, buyer, totals = draft.store, draft.buyer, draft.totals
-    settings = payment_settings(draft.tenant.settings)
+    settings = settings_from_tenant(draft.tenant)
     return PosPreviewOut(
         store_id=store.id,
         farmer_id=buyer.farmer.id if buyer.farmer is not None else None,

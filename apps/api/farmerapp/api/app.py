@@ -40,6 +40,7 @@ from farmerapp.policies import router as policy_routes
 from farmerapp.settings import Settings, get_settings
 from farmerapp.stock import router as stock_routes
 from farmerapp.sync import router as sync_routes
+from farmerapp.tenants import settings_router as settings_routes
 from farmerapp.uploads import router as upload_routes
 from farmerapp.uploads.blobstore import BlobStore, build_blob_store
 from farmerapp.users import router as user_routes
@@ -144,6 +145,7 @@ def create_app(
     v1.include_router(auth_routes.router)
     v1.include_router(auth_routes.me_router)
     v1.include_router(user_routes.router)
+    v1.include_router(user_routes.device_router)
     v1.include_router(farmer_routes.router)
     v1.include_router(farmer_routes.farm_router)
     v1.include_router(farmer_routes.plot_router)
@@ -157,6 +159,7 @@ def create_app(
     v1.include_router(upload_routes.router)
     v1.include_router(upload_routes.blob_router)
     v1.include_router(audit_routes.router)
+    v1.include_router(settings_routes.router)
     # M3: catalogue, stock, orders, payments, khata (read endpoints; writes are the loop's).
     v1.include_router(catalog_routes.router)
     v1.include_router(stock_routes.router)

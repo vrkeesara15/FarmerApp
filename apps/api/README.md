@@ -730,3 +730,38 @@ The table is append-only for the app role (migration 0004 revokes UPDATE/DELETE;
 director, auditor, tenant_admin; newest first, cursor pagination). Retention is one year
 minimum (NF-012); `python -m farmerapp.jobs purge-audit-logs --tenant-id <uuid>` only reports
 what a purge would remove (400-day default) until the archive + purge job lands under OPS.
+
+## Administration: users, devices, step-up, settings (WC-011 / WC-012 / WC-103 / SEC-020 / SEC-025 / SEC-028)
+
+Contracts for the console and the apps: `docs/prs/M4-admin-api.md`.
+
+```python
+# SEC-028: an admin action needs a fresh OTP. Declare StepUp *after* the role check.
+from farmerapp.auth.stepup import STEP_UP_OPENAPI, StepUp
+
+
+@router.post("/things/{id}/purge", openapi_extra=STEP_UP_OPENAPI)
+async def purge(
+    id: uuid.UUID,
+    actor: Annotated[User, require_roles(Role.OWNER)],
+    _step_up: StepUp,  # 401 step_up_required without a valid X-Step-Up-Token
+    session: DbSession,
+) -> ...: ...
+
+
+# WC-012: read tenant settings through the one accessor (typed, defaults, lenient load).
+from farmerapp.tenants.settings import get_tenant_settings, settings_from_tenant
+
+settings = await get_tenant_settings(session, tenant_id)
+settings.geofence_radius_m, settings.ta_rate_per_km_paise, settings.branding.primary_colour
+```
+
+New keys go into `TenantSettings` and `SETTINGS_KEYS` (and `PUBLIC_KEYS` if the apps need
+them); `PATCH /v1/settings` validates with the same model. Revocation (`farmerapp/auth/devices.py`):
+user status and `tokens_valid_after` are checked on every request, device status (lost /
+revoked) through a per-process cache (`SECURITY_CACHE_TTL_SECONDS`, 30 s, at most 60 s);
+refresh answers `session_revoked` or `device_wipe_required`. Field officers are bound to one
+device (409 `device_not_bound` until an admin binds the new one). In tests, send
+`X-Step-Up-Token` with the `step_up` fixture (`tests/authz/conftest.py`) or set
+`RouteFixture(step_up=True)` in the authz matrix.
+

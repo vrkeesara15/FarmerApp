@@ -134,7 +134,7 @@ async def test_get_unknown_or_other_tenant_user_is_404(
 
 
 async def test_owner_updates_a_user(
-    client: AsyncClient, world: World, bearer: Bearer, db_session: AsyncSession
+    client: AsyncClient, world: World, bearer: Bearer, step_up: Bearer, db_session: AsyncSession
 ) -> None:
     officer = world.a.user(UserRole.FIELD_OFFICER)
     version = officer.version
@@ -147,7 +147,7 @@ async def test_owner_updates_a_user(
             "store_id": str(STORE_1),
             "cluster_id": str(CLUSTER_1),
         },
-        headers=bearer(world.a.owner),
+        headers=bearer(world.a.owner) | step_up(world.a.owner),  # SEC-028: role / status
     )
     assert resp.status_code == 200, resp.text
     body = resp.json()

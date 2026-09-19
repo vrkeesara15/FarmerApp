@@ -22,7 +22,7 @@ from farmerapp.auth.providers import FakeProvider
 from farmerapp.auth.scheduler import InProcessScheduler
 from farmerapp.db.models import AuditLog
 from farmerapp.settings import get_settings
-from tests.authz.conftest import bearer, world  # noqa: F401  (fixtures re-exported)
+from tests.authz.conftest import bearer, step_up, world  # noqa: F401  (fixtures re-exported)
 from tests.rls.conftest import two_tenants  # noqa: F401  (fixture re-exported)
 
 T0 = datetime(2026, 9, 17, 9, 0, tzinfo=UTC)

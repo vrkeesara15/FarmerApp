@@ -13,8 +13,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.api.errors import UnauthenticatedError
 from farmerapp.auth.clock import Clock, SystemClock
-from farmerapp.auth.errors import UserDisabledError
-from farmerapp.auth.models import User, UserStatus
+from farmerapp.auth.devices import DeviceStatusCache
+from farmerapp.auth.errors import DeviceWipeRequiredError, SessionRevokedError, UserDisabledError
+from farmerapp.auth.models import DeviceStatus, User, UserStatus
 from farmerapp.auth.otp import OtpService
 from farmerapp.auth.providers import FakeProvider, MockServerProvider, SmsProvider, WhatsAppProvider
 from farmerapp.auth.scheduler import InProcessScheduler, Scheduler
@@ -33,10 +34,12 @@ class AuthServices:
     scheduler: Scheduler
     otp: OtpService = field(init=False)
     tokens: TokenService = field(init=False)
+    device_cache: DeviceStatusCache = field(init=False)
 
     def __post_init__(self) -> None:
         self.otp = OtpService(self)
         self.tokens = TokenService(self)
+        self.device_cache = DeviceStatusCache(self.clock, self.settings.security_cache_ttl_seconds)
 
 
 def build_auth_services(settings: Settings) -> AuthServices:
@@ -95,6 +98,12 @@ async def get_current_user(
     The tenant is bound *before* the user is loaded, so RLS hides the user when the token's
     tenant claim does not match: a forged claim is just an unknown user (401). Once the user
     is known it becomes the audit actor for everything this request writes (FA-006).
+
+    Revocation (WC-011, SEC-025; see ``farmerapp.auth.devices``): a disabled account or a
+    token issued at or before ``user.tokens_valid_after`` is rejected at once (the row is
+    read on every request); a token bound to a device (``did``) is rejected when the device
+    is lost (401 ``device_wipe_required``) or revoked (401 ``session_revoked``), read through
+    the device status cache (TTL <= 60 s).
     """
     header = request.headers.get("authorization", "")
     scheme, _, token = header.partition(" ")
@@ -108,6 +117,9 @@ async def get_current_user(
     user = await session.get(User, claims.user_id)
     if user is None or user.tenant_id != claims.tenant_id or user.deleted_at is not None:
         raise UnauthenticatedError("Unknown user.")
+    challenge = {"WWW-Authenticate": "Bearer"}
+    if user.status != UserStatus.ACTIVE and claims.device_id is not None:
+        raise DeviceWipeRequiredError("This account is disabled.", headers=challenge)
     if user.status != UserStatus.ACTIVE:
         # The session is no longer valid: 401 so clients drop their tokens and re-login
         # (where they get 403 `user_disabled` with the reason).
@@ -116,6 +128,18 @@ async def get_current_user(
             code=UserDisabledError.code,
             headers={"WWW-Authenticate": "Bearer"},
         )
+    valid_after = user.tokens_valid_after
+    if valid_after is not None and claims.issued_at <= int(valid_after.timestamp()):
+        raise SessionRevokedError("You were signed out by an administrator.", headers=challenge)
+    if claims.device_id is not None:
+        device_status = await services.device_cache.status(
+            session, user.tenant_id, user.id, claims.device_id
+        )
+        if device_status == DeviceStatus.LOST:
+            raise DeviceWipeRequiredError("This device was reported lost.", headers=challenge)
+        if device_status == DeviceStatus.REVOKED:
+            raise SessionRevokedError("This device is no longer bound.", headers=challenge)
+        request.state.device_id = claims.device_id
     request.state.user = user
     audit.bind_actor(audit.actor_from_request(request, user))
     return user

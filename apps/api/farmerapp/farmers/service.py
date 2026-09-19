@@ -32,7 +32,6 @@ from farmerapp.api.errors import ForbiddenError, NotFoundError
 from farmerapp.auth.models import User, UserRole
 from farmerapp.auth.scope import farmer_filters
 from farmerapp.catalog.crops import Crop
-from farmerapp.db.models import Tenant
 from farmerapp.farmers.errors import (
     FarmBoundaryInvalidError,
     FarmerPhoneExistsError,
@@ -40,7 +39,6 @@ from farmerapp.farmers.errors import (
     VersionConflictError,
 )
 from farmerapp.farmers.models import (
-    DEFAULT_CONSENT_VERSION,
     ConsentChannel,
     ConsentPurpose,
     ConsentRecord,
@@ -69,6 +67,7 @@ from farmerapp.farmers.schemas import (
 )
 from farmerapp.settings import Settings
 from farmerapp.tenants.models import Village
+from farmerapp.tenants.settings import get_tenant_settings
 from farmerapp.uploads.blobstore import parse_uri
 from farmerapp.uploads.models import UploadSession, UploadStatus
 
@@ -171,9 +170,7 @@ async def _crop(session: AsyncSession, tenant_id: uuid.UUID, crop_id: uuid.UUID)
 
 
 async def _consent_version(session: AsyncSession, tenant_id: uuid.UUID) -> str:
-    tenant = await session.get(Tenant, tenant_id)
-    value = (tenant.settings or {}).get("consent_version") if tenant is not None else None
-    return str(value) if value else DEFAULT_CONSENT_VERSION
+    return (await get_tenant_settings(session, tenant_id)).consent_version
 
 
 def _check_version(row: Any, expected: int | None) -> None:

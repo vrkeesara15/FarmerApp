@@ -188,3 +188,16 @@ def bearer(app: FastAPI) -> Bearer:
         return {"Authorization": f"Bearer {token}"}
 
     return _mint
+
+
+@pytest.fixture
+def step_up(app: FastAPI) -> Bearer:
+    """SEC-028: ``X-Step-Up-Token`` header for ``user`` (as if they had just re-entered an OTP)."""
+    from farmerapp.auth.stepup import STEP_UP_HEADER, issue_step_up_token
+
+    services: AuthServices = app.state.auth
+
+    def _mint(user: User) -> dict[str, str]:
+        return {STEP_UP_HEADER: issue_step_up_token(services.settings, user, services.clock.now())}
+
+    return _mint

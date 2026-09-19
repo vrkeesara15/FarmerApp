@@ -54,6 +54,34 @@ class OtpPurpose(StrEnum):
     FARMER_CONFIRM = "farmer_confirm"  # FA-016
     FARMER_REGISTER = "farmer_register"  # FA-012
     MEETING_ATTENDANCE = "meeting_attendance"  # FA-027
+    STEP_UP = "step_up"  # SEC-028 re-auth before admin actions
+
+
+class DeviceStatus(StrEnum):
+    """SEC-020 / SEC-025 device lifecycle (WC-011).
+
+    ``pending`` — a field officer tried to log in from a second device; an admin must bind it.
+    ``active`` — may log in and refresh. ``revoked`` — unbound by an admin (another device was
+    bound); its sessions are gone. ``lost`` — reported lost: its sessions are gone and the app
+    must wipe local data (401 ``device_wipe_required``).
+    """
+
+    PENDING = "pending"
+    ACTIVE = "active"
+    REVOKED = "revoked"
+    LOST = "lost"
+
+
+class RevokeReason(StrEnum):
+    """Why a refresh token stopped working (``refresh_token.revoked_reason``)."""
+
+    ROTATED = "rotated"
+    LOGOUT = "logout"
+    REUSE = "reuse"
+    FORCE_LOGOUT = "force_logout"
+    DEVICE_REVOKED = "device_revoked"
+    DEVICE_LOST = "device_lost"
+    USER_DISABLED = "user_disabled"
 
 
 class OtpChannel(StrEnum):
@@ -84,6 +112,11 @@ class User(Base, BaseColumns):
         String(16), nullable=False, server_default=text("'active'"), default=UserStatus.ACTIVE
     )
     device_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    # WC-011 / SEC-020: access tokens issued at or before this instant are rejected (forced
+    # logout, disable). Checked on every request against the loaded row, so immediately.
+    tokens_valid_after: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     # VV-007: where "idle at home" is measured for an officer (NULL -> their store's location).
     home_point: Mapped[Any] = mapped_column(
         Geography(geometry_type="POINT", srid=SRID, spatial_index=False), nullable=True
@@ -138,3 +171,34 @@ class RefreshToken(Base, BaseColumns):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     replaced_by: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
+    revoked_reason: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
+
+class Device(Base, BaseColumns):
+    """A phone or tablet a user has signed in from (WC-011, SEC-020, SEC-025).
+
+    Rows are written on login and refresh (``first_seen`` / ``last_seen``, platform, model,
+    app version). Field officers have at most one ``active`` device: a login from another
+    device is refused (409 ``device_not_bound``) and recorded as ``pending`` until an admin
+    binds it. Other roles may use several active devices.
+    """
+
+    __tablename__ = "device"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "user_id", "device_id"),
+        CheckConstraint(f"status IN ({_in(DeviceStatus)})", name="status"),
+        Index("ix_device_user_id", "user_id"),
+    )
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), nullable=False
+    )
+    device_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    platform: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    model: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    app_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default=DeviceStatus.ACTIVE)
+    bound_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
