@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_api.dart';
 import '../auth/token_store.dart';
+import '../security/security_providers.dart' show tenantSettingsSyncProvider;
 
 /// Provides the [TokenStore]. Apps override this with [SecureTokenStore].
 final Provider<TokenStore> tokenStoreProvider = Provider<TokenStore>(
@@ -48,6 +51,9 @@ enum AuthFailure {
 
   /// No account for this number.
   notFound,
+
+  /// This phone is not the officer's bound device (SEC-020).
+  deviceNotBound,
 
   /// Could not reach the server.
   network,
@@ -189,8 +195,10 @@ class AuthFlowNotifier extends Notifier<AuthFlowState> {
       OtpVerifyResult.expired => AuthFailure.expired,
       OtpVerifyResult.notFound => AuthFailure.expired,
       OtpVerifyResult.locked => AuthFailure.locked,
+      OtpVerifyResult.deviceNotBound => AuthFailure.deviceNotBound,
       OtpVerifyResult.network => AuthFailure.network,
     };
+    if (failure == AuthFailure.none) _pullTenantSettings();
     state = state.copyWith(
       busy: false,
       failure: failure,
@@ -199,6 +207,21 @@ class AuthFlowNotifier extends Notifier<AuthFlowState> {
       session: outcome.session,
       step: failure == AuthFailure.none ? AuthStep.done : AuthStep.otp,
     );
+  }
+
+  /// Tenant settings on login (M2 follow-up): best effort, in the
+  /// background; the cached / default values stay when it fails.
+  void _pullTenantSettings() {
+    try {
+      unawaited(
+        ref
+            .read(tenantSettingsSyncProvider)
+            .pull()
+            .then<void>((_) {}, onError: (Object _) {}),
+      );
+    } on Object {
+      // No database in this scope (widget tests of the login screens).
+    }
   }
 
   /// Goes back to the phone step.

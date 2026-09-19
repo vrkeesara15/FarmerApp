@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- SEC-008: application below sets allowBackup="false", backup / data
+         extraction rules excluding the encrypted database, and a network
+         security config allowing cleartext only to local hosts in debug. -->
     <!-- FA-025 sync, OSM map tiles (A21b) -->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- FA-012 A21b walk-around boundary capture; FA-010: read only on duty / on the boundary step -->
@@ -24,7 +27,11 @@
     <application
         android:label="Mitra"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".MainActivity"
             android:exported="true"

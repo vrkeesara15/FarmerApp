@@ -58,6 +58,9 @@ abstract final class AppRoutes {
   /// A07 Device registered.
   static const String registered = '/onboarding/done';
 
+  /// A08 Signed out by your administrator (SEC-025 remote wipe).
+  static const String signedOut = '/signed-out';
+
   /// A10 Home.
   static const String home = '/home';
 
@@ -96,9 +99,13 @@ abstract final class AppRoutes {
   static const String store = StoreRoutes.home;
 }
 
-/// The app router.
+/// The app router; after a remote wipe it opens on A08.
 final Provider<GoRouter> routerProvider = Provider<GoRouter>(
-  (ref) => buildRouter(),
+  (ref) => buildRouter(
+    initialLocation: ref.read(wipeNoticeProvider)
+        ? AppRoutes.signedOut
+        : AppRoutes.splash,
+  ),
 );
 
 /// Builds the router; tests override [routerProvider] to start elsewhere.
@@ -133,6 +140,17 @@ GoRouter buildRouter({String initialLocation = AppRoutes.splash}) {
       GoRoute(
         path: AppRoutes.registered,
         builder: (context, state) => const DeviceRegisteredScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.signedOut,
+        builder: (context, state) => Consumer(
+          builder: (context, ref, _) => SignedOutScreen(
+            onSignInAgain: () async {
+              await clearWipeNotice(ref.read(appDatabaseProvider));
+              if (context.mounted) context.go(AppRoutes.language);
+            },
+          ),
+        ),
       ),
       GoRoute(
         path: AppRoutes.home,

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SEC-008: release and profile builds never allow cleartext traffic; the API
+     domain is reached over TLS with certificate pinning in the Dart client
+     (SEC-024, API_CERT_PINS). The debug build overlays this file with one that
+     allows plain HTTP to the local development hosts only. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

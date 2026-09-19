@@ -3255,4 +3255,26 @@ class CoreLocalizationsEn extends CoreLocalizations {
   @override
   String get creditRejectedByClusterHead =>
       'The cluster head rejected this credit sale. Collect cash instead.';
+
+  @override
+  String get loginDeviceNotBound =>
+      'This phone is not registered to you. Ask your administrator to approve it, then sign in again.';
+
+  @override
+  String get wipeTitle => 'Signed out by your administrator';
+
+  @override
+  String get wipeBody =>
+      'Your administrator signed this phone out of the app. For safety, the app data on this phone has been deleted.';
+
+  @override
+  String get wipeDeletedList =>
+      'Deleted: saved farmers, visits, orders, photos and any work that was not yet sent. Your language setting is kept.';
+
+  @override
+  String get wipeWhatNext =>
+      'If this is a mistake, contact your administrator. Once they allow it, you can sign in again.';
+
+  @override
+  String get wipeSignInAgain => 'Sign in again';
 }

@@ -225,6 +225,7 @@ class _StartVisitScreenState extends ConsumerState<StartVisitScreen> {
           meetingRadiusM: pre?.meetingPoint == null
               ? null
               : detail.village?.meetingPointRadiusM ??
+                    pre!.settings.meetingPointRadiusM ??
                     pre!.settings.geofenceRadiusM,
         ),
         if (farm != null && farm.boundary.isEmpty)

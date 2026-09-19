@@ -1861,5 +1861,11 @@
     }
   },
   "creditApprovedSending": "Approved by the cluster head. Sending the sale…",
-  "creditRejectedByClusterHead": "The cluster head rejected this credit sale. Collect cash instead."
+  "creditRejectedByClusterHead": "The cluster head rejected this credit sale. Collect cash instead.",
+  "loginDeviceNotBound": "This phone is not registered to you. Ask your administrator to approve it, then sign in again.",
+  "wipeTitle": "Signed out by your administrator",
+  "wipeBody": "Your administrator signed this phone out of the app. For safety, the app data on this phone has been deleted.",
+  "wipeDeletedList": "Deleted: saved farmers, visits, orders, photos and any work that was not yet sent. Your language setting is kept.",
+  "wipeWhatNext": "If this is a mistake, contact your administrator. Once they allow it, you can sign in again.",
+  "wipeSignInAgain": "Sign in again"
 }

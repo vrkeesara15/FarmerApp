@@ -3245,4 +3245,26 @@ class CoreLocalizationsMr extends CoreLocalizations {
   @override
   String get creditRejectedByClusterHead =>
       'क्लस्टर हेडने ही उधारी विक्री नाकारली. त्याऐवजी रोख घ्या.';
+
+  @override
+  String get loginDeviceNotBound =>
+      'हा फोन तुमच्या नावावर नोंदणीकृत नाही. तो मंजूर करण्यासाठी तुमच्या ॲडमिनिस्ट्रेटरला सांगा, नंतर पुन्हा साइन इन करा.';
+
+  @override
+  String get wipeTitle => 'तुमच्या ॲडमिनिस्ट्रेटरने साइन आउट केले';
+
+  @override
+  String get wipeBody =>
+      'तुमच्या ॲडमिनिस्ट्रेटरने हा फोन ॲपमधून साइन आउट केला आहे. सुरक्षेसाठी या फोनवरील ॲपचा डेटा हटवला आहे.';
+
+  @override
+  String get wipeDeletedList =>
+      'हटवले: जतन केलेले शेतकरी, भेटी, ऑर्डर, फोटो आणि अद्याप न पाठवलेले काम. तुमची भाषा सेटिंग तशीच राहते.';
+
+  @override
+  String get wipeWhatNext =>
+      'ही चूक असल्यास तुमच्या ॲडमिनिस्ट्रेटरशी संपर्क साधा. त्यांनी परवानगी दिल्यावर तुम्ही पुन्हा साइन इन करू शकता.';
+
+  @override
+  String get wipeSignInAgain => 'पुन्हा साइन इन करा';
 }

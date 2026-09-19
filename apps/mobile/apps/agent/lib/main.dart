@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:farmerapp_core/farmerapp_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:workmanager/workmanager.dart';
 
 import 'app.dart';
 import 'screens/store/store_platform.dart';
+import 'security.dart';
 import 'widgets/share_plus_invoice_sharer.dart';
 
 /// App version sent with duty sessions and policy acceptances (pubspec).
@@ -18,25 +20,41 @@ SyncEngine buildSyncEngine({
   required AppDatabase db,
   required SecureTokenStore store,
   required HttpAuthApi auth,
+  required http.Client client,
 }) => SyncEngine(
   db: db,
-  api: HttpSyncApi(store: store, refreshSession: auth.refresh),
+  api: HttpSyncApi(store: store, client: client, refreshSession: auth.refresh),
   deviceId: store.deviceId,
 );
 
+/// SEC-024: the encrypted database (SQLCipher, key in the Android Keystore).
+EncryptedDatabaseOpener mitraDatabaseOpener() =>
+    EncryptedDatabaseOpener(keyStore: SecureDatabaseKeyStore());
+
 /// WorkManager entry point (FA-025): periodic every 15 min on network and
-/// one-off on reconnect; both run [SyncEngine.syncNow] over the same file
-/// database as the app.
+/// one-off on reconnect; both run [SyncEngine.syncNow] over the same
+/// encrypted database as the app, through the pinned, attested client. A
+/// wipe order seen here is acted on by the next foreground start
+/// (`GET /v1/devices/me/status`).
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((taskName, inputData) {
     return SyncScheduler.runBackgroundTask(taskName, () async {
       WidgetsFlutterBinding.ensureInitialized();
       final store = SecureTokenStore();
+      final client = buildApiHttpClient(
+        attestation: const PlayIntegrityAttestation(),
+      );
       return buildSyncEngine(
-        db: openAppDatabase(),
+        db: openAppDatabase(opener: mitraDatabaseOpener()),
         store: store,
-        auth: HttpAuthApi(store: store, deviceName: 'Mitra Android'),
+        client: client,
+        auth: HttpAuthApi(
+          store: store,
+          client: client,
+          deviceName: 'Mitra Android',
+          appVersion: agentAppVersion,
+        ),
       );
     });
   });
@@ -44,15 +62,37 @@ void callbackDispatcher() {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Workmanager().initialize(callbackDispatcher);
+  await startMitra();
+}
+
+/// Builds the provider container and runs the app. A remote wipe (SEC-025)
+/// tears this run down, wipes, and calls [startMitra] again: the fresh
+/// database carries the A08 notice, so the router opens "Signed out by
+/// your administrator".
+Future<void> startMitra() async {
   // Real API (FA-001): base URL from --dart-define=API_BASE_URL, default
-  // http://10.0.2.2:8000 (host machine from the Android emulator).
+  // http://10.0.2.2:8000 (host machine from the Android emulator). Every
+  // call goes through one client: certificate pinning (API_CERT_PINS), Play
+  // Integrity on login and sensitive actions, wipe detection (SEC-024/025).
   final store = SecureTokenStore();
-  final auth = HttpAuthApi(store: store, deviceName: 'Mitra Android');
+  final wipe = WipeSignal();
+  final client = buildApiHttpClient(
+    wipeSignal: wipe,
+    attestation: const PlayIntegrityAttestation(),
+  );
+  final auth = HttpAuthApi(
+    store: store,
+    client: client,
+    deviceName: 'Mitra Android',
+    appVersion: agentAppVersion,
+  );
   // Settings (language, theme) are read from the Drift kv table before the
   // first frame so the saved language is used immediately (FA-004).
-  final db = openAppDatabase();
+  final opener = mitraDatabaseOpener();
+  final db = openAppDatabase(opener: opener);
   final settings = await settingsOverrides(KvSettingsStore(db));
-  await Workmanager().initialize(callbackDispatcher);
+  final wipedBefore = await hasWipeNotice(db);
   // FA-028: device clock vs server clock from every response's Date header,
   // persisted so the next duty start / point carries the last known drift.
   final drift = ClockDriftTracker(
@@ -60,12 +100,18 @@ Future<void> main() async {
   );
   final rest = RestJsonClient(
     store: store,
+    client: client,
     refreshSession: auth.refresh,
     onServerDate: drift.record,
   );
   final copy = DutyCopy.forLocale(
     (await KvSettingsStore(db).load()).locale ?? const Locale('en'),
   );
+  final dutyService = FlutterForegroundDutyService(
+    channelName: copy.channelName,
+  );
+  final sampler = GeolocatorLocationSampler();
+  final connectivity = PlusConnectivityMonitor();
   final container = ProviderContainer(
     overrides: [
       ...settings,
@@ -75,16 +121,22 @@ Future<void> main() async {
       syncApiProvider.overrideWithValue(
         HttpSyncApi(
           store: store,
+          client: client,
           refreshSession: auth.refresh,
           onServerDate: drift.record,
         ),
       ),
+      // SEC-025 remote wipe, SEC-020 / M2 follow-up tenant settings.
+      wipeSignalProvider.overrideWithValue(wipe),
+      wipeNoticeProvider.overrideWithValue(wipedBefore),
+      deviceStatusApiProvider.overrideWithValue(
+        HttpDeviceStatusApi(rest, store),
+      ),
+      tenantSettingsApiProvider.overrideWithValue(HttpTenantSettingsApi(rest)),
       // FA-010 / FA-011 / VV-001 / VV-007 / FA-028: duty toggle stack.
       clockDriftTrackerProvider.overrideWithValue(drift),
-      locationSamplerProvider.overrideWithValue(GeolocatorLocationSampler()),
-      foregroundDutyServiceProvider.overrideWithValue(
-        FlutterForegroundDutyService(channelName: copy.channelName),
-      ),
+      locationSamplerProvider.overrideWithValue(sampler),
+      foregroundDutyServiceProvider.overrideWithValue(dutyService),
       dutyAlertsProvider.overrideWithValue(
         LocalDutyAlerts(channelName: copy.alertsChannelName),
       ),
@@ -96,18 +148,23 @@ Future<void> main() async {
       policyApiProvider.overrideWithValue(
         HttpPolicyApi(
           store: store,
+          client: client,
           refreshSession: auth.refresh,
           onServerDate: drift.record,
         ),
       ),
       appVersionProvider.overrideWithValue(agentAppVersion),
-      connectivityMonitorProvider.overrideWithValue(PlusConnectivityMonitor()),
+      connectivityMonitorProvider.overrideWithValue(connectivity),
       backgroundWorkSchedulerProvider.overrideWithValue(
         WorkmanagerSyncScheduler(),
       ),
       // FA-012 A21: farmer OTP, GPS walk-around, in-app camera, photo files.
       farmerPhoneVerifyApiProvider.overrideWithValue(
-        HttpFarmerPhoneVerifyApi(store: store, refreshSession: auth.refresh),
+        HttpFarmerPhoneVerifyApi(
+          store: store,
+          client: client,
+          refreshSession: auth.refresh,
+        ),
       ),
       locationSourceProvider.overrideWithValue(
         const GeolocatorLocationSource(),
@@ -127,6 +184,7 @@ Future<void> main() async {
       storeApiProvider.overrideWithValue(
         HttpStoreApi(
           store: store,
+          client: client,
           refreshSession: auth.refresh,
           onServerDate: drift.record,
           catalogApi: HttpCatalogApi(rest),
@@ -140,18 +198,65 @@ Future<void> main() async {
       visitConfirmApiProvider.overrideWithValue(
         HttpVisitConfirmApi(
           store: store,
+          client: client,
           refreshSession: auth.refresh,
           onServerDate: drift.record,
         ),
       ),
     ],
   );
+
+  StreamSubscription<bool>? onlineSub;
+  RemoteWipeCoordinator(
+    signal: wipe,
+    steps: (reason) => mitraWipeSteps(
+      db: db,
+      opener: opener,
+      tokens: store,
+      reason: reason,
+      dutyService: dutyService,
+      sampler: sampler,
+      directories: appCacheDirectories,
+      cancelBackgroundSync: Workmanager().cancelAll,
+    ),
+    teardown: () async {
+      runApp(const WipeInProgressView());
+      await onlineSub?.cancel();
+      // The sync run that saw the order finishes before the database closes.
+      await container
+          .read(syncEngineProvider)
+          .whenIdle()
+          .timeout(const Duration(seconds: 30), onTimeout: () {});
+      container.dispose();
+      client.close();
+    },
+    restart: startMitra,
+  ).arm();
+
   // Periodic background sync + immediate sync on reconnect (NF-002/NF-003).
   await container.read(syncSchedulerProvider).start();
   // An open duty session survives a restart: service + sampler resume
   // (FA-010); the policy version is refreshed when online (FA-011).
   await container.read(dutyControllerProvider.notifier).restore();
   unawaited(container.read(locationPolicyProvider.notifier).refresh());
+  if (!wipedBefore) {
+    // SEC-025: ask the server whether this phone must be wiped (in the
+    // background: the cold start does not wait for the network, NF-005).
+    unawaited(
+      checkDeviceStatusOnStart(
+        tokens: store,
+        api: container.read(deviceStatusApiProvider),
+        signal: wipe,
+        isOnline: connectivity.isOnline,
+      ),
+    );
+    // M2 follow-up: tenant settings daily and whenever the network returns.
+    final settingsSync = container.read(tenantSettingsSyncProvider);
+    unawaited(settingsSync.pullIfStale());
+    onlineSub = connectivity.onlineChanges.listen((online) {
+      if (online) unawaited(settingsSync.pullIfStale());
+    });
+  }
   runApp(
     UncontrolledProviderScope(container: container, child: const MitraApp()),
   );

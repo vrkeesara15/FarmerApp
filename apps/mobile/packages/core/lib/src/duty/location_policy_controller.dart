@@ -178,6 +178,21 @@ class LocationPolicyController extends Notifier<LocationPolicyState> {
     );
   }
 
+  /// Re-reads the cached duty policy (a tenant settings pull changed the
+  /// sampling cadence or the auto-end time).
+  Future<void> reloadDutyPolicy() async {
+    await load();
+    final raw = await ref.read(appDatabaseProvider).getValue(dutyPolicyKey);
+    if (raw == null) return;
+    _set(
+      state.copyWith(
+        duty: DutyPolicy.fromJson(
+          Map<String, Object?>.from(jsonDecode(raw) as Map),
+        ),
+      ),
+    );
+  }
+
   /// Forgets the acceptance (the server answered `policy_not_accepted`):
   /// A05 is shown again before the next duty start.
   Future<void> markNotAccepted() async {

@@ -5959,6 +5959,42 @@ abstract class CoreLocalizations {
   /// In en, this message translates to:
   /// **'The cluster head rejected this credit sale. Collect cash instead.'**
   String get creditRejectedByClusterHead;
+
+  /// No description provided for @loginDeviceNotBound.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone is not registered to you. Ask your administrator to approve it, then sign in again.'**
+  String get loginDeviceNotBound;
+
+  /// No description provided for @wipeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out by your administrator'**
+  String get wipeTitle;
+
+  /// No description provided for @wipeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your administrator signed this phone out of the app. For safety, the app data on this phone has been deleted.'**
+  String get wipeBody;
+
+  /// No description provided for @wipeDeletedList.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted: saved farmers, visits, orders, photos and any work that was not yet sent. Your language setting is kept.'**
+  String get wipeDeletedList;
+
+  /// No description provided for @wipeWhatNext.
+  ///
+  /// In en, this message translates to:
+  /// **'If this is a mistake, contact your administrator. Once they allow it, you can sign in again.'**
+  String get wipeWhatNext;
+
+  /// No description provided for @wipeSignInAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again'**
+  String get wipeSignInAgain;
 }
 
 class _CoreLocalizationsDelegate

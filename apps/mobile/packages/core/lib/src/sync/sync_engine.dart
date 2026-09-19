@@ -373,6 +373,18 @@ class SyncEngine {
     );
   }
 
+  /// Completes when no run is in flight (a remote wipe waits for the run
+  /// that saw the wipe order before closing the database, SEC-025).
+  Future<void> whenIdle() async {
+    final running = _inFlight;
+    if (running == null) return;
+    try {
+      await running;
+    } on Object {
+      // The run's own failure is not the caller's concern here.
+    }
+  }
+
   /// Pushes and pulls. With [force] false the run is skipped while the
   /// backoff window of the last failure has not elapsed (periodic and
   /// background triggers); user-initiated syncs pass true.

@@ -16,6 +16,7 @@ String? authFailureText(CoreLocalizations l10n, AuthFlowState flow) {
       null => l10n.otpInvalid,
     },
     AuthFailure.expired => l10n.otpExpired,
+    AuthFailure.deviceNotBound => l10n.loginDeviceNotBound,
     AuthFailure.network => l10n.networkError,
   };
 }

@@ -152,6 +152,8 @@ void main() {
         'code': '123456',
         'device_id': 'dev-1',
         'device_name': 'Test phone',
+        // M4 admin contract: shown in C101's device list.
+        'platform': 'android',
       });
       final stored = await store.read();
       expect(stored!.accessToken, 'a.b.c');
@@ -204,6 +206,15 @@ void main() {
         (await down.verifyOtp('9000000004', '1')).result,
         OtpVerifyResult.network,
       );
+      // SEC-020: an officer on a phone that is not their bound device.
+      final (unbound, _, store) = _api(
+        (_) => _problem(409, 'device_not_bound'),
+      );
+      expect(
+        (await unbound.verifyOtp('9000000004', '1')).result,
+        OtpVerifyResult.deviceNotBound,
+      );
+      expect(await store.read(), isNull);
     });
   });
 

@@ -3269,4 +3269,26 @@ class CoreLocalizationsTe extends CoreLocalizations {
   @override
   String get creditRejectedByClusterHead =>
       'క్లస్టర్ హెడ్ ఈ అరువు అమ్మకాన్ని తిరస్కరించారు. బదులుగా నగదు తీసుకోండి.';
+
+  @override
+  String get loginDeviceNotBound =>
+      'ఈ ఫోన్ మీ పేరున నమోదు కాలేదు. దీన్ని ఆమోదించమని మీ అడ్మినిస్ట్రేటర్‌ను అడిగి, తర్వాత మళ్ళీ సైన్ ఇన్ చేయండి.';
+
+  @override
+  String get wipeTitle => 'మీ అడ్మినిస్ట్రేటర్ సైన్ అవుట్ చేశారు';
+
+  @override
+  String get wipeBody =>
+      'మీ అడ్మినిస్ట్రేటర్ ఈ ఫోన్‌ను యాప్ నుండి సైన్ అవుట్ చేశారు. భద్రత కోసం ఈ ఫోన్‌లోని యాప్ డేటా తొలగించబడింది.';
+
+  @override
+  String get wipeDeletedList =>
+      'తొలగించినవి: సేవ్ చేసిన రైతులు, సందర్శనలు, ఆర్డర్లు, ఫోటోలు మరియు ఇంకా పంపని పని. మీ భాష సెట్టింగ్ అలాగే ఉంటుంది.';
+
+  @override
+  String get wipeWhatNext =>
+      'ఇది పొరపాటు అయితే మీ అడ్మినిస్ట్రేటర్‌ను సంప్రదించండి. వారు అనుమతించిన తర్వాత మీరు మళ్ళీ సైన్ ఇన్ చేయవచ్చు.';
+
+  @override
+  String get wipeSignInAgain => 'మళ్ళీ సైన్ ఇన్ చేయండి';
 }

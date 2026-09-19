@@ -69,10 +69,11 @@ class RestJsonClient {
     'Accept': 'application/json, application/problem+json',
   };
 
-  /// `GET path?query`.
+  /// `GET path?query` (with extra [headers], e.g. `X-Device-Id`).
   Future<RestResponse> get(
     String path, {
     Map<String, Object?> query = const <String, Object?>{},
+    Map<String, String> headers = const <String, String>{},
   }) => _call((token) {
     final uri = config.resolve(path);
     final params = <String, dynamic>{
@@ -85,7 +86,11 @@ class RestJsonClient {
     return _client
         .get(
           params.isEmpty ? uri : uri.replace(queryParameters: params),
-          headers: <String, String>{..._headers, 'Authorization': token},
+          headers: <String, String>{
+            ..._headers,
+            ...headers,
+            'Authorization': token,
+          },
         )
         .timeout(timeout);
   });

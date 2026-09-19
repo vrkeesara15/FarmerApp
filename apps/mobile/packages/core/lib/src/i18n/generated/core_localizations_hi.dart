@@ -3251,4 +3251,26 @@ class CoreLocalizationsHi extends CoreLocalizations {
   @override
   String get creditRejectedByClusterHead =>
       'क्लस्टर हेड ने यह उधार बिक्री अस्वीकार कर दी। इसके बजाय नकद लें।';
+
+  @override
+  String get loginDeviceNotBound =>
+      'यह फ़ोन आपके नाम पर पंजीकृत नहीं है। अपने एडमिनिस्ट्रेटर से इसे मंज़ूर करने को कहें, फिर दोबारा साइन इन करें।';
+
+  @override
+  String get wipeTitle => 'आपके एडमिनिस्ट्रेटर ने साइन आउट किया';
+
+  @override
+  String get wipeBody =>
+      'आपके एडमिनिस्ट्रेटर ने इस फ़ोन को ऐप से साइन आउट कर दिया है। सुरक्षा के लिए इस फ़ोन पर ऐप का डेटा मिटा दिया गया है।';
+
+  @override
+  String get wipeDeletedList =>
+      'मिटाया गया: सहेजे गए किसान, विज़िट, ऑर्डर, फ़ोटो और जो काम अभी भेजा नहीं गया था। आपकी भाषा सेटिंग बनी रहती है।';
+
+  @override
+  String get wipeWhatNext =>
+      'अगर यह गलती है तो अपने एडमिनिस्ट्रेटर से संपर्क करें। उनकी अनुमति के बाद आप दोबारा साइन इन कर सकते हैं।';
+
+  @override
+  String get wipeSignInAgain => 'दोबारा साइन इन करें';
 }

@@ -6,18 +6,25 @@
 #   APK_MAX_MB   budget in MB (default 25)
 set -euo pipefail
 
-cd "$(dirname "$0")/../apps/farmer"
+TOOL_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$TOOL_DIR/../apps/farmer"
 MAX_MB="${APK_MAX_MB:-25}"
 
-if ! flutter doctor 2>/dev/null | grep -q '\[✓\] Android toolchain'; then
+# Capture first: `flutter doctor | grep -q` under pipefail fails when grep
+# exits early and doctor gets SIGPIPE.
+DOCTOR="$(flutter doctor 2>/dev/null || true)"
+if ! grep -q '\[✓\] Android toolchain' <<<"$DOCTOR"; then
   echo "Android toolchain not available; cannot build the APK." >&2
   exit 2
 fi
 
 # Play delivers one ABI per device (AAB splits), so the budget applies to the
 # largest per-ABI APK, not the fat multi-ABI APK. x86_64 is not shipped.
+# Built exactly like a release (SEC-008): Dart obfuscation with the symbols
+# kept out of the APK, R8 on the Android side (build.gradle.kts).
 flutter build apk --release --no-pub --split-per-abi \
-  --target-platform android-arm,android-arm64
+  --target-platform android-arm,android-arm64 \
+  --obfuscate --split-debug-info=build/symbols
 OUT="build/app/outputs/flutter-apk"
 LARGEST=""
 LARGEST_BYTES=0
@@ -39,3 +46,4 @@ if awk -v b="$LARGEST_BYTES" -v m="$MAX_MB" 'BEGIN { exit !(b > m * 1048576) }';
   exit 1
 fi
 echo "APK size check: OK"
+"$TOOL_DIR/check_release_manifest.sh" "$LARGEST"
