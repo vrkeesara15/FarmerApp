@@ -31,7 +31,7 @@ Alembic `0028` (expand-only): `diagnosis.on_device jsonb`, `expert_requested_at 
   also reads the server's `flagged`. `submit` sends `crop_code` when the crop has no server id
   (pilot tiles) instead of `crop_id: "unknown"`. Farmer F24–F28 and agent A43 messages switch on
   the outcome. The apps still send `on_device_model` + `crop_guess`; sending the full `on_device`
-  block is a mobile follow-up.
+  block is a mobile follow-up (done: docs/prs/M6-final.md).
 - **Console (C60)**: `ProvenanceBlock` adds "On-device scores" (plant, photo quality, top crop,
   fallback), "On-device time" and the ask-expert note when present; strings in 5 languages.
 

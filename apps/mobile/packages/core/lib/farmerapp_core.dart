@@ -25,6 +25,7 @@ export 'src/diagnosis/diagnosis_providers.dart';
 export 'src/diagnosis/diagnosis_repository.dart';
 export 'src/diagnosis/fake_diagnosis_server.dart';
 export 'src/diagnosis/guided_camera.dart';
+export 'src/diagnosis/on_device_block.dart';
 export 'src/duty/device_integrity.dart';
 export 'src/duty/duty_controller.dart';
 export 'src/duty/duty_models.dart';

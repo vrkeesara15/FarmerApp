@@ -20,6 +20,16 @@ variable "sql_tier" {
   default     = "db-g1-small"
 }
 
+variable "max_connections" {
+  description = "max_connections database flag of the primary and the replica. modules/db_budget sizes the app pools against it; OPS-003 alerts at 80%."
+  type        = number
+
+  validation {
+    condition     = var.max_connections >= 25 && var.max_connections <= 5000
+    error_message = "max_connections must be between 25 and 5000."
+  }
+}
+
 variable "vpc_id" {
   description = "VPC id for the private IP (Private Service Access must already exist)."
   type        = string

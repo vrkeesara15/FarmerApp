@@ -1,4 +1,4 @@
-# SPEC 9.7 / 10.3 ci-infra: fmt, validate, tflint, checkov (SEC-005) on every PR
+# SPEC 9.7 / 10.3 ci-infra: fmt, validate, terraform test, tflint, checkov (SEC-005) on every PR
 # touching infra/; terraform plan for dev posted as a PR comment via WIF.
 # stg/prd are never planned or applied here (human-only, CLAUDE.md).
 name: ci-infra
@@ -44,6 +44,23 @@ jobs:
             terraform -chdir="$d" init -backend=false -input=false -no-color >/dev/null
             terraform -chdir="$d" validate -no-color
           done
+
+      # Same step as infra/scripts/check.sh: every module with a tests/ directory (settings
+      # contract preconditions of run_service / run_job, connection budget of db_budget).
+      # Mock providers or none: no credentials, no id-token.
+      - name: terraform test (modules with tests/)
+        working-directory: infra
+        run: |
+          dirs=$(find modules -mindepth 2 -maxdepth 2 -type d -name tests -not -path '*/.terraform/*' | sort)
+          if [ -z "$dirs" ]; then echo "no modules/*/tests found" >&2; exit 1; fi
+          status=0
+          for t in $dirs; do
+            d=$(dirname "$t")
+            echo "==> terraform test: $d"
+            terraform -chdir="$d" init -backend=false -input=false -no-color >/dev/null
+            terraform -chdir="$d" test -no-color || status=1
+          done
+          exit "$status"
 
       - uses: terraform-linters/setup-tflint@v4
         with:

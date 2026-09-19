@@ -139,9 +139,17 @@ variable "availability_goal" {
 }
 
 variable "sql_max_connections" {
-  description = "Effective max_connections of the Cloud SQL primary (`SHOW max_connections`); OPS-003 alerts at 80%."
+  description = "max_connections database flag of the Cloud SQL primary and replica (modules/sql). The app pools are budgeted against 80% of it (module.db_budget); OPS-003 alerts at 80%."
   type        = number
-  default     = 100
+}
+
+variable "db_pool" {
+  description = "SQLAlchemy pool per process (DB_POOL_SIZE / DB_MAX_OVERFLOW of every instance). Budgeted by module.db_budget against sql_max_connections and max_instances; docs/deploy/configuration.md \"Connection budget\"."
+  type = object({
+    api    = object({ pool_size = number, max_overflow = number })
+    worker = object({ pool_size = number, max_overflow = number })
+    jobs   = object({ pool_size = number, max_overflow = number })
+  })
 }
 
 # --- Jobs ---

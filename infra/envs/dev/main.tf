@@ -101,14 +101,22 @@ locals {
       CORS_ORIGINS = jsonencode(["https://console.${var.domain}"])
       # SEC-016: signs V4 URLs as itself (Token Creator on itself, below).
       GCS_SIGNING_SERVICE_ACCOUNT = module.iam.emails.api
+      # Connection budget (module.db_budget, var.db_pool): the plan fails if the pools of
+      # every process at max scale do not fit in 80% of max_connections minus the reserve.
+      DB_POOL_SIZE    = module.db_budget.env.api.DB_POOL_SIZE
+      DB_MAX_OVERFLOW = module.db_budget.env.api.DB_MAX_OVERFLOW
     }
     worker = {
-      SERVICE_NAME = "worker"
-      DB_USER      = local.db_users.worker
+      SERVICE_NAME    = "worker"
+      DB_USER         = local.db_users.worker
+      DB_POOL_SIZE    = module.db_budget.env.worker.DB_POOL_SIZE
+      DB_MAX_OVERFLOW = module.db_budget.env.worker.DB_MAX_OVERFLOW
     }
     jobs = {
-      SERVICE_NAME = "jobs"
-      DB_USER      = local.db_users.jobs
+      SERVICE_NAME    = "jobs"
+      DB_USER         = local.db_users.jobs
+      DB_POOL_SIZE    = module.db_budget.env.jobs.DB_POOL_SIZE
+      DB_MAX_OVERFLOW = module.db_budget.env.jobs.DB_MAX_OVERFLOW
     }
     migrate = {
       SERVICE_NAME = "migrate"
@@ -347,6 +355,7 @@ module "sql" {
   env                      = var.env
   region                   = var.region
   sql_tier                 = var.sql_tier
+  max_connections          = var.sql_max_connections
   vpc_id                   = module.network.vpc_id
   read_replica             = var.sql_read_replica
   backup_location          = var.sql_backup_location
@@ -359,6 +368,24 @@ module "sql" {
   ]
 
   depends_on = [module.network]
+}
+
+# --- Database connection budget (docs/deploy/configuration.md "Connection budget") ----
+# Worst case: every Cloud Run instance of api / worker at max_instances and every scheduled or
+# manual job at once (one task each), each with a full pool. The migrate job (NullPool, one
+# connection), Datastream and admins come out of the reserve. Console and embed have no pool.
+
+module "db_budget" {
+  source = "../../modules/db_budget"
+
+  max_connections  = module.sql.max_connections
+  headroom_percent = 80
+  reserve          = 20
+  processes = {
+    api    = merge(var.db_pool.api, { instances = var.max_instances.api })
+    worker = merge(var.db_pool.worker, { instances = var.max_instances.worker })
+    jobs   = merge(var.db_pool.jobs, { instances = length(local.jobs) })
+  }
 }
 
 # --- Cloud KMS (SEC-026 PII key-encryption key) ------------------------------
@@ -703,7 +730,7 @@ module "monitoring" {
   # OPS-003
   sql_instance_id         = "${var.project_id}:${module.sql.instance_name}"
   sql_replica_instance_id = var.sql_read_replica ? "${var.project_id}:${module.sql.replica_instance_name}" : ""
-  sql_max_connections     = var.sql_max_connections
+  sql_max_connections     = module.sql.max_connections
 
   # OPS-004 / OPS-005
   pubsub_topics = local.topics

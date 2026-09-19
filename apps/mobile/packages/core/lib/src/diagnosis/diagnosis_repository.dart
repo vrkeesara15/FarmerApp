@@ -14,6 +14,7 @@ import '../sync/sync_models.dart';
 import '../sync/sync_store.dart';
 import 'diagnosis_api.dart';
 import 'diagnosis_models.dart';
+import 'on_device_block.dart';
 
 /// Most photos per diagnosis (FM-004, `MAX_PHOTOS` on the server).
 const int maxDiagnosisPhotos = 3;
@@ -78,7 +79,9 @@ class DiagnosisRequest {
   /// `on_device_crop_guess` flag is on.
   final (String, double)? cropGuess;
 
-  /// `ondevice-v1.0` or `heuristic-laplacian-v1` (DX-005).
+  /// `ondevice-v1.0` or `heuristic-laplacian-v1` (DX-005), sent as the
+  /// legacy `on_device_model` next to the `on_device` block (built from
+  /// [photos]) for servers that predate the block.
   final String? onDeviceModel;
 
   /// FM-006: send to the agronomist as well.
@@ -190,6 +193,7 @@ class DiagnosisRepository {
             'confidence': guess.$2,
           },
         'on_device_model': ?request.onDeviceModel,
+        'on_device': ?OnDeviceBlock.fromResults(photos.map((p) => p.quality)),
         'crop_stage': ?request.cropStage,
         'captured_at': now.toIso8601String(),
         'ask_expert': request.askExpert,

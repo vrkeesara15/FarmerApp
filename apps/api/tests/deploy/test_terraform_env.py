@@ -216,3 +216,57 @@ def test_render_cli(capsys: pytest.CaptureFixture[str]) -> None:
     assert "DB_USER=farmerapp-migrate@farmerapp-prd.iam\n" in out
     assert "SERVICE_NAME=migrate\n" in out
     assert terraform_env.main(["prd"]) == 2
+
+
+#: modules/db_budget defaults as wired in main.tf (headroom_percent, reserve).
+BUDGET_HEADROOM_PERCENT, BUDGET_RESERVE = 80, 20
+
+
+def _budget(env: str) -> tuple[dict[str, int], int, int]:
+    """Worst-case connections per process, total (with the reserve) and the ceiling, from the
+    env's tfvars, as module.db_budget computes them."""
+    pools = terraform_env.env_value(env, "db_pool")
+    max_instances = terraform_env.env_value(env, "max_instances")
+    instances = {
+        "api": max_instances["api"],
+        "worker": max_instances["worker"],
+        "jobs": len(terraform_env.load(env).job_names()),
+    }
+    per_process = {
+        name: count * (pools[name]["pool_size"] + pools[name]["max_overflow"])
+        for name, count in instances.items()
+    }
+    max_connections = terraform_env.env_value(env, "sql_max_connections")
+    ceiling = max_connections * BUDGET_HEADROOM_PERCENT // 100
+    return per_process, sum(per_process.values()) + BUDGET_RESERVE, ceiling
+
+
+def test_db_budget_module_is_wired_to_the_sql_flag_and_every_pooled_process() -> None:
+    config = terraform_env.load("prd")
+    budget = config.modules["db_budget"]
+    assert budget["max_connections"] == "${module.sql.max_connections}"
+    assert budget["headroom_percent"] == BUDGET_HEADROOM_PERCENT
+    assert budget["reserve"] == BUDGET_RESERVE
+    assert config.modules["sql"]["max_connections"] == "${var.sql_max_connections}"
+    assert "length(local.jobs)" in str(budget["processes"])
+    for process in ("api", "worker", "jobs"):
+        env = config.plain_env(process)
+        assert env["DB_POOL_SIZE"] == f"${{module.db_budget.env.{process}.DB_POOL_SIZE}}"
+        assert env["DB_MAX_OVERFLOW"] == f"${{module.db_budget.env.{process}.DB_MAX_OVERFLOW}}"
+    assert "DB_POOL_SIZE" not in config.plain_env("migrate")  # Alembic uses NullPool
+
+
+@pytest.mark.parametrize("env", ENVS)
+def test_db_connection_budget_fits_and_is_documented(env: str) -> None:
+    """Mirror of the module.db_budget precondition (proved by `terraform test` in
+    infra/modules/db_budget) on each env's real values, and the numbers in the docs table."""
+    per_process, total, ceiling = _budget(env)
+    assert total <= ceiling, (env, per_process, total, ceiling)
+    rendered = terraform_env.render(env, "api")
+    pools = terraform_env.env_value(env, "db_pool")
+    assert rendered["DB_POOL_SIZE"] == str(pools["api"]["pool_size"])
+    doc = (INFRA.parent / "docs" / "deploy" / "configuration.md").read_text()
+    row = re.search(rf"^\| {env} \|.*$", doc, re.M)
+    assert row is not None, f"no connection budget row for {env}"
+    cells = [c.strip() for c in row.group(0).strip("|").split("|")]
+    assert cells[-2:] == [str(total), str(ceiling)], (env, cells, total, ceiling)

@@ -56,7 +56,7 @@ class QualityModelMetadata {
     final t = map(json['thresholds']);
     double th(String key, double d) => (t[key] as num?)?.toDouble() ?? d;
     return QualityModelMetadata(
-      modelName: (json['model_name'] as String?) ?? 'crop_quality',
+      modelName: (json['model_name'] as String?) ?? defaultModelName,
       modelVersion: json['model_version']! as String,
       sha256: json['sha256']! as String,
       sizeBytes: (json['size_bytes'] as num?)?.toInt() ?? 0,
@@ -75,10 +75,15 @@ class QualityModelMetadata {
     );
   }
 
-  /// `crop_quality`.
+  /// Name of the DX-001 gate model when its metadata cannot be read (the
+  /// `on_device.model` of a heuristic-only answer).
+  static const String defaultModelName = 'crop_quality';
+
+  /// `crop_quality`; sent as `on_device.model` (DX-005).
   final String modelName;
 
-  /// `ondevice-v1.0`; sent as `on_device_model` (DX-005).
+  /// `ondevice-v1.0`; sent as `on_device.model_version` (and the legacy
+  /// `on_device_model`, DX-005).
   final String modelVersion;
 
   /// Hex SHA-256 of the `.tflite` file; the loader refuses any other file.
@@ -252,6 +257,8 @@ PhotoQualityResult decodeQualityOutput(
     cropScores: crops,
     qualityScores: quality,
     modelVersion: meta.modelVersion,
+    modelName: meta.modelName,
+    modelSha256: meta.sha256,
   );
 }
 
@@ -434,6 +441,7 @@ class TfliteQualityModel implements OnDeviceQualityModel {
   Future<bool>? _loading;
   QualityInterpreter? _interpreter;
   QualityModelMetadata? _meta;
+  QualityModelMetadata? _declared;
   String? _brokenReason;
   Future<void> _queue = Future<void>.value();
 
@@ -459,6 +467,7 @@ class TfliteQualityModel implements OnDeviceQualityModel {
               as Map,
         ),
       );
+      _declared = meta;
       final data = await bundle.load(modelAsset);
       final bytes = data.buffer.asUint8List(
         data.offsetInBytes,
@@ -508,7 +517,7 @@ class TfliteQualityModel implements OnDeviceQualityModel {
       inferenceMs: ms,
       fallback: true,
     );
-    return r.asFallback().withLatency(ms);
+    return r.asFallback(modelName: _declared?.modelName).withLatency(ms);
   }
 
   @override

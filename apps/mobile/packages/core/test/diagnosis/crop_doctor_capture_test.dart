@@ -101,6 +101,18 @@ void main() {
     expect(op.payload.containsKey('crop_guess'), isFalse);
     expect(op.payload['crop_id'], 'unknown');
     expect(op.payload['on_device_model'], 'ondevice-v1.0');
+    expect(op.payload['on_device'], <String, Object?>{
+      'model': 'crop_quality',
+      'model_version': 'ondevice-v1.0',
+      'plant_score': 0.99,
+      'quality': <String, Object?>{'ok': 0.96, 'blurry': 0.02, 'dark': 0.02},
+      'crop_scores': <String, Object?>{
+        'paddy': 0.03,
+        'chilli': 0.93,
+        'other': 0.04,
+      },
+      'latency_ms': 40,
+    }, reason: 'DX-005 provenance is sent whatever the guess flag says');
   });
 
   test('flag on: the guess pre-selects the crop and is sent', () async {
@@ -153,5 +165,29 @@ void main() {
     final good = await capture.addShot(jpeg(textured(1280, 960, seed: 3)));
     expect(good!.accepted, isTrue);
     expect(good.processed.width, 1280);
+  });
+
+  test('heuristic only: the fallback on_device block is queued', () async {
+    final c = container(m: PhotoQualityCheck.defaultModel);
+    final capture = c.read(cropDoctorCaptureProvider.notifier)..start();
+    final good = await capture.addShot(jpeg(textured(1280, 960, seed: 3)));
+    expect(capture.usePending(), isTrue);
+    await capture.submit();
+    final op = SyncStore.toOp((await SyncStore(db).openOps()).single);
+    final block = op.payload['on_device']! as Map<String, Object?>;
+    expect(block.keys, <String>[
+      'model',
+      'model_version',
+      'fallback',
+      'heuristic',
+      'latency_ms',
+    ]);
+    expect(block['model_version'], PhotoQualityResult.heuristicModelVersion);
+    expect(block['fallback'], 'laplacian');
+    expect(
+      (block['heuristic']! as Map)['brightness'],
+      closeTo(good!.quality.brightness, 0.0001),
+    );
+    expect(block['latency_ms'], isA<int>());
   });
 }

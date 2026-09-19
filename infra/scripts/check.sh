@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Local equivalent of ci-infra.yml's static job (SPEC 9.7):
 #   terraform fmt -check, init -backend=false + validate for bootstrap and every env,
-#   terraform test of the settings-contract preconditions (run_service, run_job), then
-#   tflint and checkov when installed (SKIP with a message otherwise).
+#   terraform test of every module with a tests/ directory (settings contract: run_service,
+#   run_job; connection budget: db_budget), then tflint and checkov when installed (SKIP with
+#   a message otherwise).
 # Usage: cd infra && ./scripts/check.sh
 set -euo pipefail
 
@@ -34,8 +35,16 @@ for d in "${DIRS[@]}"; do
   ) || status=1
 done
 
-# Settings-contract preconditions (modules/*/tests, mock providers: no credentials needed).
-for d in modules/run_service modules/run_job; do
+# Module tests (modules/*/tests: mock providers or none, no credentials needed). The same
+# discovery runs in ci-infra.yml, so a new tests/ directory is picked up by both.
+TEST_DIRS=()
+while IFS= read -r t; do TEST_DIRS+=("$(dirname "$t")"); done \
+  < <(find modules -mindepth 2 -maxdepth 2 -type d -name tests -not -path '*/.terraform/*' | sort)
+if [ "${#TEST_DIRS[@]}" -eq 0 ]; then
+  echo "FAIL: no modules/*/tests found" >&2
+  status=1
+fi
+for d in "${TEST_DIRS[@]}"; do
   step "terraform test: $d"
   (
     cd "$d"

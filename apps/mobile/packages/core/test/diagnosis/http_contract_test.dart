@@ -1,13 +1,18 @@
 // Contracts the M6 mobile work codes against: `GET /v1/diagnoses/{id}`,
 // `POST/GET /v1/me/deletion-request` (FM-015, real response shape), the
 // `officer {id, name, phone}` object on the farmer's own profile (F62) and
-// the `on_device_crop_guess` tenant flag (DX-001, default off).
+// the `on_device_crop_guess` tenant flag (DX-001, default off), and the
+// `diagnosis` create op on `POST /v1/sync` with its `on_device` block
+// (DX-001 / DX-005) checked against apps/api/openapi.yaml.
 import 'dart:convert';
 
 import 'package:farmerapp_core/farmerapp_core.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+
+import '../helpers/openapi_schema.dart';
+import '../photo/synthetic_images.dart';
 
 RestJsonClient _rest(
   List<http.Request> requests,
@@ -138,6 +143,114 @@ void main() {
       expect(Diagnosis.fromData('dx-2', r.body).askExpert, isTrue);
     },
   );
+
+  test('DX-001 / DX-005: the diagnosis create op on POST /v1/sync carries '
+      'the on_device block, every key declared by openapi.yaml', () async {
+    final db = openInMemoryDatabase();
+    addTearDown(db.close);
+    var n = 0;
+    final now = DateTime.utc(2026, 9, 19, 4, 30);
+    final outbox = Outbox(db, clock: () => now, ids: () => 'op-${++n}');
+    final photo = CapturedPhoto(
+      processed: processPhotoSync(
+        PhotoProcessRequest(bytes: jpeg(textured(640, 480, seed: 3))),
+      ),
+      quality: ScriptedQualityModel.good,
+    );
+    await DiagnosisRepository(
+      db: db,
+      outbox: outbox,
+      photos: MemoryPhotoStore(),
+      api: FakeDiagnosisApi(),
+      clock: () => now,
+      ids: () => 'dx-${++n}',
+    ).submit(
+      DiagnosisRequest(
+        photos: <CapturedPhoto>[photo],
+        cropCode: 'chilli',
+        onDeviceModel: ScriptedQualityModel.good.modelVersion,
+      ),
+    );
+    final op = SyncStore.toOp((await SyncStore(db).openOps()).single);
+
+    final requests = <http.Request>[];
+    await HttpSyncApi(
+      store: InMemoryTokenStore(
+        deviceId: 'device-1',
+        session: AuthSession(
+          accessToken: 'a',
+          refreshToken: 'r',
+          expiresAt: DateTime.now().toUtc().add(const Duration(hours: 1)),
+          user: const AuthUser(
+            id: 'u',
+            tenantId: 't',
+            phone: '+919000000004',
+            name: 'Lakshmi',
+            role: 'farmer',
+            language: 'te',
+            status: 'active',
+          ),
+        ),
+      ),
+      config: const ApiConfig(baseUrl: 'https://api.test'),
+      client: MockClient((request) async {
+        requests.add(request);
+        return http.Response(
+          jsonEncode(<String, Object?>{
+            'results': <Object?>[],
+            'changes': <Object?>[],
+            'cursor': '1',
+            'has_more': false,
+          }),
+          200,
+          headers: <String, String>{'content-type': 'application/json'},
+        );
+      }),
+    ).sync(SyncRequest(deviceId: 'device-1', cursor: null, ops: <SyncOp>[op]));
+
+    final body = jsonDecode(requests.single.body) as Map<String, Object?>;
+    final sent = (body['ops']! as List).single as Map<String, Object?>;
+    expect(sent['entity'], 'diagnosis');
+    expect(sent['action'], 'create');
+    final payload = sent['payload']! as Map<String, Object?>;
+    expect(
+      openApiSchema('DiagnosisCreate').properties,
+      containsAll(payload.keys),
+      reason: 'the create body is DiagnosisCreate (REST and sync alike)',
+    );
+    for (final image in payload['images']! as List) {
+      expect(
+        openApiSchema('PhotoQualityIn').properties,
+        containsAll(((image as Map)['quality']! as Map).keys),
+      );
+    }
+    final onDevice = payload['on_device']! as Map<String, Object?>;
+    expect(onDevice, <String, Object?>{
+      'model': 'crop_quality',
+      'model_version': 'ondevice-v1.0',
+      'plant_score': 0.99,
+      'quality': <String, Object?>{'ok': 0.96, 'blurry': 0.02, 'dark': 0.02},
+      'crop_scores': <String, Object?>{
+        'paddy': 0.03,
+        'chilli': 0.93,
+        'other': 0.04,
+      },
+      'latency_ms': 40,
+    });
+    final schema = openApiSchema('OnDeviceIn');
+    expect(schema.closed, isTrue);
+    expect(schema.properties, containsAll(onDevice.keys));
+    expect(onDevice.keys, containsAll(schema.required));
+    expect(
+      openApiSchema('OnDeviceQualityScores').properties,
+      containsAll((onDevice['quality']! as Map).keys),
+    );
+    expect(
+      payload['on_device_model'],
+      onDevice['model_version'],
+      reason: 'the legacy field agrees with the block',
+    );
+  });
 
   test('F62: the officer object on the farmer profile', () {
     final p = FarmerProfile.fromJson(const <String, Object?>{

@@ -2,6 +2,9 @@
 // `diagnosis` create op (offline first), the answer from the applied echo,
 // the poll and the change feed, F27 history, "ask an expert", and the SPEC
 // 3.4 buy rule on the model.
+import 'dart:io';
+
+import 'package:drift/native.dart';
 import 'package:farmerapp_core/farmerapp_core.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -29,6 +32,40 @@ CapturedPhoto _photo({int seed = 3, PhotoQualityResult? quality}) {
         ),
   );
 }
+
+/// A DX-001 model answer as `TfliteQualityModel` returns it.
+const PhotoQualityResult _modelResult = PhotoQualityResult(
+  isBlurry: false,
+  blurScore: 0.02,
+  isTooDark: false,
+  brightness: 0.46,
+  tipKey: PhotoTipKeys.ok,
+  plantScore: 0.998,
+  cropCode: 'chilli',
+  cropScore: 0.93,
+  cropScores: <String, double>{'paddy': 0.02, 'chilli': 0.93, 'other': 0.05},
+  qualityScores: <String, double>{'ok': 0.97, 'blurry': 0.02, 'dark': 0.01},
+  modelVersion: 'ondevice-v1.0',
+  modelName: 'crop_quality',
+  modelSha256:
+      '589b18c9a851f3958330ffbcd36d23deaa1363d8305a16a95942dcc046cec4db',
+  latencyMs: 38,
+);
+
+const Map<String, Object?> _modelBlock = <String, Object?>{
+  'model': 'crop_quality',
+  'model_version': 'ondevice-v1.0',
+  'model_sha256':
+      '589b18c9a851f3958330ffbcd36d23deaa1363d8305a16a95942dcc046cec4db',
+  'plant_score': 0.998,
+  'quality': <String, Object?>{'ok': 0.97, 'blurry': 0.02, 'dark': 0.01},
+  'crop_scores': <String, Object?>{
+    'paddy': 0.02,
+    'chilli': 0.93,
+    'other': 0.05,
+  },
+  'latency_ms': 38,
+};
 
 void main() {
   late AppDatabase db;
@@ -90,7 +127,12 @@ void main() {
     expect(op.payload.containsKey('crop_id'), isFalse, reason: 'no server id');
     expect(op.payload['crop_code'], 'chilli', reason: 'resolved per tenant');
     expect(op.payload.containsKey('crop_guess'), isFalse, reason: 'flag off');
-    expect(op.payload['on_device_model'], 'ondevice-v1.0');
+    expect(op.payload['on_device_model'], 'ondevice-v1.0', reason: 'legacy');
+    expect(op.payload['on_device'], <String, Object?>{
+      'model': 'crop_quality',
+      'model_version': 'ondevice-v1.0',
+      'plant_score': 0.99,
+    });
     expect(op.payload['ask_expert'], isFalse);
     final images = op.payload['images']! as List;
     expect(images, hasLength(2));
@@ -132,6 +174,96 @@ void main() {
       'code': 'chilli',
       'confidence': 0.93,
     });
+  });
+
+  test('DX-005: the on_device block of the model answer is in the create op '
+      'and is stored with the pending row', () async {
+    final id = await repo.submit(
+      DiagnosisRequest(
+        photos: <CapturedPhoto>[_photo(quality: _modelResult)],
+        cropCode: 'chilli',
+        onDeviceModel: 'ondevice-v1.0',
+      ),
+    );
+    final op = SyncStore.toOp((await engine.store.openOps()).single);
+    expect(op.payload['on_device'], _modelBlock);
+    final row = await engine.store.entities.read(SyncEntities.diagnosis, id);
+    expect(row!.data['on_device'], _modelBlock);
+  });
+
+  test('DX-005: the fallback block when the heuristic answered', () async {
+    await repo.submit(
+      DiagnosisRequest(
+        photos: <CapturedPhoto>[
+          _photo(
+            quality: const PhotoQualityResult(
+              isBlurry: false,
+              blurScore: 212.4,
+              isTooDark: false,
+              brightness: 0.46,
+              tipKey: PhotoTipKeys.ok,
+              latencyMs: 12,
+            ).asFallback(modelName: 'crop_quality'),
+          ),
+        ],
+      ),
+    );
+    final op = SyncStore.toOp((await engine.store.openOps()).single);
+    expect(op.payload['on_device'], <String, Object?>{
+      'model': 'crop_quality',
+      'model_version': 'heuristic-laplacian-v1',
+      'fallback': 'laplacian',
+      'heuristic': <String, Object?>{'blur_score': 212.4, 'brightness': 0.46},
+      'latency_ms': 12,
+    });
+  });
+
+  test('DX-005: the on_device block survives the offline queue and an app '
+      'restart, and reaches the server unchanged', () async {
+    final dir = await Directory.systemTemp.createTemp('dx_on_device');
+    addTearDown(() => dir.delete(recursive: true));
+    final file = File('${dir.path}/app.sqlite');
+    var fileDb = AppDatabase(NativeDatabase(file));
+    final id =
+        await DiagnosisRepository(
+          db: fileDb,
+          outbox: Outbox(fileDb, clock: clock.call, ids: () => 'op-${++n}'),
+          photos: photos,
+          api: api,
+          clock: clock.call,
+          ids: () => 'dx-${++n}',
+        ).submit(
+          DiagnosisRequest(
+            photos: <CapturedPhoto>[_photo(quality: _modelResult)],
+          ),
+        );
+    sync.offline = true;
+    var fileEngine = engineFor(
+      fileDb,
+      sync,
+      clock: clock,
+      readFile: (path) async => photos.files[path]!,
+    );
+    expect((await fileEngine.syncNow()).error, isNotNull);
+    await fileEngine.dispose();
+    await fileDb.close();
+
+    fileDb = AppDatabase(NativeDatabase(file));
+    final queued = await SyncStore(fileDb).openOps();
+    expect(SyncStore.payloadOf(queued.single)['on_device'], _modelBlock);
+    sync.offline = false;
+    clock.advance(const Duration(hours: 1));
+    fileEngine = engineFor(
+      fileDb,
+      sync,
+      clock: clock,
+      readFile: (path) async => photos.files[path]!,
+    );
+    await fileEngine.syncNow();
+    await fileEngine.dispose();
+    await fileDb.close();
+    expect(server.creates.single.entityId, id);
+    expect(server.creates.single.payload['on_device'], _modelBlock);
   });
 
   test('rejected photos are never submitted', () async {
@@ -288,8 +420,10 @@ void main() {
       expect(same, id);
       final op = SyncStore.toOp((await engine.store.openOps()).single);
       expect(op.payload['ask_expert'], isTrue);
+      expect(op.payload['on_device'], isNotNull, reason: 'kept');
       await engine.syncNow();
       expect(server.creates.single.payload['ask_expert'], isTrue);
+      expect(server.creates.single.payload['on_device'], isNotNull);
     });
 
     test('answered: the server queues the same case (no re-upload)', () async {

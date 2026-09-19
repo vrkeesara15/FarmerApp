@@ -38,6 +38,12 @@ resource "google_sql_database_instance" "main" {
       location                       = var.backup_location
       backup_retention_settings { retained_backups = var.env == "prd" ? 30 : 7 }
     }
+    # Connection budget (modules/db_budget): the pools of api / worker / jobs are sized against
+    # this value, so it is set explicitly instead of relying on the tier default.
+    database_flags {
+      name  = "max_connections"
+      value = tostring(var.max_connections)
+    }
     database_flags {
       name  = "cloudsql.iam_authentication"
       value = "on"
@@ -151,7 +157,12 @@ resource "google_sql_database_instance" "replica" {
       private_network = var.vpc_id
       ssl_mode        = "ENCRYPTED_ONLY"
     }
-    # Same logging flags as the primary (replicas do not inherit flags).
+    # Same logging flags as the primary (replicas do not inherit flags); a hot standby needs
+    # max_connections >= the primary's.
+    database_flags {
+      name  = "max_connections"
+      value = tostring(var.max_connections)
+    }
     database_flags {
       name  = "log_checkpoints"
       value = "on"

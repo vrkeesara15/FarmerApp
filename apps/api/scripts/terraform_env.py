@@ -83,6 +83,33 @@ def load(env: str) -> EnvConfig:
     return EnvConfig(locals=merged_locals, modules=modules)
 
 
+@cache
+def tfvars(env: str) -> dict[str, Any]:
+    """``infra/envs/<env>/terraform.tfvars`` (per-env values such as ``db_pool``)."""
+    with (INFRA / "envs" / env / "terraform.tfvars").open() as f:
+        return dict(_clean(hcl2.load(f)))
+
+
+@cache
+def variable_default(env: str, name: str) -> Any:
+    with (INFRA / "envs" / env / "variables.tf").open() as f:
+        doc = _clean(hcl2.load(f))
+    for block in doc.get("variable", []):
+        if name in block:
+            return block[name].get("default")
+    raise KeyError(name)
+
+
+def env_value(env: str, name: str) -> Any:
+    """A root variable of ``env``: its terraform.tfvars value, else its default."""
+    values = tfvars(env)
+    return values[name] if name in values else variable_default(env, name)
+
+
+_DB_POOL = re.compile(r"^module\.db_budget\.env\.(\w+)\.(DB_POOL_SIZE|DB_MAX_OVERFLOW)$")
+_DB_POOL_FIELD = {"DB_POOL_SIZE": "pool_size", "DB_MAX_OVERFLOW": "max_overflow"}
+
+
 # Stand-ins for values Terraform resolves from variables / other modules at plan time.
 _STAND_INS: dict[str, str] = {
     "var.env": "prd",
@@ -123,6 +150,9 @@ def resolve(value: str, process: str, env: str) -> str:
         return "1"
     if expr.startswith("jsonencode("):
         return f'["https://console.{env}.farmerapp.in"]'
+    pool = _DB_POOL.match(expr)
+    if pool is not None:  # module.db_budget passes var.db_pool through (after its budget check)
+        return str(env_value(env, "db_pool")[pool.group(1)][_DB_POOL_FIELD[pool.group(2)]])
     stand_in = _STAND_INS.get(expr)
     if stand_in is None:
         raise KeyError(f"no stand-in for {expr!r} ({process})")

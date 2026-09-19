@@ -82,4 +82,6 @@ The table of every setting (source, per-env value, process) is
   unknown before the first apply (a mock-provider plan of a whole env fails on them); the first
   apply of an env may need `-target=module.iam` first.
 * `ci-infra.yml` does not run `terraform test` yet (outside this change's scope); check.sh does.
+  Done in docs/prs/M6-final.md.
 * `DB_POOL_SIZE` x `max_instances` can exceed `sql_max_connections` in prd (20 x 15 = 300 > 200).
+  Done in docs/prs/M6-final.md (connection budget enforced by the plan).

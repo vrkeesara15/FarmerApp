@@ -404,6 +404,58 @@ void main() {
       expect(m.fallbackReason, contains('slower'));
     });
 
+    test('DX-005: the on_device block of a model answer carries the '
+        'metadata name, version, sha256, scores and latency', () async {
+      final m = model(_FakeInterpreter(<List<double>>[_row()]));
+      final r = await m.evaluate(leaf);
+      final meta = _meta();
+      expect(r.modelName, meta.modelName);
+      expect(r.modelSha256, meta.sha256);
+      final block = OnDeviceBlock.fromResults(<PhotoQualityResult>[r])!;
+      expect(block['model'], meta.modelName);
+      expect(block['model_version'], meta.modelVersion);
+      expect(block['model_sha256'], meta.sha256);
+      expect(block['plant_score'], 0.99);
+      expect(block['quality'], <String, Object?>{
+        'ok': 0.96,
+        'blurry': 0.02,
+        'dark': 0.02,
+      });
+      expect(
+        (block['crop_scores']! as Map).keys,
+        orderedEquals(meta.cropLabels),
+      );
+      expect((block['crop_scores']! as Map)['chilli'], 0.93);
+      expect(block['latency_ms'], r.latencyMs);
+      expect(block.containsKey('fallback'), isFalse);
+      expect(block.containsKey('heuristic'), isFalse);
+    });
+
+    test('DX-005: on fallback the block is the heuristic shape, named from '
+        'the metadata', () async {
+      final m = TfliteQualityModel(
+        loader: (bytes) async => throw StateError('no runtime'),
+        bundle: _realAssets(),
+        fallback: const _HeuristicSync(),
+        log: log,
+      );
+      final r = await m.evaluate(leaf);
+      final block = OnDeviceBlock.fromResults(<PhotoQualityResult>[r])!;
+      expect(block.keys, <String>[
+        'model',
+        'model_version',
+        'fallback',
+        'heuristic',
+        'latency_ms',
+      ]);
+      expect(block['model'], _meta().modelName);
+      expect(block['model_version'], PhotoQualityResult.heuristicModelVersion);
+      expect(block['fallback'], 'laplacian');
+      final h = block['heuristic']! as Map;
+      expect(h['blur_score'], closeTo(r.blurScore, 0.0001));
+      expect(h['brightness'], closeTo(r.brightness, 0.0001));
+    });
+
     test('the heuristic answers a blurred photo on fallback', () async {
       final m = TfliteQualityModel(
         loader: (bytes) async => throw StateError('no runtime'),

@@ -78,6 +78,8 @@ class PhotoQualityResult {
     this.modelVersion = heuristicModelVersion,
     this.usedFallback = false,
     this.latencyMs,
+    this.modelName,
+    this.modelSha256,
   });
 
   /// Parses [toJson] output.
@@ -103,6 +105,8 @@ class PhotoQualityResult {
       modelVersion: (json['model_version'] as String?) ?? heuristicModelVersion,
       usedFallback: json['used_fallback'] as bool? ?? false,
       latencyMs: (json['latency_ms'] as num?)?.toInt(),
+      modelName: json['model_name'] as String?,
+      modelSha256: json['model_sha256'] as String?,
     );
   }
 
@@ -158,6 +162,17 @@ class PhotoQualityResult {
   /// Time spent in the check (inference or heuristic).
   final int? latencyMs;
 
+  /// `model_name` of the model asset metadata (`crop_quality`); null when
+  /// no metadata was read (the heuristic on its own).
+  final String? modelName;
+
+  /// SHA-256 of the model file that answered (from its metadata, checked on
+  /// load); null for the heuristic.
+  final String? modelSha256;
+
+  /// The Laplacian heuristic answered (the model was not used).
+  bool get isHeuristic => usedFallback || modelVersion == heuristicModelVersion;
+
   /// True when the photo may be used.
   bool get isAcceptable => !isBlurry && !isTooDark && isPlant;
 
@@ -171,25 +186,18 @@ class PhotoQualityResult {
   };
 
   /// A copy with the check's duration.
-  PhotoQualityResult withLatency(int ms) => PhotoQualityResult(
-    isBlurry: isBlurry,
-    blurScore: blurScore,
-    isTooDark: isTooDark,
-    brightness: brightness,
-    tipKey: tipKey,
-    isPlant: isPlant,
-    plantScore: plantScore,
-    cropCode: cropCode,
-    cropScore: cropScore,
-    cropScores: cropScores,
-    qualityScores: qualityScores,
-    modelVersion: modelVersion,
-    usedFallback: usedFallback,
-    latencyMs: ms,
-  );
+  PhotoQualityResult withLatency(int ms) => _copy(latencyMs: ms);
 
-  /// A copy marked as a fallback answer.
-  PhotoQualityResult asFallback() => PhotoQualityResult(
+  /// A copy marked as a fallback answer, naming the model that could not
+  /// answer ([modelName], from its metadata when that was readable).
+  PhotoQualityResult asFallback({String? modelName}) =>
+      _copy(usedFallback: true, modelName: modelName);
+
+  PhotoQualityResult _copy({
+    int? latencyMs,
+    bool? usedFallback,
+    String? modelName,
+  }) => PhotoQualityResult(
     isBlurry: isBlurry,
     blurScore: blurScore,
     isTooDark: isTooDark,
@@ -202,8 +210,10 @@ class PhotoQualityResult {
     cropScores: cropScores,
     qualityScores: qualityScores,
     modelVersion: modelVersion,
-    usedFallback: true,
-    latencyMs: latencyMs,
+    usedFallback: usedFallback ?? this.usedFallback,
+    latencyMs: latencyMs ?? this.latencyMs,
+    modelName: modelName ?? this.modelName,
+    modelSha256: modelSha256,
   );
 
   /// JSON for the outbox and diagnosis analytics (AN-007).
@@ -222,6 +232,8 @@ class PhotoQualityResult {
     'model_version': modelVersion,
     'used_fallback': usedFallback,
     'latency_ms': latencyMs,
+    'model_name': ?modelName,
+    'model_sha256': ?modelSha256,
   };
 
   @override
@@ -237,7 +249,9 @@ class PhotoQualityResult {
       other.cropCode == cropCode &&
       other.cropScore == cropScore &&
       other.modelVersion == modelVersion &&
-      other.usedFallback == usedFallback;
+      other.usedFallback == usedFallback &&
+      other.modelName == modelName &&
+      other.modelSha256 == modelSha256;
 
   @override
   int get hashCode => Object.hash(
@@ -252,6 +266,8 @@ class PhotoQualityResult {
     cropScore,
     modelVersion,
     usedFallback,
+    modelName,
+    modelSha256,
   );
 }
 
@@ -283,12 +299,14 @@ class LaplacianQualityModel implements OnDeviceQualityModel {
   final PhotoQualityConfig config;
 
   @override
-  Future<PhotoQualityResult> evaluate(Uint8List bytes) {
-    return compute(
+  Future<PhotoQualityResult> evaluate(Uint8List bytes) async {
+    final watch = Stopwatch()..start();
+    final r = await compute(
       _evaluateEntry,
       _QualityRequest(bytes, config),
       debugLabel: 'LaplacianQualityModel.evaluate',
     );
+    return r.withLatency(watch.elapsedMilliseconds);
   }
 }
 
@@ -421,7 +439,11 @@ class ScriptedQualityModel implements OnDeviceQualityModel {
     plantScore: 0.99,
     cropCode: 'chilli',
     cropScore: 0.93,
+    cropScores: <String, double>{'paddy': 0.03, 'chilli': 0.93, 'other': 0.04},
+    qualityScores: <String, double>{'ok': 0.96, 'blurry': 0.02, 'dark': 0.02},
     modelVersion: 'ondevice-v1.0',
+    modelName: 'crop_quality',
+    latencyMs: 40,
   );
 
   /// A blurry photo.

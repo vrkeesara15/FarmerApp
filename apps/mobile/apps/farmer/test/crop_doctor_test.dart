@@ -153,6 +153,18 @@ void main() {
     expect(create.containsKey('farmer_id'), isFalse, reason: 'own request');
     expect(create.containsKey('crop_guess'), isFalse);
     expect(create['on_device_model'], 'ondevice-v1.0');
+    expect(create['on_device'], <String, Object?>{
+      'model': 'crop_quality',
+      'model_version': 'ondevice-v1.0',
+      'plant_score': 0.99,
+      'quality': <String, Object?>{'ok': 0.96, 'blurry': 0.02, 'dark': 0.02},
+      'crop_scores': <String, Object?>{
+        'paddy': 0.03,
+        'chilli': 0.93,
+        'other': 0.04,
+      },
+      'latency_ms': 40,
+    }, reason: 'DX-001 / DX-005 on-device block');
     expect(create['images']! as List, hasLength(1));
 
     // F25: name, confidence in words, signs, products at the store.

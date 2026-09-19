@@ -85,6 +85,18 @@ void main() {
     expect(create.payload['farmer_id'], 'f-1');
     expect(create.payload['crop_plot_id'], 'plot-f-1-0');
     expect(create.payload['on_device_model'], 'ondevice-v1.0');
+    expect(create.payload['on_device'], <String, Object?>{
+      'model': 'crop_quality',
+      'model_version': 'ondevice-v1.0',
+      'plant_score': 0.99,
+      'quality': <String, Object?>{'ok': 0.96, 'blurry': 0.02, 'dark': 0.02},
+      'crop_scores': <String, Object?>{
+        'paddy': 0.03,
+        'chilli': 0.93,
+        'other': 0.04,
+      },
+      'latency_ms': 40,
+    }, reason: 'DX-001 / DX-005 on-device block');
     expect(find.byType(ScoutResultScreen), findsOneWidget);
     expect(find.text('For Ramesh Reddy · Cotton'), findsOneWidget);
     expect(find.text('High confidence'), findsOneWidget);

@@ -58,8 +58,50 @@ guard** = the process also refuses to start in prd without a real value.
 | `DB_IP_TYPE` | TF | `private` | A W J M | yes |
 | `DB_USER` | TF `local.db_users` (SA email minus `.gserviceaccount.com`) | `farmerapp-api@farmerapp-<env>.iam`, `farmerapp-worker@…`, `farmerapp-jobs@…`, `farmerapp-migrate@…` | A W J M | yes (prd guard: only `migrate` may be `farmerapp-migrate@…`, and it must be) |
 | `DB_NAME` | TF `module.sql.database_name` | `farmerapp` | A W J M | yes |
-| `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` / `DB_ECHO` | default | `5` / `10` / `false` | A W J | no (mind `sql_max_connections`: 20 api instances x 15 = 300) |
+| `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` | TF `var.db_pool` through `module.db_budget` | api `2` / `1`, worker `2` / `0`, jobs `1` / `1` in every env (see "Connection budget") | A W J | no (the plan fails when the budget is exceeded) |
+| `DB_ECHO` | default | `false` | A W J | no |
 | `DATABASE_URL` / `MIGRATION_DATABASE_URL` | local | compose URLs with dev passwords | local, CI | **forbidden** in the cloud |
+
+### Connection budget
+
+Each api / worker instance and each job task opens its own SQLAlchemy pool of up to
+`DB_POOL_SIZE + DB_MAX_OVERFLOW` connections (the app defaults 5 + 10 on 20 api instances alone
+are 300 against prd's 200). `module.db_budget` (`infra/modules/db_budget`) sizes them per
+environment from `var.db_pool` and fails `terraform plan` (precondition on its `env` output)
+unless
+
+```
+  sum over api, worker, jobs of  instances x (pool_size + max_overflow)  +  reserve
+      <=  floor(max_connections x 80 / 100)
+```
+
+* `instances` = `var.max_instances.api` / `.worker` (Cloud Run scale-out ceiling); for jobs,
+  the number of Cloud Run jobs (`length(local.jobs)`, 11), each one task, all assumed to
+  overlap. Console and embed hold no database pool.
+* `reserve` = 20: the migrate job (NullPool, one connection), Datastream, Cloud SQL Studio,
+  `gcloud sql connect` and admins.
+* `max_connections` = `var.sql_max_connections`, now also set as the `max_connections`
+  database flag on the primary and the replica (`modules/sql`), so the budget uses the value the
+  instance really has; the OPS-003 alert still fires at 80% of it.
+* `pool_size + max_overflow >= 2` per process (variable validation): a tenant-bound session
+  holds one connection while `ensure_tenant_key` loads the tenant's data key on a second one
+  (`farmerapp/pii/keys.py`).
+* `terraform test` in `infra/modules/db_budget` proves the check (fits, exactly at the
+  ceiling, the app defaults and one connection over fail, a pool below 2 is refused);
+  `tests/deploy/test_terraform_env.py` recomputes each env from its tfvars and checks this
+  table.
+
+| env | max_connections | api | worker | jobs | reserve | total | 80% ceiling |
+|---|---|---|---|---|---|---|---|
+| dev | 100 (flag; the db-g1-small default of 50 cannot hold 11 jobs + the reserve) | 3 x (2 + 1) = 9 | 2 x (2 + 0) = 4 | 11 x (1 + 1) = 22 | 20 | 55 | 80 |
+| stg | 100 | 5 x (2 + 1) = 15 | 5 x (2 + 0) = 10 | 11 x (1 + 1) = 22 | 20 | 67 | 80 |
+| prd | 200 | 20 x (2 + 1) = 60 | 20 x (2 + 0) = 40 | 11 x (1 + 1) = 22 | 20 | 142 | 160 |
+
+dev and stg now set `max_instances` in their tfvars (dev api 3 / worker 2, stg api 5 /
+worker 5; console and embed lowered alike); prd keeps the defaults (api 20, worker 20). To scale
+further, raise `sql_max_connections` (a flag change restarts the instance: human apply in stg /
+prd) or the tier, then the pools; the plan tells you when a change does not fit. Setting the
+flag is itself a restart on the first apply after this change.
 
 The connector (`farmerapp/db/connect.py`, `cloud-sql-python-connector[asyncpg]`) is created
 in the running event loop on the first connection, with lazy certificate refresh (Cloud Run CPU

@@ -32,3 +32,8 @@ output "replica_instance_name" {
   description = "Read replica instance name (null when no replica)."
   value       = var.read_replica ? google_sql_database_instance.replica[0].name : null
 }
+
+output "max_connections" {
+  description = "max_connections flag of the primary (connection budget, alerts)."
+  value       = var.max_connections
+}
