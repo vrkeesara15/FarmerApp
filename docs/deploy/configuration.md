@@ -148,6 +148,9 @@ two URLs are used exactly as before.
 | `ROAD_SNAPPER` | default (M7) | `off` (haversine + filters); `google` = Roads API in the `process-tracks` job | J | no |
 | `GOOGLE_MAPS_API_KEY` | SM (to create when `ROAD_SNAPPER=google`; human gate) | Maps Platform key restricted to the Roads API | J | no |
 | `MEETING_QR_TTL_SECONDS` | default | 300 (FA-027 farmer attendance QR) | A | no |
+| `EMAIL_PROVIDER` / `EMAIL_FROM` | default | `log` (writes `email_logged`, sends nothing) / `reports@farmerapp.local`; `sendgrid` or `smtp` once a provider exists (human gate, WC-013 / AN-015 / ST-008) | A J | no |
+| `EMAIL_API_URL` / `EMAIL_API_KEY` | default / Secret Manager | SendGrid-style `https://api.sendgrid.com/v3/mail/send` / key secret (only with `EMAIL_PROVIDER=sendgrid`) | J | no |
+| `EMAIL_SMTP_HOST` / `EMAIL_SMTP_PORT` / `EMAIL_SMTP_USERNAME` / `EMAIL_SMTP_PASSWORD` / `EMAIL_SMTP_STARTTLS` / `EMAIL_TIMEOUT_S` | default / Secret Manager (password) | `localhost` / 587 / unset / unset / true / 20 (only with `EMAIL_PROVIDER=smtp`) | J | no |
 
 ## Auth and API edge (api)
 

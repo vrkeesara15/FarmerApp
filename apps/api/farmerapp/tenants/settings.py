@@ -40,6 +40,16 @@ service_area.districts              []           VA-F04 districts the tenant ser
                                                  state, bbox or polygon); empty = not checked
 discount_policy_max_bps             1000         VA-E09 most discount on a sale (bp of subtotal)
 incentive_cutoff_day                25           VA-E09 day of month the incentive is computed
+campaigns.attribution_days          14           WC-008 / AN-008 conversion window (days)
+campaigns.dlt_templates             {}           WC-008 template key -> DLT template id (SMS)
+campaigns.whatsapp_templates        {}           WC-008 template key -> WhatsApp template name
+campaigns.sends_per_run             500          WC-008 throttle: recipients sent per job run
+campaigns.holdout_pct               0            AN-008 default control group share (%)
+stock_alerts.default_reorder_level  10           ST-004 reorder level of a SKU without its own
+stock_alerts.expiry_days            [60, 30]     ST-004 expiry alert thresholds (days)
+reports.weekly_owner_emails         []           AN-015 owner / director report addresses
+reports.accounting_emails           []           ST-008 accountant addresses
+accounting.*                        see model    ST-008 Tally / Zoho ledger names
 branding.*                          see Branding C102 app names, colour, logo, support phone
 =================================== ============ ==============================================
 
@@ -124,6 +134,10 @@ SETTINGS_KEYS: Mapping[str, str] = {
     "service_area": "VA-F04 service districts: [{code, name, state, bbox | polygon}]",
     "discount_policy_max_bps": "VA-E09 largest discount on a sale, basis points of subtotal",
     "incentive_cutoff_day": "VA-E09 day of month the officer incentive is computed (1-28)",
+    "campaigns": "WC-008 attribution window, DLT / WhatsApp template ids, throttle, holdout",
+    "stock_alerts": "ST-004 default reorder level and expiry alert thresholds",
+    "reports": "AN-015 weekly owner report and ST-008 accounting export email addresses",
+    "accounting": "ST-008 Tally / Zoho ledger names",
     "branding": "C102 app names, primary colour, logo and support phone (tenant.branding)",
 }
 
@@ -196,6 +210,61 @@ class ServiceArea(BaseModel):
         return next((d for d in self.districts if d.contains(lon, lat)), None)
 
 
+_EMAIL = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+Email = Annotated[str, StringConstraints(pattern=_EMAIL, max_length=254)]
+
+
+class CampaignSettings(BaseModel):
+    """WC-008 / AN-008. Template ids are registrations (DLT, WhatsApp Business): human work."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    attribution_days: int = Field(default=14, ge=1, le=90)
+    dlt_templates: dict[str, Annotated[str, StringConstraints(max_length=64)]] = Field(
+        default_factory=dict, description="template key -> DLT template id (TRAI, SMS)"
+    )
+    whatsapp_templates: dict[str, Annotated[str, StringConstraints(max_length=64)]] = Field(
+        default_factory=dict, description="template key -> WhatsApp Business template name"
+    )
+    sends_per_run: int = Field(default=500, ge=1, le=10_000)
+    holdout_pct: int = Field(default=0, ge=0, le=50)
+
+
+class StockAlertSettings(BaseModel):
+    """ST-004 nightly alerts."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    default_reorder_level: int = Field(default=10, ge=0, le=1_000_000)
+    expiry_days: list[Annotated[int, Field(ge=1, le=365)]] = Field(
+        default_factory=lambda: [60, 30], min_length=1, max_length=5
+    )
+
+
+class ReportSettings(BaseModel):
+    """Where recurring reports go (users carry no email address)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    weekly_owner_emails: list[Email] = Field(default_factory=list, max_length=20)
+    accounting_emails: list[Email] = Field(default_factory=list, max_length=20)
+
+
+class AccountingSettings(BaseModel):
+    """ST-008 ledger names in the tenant's books (Tally / Zoho). TODO-HUMAN: the accountant
+    confirms them against the company's chart of accounts."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    sales_ledger_prefix: str = Field(default="Sales", min_length=1, max_length=60)
+    output_tax_prefix: str = Field(default="Output", min_length=1, max_length=60)
+    round_off_ledger: str = Field(default="Round Off", min_length=1, max_length=60)
+    cash_ledger: str = Field(default="Cash", min_length=1, max_length=60)
+    upi_ledger: str = Field(default="UPI Collections", min_length=1, max_length=60)
+    card_ledger: str = Field(default="Card Collections", min_length=1, max_length=60)
+    walk_in_party: str = Field(default="Cash Customer", min_length=1, max_length=60)
+
+
 class Branding(BaseModel):
     """``tenant.branding`` (C102): overrides of the app names (null: the i18n default,
     "Mitra" / "Kisan"), the primary colour, the logo (a blob URI from ``/v1/uploads``) and
@@ -251,6 +320,10 @@ class TenantSettings(BaseModel):
     service_area: ServiceArea = Field(default_factory=ServiceArea)
     discount_policy_max_bps: int = Field(default=1000, ge=0, le=10_000)
     incentive_cutoff_day: int = Field(default=25, ge=1, le=28)
+    campaigns: CampaignSettings = Field(default_factory=CampaignSettings)
+    stock_alerts: StockAlertSettings = Field(default_factory=StockAlertSettings)
+    reports: ReportSettings = Field(default_factory=ReportSettings)
+    accounting: AccountingSettings = Field(default_factory=AccountingSettings)
     branding: Branding = Field(default_factory=Branding)
 
     def auto_duty_end_time(self) -> time:
@@ -356,11 +429,15 @@ __all__ = [
     "PUBLIC_KEYS",
     "SETTINGS_KEYS",
     "SUPPORTED_LANGUAGES",
+    "AccountingSettings",
     "Branding",
+    "CampaignSettings",
     "FeatureSettings",
+    "ReportSettings",
     "SamplingSettings",
     "ServiceArea",
     "ServiceDistrict",
+    "StockAlertSettings",
     "TenantSettings",
     "get_tenant_settings",
     "parse_settings",

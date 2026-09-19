@@ -334,6 +334,28 @@ class Settings(BaseSettings):
     whatsapp_provider_url: str = Field(default="http://localhost:8090/whatsapp")
     razorpay_base_url: str = Field(default="http://localhost:8090/razorpay")
     razorpay_key_id: str = Field(default="rzp_test_mock", description="Public key id (not secret).")
+    # --- Email (WC-013 scheduled reports, AN-015, ST-008) ------------------------------
+    email_provider: Literal["log", "fake", "smtp", "sendgrid"] = Field(
+        default="log",
+        description="EmailSender adapter: 'log' writes an `email_logged` line and sends nothing "
+        "(default everywhere until a provider is configured), 'fake' keeps messages in memory "
+        "(tests), 'smtp' (EMAIL_SMTP_*), 'sendgrid' (SendGrid-style HTTP API, "
+        "EMAIL_API_KEY from Secret Manager).",
+    )
+    email_from: str = Field(default="reports@farmerapp.local", description="From address.")
+    email_smtp_host: str = Field(default="localhost")
+    email_smtp_port: int = Field(default=587)
+    email_smtp_username: str | None = Field(default=None)
+    email_smtp_password: str | None = Field(
+        default=None, description="Secret Manager in stg / prd; never in code or .env files."
+    )
+    email_smtp_starttls: bool = Field(default=True)
+    email_api_url: str = Field(default="https://api.sendgrid.com/v3/mail/send")
+    email_api_key: str | None = Field(
+        default=None, description="HTTP email API key (Secret Manager in stg / prd)."
+    )
+    email_timeout_s: float = Field(default=20.0)
+
     # --- Payments (FA-021, SEC-023) ------------------------------------------------
     razorpay_key_secret: str = Field(
         default=DEV_RAZORPAY_API_KEY_PLACEHOLDER,

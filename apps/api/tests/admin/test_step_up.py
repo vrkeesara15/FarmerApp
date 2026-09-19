@@ -94,6 +94,11 @@ def test_contract_marks_protected_operations() -> None:
         ("GET", "/v1/audit-logs/export"),
         ("GET", "/v1/catalog/export"),
         ("POST", "/v1/flags/rules/{rule_id}/enable"),  # M7 VA-006 rule re-enable
+        # M7 growth (WC-013 exports + schedules, WC-009 monthly close).
+        ("POST", "/v1/exports"),
+        ("POST", "/v1/report-schedules"),
+        ("PATCH", "/v1/report-schedules/{id}"),
+        ("POST", "/v1/incentives/close"),
     }
     patch_user = spec["paths"]["/v1/users/{id}"]["patch"]
     assert "step_up_required" in patch_user["responses"]["401"]["description"]

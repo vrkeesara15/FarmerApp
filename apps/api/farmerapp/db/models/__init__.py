@@ -7,6 +7,7 @@ import farmerapp.db.audit  # noqa: F401  (registers the session listener)
 from farmerapp.api.idempotency import IdempotencyKey
 from farmerapp.auth.models import Device, OtpChallenge, RefreshToken, User
 from farmerapp.beat.models import BeatPlan
+from farmerapp.campaigns.models import Campaign, CampaignRecipient
 from farmerapp.catalog.crops import Crop
 from farmerapp.catalog.models import LabelClaim, PestOrDisease, PriceList, Product, Sku
 from farmerapp.db.models.audit_log import AuditLog
@@ -22,8 +23,10 @@ from farmerapp.diagnosis.models import (
     LlmCallLog,
 )
 from farmerapp.duty.models import TrackGap
+from farmerapp.exports.models import ExportJob, ReportRun, ReportSchedule
 from farmerapp.farmers.models import ConsentRecord, CropPlot, Farm, Farmer, FarmPhoto
 from farmerapp.flags.models import Flag, FlagComment, FlagEvent, FlagSummary, RuleTenantOverride
+from farmerapp.incentives.models import IncentivePayout, IncentiveRuleSet, SalesTarget
 from farmerapp.invoices.models import Invoice, InvoiceCounter
 from farmerapp.khata.models import CreditApprovalRequest, CreditLimit, KhataEntry
 from farmerapp.location.models import DutySession, LocationDailyAgg, LocationPoint, PolicyAcceptance
@@ -36,6 +39,7 @@ from farmerapp.pii.models import TenantDataKey
 from farmerapp.privacy.models import DataRequest
 from farmerapp.rules.models import CropCalendar
 from farmerapp.stock.models import StockBatch, StockMovement, StockReservation
+from farmerapp.stock.reorder import ReorderLevel
 from farmerapp.sync.models import SyncChange, SyncOp
 from farmerapp.tenants.models import Cluster, Store, Village
 from farmerapp.travel.models import TravelClaim
@@ -47,6 +51,8 @@ install_feed_listener()  # FA-007: notifications in the sync change feed (offlin
 __all__ = [
     "AuditLog",
     "BeatPlan",
+    "Campaign",
+    "CampaignRecipient",
     "Cluster",
     "ConsentRecord",
     "CorpusImage",
@@ -66,6 +72,7 @@ __all__ = [
     "DiagnosisReview",
     "DiagnosisThreshold",
     "DutySession",
+    "ExportJob",
     "Farm",
     "FarmPhoto",
     "Farmer",
@@ -75,6 +82,8 @@ __all__ = [
     "FlagEvent",
     "FlagSummary",
     "IdempotencyKey",
+    "IncentivePayout",
+    "IncentiveRuleSet",
     "Invoice",
     "InvoiceCounter",
     "KhataEntry",
@@ -96,7 +105,11 @@ __all__ = [
     "Product",
     "PushToken",
     "RefreshToken",
+    "ReorderLevel",
+    "ReportRun",
+    "ReportSchedule",
     "RuleTenantOverride",
+    "SalesTarget",
     "Sku",
     "StockBatch",
     "StockMovement",

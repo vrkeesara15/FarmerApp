@@ -198,7 +198,85 @@ def _officer_device(ctx: Ctx) -> dict[str, str]:
     return {"id": str(ctx.target.user(UserRole.FIELD_OFFICER).id), "device_id": "matrix-device"}
 
 
+def _export_resource(ctx: Ctx) -> str:
+    """M7 WC-013: a resource the actor's role may export (the route admits every staff role)."""
+    return {
+        UserRole.FIELD_OFFICER: "visits",
+        UserRole.AGRONOMIST: "farmers",
+        UserRole.ACCOUNTANT: "payments",
+    }.get(UserRole(ctx.actor.role), "orders")
+
+
+_RULES_BODY = {
+    "components": [
+        {"id": "visits", "metric": "verified_visits", "kind": "per_unit", "rate_paise": 100}
+    ]
+}
+
+
 ROUTE_FIXTURES: dict[str, RouteFixture] = {
+    # M7 growth (WC-008, WC-009, WC-013, AN-008, ST-004, ST-008); outcomes in tests/growth.
+    "POST /v1/campaigns/segment-count": RouteFixture(body=lambda _ctx: {"segment": {}}),
+    "POST /v1/campaigns": RouteFixture(
+        body=lambda _ctx: {"name": "Matrix", "channel": "push", "messages": {"en": "Hello"}}
+    ),
+    "GET /v1/campaigns/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "PATCH /v1/campaigns/{id}": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"name": "Matrix"}
+    ),
+    "POST /v1/campaigns/{id}/schedule": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {}
+    ),
+    "POST /v1/campaigns/{id}/cancel": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "GET /v1/campaigns/{id}/recipients": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "GET /v1/campaigns/{id}/roi": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "GET /v1/targets": RouteFixture(query={"month": "2026-09-01"}),
+    "PUT /v1/targets": RouteFixture(
+        body=lambda ctx: {
+            "month": "2026-09-01",
+            "items": [{"subject_type": "store", "subject_id": str(ctx.target.store_id)}],
+        }
+    ),
+    "POST /v1/incentive-rules": RouteFixture(
+        body=lambda _ctx: {"name": "Matrix", "definition": _RULES_BODY}
+    ),
+    "GET /v1/incentive-rules/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "POST /v1/incentive-rules/{id}/activate": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}
+    ),
+    "GET /v1/incentives/preview": RouteFixture(query={"month": "2026-09-01"}),
+    "POST /v1/incentives/preview": RouteFixture(
+        body=lambda ctx: {
+            "officer_id": str(ctx.target.user(UserRole.FIELD_OFFICER).id),
+            "month": "2026-09-01",
+            "definition": _RULES_BODY,
+        }
+    ),
+    "GET /v1/incentives/payouts": RouteFixture(query={"month": "2026-09-01"}),
+    "POST /v1/incentives/close": RouteFixture(
+        body=lambda _ctx: {"month": "2026-08-01"}, step_up=True
+    ),
+    "POST /v1/exports": RouteFixture(
+        body=lambda ctx: {"resource": _export_resource(ctx), "format": "csv"}, step_up=True
+    ),
+    "GET /v1/exports/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "POST /v1/report-schedules": RouteFixture(
+        body=lambda ctx: {
+            "name": "Matrix weekly",
+            "resource": _export_resource(ctx),
+            "recipients": ["matrix@example.com"],
+        },
+        step_up=True,
+    ),
+    "PATCH /v1/report-schedules/{id}": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"name": "x"}, step_up=True
+    ),
+    "DELETE /v1/report-schedules/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "GET /v1/stores/{id}/reorder-levels": RouteFixture(path_params=_store_id),
+    "PUT /v1/stores/{id}/reorder-levels": RouteFixture(
+        path_params=_store_id,
+        body=lambda ctx: {"items": [{"sku_id": str(ctx.target.sku_id), "reorder_level": "5"}]},
+    ),
     # WC-011 / WC-012 / WC-103 admin actions (step-up); outcomes in tests/admin.
     "POST /v1/users": RouteFixture(
         body=lambda _ctx: {"phone": "+919000188001", "name": "Matrix User", "role": "agronomist"},
