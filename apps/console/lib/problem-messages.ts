@@ -21,6 +21,21 @@ const CODES: Record<string, MessageKey> = {
   unauthenticated: "problems.unauthenticated",
   token_expired: "problems.unauthenticated",
   not_found: "problems.notFound",
+  // SEC-028 step-up, WC-010 flags, WC-011 users, WC-012 settings
+  step_up_required: "problems.stepUpRequired",
+  otp_invalid: "problems.otpInvalid",
+  otp_expired: "problems.otpExpired",
+  otp_locked: "problems.otpLocked",
+  otp_rate_limited: "problems.otpRateLimited",
+  otp_not_found: "problems.otpNotFound",
+  invalid_transition: "problems.invalidTransition",
+  flag_resolved: "problems.flagResolved",
+  assignee_invalid: "problems.assigneeInvalid",
+  phone_taken: "problems.phoneTaken",
+  invalid_assignment: "problems.invalidAssignment",
+  role_not_grantable: "problems.roleNotGrantable",
+  cannot_modify_self: "problems.cannotModifySelf",
+  invalid_settings: "problems.invalidSettings",
 };
 
 export function problemCode(err: unknown): string | undefined {

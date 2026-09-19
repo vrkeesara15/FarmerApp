@@ -9,10 +9,12 @@ import {
   Home,
   Leaf,
   Package,
+  ScrollText,
   Settings,
   Store,
   Users,
   UserSquare2,
+  UserCog,
   Palette,
 } from "lucide-react";
 import { SideNav, type SideNavItem } from "@/components/ds/SideNav";
@@ -93,10 +95,12 @@ function Shell({ children }: { children: React.ReactNode }) {
     { href: "/products/prices", label: t("nav.prices"), icon: <BadgeIndianRupee /> },
     { href: "/agronomist", label: t("nav.agronomist"), icon: <Leaf /> },
     { href: "/flags", label: t("nav.flags"), icon: <Flag /> },
+    { href: "/admin/users", label: t("nav.users"), icon: <UserCog /> },
     { href: "/settings", label: t("nav.settings"), icon: <Settings /> },
+    { href: "/admin/audit", label: t("nav.audit"), icon: <ScrollText /> },
     { href: "/design", label: t("nav.design"), icon: <Palette /> },
   ];
-  // Role-based nav (SPEC 2.6, lib/nav.ts): hide what the signed-in role cannot read.
+  // Role-based nav (SPEC 2.6, lib/nav.ts ROUTE_ROLES): hide what the signed-in role cannot read.
   const items = visibleNavItems(allItems, session.user?.role);
 
   return (

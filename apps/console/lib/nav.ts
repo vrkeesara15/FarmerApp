@@ -5,6 +5,9 @@
  * Routes without an entry here are visible to every role (their owners add their own).
  */
 
+import { AUDIT_ROLES, SETTINGS_ROLES, USER_READ_ROLES } from "./admin";
+import { FLAG_READ_ROLES } from "./flags";
+
 export const OWNER_HOME_ROLES = [
   "owner",
   "director",
@@ -35,6 +38,10 @@ export const ROUTE_ROLES: Readonly<Record<string, readonly string[]>> = {
   "/field-team": FIELD_TEAM_ROLES,
   "/farmers": FARMER_ROLES,
   "/stores": STORE_ROLES,
+  "/flags": FLAG_READ_ROLES,
+  "/admin/users": USER_READ_ROLES,
+  "/settings": SETTINGS_ROLES,
+  "/admin/audit": AUDIT_ROLES,
 };
 
 /** The route entry that governs a path (`/field-team/abc` -> `/field-team`). */

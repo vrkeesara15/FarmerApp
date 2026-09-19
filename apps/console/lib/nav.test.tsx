@@ -12,35 +12,34 @@ const ITEMS = [
   "/stores",
   "/products",
   "/flags",
+  "/admin/users",
   "/settings",
+  "/admin/audit",
 ].map((href) => ({ href, label: href.slice(1), icon: null }));
 const visible = (role: string | undefined) => visibleNavItems(ITEMS, role).map((i) => i.href);
+const ALL = ITEMS.map((i) => i.href);
+const without = (...hidden: string[]) => ALL.filter((h) => !hidden.includes(h));
 
 describe("role-based nav (SPEC 2.6)", () => {
-  it("owners, directors, tenant admins and auditors see every dashboard", () => {
-    for (const role of ["owner", "director", "tenant_admin", "auditor", "cluster_head"])
-      expect(visible(role)).toEqual(ITEMS.map((i) => i.href));
+  it("owners, directors and tenant admins see every screen; auditors and cluster heads most", () => {
+    for (const role of ["owner", "director", "tenant_admin"]) expect(visible(role)).toEqual(ALL);
+    expect(visible("auditor")).toEqual(without("/settings"));
+    expect(visible("cluster_head")).toEqual(without("/settings", "/admin/audit"));
   });
 
   it("store managers see home, field team, farmers and stores but never a track replay", () => {
-    expect(visible("store_manager")).toEqual(ITEMS.map((i) => i.href));
+    expect(visible("store_manager")).toEqual(without("/admin/users", "/settings", "/admin/audit"));
     expect(canSeeReplay("store_manager")).toBe(false);
   });
 
-  it("field officers see their own field team row and farmers, not home or stores", () => {
-    expect(visible("field_officer")).toEqual([
-      "/field-team",
-      "/farmers",
-      "/products",
-      "/flags",
-      "/settings",
-    ]);
+  it("field officers see their own field team row, farmers and their flags, not home or stores", () => {
+    expect(visible("field_officer")).toEqual(["/field-team", "/farmers", "/products", "/flags"]);
     expect(canSeeReplay("field_officer")).toBe(true); // own track only (the API scopes it)
   });
 
-  it("accountants see stores only; agronomists see none of the analytics screens", () => {
-    expect(visible("accountant")).toEqual(["/stores", "/products", "/flags", "/settings"]);
-    expect(visible("agronomist")).toEqual(["/products", "/flags", "/settings"]);
+  it("accountants see stores only; agronomists see none of the analytics or admin screens", () => {
+    expect(visible("accountant")).toEqual(["/stores", "/products"]);
+    expect(visible("agronomist")).toEqual(["/products"]);
     expect(canSeeReplay("agronomist")).toBe(false);
   });
 

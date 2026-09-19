@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
+import { FlagInbox } from "@/components/flags/FlagInbox";
 import { t } from "@/lib/i18n";
-import { PlaceholderPage } from "../PlaceholderPage";
 
 export const metadata: Metadata = { title: t("flags.title") };
 
-/** C70 */
+/** C70 Validation inbox (WC-010). */
 export default function Page() {
-  return <PlaceholderPage screenId="C70" titleKey="flags.title" emptyKey="flags.empty" />;
+  return <FlagInbox />;
 }

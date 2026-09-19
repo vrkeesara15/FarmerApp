@@ -1,6 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { handleAdmin, resetMockAdmin } from "@/lib/mock/admin";
 import { handleAnalytics } from "@/lib/mock/analytics";
-import { handleCatalog, resetMockCatalog, type MockActor } from "@/lib/mock/catalog";
+import {
+  handleCatalog,
+  resetMockCatalog,
+  type MockActor,
+  type MockResult,
+} from "@/lib/mock/catalog";
+import { handleFlags, resetMockFlags } from "@/lib/mock/flags";
 
 /**
  * In-app mock of the FarmerApp API, used when NEXT_PUBLIC_API_URL is unset (dev + Playwright).
@@ -10,8 +17,10 @@ import { handleCatalog, resetMockCatalog, type MockActor } from "@/lib/mock/cata
  * Roles: any +91 mobile signs in as the owner except the numbers in MOCK_ROLE_BY_PHONE
  * (e.g. +919000000008 = agronomist). The role is carried in the mock tokens
  * (`mock-access-<role>-<ts>`, `mock-refresh-<role>-<ts>-<rand>`) so a refresh keeps it.
- * `/v1/catalog/*` (WC-005) is served by lib/mock/catalog.ts, `/v1/analytics/*` (M4) by
- * lib/mock/analytics.ts.
+ * `/v1/catalog/*` (WC-005) is served by lib/mock/catalog.ts; `/v1/analytics/*` (M4) by
+ * lib/mock/analytics.ts; `/v1/flags*` (WC-010) by lib/mock/flags.ts; `/v1/auth/step-up*`,
+ * `/v1/users*`, `/v1/settings*` and `/v1/audit-logs*` (SEC-028, WC-011, WC-012, WC-103) by
+ * lib/mock/admin.ts.
  */
 export const MOCK_OTP = "123456";
 export const MOCK_UNKNOWN_PHONE = "+919999999999";
@@ -31,6 +40,15 @@ const state = new Map<string, PhoneState>();
 export function resetMockState() {
   state.clear();
   resetMockCatalog();
+  resetMockAdmin();
+  resetMockFlags();
+}
+
+function toResponse(result: MockResult): NextResponse {
+  const headers = result.headers ?? {};
+  if (result.text !== undefined)
+    return new NextResponse(result.text, { status: result.status, headers });
+  return NextResponse.json(result.json, { status: result.status, headers });
 }
 
 /** Mock numbers that sign in with a role other than owner (docs: apps/console/README.md). */
@@ -120,12 +138,12 @@ async function handle(req: NextRequest, rawPath: string[]): Promise<NextResponse
     actorFrom(req),
   );
   const moduleResult =
-    catalogResult ?? handleAnalytics(req.method, path, req.nextUrl.searchParams, actorFrom(req));
+    catalogResult ??
+    handleAnalytics(req.method, path, req.nextUrl.searchParams, actorFrom(req)) ??
+    handleFlags(req.method, path, req.nextUrl.searchParams, body, actorFrom(req)) ??
+    handleAdmin(req.method, path, req.nextUrl.searchParams, body, actorFrom(req), req.headers);
   if (moduleResult) {
-    const headers = moduleResult.headers ?? {};
-    if (moduleResult.text !== undefined)
-      return new NextResponse(moduleResult.text, { status: moduleResult.status, headers });
-    return NextResponse.json(moduleResult.json, { status: moduleResult.status, headers });
+    return toResponse(moduleResult);
   }
 
   switch (route) {

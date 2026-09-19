@@ -1,15 +1,15 @@
 "use client";
 
 /**
- * Leaflet base for the console maps (C10 store map, C22 replay, C31 farms). OpenStreetMap
- * raster tiles, no API key. Only imported from lazily loaded modules (maps/index.tsx,
+ * Leaflet base for the console maps (C10 store map, C22 replay, C31 farms); tiles and
+ * attribution from lib/map-config.ts, shared with the C71 EvidenceMap. Only imported from lazily loaded modules (maps/index.tsx,
  * `ssr: false`): Leaflet touches `window` at import time.
  */
 import * as React from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { MAP_MAX_ZOOM, MAP_TILE_URL } from "@/lib/map-config";
 
-export const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 /** India, for an empty map. */
 export const INDIA_CENTER: L.LatLngExpression = [20.6, 78.9];
 
@@ -28,7 +28,7 @@ export function useLeafletMap(
       scrollWheelZoom: false,
     });
     m.attributionControl.setPrefix(false);
-    L.tileLayer(OSM_TILES, { maxZoom: 18, attribution }).addTo(m);
+    L.tileLayer(MAP_TILE_URL, { maxZoom: MAP_MAX_ZOOM, attribution }).addTo(m);
     setMap(m);
     return () => {
       m.remove();

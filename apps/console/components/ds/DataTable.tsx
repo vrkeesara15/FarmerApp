@@ -56,6 +56,10 @@ export interface DataTableProps<Row> {
   caption?: string;
   skeletonRows?: number;
   className?: string;
+  /** Keys of rows whose detail row is open (with `renderExpanded`). */
+  expandedKeys?: ReadonlySet<string>;
+  /** Full-width detail row rendered under an expanded row. */
+  renderExpanded?: (row: Row) => React.ReactNode;
 }
 
 function compare(a: unknown, b: unknown): number {
@@ -82,6 +86,8 @@ export function DataTable<Row>({
   caption,
   skeletonRows = 5,
   className,
+  expandedKeys,
+  renderExpanded,
 }: DataTableProps<Row>) {
   const t = useT();
   const [internalSort, setInternalSort] = React.useState<DataTableSort | undefined>();
@@ -194,31 +200,39 @@ export function DataTable<Row>({
             </TableRow>
           ) : (
             sortedRows.map((row) => (
-              <TableRow
-                key={rowKey(row)}
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
-                tabIndex={onRowClick ? 0 : undefined}
-                onKeyDown={
-                  onRowClick
-                    ? (e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          onRowClick(row);
+              <React.Fragment key={rowKey(row)}>
+                <TableRow
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onKeyDown={
+                    onRowClick
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onRowClick(row);
+                          }
                         }
-                      }
-                    : undefined
-                }
-                className={cn(onRowClick && "cursor-pointer")}
-              >
-                {columns.map((col) => (
-                  <TableCell
-                    key={col.id}
-                    className={cn(col.numeric && "tnum text-right", col.className)}
-                  >
-                    {col.cell ? col.cell(row) : (col.accessor?.(row) ?? t("common.none"))}
-                  </TableCell>
-                ))}
-              </TableRow>
+                      : undefined
+                  }
+                  className={cn(onRowClick && "cursor-pointer")}
+                >
+                  {columns.map((col) => (
+                    <TableCell
+                      key={col.id}
+                      className={cn(col.numeric && "tnum text-right", col.className)}
+                    >
+                      {col.cell ? col.cell(row) : (col.accessor?.(row) ?? t("common.none"))}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {renderExpanded && expandedKeys?.has(rowKey(row)) ? (
+                  <TableRow className="hover:bg-transparent" data-testid="expanded-row">
+                    <TableCell colSpan={columns.length} className="bg-background">
+                      {renderExpanded(row)}
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </React.Fragment>
             ))
           )}
         </TableBody>
