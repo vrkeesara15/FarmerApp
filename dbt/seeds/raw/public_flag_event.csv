@@ -1,0 +1,7 @@
+id,tenant_id,flag_id,kind,to_status,label,created_at,_ds_uuid,_ds_source_timestamp
+fe1,t1,fl1,created,open,,2026-09-12 07:00:00,ds-fe-1,1789198800000
+fe2,t1,fl2,created,open,,2026-09-02 00:00:00,ds-fe-2,1788307200000
+fe3,t1,fl2,transition,resolved_fixed,true_positive,2026-09-03 12:00:00,ds-fe-3,1788436800000
+fe4,t1,fl3,created,open,,2026-09-05 00:00:00,ds-fe-4,1788566400000
+fe5,t1,fl3,transition,resolved_valid,false_positive,2026-09-05 06:00:00,ds-fe-5,1788588000000
+fe6,t1,fl4,transition,escalated,,2026-09-10 07:00:00,ds-fe-6,1789062000000

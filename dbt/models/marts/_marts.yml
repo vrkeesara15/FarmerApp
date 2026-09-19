@@ -1,0 +1,471 @@
+version: 2
+
+# AN-012: every mart carries unique + not_null on its key, relationships on its foreign keys
+# and accepted_values on its categorical (or definition) columns. Singular tests in tests/
+# reconcile the KPIs to hand-computed fixture values (ci target) and check PII and row scopes.
+# AN-014: marts identify people by id; the only phone is phone_masked (tests/an014_*).
+
+models:
+  # ------------------------------------------------------------------ core
+  - name: dim_store
+    description: Stores with their cluster (store / cluster keys of the store-grain marts).
+    columns:
+      - name: store_id
+        data_tests: [unique, not_null]
+      - &tenant_fk
+        name: tenant_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_tenant'), field: tenant_id}}
+      - &cluster_fk
+        name: cluster_id
+        data_tests:
+          - relationships: {arguments: {to: ref('stg_cluster'), field: cluster_id}}
+      - name: state
+        data_tests:
+          - accepted_values: {arguments: {values: [TS, AP, KA, MH, TN]}}
+
+  - name: dim_employee
+    description: Employees by id, role, store and cluster. No names, no phones.
+    columns:
+      - name: employee_id
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - &store_fk
+        name: store_id
+        data_tests:
+          - relationships: {arguments: {to: ref('dim_store'), field: store_id}}
+      - name: role
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [owner, director, cluster_head, auditor, store_manager, accountant, field_officer, agronomist, tenant_admin]
+      - name: status
+        data_tests:
+          - accepted_values: {arguments: {values: [active, disabled]}}
+
+  - name: dim_viewer_scope
+    description: AN-013 viewer -> row scope mapping read by every authorised view.
+    columns:
+      - name: viewer_user_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships: {arguments: {to: ref('stg_user'), field: user_id}}
+      - *tenant_fk
+      - name: scope_level
+        data_tests:
+          - not_null
+          - accepted_values: {arguments: {values: [tenant, cluster, store]}}
+      - name: role
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [owner, director, tenant_admin, auditor, agronomist, cluster_head, store_manager]
+      - *cluster_fk
+      - *store_fk
+    data_tests:
+      - expression_is_true:
+          arguments:
+            expression: "(scope_level <> 'cluster' or cluster_id is not null) and (scope_level <> 'store' or store_id is not null)"
+
+  - name: int_flag_officer
+    description: Flags attributed to an officer (on the employee or on one of their visits).
+    columns:
+      - name: flag_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_flag'), field: flag_id}}
+      - name: officer_id
+        data_tests: [not_null]
+      - *tenant_fk
+      - name: severity
+        data_tests:
+          - accepted_values: {arguments: {values: [low, medium, high]}}
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [flag_id, officer_id]}}
+
+  - name: fct_sales_line
+    description: One row per order line of a fulfilled order (SPEC 5.2 sales).
+    columns:
+      - name: sales_line_id
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - name: store_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_store'), field: store_id}}
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_order'), field: order_id}}
+      - name: farmer_id
+        description: NULL for walk-in sales.
+        data_tests:
+          - relationships: {arguments: {to: ref('stg_farmer'), field: farmer_id}}
+      - name: date_day
+        data_tests: [not_null]
+      - name: category
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [seed, fertiliser, pesticide, fungicide, herbicide, growth, tool, other]
+      - name: channel
+        data_tests:
+          - accepted_values: {arguments: {values: [officer, farmer_app, pos]}}
+      - name: net_paise
+        data_tests: [non_negative]
+
+  - name: fct_visit
+    description: One row per visit with SPEC 5.2 verified / confirmed / time-on-farm / conversion flags.
+    columns:
+      - name: visit_id
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - name: officer_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_employee'), field: employee_id}}
+      - name: farmer_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_farmer'), field: farmer_id}}
+      - *store_fk
+      - name: status
+        data_tests:
+          - accepted_values: {arguments: {values: [verified, partial, unverified, open]}}
+      - name: purpose
+        data_tests:
+          - accepted_values: {arguments: {values: [advisory, scouting, demo, collection, sale, meeting]}}
+    data_tests:
+      - expression_is_true:
+          arguments:
+            expression: "is_verified = coalesce(score >= 70, false) and (not converted_30d or is_verified)"
+
+  # ------------------------------------------------------------------ AN-001 owner home
+  - name: mart_owner_kpi_30d
+    description: AN-001 KPI row per tenant, last 30 IST days to the as-of date (SPEC 5.2).
+    columns:
+      - name: tenant_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships: {arguments: {to: ref('stg_tenant'), field: tenant_id}}
+      - name: window_days
+        data_tests:
+          - accepted_values: {arguments: {values: [30], quote: false}}
+      - name: own_brand_share
+        <<: &ratio
+          data_tests: [ratio_between_0_and_1]
+      - name: confirmation_rate
+        <<: *ratio
+      - name: visit_conversion_rate
+        <<: *ratio
+      - name: net_sales_paise
+        data_tests: [not_null, non_negative]
+      - name: credit_overdue_paise
+        data_tests: [not_null, non_negative]
+    data_tests:
+      - expression_is_true:
+          arguments:
+            expression: "unique_farmers_reached <= verified_visits and verified_visits <= visits and credit_overdue_paise <= credit_outstanding_paise"
+
+  - name: mart_active_farmers_daily
+    description: AN-001 SPEC 5.2 active farmers per tenant for each of the last 90 days.
+    columns:
+      - name: tenant_day_key
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - name: date_day
+        data_tests: [not_null]
+      - name: active_window_days
+        data_tests:
+          - accepted_values: {arguments: {values: [60], quote: false}}
+      - name: active_farmers
+        data_tests: [not_null, non_negative]
+
+  - name: mart_store_daily
+    description: AN-001 / AN-005 per store and IST day.
+    columns:
+      - name: store_day_key
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - *cluster_fk
+      - name: store_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_store'), field: store_id}}
+      - name: date_day
+        data_tests: [not_null]
+      - name: own_brand_share
+        <<: *ratio
+      - name: net_sales_paise
+        data_tests: [not_null, non_negative]
+      - name: day_close_variance_flagged
+        data_tests:
+          - accepted_values: {arguments: {values: [true, false], quote: false}}
+
+  # ------------------------------------------------------------------ AN-002 field team
+  - name: mart_officer_daily
+    description: AN-002 per field officer and IST day.
+    columns:
+      - name: officer_day_key
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - *cluster_fk
+      - *store_fk
+      - name: officer_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_employee'), field: employee_id}}
+      - name: on_duty
+        data_tests:
+          - accepted_values: {arguments: {values: [true, false], quote: false}}
+
+  - name: mart_officer_scorecard_30d
+    description: AN-002 scorecard per active field officer, last 30 IST days.
+    columns:
+      - name: officer_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships: {arguments: {to: ref('dim_employee'), field: employee_id}}
+      - *tenant_fk
+      - *cluster_fk
+      - *store_fk
+      - name: window_days
+        data_tests:
+          - accepted_values: {arguments: {values: [30], quote: false}}
+      - name: confirmation_rate
+        <<: *ratio
+      - name: conversion_rate
+        <<: *ratio
+      - name: officer_rank
+        data_tests: [not_null]
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [tenant_id, officer_rank]}}
+
+  # ------------------------------------------------------------------ AN-004 farmers
+  - name: mart_farmer_360
+    description: AN-004 farmer 360 (farmer_id + masked phone; LTV, activity, credit risk, segment, churn risk).
+    columns:
+      - name: farmer_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships: {arguments: {to: ref('stg_farmer'), field: farmer_id}}
+      - *tenant_fk
+      - *cluster_fk
+      - *store_fk
+      - name: phone_masked
+        data_tests:
+          - not_null
+          - expression_is_true:
+              arguments:
+                expression: "length(phone_masked) = 13 and substr(phone_masked, 1, 9) = '*********'"
+      - name: segment
+        data_tests:
+          - not_null
+          - accepted_values: {arguments: {values: [new, active_buyer, engaged, lapsed, dormant]}}
+      - name: churn_risk
+        data_tests:
+          - not_null
+          - accepted_values: {arguments: {values: [low, medium, high]}}
+      - name: credit_risk
+        data_tests:
+          - not_null
+          - accepted_values: {arguments: {values: [low, medium, high]}}
+      - name: source
+        data_tests:
+          - accepted_values: {arguments: {values: [officer, app, import]}}
+      - name: current_stage
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [sown, vegetative, flowering, fruiting, maturity, harvested]
+
+  - name: mart_farmer_segments
+    description: AN-004 farmers and acreage by district, crop, stage and segment.
+    columns:
+      - name: segment_key
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - *cluster_fk
+      - *store_fk
+      - name: crop_id
+        data_tests:
+          - relationships: {arguments: {to: ref('stg_crop'), field: crop_id}}
+      - name: segment
+        data_tests:
+          - not_null
+          - accepted_values: {arguments: {values: [new, active_buyer, engaged, lapsed, dormant]}}
+      - name: stage
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [sown, vegetative, flowering, fruiting, maturity, harvested]
+      - name: farmers
+        data_tests: [not_null, non_negative]
+
+  # ------------------------------------------------------------------ AN-005 stores
+  - name: mart_credit_accounts
+    description: SPEC 5.2 credit overdue per khata account (farmer x store) with ageing buckets.
+    columns:
+      - name: credit_account_key
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - *cluster_fk
+      - name: store_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_store'), field: store_id}}
+      - name: farmer_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_farmer'), field: farmer_id}}
+      - name: credit_risk
+        data_tests:
+          - not_null
+          - accepted_values: {arguments: {values: [low, medium, high]}}
+    data_tests:
+      - expression_is_true:
+          arguments:
+            expression: "overdue_paise = overdue_0_30_paise + overdue_31_60_paise + overdue_61_90_paise + overdue_90_plus_paise and overdue_paise <= outstanding_paise"
+
+  - name: mart_store_snapshot
+    description: AN-005 per store as of the as-of date (stock value, turns, stockouts, credit book, day close).
+    columns:
+      - name: store_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships: {arguments: {to: ref('dim_store'), field: store_id}}
+      - *tenant_fk
+      - *cluster_fk
+      - name: turns_window_days
+        data_tests:
+          - accepted_values: {arguments: {values: [30], quote: false}}
+      - name: stockout_skus
+        data_tests: [not_null, non_negative]
+
+  - name: mart_store_category_monthly
+    description: AN-005 sales by category and brand with margin per store and month.
+    columns:
+      - name: store_category_month_key
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - *cluster_fk
+      - name: store_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_store'), field: store_id}}
+      - name: category
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [seed, fertiliser, pesticide, fungicide, herbicide, growth, tool, other]
+      - name: own_brand
+        data_tests:
+          - accepted_values: {arguments: {values: [true, false], quote: false}}
+
+  # ------------------------------------------------------------------ AN-006 crop health
+  - name: mart_crop_health_weekly
+    description: AN-006 confirmed problems by district, crop and ISO week, with outbreak alerts.
+    columns:
+      - name: crop_health_key
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - name: problem_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_corpus_problem'), field: problem_id}}
+      - name: crop_id
+        data_tests:
+          - relationships: {arguments: {to: ref('stg_crop'), field: crop_id}}
+      - name: problem_type
+        data_tests:
+          - accepted_values: {arguments: {values: [disease, pest, nutrient, abiotic]}}
+      - name: outbreak_alert
+        data_tests:
+          - not_null
+          - accepted_values: {arguments: {values: [true, false], quote: false}}
+
+  # ------------------------------------------------------------------ AN-007 diagnosis quality
+  - name: mart_diagnosis_quality_weekly
+    description: AN-007 corpus share, escalation rate and review SLA per ISO week.
+    columns:
+      - name: tenant_week_key
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - name: review_sla_hours
+        data_tests:
+          - accepted_values: {arguments: {values: [24], quote: false}}
+      - name: corpus_share
+        <<: *ratio
+      - name: escalation_rate
+        <<: *ratio
+      - name: review_sla_rate
+        <<: *ratio
+
+  - name: mart_diagnosis_unknowns
+    description: AN-007 top unknowns (out-of-scope diagnoses by crop and reason).
+    columns:
+      - name: unknown_key
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - name: crop_id
+        data_tests:
+          - relationships: {arguments: {to: ref('stg_crop'), field: crop_id}}
+      - name: reason
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [not_a_plant, unsupported_crop, unreadable_image, no_match, unspecified]
+
+  # ------------------------------------------------------------------ AN-008 campaigns
+  - name: mart_campaign_roi
+    description: AN-008 campaign ROI -- placeholder with the final shape and no rows until WC-008.
+    columns:
+      - name: campaign_week_key
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - name: channel
+        data_tests:
+          - accepted_values: {arguments: {values: [sms, whatsapp, push]}}
+
+  # ------------------------------------------------------------------ AN-009 data quality
+  - name: mart_flags_weekly
+    description: AN-009 flag volume, open, resolution time and labels by rule and ISO week.
+    columns:
+      - name: flag_week_key
+        data_tests: [unique, not_null]
+      - *tenant_fk
+      - name: rule_id
+        data_tests: [not_null]
+      - name: rule_family
+        data_tests:
+          - accepted_values: {arguments: {values: [employee, farmer, store, visit, other]}}
+    data_tests:
+      - expression_is_true:
+          arguments:
+            expression: "open_now + resolved <= raised and true_positive + false_positive <= resolved + open_now"
+
+  - name: mart_flag_repeat_offenders
+    description: AN-009 officers with 2+ flags in the last 90 days.
+    columns:
+      - name: officer_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships: {arguments: {to: ref('dim_employee'), field: employee_id}}
+      - *tenant_fk
+      - *cluster_fk
+      - *store_fk
+      - name: window_days
+        data_tests:
+          - accepted_values: {arguments: {values: [90], quote: false}}
+      - name: flags_90d
+        data_tests:
+          - expression_is_true: {arguments: {expression: "flags_90d >= 2"}}

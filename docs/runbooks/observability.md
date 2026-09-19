@@ -28,6 +28,7 @@ hold tokens (Slack, PagerDuty) and Firebase Crashlytics.
 | OPS-005 | `[env] job <name> failed` (one per Cloud Run job) | sev2 | job owner | job-failure |
 | OPS-009 | `[env] diagnosis review queue older than 18 h` (per tenant, `farmerapp_diagnosis_queue_oldest_hours` p99 > 18 in the hourly window) | sev2 | agronomist-lead | [OPS-009 below](#ops-009-diagnosis-review-queue-and-llm-fallback) |
 | OPS-009 | `[env] diagnosis LLM fallback > 40% today` (per tenant, any `diagnosis_llm_fallback_alert` line) | sev3 | agronomist-lead | [OPS-009 below](#ops-009-diagnosis-review-queue-and-llm-fallback) |
+| OPS-011 / AN-010 | `dbt source freshness`: orders, payments, visits, duty sessions warn > 15 min, error > 30 min behind Postgres (Datastream `source_timestamp`); dbt run / test failure. Checked by the dbt job and `make dbt-freshness`; a Cloud Monitoring policy on `datastream.googleapis.com/stream/freshness` is an OPS-011 follow-up (not in M7 kickoff) | sev2 | data owner | [datastream-cdc-setup](datastream-cdc-setup.md) |
 | SLO | availability burn 14x / 1 h, 6x / 6 h | sev1 / sev2 | platform-lead | platform-incident |
 | SLO | read p95 > 300 ms, write p95 > 600 ms for 15 min | sev2 | platform-lead | platform-incident |
 | SLO | sync success < 97% for 30 min (burn > 3x / 30 min) | sev2 | mobile-lead | mass-location-anomaly |

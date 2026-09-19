@@ -1,11 +1,21 @@
-# SPEC 10.3 ci-dbt: dbt build against the dev BigQuery dataset + tests.
-# Skeleton: skips while dbt/ has no models (M7 adds them) or WIF is unset.
+# SPEC 10.3 ci-dbt: dbt build + tests on every PR touching dbt.
+#
+#   fixtures      always: replication allowlist check (AN-014) and `dbt build --target ci` on
+#                 DuckDB over the fixture seeds -- every model, every generic test (AN-012),
+#                 the KPI reconciliations, row scopes (AN-013), PII (AN-014) and the freshness
+#                 contract (AN-010). No cloud, no credentials.
+#   bigquery-dev  only when WIF is configured AND the dbt service account is published
+#                 (vars.DBT_SA_DEV, set by a human once the dev stream is running -- until then
+#                 farmerapp_raw has no tables to build on): `dbt build --target dev` against the
+#                 dev BigQuery datasets, then `dbt source freshness` (informational in dev: dev
+#                 has no steady traffic; the scheduled dbt job enforces it in stg / prd).
 name: ci-dbt
 
 on:
   pull_request:
     paths:
       - "dbt/**"
+      - "infra/modules/analytics/replicated_columns.json"
       - ".github/workflows/ci-dbt.yml"
 
 permissions:
@@ -15,22 +25,51 @@ concurrency:
   group: ci-dbt-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PYTHON_VERSION: "3.12"
+  DBT_PROFILES_DIR: .
+
 jobs:
-  detect:
+  fixtures:
+    name: dbt build (DuckDB fixtures)
     runs-on: ubuntu-latest
-    outputs:
-      has_models: ${{ steps.models.outputs.has_models }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: dbt
     steps:
       - uses: actions/checkout@v4
-      - id: models
-        run: |
-          count=$(find dbt/models -name '*.sql' 2>/dev/null | wc -l | tr -d ' ')
-          echo "found ${count} dbt models"
-          if [ "$count" -gt 0 ]; then echo "has_models=true" >> "$GITHUB_OUTPUT"; else echo "has_models=false" >> "$GITHUB_OUTPUT"; fi
 
-  build:
-    needs: detect
-    if: needs.detect.outputs.has_models == 'true' && vars.WIF_PROVIDER != ''
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install dbt (uv.lock)
+        run: uv sync --frozen
+
+      - name: Replication allowlist = dbt sources = fixtures (AN-014)
+        run: uv run python scripts/check_replication.py
+
+      - name: dbt build --target ci
+        run: uv run dbt build --target ci --fail-fast
+
+      - name: Upload dbt artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-ci-target
+          path: |
+            dbt/target/run_results.json
+            dbt/target/compiled
+            dbt/logs
+          retention-days: 7
+
+  bigquery-dev:
+    name: dbt build (dev BigQuery)
+    needs: fixtures
+    if: vars.WIF_PROVIDER != '' && vars.DBT_SA_DEV != ''
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -44,27 +83,25 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - uses: astral-sh/setup-uv@v6
 
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
-          service_account: ${{ vars.DEPLOY_SA_DEV }}
+          service_account: ${{ vars.DBT_SA_DEV }}
 
-      - run: pip install dbt-bigquery
+      - name: Install dbt (uv.lock)
+        run: uv sync --frozen
 
-      - name: dbt deps + build (dev)
+      - name: dbt build --target dev
         env:
-          DBT_PROFILES_DIR: .
-          DBT_TARGET: dev
           DBT_PROJECT_ID: farmerapp-dev
-        run: |
-          dbt deps
-          dbt build --target "$DBT_TARGET" --fail-fast
+        run: uv run dbt build --target dev --fail-fast
 
-  skip:
-    needs: detect
-    if: needs.detect.outputs.has_models != 'true' || vars.WIF_PROVIDER == ''
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "ci-dbt skipped (no models under dbt/models or WIF_PROVIDER unset)"
+      - name: dbt source freshness (AN-010, informational in dev)
+        continue-on-error: true
+        env:
+          DBT_PROJECT_ID: farmerapp-dev
+        run: uv run dbt source freshness --target dev

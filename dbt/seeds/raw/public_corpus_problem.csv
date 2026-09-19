@@ -1,0 +1,3 @@
+id,tenant_id,pest_or_disease_id,crop_id,problem_type,status,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+cpr-blast,t1,pd-blast,cr-paddy,disease,approved,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-cpr-1,1767225600000
+cpr-boll,t1,pd-boll,cr-cotton,pest,approved,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-cpr-2,1767225600000

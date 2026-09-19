@@ -1,0 +1,4 @@
+id,tenant_id,code,name,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+cr-paddy,t1,paddy,Paddy,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-crop-1,1767225600000
+cr-cotton,t1,cotton,Cotton,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-crop-2,1767225600000
+cr2-chilli,t2,chilli,Chilli,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-crop-3,1767225600000

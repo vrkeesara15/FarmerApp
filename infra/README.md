@@ -98,7 +98,7 @@ tools that are missing so it still passes locally; CI always runs all four.
 | migrate + 11 jobs (`python -m farmerapp.jobs <command>`) | `run_job` | Cloud Scheduler in Asia/Kolkata: run-rules 02:00, flags-sla hourly, sync-silence /15 min, auto-end-duty /10 min, ensure-partitions 00:30, purge-location-points 04:00 (`--apply` prd only), purge-expired hourly, store-day-watch 22:15, diagnosis-queue-age hourly, reconcile-payments 06:00, backfill-farm-photo-phash manual. Per-tenant jobs need `job_tenant_ids`. The migrate job runs as the `migrate` SA |
 | 7 topics, each with `.dlq` + push sub to worker | `pubsub` | 7-day retention, 5 attempts |
 | HTTPS LB, managed cert, Cloud Armor (OWASP CRS, OTP 5/min/IP, login 10/min/IP, India geo for field APIs; stg preview, prd enforce), optional console IAP | `lb` | SEC-014/015; reCAPTCHA bot management is a TODO needing keys |
-| BigQuery datasets; Datastream CDC when enabled | `analytics` | `datastream_enabled=false` in dev until M7 |
+| BigQuery `farmerapp_raw` / `_staging` / `_marts` / `_views`, `farmerapp-dbt` + `farmerapp-bi-reader` SAs (views authorised on marts, AN-013), Datastream over a PSC interface with a column allowlist (`replicated_columns.json`, AN-014) | `analytics` | `datastream_enabled=true` everywhere since M7; the stream itself waits for `datastream_stream_enabled` (human gate, `docs/runbooks/datastream-cdc-setup.md`; SQL from `scripts/datastream_sql.py`) |
 | Uptime checks, OPS-001..005 alerts, SLOs + burn-rate alerts, log-based metrics, platform / business / cost dashboards, Data Access audit logs -> locked 400-day bucket | `monitoring` | SPEC 12, SEC-017; reference `docs/runbooks/observability.md` |
 
 Database roles (SEC-011, FA-003): Terraform only creates the IAM users. Migration 0003

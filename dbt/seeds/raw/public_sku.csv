@@ -1,0 +1,4 @@
+id,tenant_id,product_id,mrp_paise,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+sk1,t1,p1,11000,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-sku-1,1767225600000
+sk2,t1,p2,65000,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-sku-2,1767225600000
+sk3,t2,p3,1600,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-sku-3,1767225600000

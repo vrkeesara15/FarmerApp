@@ -1,0 +1,4 @@
+id,tenant_id,name,district,mandal,state,store_id,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+v1,t1,Mamnoor,Warangal,Warangal,TS,s1,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-village-1,1767225600000
+v2,t1,Thimmapur,Karimnagar,Thimmapur,TS,s3,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-village-2,1767225600000
+v3,t2,Pedakakani,Guntur,Pedakakani,AP,s4,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-village-3,1767225600000

@@ -1,0 +1,3 @@
+id,tenant_id,code,name,type,crop_id,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+pd-blast,t1,paddy_blast,Paddy blast,disease,cr-paddy,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-pd-1,1767225600000
+pd-boll,t1,pink_bollworm,Pink bollworm,pest,cr-cotton,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-pd-2,1767225600000

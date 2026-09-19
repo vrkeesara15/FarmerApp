@@ -77,15 +77,33 @@ variable "cloud_armor_mode" {
 
 # --- Analytics ---
 variable "datastream_enabled" {
-  description = "Datastream → BigQuery (off dev, on stg/prd)."
+  description = "Datastream → BigQuery private connectivity and destination (SPEC 9.2: on in stg/prd; dev on from M7)."
+  type        = bool
+  default     = false
+}
+
+variable "datastream_stream_enabled" {
+  description = "Create the Postgres source profile and CDC stream. HUMAN GATE: only after docs/runbooks/datastream-cdc-setup.md (replication user, secret version, publication, slot)."
   type        = bool
   default     = false
 }
 
 variable "datastream_password_secret_version" {
-  description = "Secret version resource name holding the Datastream DB password (set out-of-band)."
+  description = "Secret version resource name holding the Datastream DB password. Empty = the datastream-db-password secret, version `latest` (value added out-of-band)."
   type        = string
   default     = ""
+}
+
+variable "dbt_workload_identity_members" {
+  description = "Principals that may act as the dbt SA through WIF (e.g. principalSet://iam.googleapis.com/<pool>/attribute.repository/<owner>/<repo>). Empty = nobody."
+  type        = list(string)
+  default     = []
+}
+
+variable "dbt_impersonators" {
+  description = "Members that may impersonate the dbt SA (local `dbt build --target <env>` with DBT_IMPERSONATE_SA)."
+  type        = list(string)
+  default     = []
 }
 
 # --- Safety ---

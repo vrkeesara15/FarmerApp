@@ -1,0 +1,5 @@
+id,tenant_id,code,name,cluster_id,district,state,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+s1,t1,WGL,Warangal main,c1,Warangal,TS,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-store-1,1767225600000
+s2,t1,HNK,Hanamkonda,c1,Warangal,TS,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-store-2,1767225600000
+s3,t1,KNR,Karimnagar,c2,Karimnagar,TS,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-store-3,1767225600000
+s4,t2,GNT,Guntur,c3,Guntur,AP,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-store-4,1767225600000

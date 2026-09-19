@@ -1,0 +1,4 @@
+id,tenant_id,name,settings,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+t1,t1,FCC Agro (fixture),"{""credit_due_days"": 60, ""targets"": {}}",2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-tenant-1,1767225600000
+t2,t2,GFL (fixture),{},2026-01-01 00:00:00,2026-01-01 00:00:00,2026-01-02 00:00:00,ds-tenant-2a,1767225600000
+t2,t2,GFL (fixture),{},2026-01-01 00:00:00,2026-01-03 00:00:00,,ds-tenant-2b,1767398400000

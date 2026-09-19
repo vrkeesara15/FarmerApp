@@ -1,0 +1,4 @@
+id,tenant_id,user_id,created_at,_ds_uuid,_ds_source_timestamp
+rt1,t1,u-far1,2026-09-15 02:00:00,ds-rt-1,1789437600000
+rt2,t1,u-fo1,2026-09-15 03:00:00,ds-rt-2,1789441200000
+rt3,t1,u-far1,2026-08-21 02:00:00,ds-rt-3,1787277600000

@@ -1,0 +1,8 @@
+id,tenant_id,farmer_id,area_acres,soil,irrigation,ownership,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+fa1,t1,f1,3.50,black,borewell,own,2026-08-20 04:10:00,2026-08-20 04:10:00,,ds-farm-1,1787199000000
+fa1x,t1,f1,10.00,black,borewell,own,2026-08-20 04:12:00,2026-08-21 04:00:00,2026-08-21 04:00:00,ds-farm-2,1787284800000
+fa2,t1,f2,2.00,red,rainfed,leased,2026-03-01 04:10:00,2026-03-01 04:10:00,,ds-farm-3,1772338200000
+fa3,t1,f3,5.00,black,canal,own,2026-01-10 04:10:00,2026-01-10 04:10:00,,ds-farm-4,1768018200000
+fa4,t1,f4,1.25,red,rainfed,own,2025-06-01 04:10:00,2025-06-01 04:10:00,,ds-farm-5,1748751000000
+fa5,t1,f5,1.00,sandy,rainfed,own,2026-05-01 04:10:00,2026-05-01 04:10:00,,ds-farm-6,1777608600000
+fa6,t2,f6,4.00,black,drip,own,2026-02-01 04:10:00,2026-02-01 04:10:00,,ds-farm-7,1769919000000

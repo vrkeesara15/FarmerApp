@@ -13,7 +13,8 @@ UV_RUN    := cd $(API_DIR) && $(UV) run
 CORE_SERVICES := db pubsub gcs mockserver
 
 .PHONY: help up down db db-roles seed migrate openapi test-api test-api-fast perf-api test-console test-mobile \
-        check-api check-console check-mobile check-infra check plan-dev logs
+        check-api check-console check-mobile check-infra check-dbt check plan-dev logs \
+        dbt dbt-dev dbt-freshness
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage: make <target>\n\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -113,7 +114,33 @@ check-infra: ## Terraform fmt/validate/tflint/checkov
 	@if [ -x infra/scripts/check.sh ]; then cd infra && ./scripts/check.sh; \
 	else echo "check-infra: infra/scripts/check.sh not found, skipping"; fi
 
-check: check-api check-console check-mobile check-infra ## Everything CI runs
+# ---------------------------------------------------------------- analytics (dbt, SPEC 5)
+# `ci` target = DuckDB over the fixture seeds: no GCP, no credentials (dbt/README.md).
+DBT_DIR := dbt
+DBT_RUN := cd $(DBT_DIR) && DBT_PROFILES_DIR=. $(UV) run
+
+$(DBT_DIR)/.venv/.synced: $(DBT_DIR)/pyproject.toml $(DBT_DIR)/uv.lock
+	cd $(DBT_DIR) && $(UV) sync --frozen --quiet && touch .venv/.synced
+
+dbt: $(DBT_DIR)/.venv/.synced ## dbt build on DuckDB fixtures: seeds, models, tests (no cloud)
+	rm -f $(DBT_DIR)/target/ci.duckdb
+	$(DBT_RUN) dbt build --target ci
+
+dbt-dev: $(DBT_DIR)/.venv/.synced ## dbt build on dev BigQuery (ADC; DBT_IMPERSONATE_SA to run as the dbt SA)
+	$(DBT_RUN) dbt build --target dev
+
+dbt-freshness: $(DBT_DIR)/.venv/.synced ## AN-010 source freshness on dev BigQuery (warn 15 min, error 30)
+	$(DBT_RUN) dbt source freshness --target dev
+
+check-dbt: ## Replication allowlist check + dbt build --target ci (skips without uv)
+	@if ! command -v $(UV) >/dev/null 2>&1; then echo "check-dbt: uv not installed, skipping"; \
+	elif [ ! -f $(DBT_DIR)/pyproject.toml ]; then echo "check-dbt: dbt/pyproject.toml not found, skipping"; \
+	else $(MAKE) --no-print-directory $(DBT_DIR)/.venv/.synced && \
+	  (cd $(DBT_DIR) && $(UV) run python scripts/check_replication.py) && \
+	  rm -f $(DBT_DIR)/target/ci.duckdb && \
+	  $(DBT_RUN) dbt build --target ci --fail-fast; fi
+
+check: check-api check-console check-mobile check-infra check-dbt ## Everything CI runs
 
 plan-dev: ## terraform plan for the dev environment
 	@if ls infra/envs/dev/*.tf >/dev/null 2>&1; then cd infra/envs/dev && terraform plan; \

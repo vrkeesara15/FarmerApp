@@ -1,0 +1,18 @@
+id,tenant_id,name,phone,role,store_id,cluster_id,status,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+u-owner,t1,Fixture Owner,+910000000101,owner,,,active,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-1,1767225600000
+u-dir,t1,Fixture Director,+910000000102,director,,,active,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-2,1767225600000
+u-admin,t1,Fixture Admin,+910000000103,tenant_admin,,,active,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-3,1767225600000
+u-aud,t1,Fixture Auditor,+910000000104,auditor,,,active,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-4,1767225600000
+u-ch1,t1,Fixture Cluster Head One,+910000000105,cluster_head,,c2,active,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-5a,1767225600000
+u-ch1,t1,Fixture Cluster Head One,+910000000105,cluster_head,,c1,active,2026-01-01 00:00:00,2026-03-01 00:00:00,,ds-user-5b,1772323200000
+u-ch2,t1,Fixture Cluster Head Two,+910000000106,cluster_head,,c2,active,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-6,1767225600000
+u-sm1,t1,Fixture Store Manager,+910000000107,store_manager,s1,,active,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-7,1767225600000
+u-sm-off,t1,Fixture Disabled Manager,+910000000108,store_manager,s3,c2,disabled,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-8,1767225600000
+u-fo1,t1,Fixture Officer One,+910000000109,field_officer,s1,c1,active,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-9,1767225600000
+u-fo2,t1,Fixture Officer Two,+910000000110,field_officer,s3,c2,active,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-10,1767225600000
+u-agro,t1,Fixture Agronomist,+910000000111,agronomist,,,active,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-11,1767225600000
+u-acct,t1,Fixture Accountant,+910000000112,accountant,s1,,active,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-12,1767225600000
+u-far1,t1,Fixture Farmer One,+910000000001,farmer,,,active,2026-08-20 04:00:00,2026-08-20 04:00:00,,ds-user-13,1787198400000
+u-gone,t1,Fixture Former Owner,+910000000113,owner,,,active,2026-01-01 00:00:00,2026-05-01 00:00:00,2026-05-01 00:00:00,ds-user-14,1777593600000
+u2-owner,t2,Fixture Owner T2,+910000000201,owner,,,active,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-15,1767225600000
+u2-fo,t2,Fixture Officer T2,+910000000202,field_officer,s4,c3,active,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-user-16,1767225600000

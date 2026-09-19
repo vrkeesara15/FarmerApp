@@ -1,0 +1,7 @@
+id,tenant_id,farm_id,crop_id,season,sowing_date,stage,expected_harvest,area_acres,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+cp1,t1,fa1,cr-paddy,kharif,2026-07-01,vegetative,2026-11-01,3.50,2026-08-20 04:15:00,2026-08-20 04:15:00,,ds-plot-1,1787199300000
+cp2,t1,fa2,cr-cotton,kharif,2026-06-15,flowering,2026-12-15,2.00,2026-06-15 04:15:00,2026-06-15 04:15:00,,ds-plot-2,1781496900000
+cp3,t1,fa3,cr-paddy,kharif,2026-06-20,maturity,2026-10-20,5.00,2026-06-20 04:15:00,2026-06-20 04:15:00,,ds-plot-3,1781928900000
+cp4,t1,fa4,cr-cotton,kharif,2025-06-10,harvested,2025-12-10,1.25,2025-06-10 04:15:00,2025-06-10 04:15:00,,ds-plot-4,1749528900000
+cp6,t2,fa6,cr2-chilli,rabi,2026-01-05,fruiting,2026-05-05,4.00,2026-02-01 04:15:00,2026-02-01 04:15:00,,ds-plot-5,1769919300000
+cp9,t1,fa1,cr-cotton,kharif,2026-07-01,sown,,1.00,2026-08-20 04:16:00,2026-08-22 04:00:00,2026-08-22 04:00:00,ds-plot-9,1787371200000

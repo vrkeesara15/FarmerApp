@@ -1,0 +1,219 @@
+version: 2
+
+# Staging: one view per replicated table. Typed (ids as strings, money as integer paise, UTC
+# timestamps), latest CDC row per primary key (macros/raw.sql latest_cdc_rows), soft-deleted
+# rows removed (deleted_at), tenant_id kept on every row, PII dropped or masked (AN-014).
+# The dedup is proven by tests: primary keys are unique although the fixtures carry older
+# versions of o1, v1, u-ch1 and t2.
+
+models:
+  - name: stg_tenant
+    columns:
+      - name: tenant_id
+        data_tests: [unique, not_null]
+      - name: credit_due_days
+        data_tests: [not_null]
+
+  - name: stg_cluster
+    columns:
+      - name: cluster_id
+        data_tests: [unique, not_null]
+      - name: tenant_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_tenant'), field: tenant_id}}
+
+  - name: stg_store
+    columns:
+      - name: store_id
+        data_tests: [unique, not_null]
+      - name: tenant_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_tenant'), field: tenant_id}}
+      - name: cluster_id
+        data_tests:
+          - relationships: {arguments: {to: ref('stg_cluster'), field: cluster_id}}
+
+  - name: stg_village
+    columns:
+      - name: village_id
+        data_tests: [unique, not_null]
+      - name: tenant_id
+        data_tests: [not_null]
+
+  - name: stg_user
+    description: Users without name or phone (AN-014).
+    columns:
+      - name: user_id
+        data_tests: [unique, not_null]
+      - name: tenant_id
+        data_tests: [not_null]
+      - name: role
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [owner, director, cluster_head, auditor, store_manager, accountant, field_officer, agronomist, tenant_admin, farmer]
+      - name: status
+        data_tests:
+          - accepted_values: {arguments: {values: [active, disabled]}}
+
+  - name: stg_farmer
+    description: Farmers without name, phone or landmark; phone masked to the last 4 digits (AN-014).
+    columns:
+      - name: farmer_id
+        data_tests: [unique, not_null]
+      - name: tenant_id
+        data_tests: [not_null]
+      - name: phone_masked
+        data_tests:
+          - not_null
+          - expression_is_true:
+              arguments:
+                expression: "length(phone_masked) = 13 and substr(phone_masked, 1, 9) = '*********'"
+      - name: village_id
+        data_tests:
+          - relationships: {arguments: {to: ref('stg_village'), field: village_id}}
+
+  - name: stg_farm
+    columns:
+      - name: farm_id
+        data_tests: [unique, not_null]
+      - name: tenant_id
+        data_tests: [not_null]
+
+  - name: stg_crop
+    columns:
+      - name: crop_id
+        data_tests: [unique, not_null]
+
+  - name: stg_crop_plot
+    columns:
+      - name: crop_plot_id
+        data_tests: [unique, not_null]
+      - name: tenant_id
+        data_tests: [not_null]
+      - name: crop_id
+        data_tests:
+          - relationships: {arguments: {to: ref('stg_crop'), field: crop_id}}
+
+  - name: stg_product
+    columns:
+      - name: product_id
+        data_tests: [unique, not_null]
+
+  - name: stg_sku
+    columns:
+      - name: sku_id
+        data_tests: [unique, not_null]
+
+  - name: stg_order
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: tenant_id
+        data_tests: [not_null]
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [draft, placed, reserved, packed, ready, handed_over, delivered, cancelled]
+      - name: sold_date
+        data_tests: [not_null]
+
+  - name: stg_order_line
+    columns:
+      - name: order_line_id
+        data_tests: [unique, not_null]
+      - name: tenant_id
+        data_tests: [not_null]
+
+  - name: stg_stock_batch
+    columns:
+      - name: batch_id
+        data_tests: [unique, not_null]
+
+  - name: stg_stock_movement
+    columns:
+      - name: stock_movement_id
+        data_tests: [unique, not_null]
+      - name: kind
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [receipt, sale, transfer_out, transfer_in, damage, adjust]
+
+  - name: stg_khata_entry
+    columns:
+      - name: khata_entry_id
+        data_tests: [unique, not_null]
+      - name: entry_type
+        data_tests:
+          - accepted_values: {arguments: {values: [debit, credit]}}
+      - name: effective_due_date
+        data_tests: [not_null]
+
+  - name: stg_payment
+    columns:
+      - name: payment_id
+        data_tests: [unique, not_null]
+
+  - name: stg_day_close
+    columns:
+      - name: day_close_id
+        data_tests: [unique, not_null]
+
+  - name: stg_visit
+    columns:
+      - name: visit_id
+        data_tests: [unique, not_null]
+      - name: tenant_id
+        data_tests: [not_null]
+      - name: status
+        data_tests:
+          - accepted_values: {arguments: {values: [verified, partial, unverified, open]}}
+
+  - name: stg_duty_session
+    columns:
+      - name: duty_session_id
+        data_tests: [unique, not_null]
+
+  - name: stg_app_session
+    description: Farmer app sessions (refresh tokens issued to a farmer's login); ids and times only.
+    columns:
+      - name: app_session_id
+        data_tests: [unique, not_null]
+
+  - name: stg_diagnosis
+    columns:
+      - name: diagnosis_id
+        data_tests: [unique, not_null]
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [queued, answered, provisional, confirmed, corrected, out_of_scope]
+
+  - name: stg_corpus_problem
+    columns:
+      - name: problem_id
+        data_tests: [unique, not_null]
+
+  - name: stg_flag
+    columns:
+      - name: flag_id
+        data_tests: [unique, not_null]
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [open, in_review, resolved_valid, resolved_fixed, escalated, resolved_action]
+      - name: subject_type
+        data_tests:
+          - accepted_values: {arguments: {values: [farmer, employee, visit, store, tenant]}}
+
+  - name: stg_flag_event
+    columns:
+      - name: flag_event_id
+        data_tests: [unique, not_null]

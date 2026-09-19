@@ -1,0 +1,5 @@
+id,tenant_id,name,district,state,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+c1,t1,Warangal cluster,Warangal,TS,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-cluster-1,1767225600000
+c2,t1,Karimnagar cluster,Karimnagar,TS,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-cluster-2,1767225600000
+c3,t2,Guntur cluster,Guntur,AP,2026-01-01 00:00:00,2026-01-01 00:00:00,,ds-cluster-3,1767225600000
+c9,t1,Closed cluster,Warangal,TS,2026-01-01 00:00:00,2026-02-01 00:00:00,2026-02-01 00:00:00,ds-cluster-9,1769904000000

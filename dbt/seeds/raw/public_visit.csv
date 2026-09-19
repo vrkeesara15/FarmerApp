@@ -1,0 +1,10 @@
+id,tenant_id,officer_id,farmer_id,farm_id,village_id,purpose,checkin_at,checkout_at,geofence_result,crop_stage,score,status,confirmation_channel,confirmed_at,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+v1,t1,u-fo1,f1,fa1,v1,advisory,2026-09-01 04:00:00,,inside,vegetative,,open,sms_otp,,2026-09-01 04:00:00,2026-09-01 04:00:00,,ds-visit-1a,1788235200000
+v1,t1,u-fo1,f1,fa1,v1,advisory,2026-09-01 04:00:00,2026-09-01 04:30:00,inside,vegetative,85,verified,sms_otp,2026-09-01 04:31:00,2026-09-01 04:00:00,2026-09-01 04:31:00,,ds-visit-1b,1788237060000
+v2,t1,u-fo1,f2,fa2,v1,scouting,2026-09-02 05:00:00,2026-09-02 05:20:00,inside,flowering,72,verified,none,,2026-09-02 05:00:00,2026-09-02 05:20:00,,ds-visit-2,1788326400000
+v3,t1,u-fo1,f1,fa1,v1,sale,2026-09-12 06:00:00,2026-09-12 06:45:00,outside,vegetative,50,partial,app_push,2026-09-12 06:46:00,2026-09-12 06:00:00,2026-09-12 06:46:00,,ds-visit-3,1789195560000
+v4,t1,u-fo2,f3,fa3,v2,advisory,2026-08-20 03:00:00,2026-08-20 04:00:00,inside,maturity,90,verified,qr,2026-08-20 04:01:00,2026-08-20 03:00:00,2026-08-20 04:01:00,,ds-visit-4,1787198460000
+v5,t1,u-fo2,f4,fa4,v2,collection,2026-09-14 07:00:00,,inside,harvested,,open,none,,2026-09-14 07:00:00,2026-09-14 07:00:00,,ds-visit-5,1789369200000
+v6,t1,u-fo1,f2,fa2,v1,demo,2026-09-03 05:00:00,2026-09-03 06:00:00,inside,flowering,95,verified,sms_otp,2026-09-03 06:01:00,2026-09-03 05:00:00,2026-09-04 05:00:00,2026-09-04 05:00:00,ds-visit-6,1788498000000
+v7,t1,u-fo2,f3,fa3,v2,advisory,2026-06-01 04:00:00,2026-06-01 04:30:00,inside,sown,80,verified,sms_otp,2026-06-01 04:31:00,2026-06-01 04:00:00,2026-06-01 04:31:00,,ds-visit-7,1780288260000
+v9,t2,u2-fo,f6,fa6,v3,advisory,2026-09-09 03:00:00,2026-09-09 03:30:00,inside,fruiting,75,verified,sms_otp,2026-09-09 03:31:00,2026-09-09 03:00:00,2026-09-09 03:31:00,,ds-visit-9,1788924660000

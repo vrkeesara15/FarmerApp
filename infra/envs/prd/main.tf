@@ -245,6 +245,9 @@ locals {
     # otp-provider-outage.md); not mounted until that adapter exists (OTP_PROVIDER is
     # mockserver | fake today).
     { otp-provider = ["serviceAccount:${module.iam.emails.api}"] },
+    # M7 / AN-010: password of the Postgres `datastream` login (docs/runbooks/
+    # datastream-cdc-setup.md). Read only by the Datastream service agent, never by a service.
+    { datastream-db-password = var.datastream_enabled ? ["serviceAccount:${module.analytics.datastream_service_agent}"] : [] },
   )
 
   # Scheduled Cloud Run Jobs: one per `python -m farmerapp.jobs <command>` of
@@ -686,20 +689,35 @@ module "lb" {
   depends_on = [google_project_service.apis]
 }
 
-# --- Analytics (Datastream → BigQuery) -------------------------------------------
+# --- Analytics (Datastream → BigQuery, SPEC 5 / 9.1; M7) -------------------------------
+# Datasets and the dbt / BI-reader service accounts always exist. datastream_enabled adds the
+# private connectivity and BigQuery profile; datastream_stream_enabled (human gate, after the
+# one-time SQL of docs/runbooks/datastream-cdc-setup.md) adds the source profile and stream.
 
 module "analytics" {
   source = "../../modules/analytics"
 
-  project_id                         = var.project_id
-  env                                = var.env
-  region                             = var.region
-  enabled                            = var.datastream_enabled
-  vpc_id                             = module.network.vpc_id
-  datastream_subnet_cidr             = module.network.datastream_subnet_cidr
-  sql_private_ip                     = module.sql.private_ip
-  database_name                      = module.sql.database_name
-  datastream_password_secret_version = var.datastream_password_secret_version
+  project_id                = var.project_id
+  env                       = var.env
+  region                    = var.region
+  datastream_enabled        = var.datastream_enabled
+  datastream_stream_enabled = var.datastream_stream_enabled
+  vpc_id                    = module.network.vpc_id
+  datastream_subnet_cidr    = module.network.datastream_subnet_cidr
+  sql_private_ip            = module.sql.private_ip
+  sql_server_ca_cert        = module.sql.server_ca_cert
+  database_name             = module.sql.database_name
+  datastream_password_secret_version = (
+    var.datastream_password_secret_version != ""
+    ? var.datastream_password_secret_version
+    : "${module.secrets.secret_names["datastream-db-password"]}/versions/latest"
+  )
+
+  # ci-dbt.yml / the scheduled dbt job (WIF principal set by the bootstrap owner) and the
+  # console, which reads the authorised views as the BI reader (AN-013).
+  dbt_workload_identity_members = var.dbt_workload_identity_members
+  dbt_impersonators             = var.dbt_impersonators
+  reader_impersonators          = ["serviceAccount:${module.iam.emails.console}"]
 
   depends_on = [google_project_service.apis]
 }

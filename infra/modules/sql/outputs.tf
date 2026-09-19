@@ -13,6 +13,11 @@ output "private_ip" {
   value       = google_sql_database_instance.main.private_ip_address
 }
 
+output "server_ca_cert" {
+  description = "PEM of the primary's server CA (Datastream verifies the TLS server certificate). Public, not a secret."
+  value       = google_sql_database_instance.main.server_ca_cert[0].cert
+}
+
 output "database_name" {
   description = "Application database name."
   value       = google_sql_database.app.name

@@ -1,0 +1,7 @@
+id,tenant_id,store_id,sku_id,batch_id,kind,qty,created_at,_ds_uuid,_ds_source_timestamp
+m1,t1,s1,sk1,b1,receipt,14.000,2026-08-01 04:00:00,ds-move-1,1785643200000
+m2,t1,s1,sk1,b1,sale,-2.000,2026-09-10 06:00:00,ds-move-2,1789020000000
+m3,t1,s1,sk1,b1,damage,-1.000,2026-09-11 05:00:00,ds-move-3,1789102800000
+m4,t1,s1,sk1,b1,sale,-1.000,2026-09-14 10:05:00,ds-move-4,1789380300000
+m5,t1,s3,sk1,b3,adjust,-1.000,2026-09-01 04:00:00,ds-move-5,1788235200000
+m6,t2,s4,sk3,b6,damage,-1.000,2026-09-12 05:00:00,ds-move-6,1789189200000

@@ -9,9 +9,12 @@ sql_max_connections = 100 # max_connections flag (tier default 50 cannot fit 11 
 min_instances       = { api = 0, console = 0, worker = 0, embed = 0 }
 max_instances       = { api = 3, console = 2, worker = 2, embed = 1 }
 cloud_armor_enabled = false
-datastream_enabled  = false
-deletion_protection = false
-notification_email  = ""
+datastream_enabled  = true # M7 kickoff: Datastream -> BigQuery in dev (SPEC 14.4; 9.2 had dev off until M7)
+# HUMAN GATE: set true only after docs/runbooks/datastream-cdc-setup.md (replication user,
+# password secret version, publication, slot) -- the source profile cannot connect before.
+datastream_stream_enabled = false
+deletion_protection       = false
+notification_email        = ""
 # Demo tenants of `jobs seed` (uuid5 of the slugs fcc and gfl), so dev schedules every job.
 job_tenant_ids       = ["f14ddecd-97a2-54e9-813a-a2239fcd59ca", "69321438-81a5-5160-9067-6e809e4fd7e5"]
 location_purge_apply = false
