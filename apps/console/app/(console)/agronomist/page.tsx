@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
+import { ReviewQueue } from "@/components/agronomist/ReviewQueue";
 import { t } from "@/lib/i18n";
-import { PlaceholderPage } from "../PlaceholderPage";
 
-export const metadata: Metadata = { title: t("agronomist.title") };
+export const metadata: Metadata = { title: t("queue.title") };
 
-/** C60 */
+/** C60 Agronomist review queue (WC-006, DX-006). */
 export default function Page() {
-  return <PlaceholderPage screenId="C60" titleKey="agronomist.title" emptyKey="agronomist.empty" />;
+  return <ReviewQueue />;
 }

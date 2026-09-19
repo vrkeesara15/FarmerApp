@@ -36,6 +36,21 @@ const CODES: Record<string, MessageKey> = {
   role_not_grantable: "problems.roleNotGrantable",
   cannot_modify_self: "problems.cannotModifySelf",
   invalid_settings: "problems.invalidSettings",
+  // WC-006 review queue, WC-007 corpus manager, NF-003 uploads
+  corpus_problem_exists: "problems.corpusProblemExists",
+  corpus_problem_invalid: "problems.corpusProblemInvalid",
+  corpus_entry_locked: "problems.corpusEntryLocked",
+  corpus_image_exists: "problems.corpusImageExists",
+  diagnosis_not_reviewable: "problems.diagnosisNotReviewable",
+  review_invalid: "problems.reviewInvalid",
+  diagnosis_image_missing: "problems.imageMissing",
+  image_sha_mismatch: "problems.uploadFailed",
+  encoder_unavailable: "problems.encoderUnavailable",
+  upload_too_large: "problems.uploadFailed",
+  upload_sha_mismatch: "problems.uploadFailed",
+  upload_incomplete: "problems.uploadFailed",
+  upload_expired: "problems.uploadFailed",
+  chunk_sha_mismatch: "problems.uploadFailed",
 };
 
 export function problemCode(err: unknown): string | undefined {

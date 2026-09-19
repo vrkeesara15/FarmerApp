@@ -7,6 +7,7 @@ import {
   type MockActor,
   type MockResult,
 } from "@/lib/mock/catalog";
+import { handleDiagnosis, handleUploads, resetMockDiagnosis } from "@/lib/mock/diagnosis";
 import { handleFlags, resetMockFlags } from "@/lib/mock/flags";
 
 /**
@@ -20,7 +21,8 @@ import { handleFlags, resetMockFlags } from "@/lib/mock/flags";
  * `/v1/catalog/*` (WC-005) is served by lib/mock/catalog.ts; `/v1/analytics/*` and
  * `/v1/clusters` (M4) by lib/mock/analytics.ts; `/v1/flags*` (WC-010) by lib/mock/flags.ts; `/v1/auth/step-up*`,
  * `/v1/users*`, `/v1/settings*` and `/v1/audit-logs*` (SEC-028, WC-011, WC-012, WC-103) by
- * lib/mock/admin.ts.
+ * lib/mock/admin.ts; `/v1/diagnoses*`, `/v1/corpus/*` and `/v1/uploads*` (WC-006, WC-007, NF-003) by
+ * lib/mock/diagnosis.ts.
  */
 export const MOCK_OTP = "123456";
 export const MOCK_UNKNOWN_PHONE = "+919999999999";
@@ -42,6 +44,7 @@ export function resetMockState() {
   resetMockCatalog();
   resetMockAdmin();
   resetMockFlags();
+  resetMockDiagnosis();
 }
 
 function toResponse(result: MockResult): NextResponse {
@@ -124,10 +127,19 @@ function tokens(phone: string, role: string = roleForPhone(phone)) {
 async function handle(req: NextRequest, rawPath: string[]): Promise<NextResponse> {
   const path = rawPath[0] === "v1" ? rawPath.slice(1) : rawPath;
   const route = `${req.method} /${path.join("/")}`;
-  const body =
-    req.method === "POST" || req.method === "PUT" || req.method === "PATCH"
-      ? ((await req.json().catch(() => ({}))) as Record<string, unknown>)
-      : {};
+  const hasBody = req.method === "POST" || req.method === "PUT" || req.method === "PATCH";
+  // Read the body once as bytes: chunked uploads carry raw bytes, everything else JSON.
+  const raw = hasBody ? await req.arrayBuffer() : new ArrayBuffer(0);
+  const uploadResult = await handleUploads(req.method, path, raw, req.headers, actorFrom(req));
+  if (uploadResult) return toResponse(uploadResult);
+  let body: Record<string, unknown> = {};
+  if (hasBody) {
+    try {
+      body = JSON.parse(new TextDecoder().decode(raw)) as Record<string, unknown>;
+    } catch {
+      body = {};
+    }
+  }
   const now = Date.now();
 
   const catalogResult = handleCatalog(
@@ -142,6 +154,7 @@ async function handle(req: NextRequest, rawPath: string[]): Promise<NextResponse
     handleAnalytics(req.method, path, req.nextUrl.searchParams, actorFrom(req)) ??
     handleClusters(req.method, path, actorFrom(req)) ??
     handleFlags(req.method, path, req.nextUrl.searchParams, body, actorFrom(req)) ??
+    handleDiagnosis(req.method, path, req.nextUrl.searchParams, body, actorFrom(req)) ??
     handleAdmin(req.method, path, req.nextUrl.searchParams, body, actorFrom(req), req.headers);
   if (moduleResult) {
     return toResponse(moduleResult);

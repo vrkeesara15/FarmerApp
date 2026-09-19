@@ -92,6 +92,29 @@ describe("role-based nav (SPEC 2.6)", () => {
     expect(screen.getByRole("link", { name: "products" })).toBeInTheDocument();
   });
 
+  it("C60-C62: agronomists work there, owners read, every other role is hidden", () => {
+    for (const path of ["/agronomist", "/agronomist/corpus", "/agronomist/quality"]) {
+      expect(canSeeRoute(path, "agronomist")).toBe(true);
+      expect(canSeeRoute(path, "owner")).toBe(true);
+      for (const role of [
+        "director",
+        "tenant_admin",
+        "auditor",
+        "cluster_head",
+        "store_manager",
+        "accountant",
+        "field_officer",
+        "farmer",
+      ])
+        expect(canSeeRoute(path, role)).toBe(false);
+    }
+    const withAgronomist = [...ITEMS, { href: "/agronomist", label: "agronomist", icon: null }];
+    expect(visibleNavItems(withAgronomist, "agronomist").map((i) => i.href)).toEqual([
+      "/products",
+      "/agronomist",
+    ]);
+  });
+
   it("binds the TopBar date range only on the analytics dashboards", () => {
     for (const p of ["/home", "/field-team/off-1/replay", "/farmers/f1", "/stores"])
       expect(isAnalyticsRoute(p)).toBe(true);
