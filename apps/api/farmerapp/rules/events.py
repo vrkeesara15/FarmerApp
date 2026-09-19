@@ -23,12 +23,15 @@
   ``PaymentCaptured`` (payments)   ``payment.captured``   the payment
   ``CashVarianceDetected``         ``day_close.variance`` the day close
   (payments, ST-006 day close)
+  ``TravelClaimSubmitted``         ``ta.claim.submitted`` the claim
+  (travel, FA-023)
   ==============================  =====================  ==========================
 
-  FA-023 TA claims (M7, travel package): ``on_travel_claim_submitted(session, tenant_id,
-  claim_id, ...)`` is the seam the travel write path calls after it flushed a submitted
-  claim (``ta.claim.submitted``, subject = the claim; VA-E07 reads the claim through
-  ``TravelClaimPort``). The Pub/Sub worker accepts the same topic with ``claim_id``.
+  FA-023 TA claims (M7): the claim submit path (``POST /v1/travel/claims`` and the
+  ``travel_claim`` sync create) dispatches ``TravelClaimSubmitted`` after the claim row is
+  flushed; the subscriber runs ``on_travel_claim_submitted`` (VA-E07 reads the claim through
+  the ``TravelClaimPort`` the travel package registers, ``farmerapp.travel.rules_port``).
+  The Pub/Sub worker accepts the same topic with ``claim_id``.
 
   Write paths that own a session without a bus (FA-012 registration, farm photos) call
   ``engine.emit`` directly (``farmer.registered``, ``farm.photo``).
@@ -54,6 +57,7 @@ from farmerapp.payments import events as payment_events
 from farmerapp.rules.engine import RunReport, emit
 from farmerapp.rules.loader import RuleSet, get_rule_set
 from farmerapp.rules.schema import Mode
+from farmerapp.travel import events as travel_events
 from farmerapp.visits import events as visit_events
 from farmerapp.worker.messages import PubSubMessage
 
@@ -171,6 +175,14 @@ async def on_travel_claim_submitted(
     )
 
 
+async def _on_travel_claim_submitted(
+    session: AsyncSession, event: travel_events.TravelClaimSubmitted
+) -> None:
+    await on_travel_claim_submitted(
+        session, event.tenant_id, event.claim_id, officer_id=event.officer_id, at=event.at
+    )
+
+
 async def _on_visit_checked_in(session: AsyncSession, event: visit_events.VisitCheckedIn) -> None:
     await _run_subscribed(
         session,
@@ -244,6 +256,9 @@ def register() -> None:
     visit_events.bus.subscribe_async(visit_events.VisitCheckedOut, _on_visit_checked_out)
     location_events.bus.subscribe_async(location_events.DutyStarted, _on_duty_started)
     location_events.bus.subscribe_async(location_events.LocationBatchIngested, _on_location_batch)
+    travel_events.bus.subscribe_async(
+        travel_events.TravelClaimSubmitted, _on_travel_claim_submitted
+    )
 
 
 __all__ = ["SUBJECT_KEYS", "handle_event_message", "on_travel_claim_submitted", "register"]

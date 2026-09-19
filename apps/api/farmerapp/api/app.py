@@ -61,6 +61,7 @@ from farmerapp.sync import router as sync_routes
 from farmerapp.tenants import clusters_router as cluster_routes
 from farmerapp.tenants import settings_router as settings_routes
 from farmerapp.travel import router as travel_routes
+from farmerapp.travel import rules_port as travel_rules_port
 from farmerapp.uploads import router as upload_routes
 from farmerapp.uploads.blobstore import BlobStore, build_blob_store
 from farmerapp.users import router as user_routes
@@ -182,6 +183,7 @@ def create_app(
     app.state.incentives = incentives or NULL_INCENTIVES  # FA-024: WC-009 plugs in here
     validate_rules()  # VA-001: invalid rules/*.yaml refuse to start
     rule_events.register()  # SPEC 6.1: event rules on the in-process buses
+    travel_rules_port.register()  # VA-E07 reads FA-023 claims through TravelClaimPort
 
     v1 = APIRouter(prefix=API_PREFIX)
     v1.include_router(health.router)

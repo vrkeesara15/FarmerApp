@@ -22,6 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.auth.clock import FakeClock
 from farmerapp.duty.service import close_session
+from farmerapp.flags.models import Flag
 from farmerapp.notifications.models import Notification
 from farmerapp.tenants.settings import TenantSettings
 from farmerapp.travel import events
@@ -259,3 +260,48 @@ async def test_claim_offline_through_sync(
         "/v1/sync", json={"device_id": "d1", "cursor": None, "ops": [op2]}, headers=bearer(o1)
     )
     assert resp.json()["results"][0]["status"] == "conflict"
+
+
+async def test_claim_submit_raises_va_e07_end_to_end(
+    app: FastAPI, client: AsyncClient, bearer: Bearer, mini: Mini, db_session: AsyncSession
+) -> None:
+    """VA-E07 through the real claim endpoint: ``TravelClaimSubmitted`` -> the rules'
+    subscriber -> ``DbTravelClaims`` (km implied by the amount at the tenant's TA rate,
+    300 paise / km) vs the processed duty km of the day. 40 km driven: a 150 rupee claim
+    (50 km, +25 %) is flagged for the cluster head, a 130 rupee claim (43.33 km, +8 %) is not."""
+    await mini.duty("o1", ist(DAY, 9), ist(DAY, 18), km="40.00")
+    o1 = mini.user("o1")
+    ids: dict[int, str] = {}
+    for amount in (15_000, 13_000):
+        resp = await client.post(
+            "/v1/travel/claims",
+            json={
+                "claim_date": str(DAY),
+                "type": "fuel",
+                "amount_paise": amount,
+                "receipt_uri": await receipt(app, mini.tid),
+            },
+            headers=bearer(o1),
+        )
+        assert resp.status_code == 201, resp.text
+        ids[amount] = resp.json()["id"]
+    flags = (
+        (
+            await db_session.execute(
+                select(Flag).where(Flag.tenant_id == mini.tid, Flag.rule_id == "VA-E07")
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert len(flags) == 1
+    (flag,) = flags
+    assert flag.subject_id == o1.id and flag.raised_by_mode == "event"
+    assert flag.severity == "medium"
+    assert {"type": "ta_claim", "id": ids[15_000]} in flag.evidence["records"]
+    metrics = flag.evidence["metrics"]
+    assert metrics["claimed_km"] == 50.0 and metrics["computed_km"] == 40.0
+    assert metrics["difference_share"] == 0.25
+    # The flag goes to the officer's cluster head (the review surface of VA-E07).
+    listed = await client.get(f"/v1/flags/{flag.id}", headers=bearer(mini.user("cluster_head")))
+    assert listed.status_code == 200, listed.text

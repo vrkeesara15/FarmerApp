@@ -9,6 +9,19 @@ points within the stop radius) begins and ends with such a movement, so arriving
 leaving a stop is activity; sitting at one place with no visit is not. The longest gap
 between consecutive activity instants above the threshold raises the flag.
 
+Processed sessions (VV-006, ``duty_session.processed_at`` set at duty end or by the
+``process-tracks`` job) use the processed track where it is more accurate:
+
+* movement is measured on the fixes the VV-006 filter keeps (accuracy, duplicate timestamps
+  and > 90 km/h jumps dropped, ``farmerapp.duty.track``), so GPS jitter is not activity;
+* the start and end of every stored stop (>= 5 min within 100 m) are activity instants;
+* the stored track gaps (> 30 min without a kept fix; VV-008 asks the officer for a reason)
+  are not idle time: the app samples a stationary officer every few minutes, so a gap is a
+  tracking outage, not evidence of sitting still. Their overlap is subtracted from each idle
+  span (``gap_minutes_excluded``); gaps are reviewed through VV-008, not here.
+
+Unprocessed sessions (open, or ended before VV-006) keep the raw-point pass above.
+
 Batch (nightly): sessions overlapping the last ``lookback_hours``. One flag per session
 (key ``idle:<session>``), low severity, for the cluster head.
 """
@@ -22,6 +35,8 @@ from itertools import pairwise
 from sqlalchemy import or_, select
 
 from farmerapp.db.geo import haversine_m
+from farmerapp.duty.models import TrackGap
+from farmerapp.duty.track import TrackPoint, _usable
 from farmerapp.location.models import DutySession, LocationPoint
 from farmerapp.rules.checks.common import geo_point
 from farmerapp.rules.registry import Evidence, Finding, RuleContext, record, rule
@@ -36,7 +51,14 @@ async def check(ctx: RuleContext) -> list[Finding]:
     max_accuracy = float(ctx.param("max_accuracy_m"))
     since = ctx.now - timedelta(hours=float(ctx.param("lookback_hours")))
     stmt = (
-        select(DutySession.id, DutySession.officer_id, DutySession.start_at, DutySession.end_at)
+        select(
+            DutySession.id,
+            DutySession.officer_id,
+            DutySession.start_at,
+            DutySession.end_at,
+            DutySession.processed_at,
+            DutySession.stops,
+        )
         .where(
             DutySession.tenant_id == ctx.tenant_id,
             DutySession.deleted_at.is_(None),
@@ -48,7 +70,10 @@ async def check(ctx: RuleContext) -> list[Finding]:
     if ctx.subject_ids is not None:
         stmt = stmt.where(DutySession.id.in_(ctx.subject_ids))
     findings: list[Finding] = []
-    for duty_id, officer, start, end in (await ctx.session.execute(stmt)).tuples():
+    for duty_id, officer, start, end, processed_at, stops in (
+        await ctx.session.execute(stmt)
+    ).tuples():
+        processed = processed_at is not None
         until = min(end, ctx.now) if end is not None else ctx.now
         instants: list[tuple[datetime, str, uuid.UUID | None]] = [
             (start, "duty_start", None),
@@ -68,7 +93,7 @@ async def check(ctx: RuleContext) -> list[Finding]:
                 if at is not None and start <= at <= until:
                     instants.append((at, "visit", visit_id))
         points = await ctx.session.execute(
-            select(LocationPoint.ts, LocationPoint.lon, LocationPoint.lat)
+            select(LocationPoint.ts, LocationPoint.lon, LocationPoint.lat, LocationPoint.accuracy_m)
             .where(
                 LocationPoint.tenant_id == ctx.tenant_id,
                 LocationPoint.duty_session_id == duty_id,
@@ -78,9 +103,30 @@ async def check(ctx: RuleContext) -> list[Finding]:
             )
             .order_by(LocationPoint.ts)
         )
+        fixes = [
+            TrackPoint(ts=ts, lat=lat, lon=lon, accuracy_m=float(acc))
+            for ts, lon, lat, acc in points.tuples()
+        ]
+        gaps: list[tuple[datetime, datetime]] = []
+        if processed:
+            fixes = _usable(fixes)  # the VV-006 filter: jitter jumps are not movement
+            for stop in stops or []:
+                for key in ("start", "end"):
+                    at = datetime.fromisoformat(stop[key])
+                    if start <= at <= until:
+                        instants.append((at, "stop", None))
+            gap_rows = await ctx.session.execute(
+                select(TrackGap.start_at, TrackGap.end_at).where(
+                    TrackGap.tenant_id == ctx.tenant_id,
+                    TrackGap.duty_session_id == duty_id,
+                    TrackGap.deleted_at.is_(None),
+                )
+            )
+            gaps = list(gap_rows.tuples())
         anchor: tuple[float, float] | None = None
         where: dict[datetime, tuple[float, float]] = {}
-        for ts, lon, lat in points.tuples():
+        for fix in fixes:
+            ts, lon, lat = fix.ts, fix.lon, fix.lat
             if anchor is None:
                 anchor = (lon, lat)
                 where[ts] = anchor
@@ -90,14 +136,15 @@ async def check(ctx: RuleContext) -> list[Finding]:
                 instants.append((ts, "movement", None))
             where[ts] = anchor
         instants.sort(key=lambda i: i[0])
-        worst: tuple[timedelta, datetime, datetime] | None = None
+        worst: tuple[timedelta, datetime, datetime, timedelta] | None = None
         for (a, _ka, _ia), (b, _kb, _ib) in pairwise(instants):
-            gap = b - a
-            if worst is None or gap > worst[0]:
-                worst = (gap, a, b)
+            outage = _overlap(gaps, a, b)
+            idle = b - a - outage
+            if worst is None or idle > worst[0]:
+                worst = (idle, a, b, outage)
         if worst is None or worst[0] <= max_idle:
             continue
-        gap, idle_from, idle_to = worst
+        gap, idle_from, idle_to, outage = worst
         seen = [xy for ts, xy in where.items() if idle_from <= ts <= idle_to]
         findings.append(
             Finding(
@@ -115,8 +162,20 @@ async def check(ctx: RuleContext) -> list[Finding]:
                         "idle_minutes": int(gap.total_seconds() // 60),
                         "max_idle_hours": float(ctx.param("max_idle_hours")),
                         "visits_in_session": sum(1 for i in instants if i[1] == "visit"),
+                        "track_processed": processed,
+                        "gap_minutes_excluded": int(outage.total_seconds() // 60),
                     },
                 ),
             )
         )
     return findings
+
+
+def _overlap(spans: list[tuple[datetime, datetime]], a: datetime, b: datetime) -> timedelta:
+    """Total time of ``spans`` (disjoint track gaps) inside ``[a, b]``."""
+    total = timedelta(0)
+    for lo, hi in spans:
+        lo, hi = max(lo, a), min(hi, b)
+        if hi > lo:
+            total += hi - lo
+    return total

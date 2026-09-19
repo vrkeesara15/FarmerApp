@@ -7,11 +7,15 @@ from __future__ import annotations
 import uuid
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from farmerapp.duty.models import TrackGap
+from farmerapp.duty.processing import process_session
 from farmerapp.flags.models import Flag
+from farmerapp.location.models import DutySession
 from farmerapp.payments import events as payment_events
 from farmerapp.rules import events
 from farmerapp.rules.checks.va_f05 import in_window
@@ -21,6 +25,7 @@ from farmerapp.rules.ports import (
     NoLandCover,
     NoSegments,
     NoTravelClaims,
+    Ports,
     TravelClaim,
     get_ports,
     override_ports,
@@ -32,7 +37,7 @@ from farmerapp.rules.reference import (
     service_area_setting,
 )
 from farmerapp.tenants.settings import ServiceArea, ServiceDistrict
-from tests.rules.harness import DEFAULT_NOW, add_duty, base_world, when
+from tests.rules.harness import DEFAULT_NOW, add_duty, base_world, run_fixture, seed, when
 from tests.rules.harness_m7 import seed_m7
 
 
@@ -61,7 +66,7 @@ def test_service_area_polygon_and_bbox() -> None:
 
 
 async def test_ports_default_to_no_rows(db_session: AsyncSession) -> None:
-    ports = get_ports()
+    ports = Ports()  # the defaults (the app registers the travel package's real adapter)
     assert isinstance(ports.segments, NoSegments)
     assert isinstance(ports.travel_claims, NoTravelClaims)
     assert isinstance(ports.land_cover, NoLandCover)
@@ -145,4 +150,77 @@ async def test_travel_claim_seam_raises_va_e07(db_session: AsyncSession) -> None
     assert flag.rule_id == "VA-E07" and flag.subject_id == world.refs["officer"]
     assert {"type": "ta_claim", "id": str(claim.id)} in flag.evidence["records"]
     assert flag.evidence["metrics"]["computed_km"] == 12.5
-    assert isinstance(get_ports().travel_claims, NoTravelClaims)  # restored after the block
+    assert not isinstance(get_ports().travel_claims, InMemoryTravelClaims)  # restored
+
+
+# --------------------------------------------------------------------------- VA-E06 x VV-006
+def _stationary(duty: str, hours: list[float], **extra: Any) -> list[dict[str, Any]]:
+    """A fix every 10 minutes at the origin over each ``(from_h, to_h)`` pair (hours ago)."""
+    out: list[dict[str, Any]] = []
+    for lo, hi in zip(hours[::2], hours[1::2], strict=True):
+        for step in range(round((lo - hi) * 60) // 10 + 1):
+            ago = lo * 60 - step * 10  # minutes ago
+            out.append(
+                {"duty": duty, "at": f"-{ago / 60:.4f}h", "east_m": 0, "north_m": 0, **extra}
+            )
+    return out
+
+
+async def _processed_vs_raw(db_session: AsyncSession, data: dict[str, Any]) -> list[Flag]:
+    """Seed the same track for ``officer`` (session ``p``, processed by VV-006 at duty end)
+    and ``officer2`` (session ``r``, never processed), then run VA-E06."""
+    world = await base_world(db_session)
+    await seed(db_session, world, data, DEFAULT_NOW)
+    duty = await db_session.get_one(DutySession, world.refs["p"])
+    await process_session(db_session, duty, now=DEFAULT_NOW)
+    assert duty.processed_at is not None
+    _world, outcome = await run_fixture(db_session, "VA-E06", {"mode": "batch"}, world=world)
+    return outcome.flags
+
+
+def _both(points: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [p for spec in points for p in ({**spec, "duty": "p"}, {**spec, "duty": "r"})]
+
+
+async def test_va_e06_does_not_count_a_track_gap_as_idle(db_session: AsyncSession) -> None:
+    """Six hours of duty at one spot with a 3.5 h tracking outage in the middle (a VV-006
+    gap, explained through VV-008): the processed session has at most 1.5 h of observed
+    idleness; the unprocessed one reads the outage as 3.5 h idle (the raw pass)."""
+    points = _both(_stationary("x", [7, 5.5, 2, 1]))
+    data = {
+        "seed": {
+            "duty": [
+                {"ref": "p", "officer": "officer", "start": "-7h", "end": "-1h"},
+                {"ref": "r", "officer": "officer2", "start": "-7h", "end": "-1h"},
+            ],
+            "points": points,
+        }
+    }
+    flags = await _processed_vs_raw(db_session, data)
+    assert len(flags) == 1
+    (flag,) = flags
+    assert flag.evidence["metrics"]["track_processed"] is False
+    assert flag.evidence["metrics"]["gap_minutes_excluded"] == 0
+    gaps = (await db_session.execute(select(TrackGap))).scalars().all()
+    assert len(gaps) == 1 and gaps[0].duration_s == int(3.5 * 3600)
+
+
+async def test_va_e06_ignores_gps_jitter_on_processed_tracks(db_session: AsyncSession) -> None:
+    """Five hours at one spot with one bad fix 5 km away (a > 90 km/h jump the VV-006 filter
+    drops): the raw pass reads the jump as two movements and splits the idle time; the
+    processed session is one stop and raises the idle flag."""
+    points = _stationary("x", [6, 1])
+    points.append({"duty": "x", "at": "-3.49h", "east_m": 5000, "north_m": 0})
+    data = {
+        "seed": {
+            "duty": [
+                {"ref": "p", "officer": "officer", "start": "-6h", "end": "-1h"},
+                {"ref": "r", "officer": "officer2", "start": "-6h", "end": "-1h"},
+            ],
+            "points": _both(points),
+        }
+    }
+    flags = await _processed_vs_raw(db_session, data)
+    assert [f.evidence["metrics"]["track_processed"] for f in flags] == [True]
+    (flag,) = flags
+    assert flag.evidence["metrics"]["idle_minutes"] >= 4 * 60
