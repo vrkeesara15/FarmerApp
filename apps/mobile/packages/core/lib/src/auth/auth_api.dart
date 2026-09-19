@@ -36,6 +36,10 @@ enum OtpVerifyResult {
   /// Too many wrong attempts (423 `otp_locked`); try later.
   locked,
 
+  /// A field officer signed in on a phone that is not their bound device
+  /// (409 `device_not_bound`, SEC-020); an administrator must approve it.
+  deviceNotBound,
+
   /// The request never reached the server.
   network,
 }
@@ -239,7 +243,12 @@ class FakeAuthApi implements AuthApi {
     this.lockout = const Duration(minutes: 15),
     this.role = 'field_officer',
     this.storeId,
+    this.deviceBound = true,
   });
+
+  /// When false a correct code answers [OtpVerifyResult.deviceNotBound]
+  /// (SEC-020: this phone is not the officer's bound device).
+  bool deviceBound;
 
   /// Role of the signed-in user (store-mode tests use `store_manager`).
   final String role;
@@ -306,6 +315,9 @@ class FakeAuthApi implements AuthApi {
     await Future<void>.delayed(latency);
     if (_locked.contains(phone)) {
       return OtpVerifyOutcome(OtpVerifyResult.locked, retryAfter: lockout);
+    }
+    if (otp == acceptedOtp && !deviceBound) {
+      return const OtpVerifyOutcome(OtpVerifyResult.deviceNotBound);
     }
     if (otp == acceptedOtp) {
       _attempts.remove(phone);

@@ -1,3 +1,4 @@
+import 'package:farmerapp_core/farmerapp_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,11 +20,18 @@ abstract final class AppRoutes {
 
   /// F70 Me.
   static const String settings = '/me';
+
+  /// Signed out by your administrator (SEC-025; the officer app's A08).
+  static const String signedOut = '/signed-out';
 }
 
-/// The app router.
+/// The app router; after a remote wipe it opens on the signed-out screen.
 final Provider<GoRouter> routerProvider = Provider<GoRouter>(
-  (ref) => buildRouter(),
+  (ref) => buildRouter(
+    initialLocation: ref.read(wipeNoticeProvider)
+        ? AppRoutes.signedOut
+        : AppRoutes.language,
+  ),
 );
 
 /// Builds the router; tests override [routerProvider] to start elsewhere.
@@ -46,6 +54,17 @@ GoRouter buildRouter({String initialLocation = AppRoutes.language}) {
       GoRoute(
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.signedOut,
+        builder: (context, state) => Consumer(
+          builder: (context, ref, _) => SignedOutScreen(
+            onSignInAgain: () async {
+              await clearWipeNotice(ref.read(appDatabaseProvider));
+              if (context.mounted) context.go(AppRoutes.language);
+            },
+          ),
+        ),
       ),
     ],
   );

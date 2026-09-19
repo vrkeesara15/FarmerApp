@@ -209,7 +209,8 @@ class VisitFlow {
               farmBoundary: boundary,
               meetingPoint: meeting,
               radiusM: settings.geofenceRadiusM,
-              meetingRadiusM: village?.meetingPointRadiusM,
+              meetingRadiusM:
+                  village?.meetingPointRadiusM ?? settings.meetingPointRadiusM,
             ),
       settings: settings,
       farmBoundary: boundary,

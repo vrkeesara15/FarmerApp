@@ -18,6 +18,7 @@ void main() {
   late MemoryPhotoStore photos;
   late FakeVisitConfirmApi confirmApi;
   late FakeConnectivityMonitor connectivity;
+  late FakeTenantSettingsApi settingsApi;
   late ProviderContainer c;
 
   const farmerId = 'farmer-1';
@@ -29,9 +30,11 @@ void main() {
     photos = MemoryPhotoStore();
     confirmApi = FakeVisitConfirmApi(clock: deps.clock.call);
     connectivity = FakeConnectivityMonitor();
+    settingsApi = FakeTenantSettingsApi();
     c = ProviderContainer(
       overrides: <Override>[
         ...deps.overrides(),
+        tenantSettingsApiProvider.overrideWithValue(settingsApi),
         cameraSourceProvider.overrideWithValue(camera),
         photoStoreProvider.overrideWithValue(photos),
         visitConfirmApiProvider.overrideWithValue(confirmApi),
@@ -193,6 +196,26 @@ void main() {
     final pre = await flow().precheck(farm: await farm());
     expect(pre.check!.outcome, GeofenceOutcome.outside);
     expect(pre.check!.radiusM, 50);
+  });
+
+  test('fetched tenant settings (GET /v1/settings/public) drive the '
+      'pre-check and the proof minimum', () async {
+    deps.sampler.initial = fixAt(dutyT0, east: 200, north: 50);
+    // SPEC default 150 m: 100 m past the farm edge is inside.
+    var pre = await flow().precheck(farm: await farm());
+    expect(pre.check!.outcome, GeofenceOutcome.inside);
+    expect(pre.check!.radiusM, 150);
+
+    settingsApi.settings = const PublicTenantSettings(
+      geofenceRadiusM: 60,
+      minVisitDurationS: 900,
+    );
+    await c.read(tenantSettingsSyncProvider).pull();
+    pre = await flow().precheck(farm: await farm());
+    expect(pre.check!.outcome, GeofenceOutcome.outside);
+    expect(pre.check!.radiusM, 60);
+    expect(pre.settings.minVisitDurationS, 900);
+    expect((await c.read(visitSettingsProvider.future)).geofenceRadiusM, 60);
   });
 
   test('photo: in-app capture through NF-004, upload + visit_photo op with '

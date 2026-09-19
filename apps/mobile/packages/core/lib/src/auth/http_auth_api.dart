@@ -19,6 +19,8 @@ class HttpAuthApi implements AuthApi {
     this._config = const ApiConfig(),
     http.Client? client,
     this.deviceName,
+    this.appVersion,
+    this.platform = 'android',
     this.timeout = const Duration(seconds: 20),
   }) : _client = client ?? http.Client();
 
@@ -28,6 +30,12 @@ class HttpAuthApi implements AuthApi {
 
   /// Human-readable device label sent on login (optional).
   final String? deviceName;
+
+  /// App version sent on login and refresh (shown in C101; optional).
+  final String? appVersion;
+
+  /// Platform sent on login (C101 device list).
+  final String platform;
 
   /// Per-request timeout (the SLO says the OTP arrives within 20 s).
   final Duration timeout;
@@ -98,6 +106,8 @@ class HttpAuthApi implements AuthApi {
         'code': otp,
         'device_id': await _store.deviceId(),
         if (deviceName != null) 'device_name': deviceName,
+        'platform': platform,
+        if (appVersion != null) 'app_version': appVersion,
       });
     } on http.ClientException {
       return const OtpVerifyOutcome(OtpVerifyResult.network);
@@ -123,6 +133,11 @@ class HttpAuthApi implements AuthApi {
         OtpVerifyResult.locked,
         retryAfter: _seconds(json['retry_after']),
       ),
+      // SEC-020: an officer on a phone other than their bound device. The
+      // refresh token stays bound to the device id sent above.
+      'device_not_bound' => const OtpVerifyOutcome(
+        OtpVerifyResult.deviceNotBound,
+      ),
       _ => const OtpVerifyOutcome(OtpVerifyResult.network),
     };
   }
@@ -137,6 +152,7 @@ class HttpAuthApi implements AuthApi {
       reply = await _post('/v1/auth/refresh', <String, Object?>{
         'refresh_token': current.refreshToken,
         'device_id': await _store.deviceId(),
+        if (appVersion != null) 'app_version': appVersion,
       });
     } on http.ClientException {
       return current;

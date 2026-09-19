@@ -9,15 +9,17 @@ import 'app_database.dart';
 
 /// How the on-device database file is opened.
 ///
-/// SEC-024 (M5) adds an encrypted opener (SQLCipher via Drift's
-/// `sqlcipher_flutter_libs`, key held in the Android Keystore) behind this
-/// same interface; callers keep using [AppDatabase] and [openAppDatabase].
+/// The apps use `EncryptedDatabaseOpener` (SEC-024: SQLCipher, key in the
+/// Android Keystore, see `encrypted_database.dart`); unit tests use
+/// [InMemoryDatabaseOpener]. Callers keep using [AppDatabase] and
+/// [openAppDatabase].
 abstract interface class DatabaseOpener {
   /// Creates the executor the database runs on.
   QueryExecutor open();
 }
 
-/// Plain SQLite file in the app documents directory (no encryption yet).
+/// Plain SQLite file in the app documents directory (unencrypted: previews
+/// and tools only; the apps open `EncryptedDatabaseOpener`).
 class NativeDatabaseOpener implements DatabaseOpener {
   /// Creates the opener for [fileName].
   const NativeDatabaseOpener({this.fileName = 'farmerapp.db'});

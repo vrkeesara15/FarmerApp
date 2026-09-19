@@ -3268,4 +3268,26 @@ class CoreLocalizationsKn extends CoreLocalizations {
   @override
   String get creditRejectedByClusterHead =>
       'ಕ್ಲಸ್ಟರ್ ಮುಖ್ಯಸ್ಥರು ಈ ಸಾಲದ ಮಾರಾಟವನ್ನು ತಿರಸ್ಕರಿಸಿದ್ದಾರೆ. ಬದಲಿಗೆ ನಗದು ಪಡೆಯಿರಿ.';
+
+  @override
+  String get loginDeviceNotBound =>
+      'ಈ ಫೋನ್ ನಿಮ್ಮ ಹೆಸರಿನಲ್ಲಿ ನೋಂದಣಿ ಆಗಿಲ್ಲ. ಇದನ್ನು ಅನುಮೋದಿಸಲು ನಿಮ್ಮ ಆಡಳಿತಗಾರರನ್ನು ಕೇಳಿ, ನಂತರ ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಿ.';
+
+  @override
+  String get wipeTitle => 'ನಿಮ್ಮ ಆಡಳಿತಗಾರರು ಸೈನ್ ಔಟ್ ಮಾಡಿದ್ದಾರೆ';
+
+  @override
+  String get wipeBody =>
+      'ನಿಮ್ಮ ಆಡಳಿತಗಾರರು ಈ ಫೋನ್ ಅನ್ನು ಆ್ಯಪ್‌ನಿಂದ ಸೈನ್ ಔಟ್ ಮಾಡಿದ್ದಾರೆ. ಸುರಕ್ಷತೆಗಾಗಿ ಈ ಫೋನ್‌ನಲ್ಲಿನ ಆ್ಯಪ್ ಡೇಟಾ ಅಳಿಸಲಾಗಿದೆ.';
+
+  @override
+  String get wipeDeletedList =>
+      'ಅಳಿಸಲಾಗಿದೆ: ಉಳಿಸಿದ ರೈತರು, ಭೇಟಿಗಳು, ಆರ್ಡರ್‌ಗಳು, ಫೋಟೋಗಳು ಮತ್ತು ಇನ್ನೂ ಕಳುಹಿಸದ ಕೆಲಸ. ನಿಮ್ಮ ಭಾಷೆ ಸೆಟ್ಟಿಂಗ್ ಹಾಗೆಯೇ ಇರುತ್ತದೆ.';
+
+  @override
+  String get wipeWhatNext =>
+      'ಇದು ತಪ್ಪಾಗಿದ್ದರೆ ನಿಮ್ಮ ಆಡಳಿತಗಾರರನ್ನು ಸಂಪರ್ಕಿಸಿ. ಅವರು ಅನುಮತಿಸಿದ ನಂತರ ನೀವು ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಬಹುದು.';
+
+  @override
+  String get wipeSignInAgain => 'ಮತ್ತೆ ಸೈನ್ ಇನ್ ಮಾಡಿ';
 }

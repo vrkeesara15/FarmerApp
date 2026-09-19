@@ -100,14 +100,16 @@ abstract final class CropStages {
   };
 }
 
-/// Tenant settings the visit flow needs offline (WC-102 values cached in
-/// `kv`; the SPEC defaults until a settings pull lands).
+/// Tenant settings the visit flow needs offline (`GET /v1/settings/public`
+/// values cached in `kv` by `TenantSettingsSync`; the SPEC defaults until
+/// the first pull).
 @immutable
 class VisitSettings {
   /// Creates the settings.
   const VisitSettings({
     this.geofenceRadiusM = 150,
     this.minVisitDurationS = 300,
+    this.meetingPointRadiusM,
   });
 
   /// Parses the cached / pulled shape; missing keys keep the defaults.
@@ -115,6 +117,7 @@ class VisitSettings {
     const d = VisitSettings();
     final radius = json['geofence_radius_m'];
     final minimum = json['min_visit_duration_s'];
+    final meeting = json['meeting_point_radius_m'];
     return VisitSettings(
       geofenceRadiusM: radius is num && radius > 0
           ? radius.toDouble()
@@ -122,6 +125,9 @@ class VisitSettings {
       minVisitDurationS: minimum is num && minimum >= 0
           ? minimum.toInt()
           : d.minVisitDurationS,
+      meetingPointRadiusM: meeting is num && meeting > 0
+          ? meeting.toDouble()
+          : null,
     );
   }
 
@@ -134,20 +140,27 @@ class VisitSettings {
   /// FA-017 minimum duration (default 5 min); shorter visits are flagged.
   final int minVisitDurationS;
 
+  /// Tenant default meeting-point radius for villages without their own
+  /// (null: [geofenceRadiusM], as on the server).
+  final double? meetingPointRadiusM;
+
   /// Wire shape.
   Map<String, Object?> toJson() => <String, Object?>{
     'geofence_radius_m': geofenceRadiusM,
     'min_visit_duration_s': minVisitDurationS,
+    'meeting_point_radius_m': meetingPointRadiusM,
   };
 
   @override
   bool operator ==(Object other) =>
       other is VisitSettings &&
       other.geofenceRadiusM == geofenceRadiusM &&
-      other.minVisitDurationS == minVisitDurationS;
+      other.minVisitDurationS == minVisitDurationS &&
+      other.meetingPointRadiusM == meetingPointRadiusM;
 
   @override
-  int get hashCode => Object.hash(geofenceRadiusM, minVisitDurationS);
+  int get hashCode =>
+      Object.hash(geofenceRadiusM, minVisitDurationS, meetingPointRadiusM);
 }
 
 /// Client-side geofence decision (VV-003).

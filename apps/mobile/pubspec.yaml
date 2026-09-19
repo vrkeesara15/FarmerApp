@@ -12,3 +12,12 @@ workspace:
 
 dev_dependencies:
   test: ^1.31.1
+
+# SEC-024: the bundled SQLite is SQLCipher on every platform (Android devices
+# and the test host alike). package:sqlite3 3.x ships prebuilt, sha256-pinned
+# SQLCipher binaries through its build hook (`sqlcipher_flutter_libs` is EOL).
+# See docs/prs/M5-mobile-security.md "Encrypted database".
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlcipher
