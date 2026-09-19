@@ -20,6 +20,7 @@ import { TopBar } from "@/components/ds/TopBar";
 import type { DateRange } from "@/components/ds/DateRangePicker";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useT } from "@/lib/i18n-client";
+import { visibleNavItems } from "@/lib/nav";
 import { SessionProvider, useSession } from "@/lib/session-context";
 
 const ROLE_KEYS = [
@@ -82,7 +83,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const items: SideNavItem[] = [
+  const allItems: SideNavItem[] = [
     { href: "/home", label: t("nav.home"), icon: <Home /> },
     { href: "/field-team", label: t("nav.fieldTeam"), icon: <UserSquare2 /> },
     { href: "/farmers", label: t("nav.farmers"), icon: <Users /> },
@@ -95,6 +96,8 @@ function Shell({ children }: { children: React.ReactNode }) {
     { href: "/settings", label: t("nav.settings"), icon: <Settings /> },
     { href: "/design", label: t("nav.design"), icon: <Palette /> },
   ];
+  // Role-based nav (SPEC 2.6, lib/nav.ts): hide what the signed-in role cannot read.
+  const items = visibleNavItems(allItems, session.user?.role);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">

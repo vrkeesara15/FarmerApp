@@ -21,7 +21,9 @@
     "none": "—",
     "back": "पीछे",
     "next": "अगला",
-    "seconds": "{n}से"
+    "seconds": "{n}से",
+    "yes": "हाँ",
+    "no": "नहीं"
   },
   "theme": {
     "toggle": "थीम बदलें",
@@ -93,19 +95,183 @@
   },
   "home": {
     "title": "होम",
-    "empty": "डेटा आने पर KPI, ट्रेंड और अलर्ट यहाँ दिखेंगे।"
+    "empty": "डेटा आने पर KPI, ट्रेंड और अलर्ट यहाँ दिखेंगे।",
+    "kpiRow": "मुख्य आँकड़े",
+    "revenueTrend": "राजस्व और अपने ब्रांड का हिस्सा",
+    "thisPeriod": "यह अवधि",
+    "lastYear": "पिछला साल",
+    "ownBrandDonut": "बिक्री में अपने ब्रांड का हिस्सा",
+    "storeMap": "प्रदर्शन के अनुसार स्टोर",
+    "bandLegend": "प्रदर्शन श्रेणियाँ",
+    "band": {
+      "green": "सही राह पर (80+)",
+      "amber": "ध्यान दें (50–79)",
+      "red": "पीछे (50 से कम)",
+      "none": "कोई बिक्री नहीं"
+    },
+    "storeTooltip": "{name}\nराजस्व {revenue} · अपना ब्रांड {share}\n{band}",
+    "showStoreTable": "स्टोर तालिका के रूप में दिखाएँ",
+    "storeTable": {
+      "revenue": "राजस्व",
+      "ownBrandShare": "अपने ब्रांड का हिस्सा",
+      "overdue": "अतिदेय",
+      "score": "स्कोर",
+      "band": "श्रेणी"
+    },
+    "noStoresTitle": "दिखाने को कोई स्टोर नहीं",
+    "noStoresHelp": "स्टोर देखने के लिए फ़िल्टर बदलें।",
+    "creditAgeing": "अवधि के अनुसार अतिदेय उधार",
+    "topOfficers": "शीर्ष 5 अधिकारी",
+    "bottomOfficers": "सबसे नीचे के 5 अधिकारी",
+    "perDutyDay": "{days} ड्यूटी दिनों में {visits} सत्यापित",
+    "highFlags": "खुले उच्च गंभीरता वाले फ़्लैग",
+    "noFlagsTitle": "कोई खुला उच्च गंभीरता वाला फ़्लैग नहीं",
+    "noFlagsHelp": "नए उच्च गंभीरता वाले फ़्लैग यहाँ दिखेंगे।",
+    "cropHealth": "फ़सल स्वास्थ्य अलर्ट",
+    "cropHealthEmptyTitle": "अभी कोई फ़सल स्वास्थ्य अलर्ट नहीं",
+    "cropHealthEmptyHelp": "प्रकोप अलर्ट फ़सल स्वास्थ्य मानचित्र (AN-006) के साथ आएँगे।",
+    "noSalesTitle": "इस अवधि में कोई बिक्री नहीं",
+    "noSalesHelp": "लंबी तारीख़ सीमा या कम फ़िल्टर आज़माएँ।"
   },
   "fieldTeam": {
     "title": "फ़ील्ड टीम",
-    "empty": "अधिकारियों के स्कोरकार्ड यहाँ दिखेंगे।"
+    "empty": "अधिकारियों के स्कोरकार्ड यहाँ दिखेंगे।",
+    "emptyTitle": "दिखाने को कोई अधिकारी नहीं",
+    "emptyHelp": "अधिकारियों के स्कोरकार्ड देखने के लिए फ़िल्टर बदलें।",
+    "noLocation": "आपकी भूमिका के लिए दूरी और ट्रैक नहीं दिखाए जाते।",
+    "columns": {
+      "rank": "रैंक",
+      "officer": "अधिकारी",
+      "store": "स्टोर",
+      "dutyDays": "ड्यूटी दिन",
+      "verifiedVisits": "सत्यापित विज़िट",
+      "verifiedPerDay": "सत्यापित विज़िट / दिन",
+      "uniqueFarmers": "अलग-अलग किसान",
+      "newRegistrations": "नए किसान",
+      "confirmationRate": "पुष्टि दर",
+      "timeOnFarm": "खेत पर औसत समय",
+      "timeOnFarmMinutes": "खेत पर औसत समय (मिनट)",
+      "kmPerDay": "Km / दिन",
+      "conversion": "रूपांतरण",
+      "collections": "वसूली",
+      "collectionsRupees": "वसूली (₹)",
+      "flags": "फ़्लैग",
+      "trend": "साप्ताहिक ट्रेंड"
+    },
+    "trendLabel": "{name} की साप्ताहिक सत्यापित विज़िट: {values}",
+    "backToList": "फ़ील्ड टीम",
+    "profileTitle": "अधिकारी",
+    "onDuty": "ड्यूटी पर",
+    "offDuty": "ड्यूटी पर नहीं",
+    "summary": "स्कोरकार्ड",
+    "weeklyTrend": "प्रति सप्ताह सत्यापित विज़िट",
+    "visitsPerDay": "प्रति ड्यूटी दिन विज़िट",
+    "dutyDays": "ड्यूटी दिन",
+    "recentVisits": "हाल की विज़िट",
+    "noDutyTitle": "इस अवधि में कोई ड्यूटी दिन नहीं",
+    "noDutyHelp": "लंबी तारीख़ सीमा आज़माएँ।",
+    "noVisitsTitle": "इस अवधि में कोई विज़िट नहीं",
+    "noVisitsHelp": "अधिकारी के सिंक करने के बाद विज़िट यहाँ दिखेंगी।",
+    "replayDate": "रीप्ले के लिए दिन",
+    "openReplay": "दिन का रीप्ले खोलें",
+    "replayOn": "{date} का दिन रीप्ले करें",
+    "duty": {
+      "day": "दिन",
+      "start": "शुरुआत",
+      "end": "अंत",
+      "km": "Km",
+      "visits": "विज़िट",
+      "verified": "सत्यापित",
+      "timeOnFarm": "खेत पर समय",
+      "replay": "रीप्ले"
+    },
+    "visits": {
+      "when": "कब",
+      "farmer": "किसान",
+      "purpose": "उद्देश्य",
+      "score": "स्कोर"
+    }
   },
   "farmers": {
     "title": "किसान",
-    "empty": "किसान निर्देशिका यहाँ दिखेगी।"
+    "empty": "किसान निर्देशिका यहाँ दिखेगी।",
+    "total": "{n} किसान",
+    "searchLabel": "किसान खोजें",
+    "searchPlaceholder": "नाम, फ़ोन के आख़िरी 4 अंक, या गाँव",
+    "never": "कभी नहीं",
+    "loadMore": "और लोड करें ({total} में से {shown})",
+    "emptyTitle": "अभी कोई किसान नहीं",
+    "emptyHelp": "अधिकारियों के पंजीकरण करने के बाद किसान यहाँ दिखेंगे।",
+    "emptyFilteredTitle": "कोई मेल खाता किसान नहीं",
+    "emptyFilteredHelp": "कोई दूसरी खोज या कम फ़िल्टर आज़माएँ।",
+    "backToList": "किसान",
+    "filters": {
+      "district": "ज़िला",
+      "stage": "फ़सल अवस्था",
+      "risk": "उधार जोखिम",
+      "lastVisit": "आख़िरी विज़िट"
+    },
+    "lastVisitWindow": {
+      "7d": "पिछले 7 दिनों में",
+      "30d": "पिछले 30 दिनों में",
+      "90d": "पिछले 90 दिनों में",
+      "over_90d": "90 दिन से पहले",
+      "never": "कभी विज़िट नहीं हुई"
+    },
+    "risk": {
+      "low": "कम जोखिम",
+      "medium": "मध्यम जोखिम",
+      "high": "उच्च जोखिम"
+    },
+    "columns": {
+      "name": "किसान",
+      "phone": "फ़ोन",
+      "village": "गाँव",
+      "district": "ज़िला",
+      "crops": "फ़सलें और अवस्था",
+      "stage": "अवस्था",
+      "acres": "एकड़",
+      "lastVisit": "आख़िरी विज़िट",
+      "lastPurchase": "आख़िरी ख़रीद",
+      "balance": "बकाया",
+      "balanceRupees": "बकाया (₹)",
+      "overdue": "अतिदेय",
+      "overdueRupees": "अतिदेय (₹)",
+      "risk": "उधार जोखिम",
+      "ltv": "LTV",
+      "ltvRupees": "LTV (₹)",
+      "app": "ऐप उपयोगकर्ता"
+    }
   },
   "stores": {
     "title": "स्टोर",
-    "empty": "स्टोर का प्रदर्शन यहाँ दिखेगा।"
+    "empty": "स्टोर का प्रदर्शन यहाँ दिखेगा।",
+    "emptyTitle": "दिखाने को कोई स्टोर नहीं",
+    "emptyHelp": "स्टोर देखने के लिए फ़िल्टर बदलें।",
+    "salesComparison": "स्टोर के अनुसार शुद्ध बिक्री और सकल मार्जिन",
+    "noDayClose": "कोई डे क्लोज़ नहीं",
+    "backToList": "स्टोर",
+    "columns": {
+      "store": "स्टोर",
+      "code": "कोड",
+      "district": "ज़िला",
+      "netSales": "शुद्ध बिक्री",
+      "netSalesRupees": "शुद्ध बिक्री (₹)",
+      "cogsRupees": "माल की लागत (₹)",
+      "grossMargin": "सकल मार्जिन",
+      "grossMarginRupees": "सकल मार्जिन (₹)",
+      "marginPct": "मार्जिन %",
+      "ownBrandShare": "अपने ब्रांड का हिस्सा",
+      "orders": "ऑर्डर",
+      "stockValue": "स्टॉक मूल्य",
+      "stockValueRupees": "स्टॉक मूल्य (₹)",
+      "creditOutstanding": "बकाया उधार",
+      "creditOutstandingRupees": "बकाया उधार (₹)",
+      "creditOverdue": "अतिदेय उधार",
+      "creditOverdueRupees": "अतिदेय उधार (₹)",
+      "lastVariance": "पिछले डे क्लोज़ का अंतर",
+      "lastVarianceRupees": "पिछले डे क्लोज़ का अंतर (₹)"
+    }
   },
   "products": {
     "title": "उत्पाद",
@@ -259,7 +425,11 @@
     "target": "लक्ष्य {value}",
     "trendUp": "पिछली अवधि से {value} ऊपर",
     "trendDown": "पिछली अवधि से {value} नीचे",
-    "trendFlat": "पिछली अवधि से कोई बदलाव नहीं"
+    "trendFlat": "पिछली अवधि से कोई बदलाव नहीं",
+    "points": "{value} अंक",
+    "lastYear": "पिछला साल {value}",
+    "lastYearDelta": "पिछला साल {value} ({delta})",
+    "noLastYear": "पिछले साल का आँकड़ा नहीं"
   },
   "dialog": {
     "close": "डायलॉग बंद करें"
@@ -444,5 +614,336 @@
     "claimCategory": "केवल कीटनाशक, फफूंदनाशक, खरपतवारनाशक और वृद्धि वर्धक पर ही कीट या रोग का दावा हो सकता है",
     "date": "तिथि दर्ज करें",
     "dateOrder": "अंतिम तिथि प्रारंभ तिथि से पहले है"
+  },
+  "analytics": {
+    "aboutKpi": "{name} के बारे में",
+    "clusterOption": "{name} क्लस्टर ({n} स्टोर)",
+    "definitions": "परिभाषाएँ:",
+    "errorTitle": "यह डेटा लोड नहीं हो सका",
+    "filtersCorrected": "लिंक के कुछ फ़िल्टर मान्य नहीं थे, उन्हें ठीक कर दिया गया है।",
+    "forbiddenTitle": "आपको इस व्यू की पहुँच नहीं है",
+    "forbiddenHelp": "आपकी भूमिका यह डेटा नहीं देख सकती। ज़रूरत हो तो मालिक या टेनेंट एडमिन से पूछें।",
+    "invalidFiltersTitle": "ये फ़िल्टर आपस में मेल नहीं खाते",
+    "invalidCombination": "यह स्टोर चुने गए क्लस्टर में नहीं है, या यह अधिकारी चुने गए स्टोर या क्लस्टर में नहीं है।",
+    "invalidRange": "अधिकतम 366 दिनों की ऐसी सीमा चुनें जो ख़त्म होने से पहले शुरू हो।",
+    "notFoundTitle": "नहीं मिला",
+    "notFoundHelp": "यह आपके क्लस्टर या स्टोर के दायरे से बाहर हो सकता है, या अब मौजूद नहीं है।",
+    "resetFilters": "फ़िल्टर रीसेट करें",
+    "scope": {
+      "tenant": "सभी स्टोर",
+      "cluster": "आपका क्लस्टर",
+      "store": "आपका स्टोर",
+      "own": "आपका अपना काम"
+    },
+    "trendOf": "{name} का ट्रेंड",
+    "updating": "अपडेट हो रहा है…"
+  },
+  "kpis": {
+    "revenue": "राजस्व",
+    "ownBrandShare": "अपने ब्रांड का हिस्सा",
+    "creditOutstanding": "बकाया उधार",
+    "creditOverdue": "अतिदेय उधार",
+    "verifiedVisits": "सत्यापित विज़िट",
+    "activeFarmers": "सक्रिय किसान",
+    "openFlags": "खुले फ़्लैग"
+  },
+  "kpiNames": {
+    "verifiedVisit": "सत्यापित विज़िट",
+    "uniqueFarmers": "पहुँचे गए अलग-अलग किसान",
+    "confirmationRate": "पुष्टि दर",
+    "conversion": "विज़िट रूपांतरण",
+    "ownBrandShare": "अपने ब्रांड का हिस्सा",
+    "activeFarmer": "सक्रिय किसान",
+    "creditOverdue": "अतिदेय उधार",
+    "ltv": "किसान LTV",
+    "timeOnFarm": "खेत पर बिताया समय"
+  },
+  "kpiDefinitions": {
+    "revenue": "अवधि में सौंपे गए या डिलीवर किए गए ऑर्डरों की शुद्ध बिक्री (छूट के बाद, GST से पहले)।",
+    "ownBrandShare": "अपने ब्रांड की शुद्ध बिक्री ÷ कुल शुद्ध बिक्री।",
+    "creditOutstanding": "अवधि के अंत में किसानों पर बकाया खाता राशि।",
+    "creditOverdue": "नियत तारीख़ पार कर चुकी खाता बकाया राशि; 0–30, 31–60, 61–90 और 90+ दिनों के वर्ग।",
+    "verifiedVisit": "70 या उससे अधिक स्कोर वाली विज़िट।",
+    "activeFarmer": "पिछले 60 दिनों में कोई ख़रीद, सत्यापित विज़िट या ऐप सेशन।",
+    "openFlags": "अवधि के अंत तक अनसुलझे वैलिडेशन फ़्लैग।",
+    "uniqueFarmers": "अवधि में कम से कम एक सत्यापित विज़िट वाले अलग-अलग किसान।",
+    "confirmationRate": "किसान द्वारा पुष्टि की गई विज़िट ÷ सभी विज़िट।",
+    "conversion": "सत्यापित विज़िट के 30 दिनों के भीतर ख़रीद करने वाले किसान ÷ जिन किसानों से विज़िट हुई।",
+    "ltv": "किसान से मिला कुल संचयी सकल मार्जिन।",
+    "timeOnFarm": "सत्यापित विज़िटों की अवधियों का योग (चेक-इन से चेक-आउट तक)।"
+  },
+  "brand": {
+    "own": "अपना ब्रांड",
+    "multi": "अन्य ब्रांड"
+  },
+  "buckets": {
+    "0_30": "0–30 दिन",
+    "31_60": "31–60 दिन",
+    "61_90": "61–90 दिन",
+    "90_plus": "90+ दिन"
+  },
+  "categories": {
+    "seed": "बीज",
+    "fertiliser": "उर्वरक",
+    "pesticide": "कीटनाशक",
+    "fungicide": "फफूंदनाशक",
+    "herbicide": "खरपतवारनाशक",
+    "growth": "वृद्धि नियामक",
+    "tool": "औज़ार",
+    "other": "अन्य"
+  },
+  "map": {
+    "attribution": "© OpenStreetMap योगदानकर्ता"
+  },
+  "proof": {
+    "geofence": "खेत पर",
+    "photo": "फ़ोटो",
+    "confirmation": "किसान ने पुष्टि की",
+    "duration": "खेत पर बिताया समय",
+    "integrity": "डिवाइस जाँच",
+    "done": "हो गया",
+    "missing": "नहीं है",
+    "points": "{points}/{max}",
+    "integrityIssue": "इस विज़िट के दौरान कुछ डिवाइस जाँचों में समस्याएँ मिलीं।"
+  },
+  "purpose": {
+    "advisory": "सलाह",
+    "follow_up": "फ़ॉलो-अप",
+    "collection": "वसूली",
+    "demo": "प्रदर्शन",
+    "registration": "पंजीकरण",
+    "delivery": "डिलीवरी",
+    "other": "अन्य"
+  },
+  "visitStatus": {
+    "verified": "सत्यापित",
+    "partial": "आंशिक",
+    "unverified": "असत्यापित",
+    "open": "खुली"
+  },
+  "stage": {
+    "sown": "बुवाई",
+    "vegetative": "वानस्पतिक वृद्धि",
+    "flowering": "फूल आना",
+    "fruiting": "फल लगना",
+    "maturity": "परिपक्वता",
+    "harvested": "कटाई हो चुकी"
+  },
+  "orderChannel": {
+    "pos": "स्टोर काउंटर",
+    "field": "फ़ील्ड अधिकारी",
+    "app": "किसान ऐप",
+    "whatsapp": "WhatsApp",
+    "call": "फ़ोन कॉल",
+    "other": "अन्य"
+  },
+  "orderStatus": {
+    "draft": "ड्राफ़्ट",
+    "placed": "ऑर्डर किया गया",
+    "confirmed": "पुष्टि हुई",
+    "handed_over": "सौंपा गया",
+    "delivered": "डिलीवर हुआ",
+    "cancelled": "रद्द",
+    "returned": "लौटाया गया",
+    "other": "अन्य"
+  },
+  "replay": {
+    "title": "दिन का रीप्ले",
+    "titleFor": "दिन का रीप्ले · {name}",
+    "backToOfficer": "अधिकारी प्रोफ़ाइल",
+    "date": "दिन",
+    "forbiddenHelp": "लोकेशन ट्रैक स्टोर प्रबंधकों या दूसरे अधिकारियों को कभी नहीं दिखाए जाते।",
+    "emptyTitle": "इस दिन कोई ड्यूटी नहीं",
+    "emptyHelp": "कोई दूसरा दिन चुनें; रीप्ले केवल उन्हीं दिनों का होता है जब अधिकारी ड्यूटी पर था।",
+    "summary": "दिन का सारांश",
+    "km": "तय की गई दूरी (Km)",
+    "visits": "विज़िट",
+    "verified": "सत्यापित",
+    "stops": "ठहराव",
+    "gaps": "अंतराल",
+    "mapLabel": "अधिकारी के दिन का मानचित्र",
+    "play": "चलाएँ",
+    "pause": "रोकें",
+    "slider": "प्लेबैक समय",
+    "inGap": "कोई लोकेशन दर्ज नहीं",
+    "gapsTitle": "ट्रैक में अंतराल",
+    "noReason": "कोई कारण नहीं दिया गया",
+    "gapReasonNote": "अधिकारी हर अंतराल का कारण बता सकेंगे (VV-008)।",
+    "gapTooltip": "{duration} का अंतराल: {reason}",
+    "visitTooltip": "{farmer} · {status} · {time}",
+    "timeline": "टाइमलाइन",
+    "visitDetail": "विज़िट विवरण",
+    "pickVisit": "मानचित्र या टाइमलाइन में कोई विज़िट चुनें।",
+    "purpose": "उद्देश्य",
+    "checkin": "चेक-इन",
+    "checkout": "चेक-आउट",
+    "duration": "अवधि",
+    "geofence": "लोकेशन जाँच",
+    "geofenceInside": "खेत की सीमा के अंदर",
+    "geofenceOutside": "खेत की सीमा के बाहर",
+    "photos": "फ़ोटो",
+    "event": {
+      "dutyStart": "ड्यूटी शुरू हुई",
+      "dutyEnd": "ड्यूटी ख़त्म हुई",
+      "checkin": "{farmer} के यहाँ चेक-इन",
+      "checkout": "{farmer} के यहाँ से चेक-आउट",
+      "stop": "{duration} के लिए रुके",
+      "gapStart": "{duration} का लोकेशन अंतराल",
+      "gapEnd": "लोकेशन फिर से शुरू"
+    },
+    "legend": {
+      "title": "मानचित्र संकेत",
+      "stop": "ठहराव",
+      "track": "ट्रैक",
+      "gap": "अंतराल",
+      "position": "प्लेबैक स्थिति"
+    },
+    "csv": {
+      "time": "समय",
+      "event": "घटना",
+      "detail": "विवरण"
+    }
+  },
+  "farmer360": {
+    "title": "किसान",
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय",
+    "registeredBy": "{date} को {name} ने पंजीकृत किया",
+    "updatedAt": "{date} को अपडेट किया गया",
+    "summary": "किसान सारांश",
+    "ltv": "आजीवन मूल्य",
+    "balance": "खाता बकाया",
+    "overdue": "अतिदेय",
+    "lastVisit": "आख़िरी विज़िट",
+    "lastPurchase": "आख़िरी ख़रीद",
+    "appSessions": "ऐप सेशन (60 दिन)",
+    "tabsLabel": "किसान विवरण",
+    "tabs": {
+      "farms": "खेत और फ़सलें",
+      "visits": "विज़िट",
+      "orders": "ऑर्डर",
+      "khata": "खाता",
+      "consent": "सहमति",
+      "app": "ऐप उपयोग"
+    },
+    "farms": {
+      "mapLabel": "किसान के खेतों का मानचित्र",
+      "tooltip": "{name} · {acres} एकड़",
+      "crops": "फ़सलें",
+      "farm": "खेत",
+      "crop": "फ़सल",
+      "variety": "किस्म",
+      "stage": "अवस्था",
+      "sown": "बुवाई",
+      "harvest": "अनुमानित कटाई",
+      "acres": "एकड़",
+      "soilIrrigation": "मिट्टी · सिंचाई",
+      "emptyTitle": "कोई खेत दर्ज नहीं",
+      "emptyHelp": "अधिकारी के मैप करने के बाद खेत यहाँ दिखेंगे।"
+    },
+    "visits": {
+      "officer": "अधिकारी",
+      "cropStage": "फ़सल अवस्था",
+      "status": "स्थिति",
+      "confirmed": "पुष्टि हुई",
+      "photos": "फ़ोटो",
+      "emptyTitle": "अभी कोई विज़िट नहीं",
+      "emptyHelp": "अधिकारी के सिंक करने के बाद विज़िट यहाँ दिखेंगी।"
+    },
+    "diagnoses": {
+      "title": "फ़ोटो सहित निदान",
+      "emptyTitle": "अभी कोई निदान नहीं",
+      "emptyHelp": "क्रॉप डॉक्टर के निदान उनकी फ़ोटो सहित निदान इंजन (M6) के साथ आएँगे।"
+    },
+    "orders": {
+      "placed": "ऑर्डर तारीख़",
+      "invoice": "इनवॉइस",
+      "store": "स्टोर",
+      "channel": "चैनल",
+      "status": "स्थिति",
+      "lines": "पंक्तियाँ",
+      "total": "कुल",
+      "totalRupees": "कुल (₹)",
+      "emptyTitle": "अभी कोई ऑर्डर नहीं",
+      "emptyHelp": "स्टोर, अधिकारियों और ऐप से आए ऑर्डर यहाँ दिखेंगे।"
+    },
+    "khata": {
+      "nextDue": "अगली नियत तारीख़",
+      "lastPayment": "आख़िरी भुगतान",
+      "limit": "{store} पर उधार सीमा: {amount}",
+      "buckets": "अवधि के अनुसार अतिदेय",
+      "bucket": "अवधि",
+      "amountRupees": "राशि (₹)",
+      "entriesNote": "हर एंट्री की खाता पंक्तियाँ स्टोर की खाता स्क्रीन पर हैं; यह व्यू बकाया और उसकी अवधि दिखाता है।"
+    },
+    "consent": {
+      "dataGranted": "डेटा सहमति दी गई",
+      "dataWithdrawn": "डेटा सहमति वापस ली गई",
+      "marketingGranted": "मार्केटिंग की अनुमति है",
+      "marketingWithdrawn": "मार्केटिंग नहीं",
+      "when": "कब",
+      "purpose": "उद्देश्य",
+      "data": "डेटा का उपयोग",
+      "marketing": "मार्केटिंग संदेश",
+      "state": "स्थिति",
+      "granted": "दी गई",
+      "withdrawn": "वापस ली गई",
+      "version": "नीति संस्करण",
+      "channel": "चैनल"
+    },
+    "app": {
+      "hasLogin": "ऐप लॉगिन है",
+      "lastSession": "आख़िरी ऐप सेशन",
+      "sessions": "60 दिनों में सेशन",
+      "proxyNote": "ऐप एनालिटिक्स इवेंट आने तक, ऐप सेशन साइन-इन रिफ़्रेश से गिने जा रहे हैं।"
+    }
+  },
+  "storeDetail": {
+    "title": "स्टोर",
+    "summary": "स्टोर सारांश",
+    "cogs": "माल की लागत",
+    "salesByCategory": "श्रेणी के अनुसार बिक्री",
+    "brandSplit": "अपना ब्रांड बनाम अन्य ब्रांड",
+    "creditAgeing": "उधार बही की अवधि",
+    "creditSummary": "{accounts} खातों में {outstanding} बकाया, {overdue} अतिदेय",
+    "stock": "स्टॉक",
+    "stockValue": "लागत मूल्य पर स्टॉक",
+    "skusInStock": "स्टॉक में SKU",
+    "turns": "अवधि में स्टॉक टर्न",
+    "turnsAnnualised": "स्टॉक टर्न (वार्षिक)",
+    "stockouts": "स्टॉक ख़त्म ({n})",
+    "noStockouts": "कोई स्टॉक ख़त्म नहीं।",
+    "dayCloses": "डे क्लोज़ अंतर",
+    "variance": "अंतर",
+    "noDayClosesTitle": "इस अवधि में कोई डे क्लोज़ नहीं",
+    "noDayClosesHelp": "स्टोर के दिन बंद करने के बाद डे क्लोज़ यहाँ दिखेंगे।",
+    "noSalesTitle": "इस अवधि में कोई बिक्री नहीं",
+    "noSalesHelp": "लंबी तारीख़ सीमा आज़माएँ।",
+    "dayClose": {
+      "showTable": "डे क्लोज़ तालिका के रूप में दिखाएँ",
+      "date": "कारोबारी तारीख़",
+      "expected": "अपेक्षित नकद",
+      "counted": "गिना गया नकद",
+      "flagged": "फ़्लैग किया गया",
+      "status": "स्थिति",
+      "closed": "बंद"
+    },
+    "pnl": {
+      "title": "मासिक P&L",
+      "window": "12 महीने: {range}",
+      "line": "मद",
+      "month": "महीना",
+      "grossSales": "सकल बिक्री",
+      "discounts": "छूट",
+      "netSales": "शुद्ध बिक्री",
+      "cogs": "बेचे गए माल की लागत",
+      "grossMargin": "सकल मार्जिन",
+      "marginPct": "सकल मार्जिन %",
+      "writeOffs": "राइट-ऑफ़",
+      "contribution": "योगदान",
+      "partial": "अधूरा महीना",
+      "partialShort": "अधूरा",
+      "opexNote": "परिचालन ख़र्च (किराया, वेतन, बिजली) शामिल नहीं हैं: योगदान = सकल मार्जिन में से राइट-ऑफ़ घटाकर।"
+    }
   }
 }

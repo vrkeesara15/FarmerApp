@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { handleAnalytics } from "@/lib/mock/analytics";
 import { handleCatalog, resetMockCatalog, type MockActor } from "@/lib/mock/catalog";
 
 /**
@@ -9,7 +10,8 @@ import { handleCatalog, resetMockCatalog, type MockActor } from "@/lib/mock/cata
  * Roles: any +91 mobile signs in as the owner except the numbers in MOCK_ROLE_BY_PHONE
  * (e.g. +919000000008 = agronomist). The role is carried in the mock tokens
  * (`mock-access-<role>-<ts>`, `mock-refresh-<role>-<ts>-<rand>`) so a refresh keeps it.
- * `/v1/catalog/*` (WC-005) is served by lib/mock/catalog.ts.
+ * `/v1/catalog/*` (WC-005) is served by lib/mock/catalog.ts, `/v1/analytics/*` (M4) by
+ * lib/mock/analytics.ts.
  */
 export const MOCK_OTP = "123456";
 export const MOCK_UNKNOWN_PHONE = "+919999999999";
@@ -117,11 +119,13 @@ async function handle(req: NextRequest, rawPath: string[]): Promise<NextResponse
     body,
     actorFrom(req),
   );
-  if (catalogResult) {
-    const headers = catalogResult.headers ?? {};
-    if (catalogResult.text !== undefined)
-      return new NextResponse(catalogResult.text, { status: catalogResult.status, headers });
-    return NextResponse.json(catalogResult.json, { status: catalogResult.status, headers });
+  const moduleResult =
+    catalogResult ?? handleAnalytics(req.method, path, req.nextUrl.searchParams, actorFrom(req));
+  if (moduleResult) {
+    const headers = moduleResult.headers ?? {};
+    if (moduleResult.text !== undefined)
+      return new NextResponse(moduleResult.text, { status: moduleResult.status, headers });
+    return NextResponse.json(moduleResult.json, { status: moduleResult.status, headers });
   }
 
   switch (route) {

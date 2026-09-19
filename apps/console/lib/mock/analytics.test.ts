@@ -1,0 +1,176 @@
+import { describe, expect, it } from "vitest";
+import type {
+  DayReplayOut,
+  Farmer360Out,
+  FarmerDirectoryOut,
+  FieldTeamOut,
+  OwnerHomeOut,
+  StoreDetailOut,
+} from "../analytics";
+import { handleAnalytics, MOCK_OFFICERS, MOCK_STORES } from "./analytics";
+
+const as = (role: string) => ({ id: `u-${role}`, role });
+const get = (path: string, role = "owner", qs = "") =>
+  handleAnalytics("GET", path.split("/"), new URLSearchParams(qs), as(role))!;
+
+describe("mock /v1/analytics (shapes of apps/api/openapi.yaml)", () => {
+  it("ignores other paths", () => {
+    expect(
+      handleAnalytics("GET", ["catalog", "crops"], new URLSearchParams(), as("owner")),
+    ).toBeNull();
+  });
+
+  it("owner home: 7 KPIs in API order, echoed filters, 24 stores with bands", () => {
+    const r = get("analytics/owner-home", "owner", "from=2026-08-01&to=2026-08-30");
+    expect(r.status).toBe(200);
+    const body = r.json as OwnerHomeOut;
+    expect(body.kpis.map((k) => k.key)).toEqual([
+      "revenue",
+      "own_brand_share",
+      "credit_outstanding",
+      "credit_overdue",
+      "verified_visits",
+      "active_farmers",
+      "open_flags",
+    ]);
+    expect(body.filters).toMatchObject({
+      from: "2026-08-01",
+      to: "2026-08-30",
+      days: 30,
+      scope: "tenant",
+    });
+    expect(body.granularity).toBe("day");
+    expect(body.series.revenue).toHaveLength(30);
+    expect(body.stores).toHaveLength(24);
+    expect(new Set(body.stores.map((s) => s.band)).size).toBeGreaterThan(1);
+    expect(body.officers_top).toHaveLength(5);
+    expect(body.high_severity_flags.length).toBeGreaterThan(0);
+    expect(body.crop_health_alerts).toEqual([]);
+    for (const k of body.kpis)
+      expect(Number.isInteger(k.unit === "paise" ? k.value : 0)).toBe(true);
+  });
+
+  it("weekly buckets above 31 days; same figures on every call", () => {
+    const a = get("analytics/owner-home", "owner", "from=2026-06-01&to=2026-08-30")
+      .json as OwnerHomeOut;
+    const b = get("analytics/owner-home", "owner", "from=2026-06-01&to=2026-08-30")
+      .json as OwnerHomeOut;
+    expect(a.granularity).toBe("week");
+    expect(a.series.revenue).toHaveLength(13);
+    expect(a.kpis[0]!.value).toBe(b.kpis[0]!.value);
+  });
+
+  it("AN-011 problems: bad range 422, unknown id 404, store outside cluster 422", () => {
+    expect(get("analytics/owner-home", "owner", "from=2026-09-10&to=2026-09-01").status).toBe(422);
+    expect(get("analytics/owner-home", "owner", "from=2024-01-01&to=2026-09-01").status).toBe(422);
+    expect(get("analytics/owner-home", "owner", "store_id=nope").status).toBe(404);
+    const bad = get("analytics/owner-home", "owner", "cluster_id=cluster-ka&store_id=store-wgl");
+    expect(bad.status).toBe(422);
+    expect((bad.json as { code: string }).code).toBe("invalid_filter_combination");
+    const off = get("analytics/field-team", "owner", "store_id=store-knr&officer_id=off-wgl-1");
+    expect((off.json as { code: string }).code).toBe("invalid_filter_combination");
+  });
+
+  it("filters narrow the figures", () => {
+    const all = get("analytics/stores", "owner").json as { items: unknown[] };
+    const tg = get("analytics/stores", "owner", "cluster_id=cluster-tg").json as {
+      items: unknown[];
+    };
+    expect(all.items).toHaveLength(24);
+    expect(tg.items).toHaveLength(8);
+  });
+
+  it("roles: store manager own store, no km, 403 on the replay; officer own row", () => {
+    const home = get("analytics/owner-home", "store_manager").json as OwnerHomeOut;
+    expect(home.filters.scope).toBe("store");
+    expect(home.stores.map((s) => s.id)).toEqual(["store-wgl"]);
+    const team = get("analytics/field-team", "store_manager").json as FieldTeamOut;
+    expect(team.location_visible).toBe(false);
+    expect(team.items.every((r) => r.km_per_day === null)).toBe(true);
+    expect(
+      get("analytics/officers/off-wgl-1/day-replay", "store_manager", "date=2026-09-10").status,
+    ).toBe(403);
+    const own = get("analytics/field-team", "field_officer").json as FieldTeamOut;
+    expect(own.items.map((r) => r.officer_id)).toEqual(["off-wgl-1"]);
+    expect(get("analytics/officers/off-knr-1", "field_officer").status).toBe(404);
+    expect(get("analytics/owner-home", "field_officer").status).toBe(403);
+    expect(get("analytics/stores", "accountant").status).toBe(200);
+    expect(get("analytics/farmers", "agronomist").status).toBe(403);
+  });
+
+  it("day replay: track split at the gap, stops, visits by status, gaps with and without a reason", () => {
+    const r = get("analytics/officers/off-wgl-1/day-replay", "owner", "date=2026-09-10");
+    const d = r.json as DayReplayOut;
+    expect(d.track.type).toBe("MultiLineString");
+    expect(d.track.coordinates.length).toBe(3);
+    expect(d.visits.map((v) => v.status)).toEqual([
+      "verified",
+      "partial",
+      "unverified",
+      "verified",
+    ]);
+    expect(d.visits.map((v) => v.colour)).toEqual(["green", "amber", "red", "green"]);
+    expect(d.gaps.map((g) => g.reason)).toEqual([null, "Phone battery died"]);
+    expect(d.stops).toHaveLength(1);
+    expect(d.timeline[0]!.type).toBe("duty_start");
+    expect(d.timeline.at(-1)!.type).toBe("duty_end");
+    const sorted = [...d.timeline].sort((a, b) => a.ts.localeCompare(b.ts));
+    expect(d.timeline).toEqual(sorted);
+    // No points inside a gap.
+    for (const g of d.gaps)
+      expect(d.points.some((p) => p.ts > g.start && p.ts < g.end)).toBe(false);
+    // A Sunday has no duty.
+    const sunday = get("analytics/officers/off-wgl-1/day-replay", "owner", "date=2026-09-13")
+      .json as DayReplayOut;
+    expect(sunday.points).toEqual([]);
+    expect(get("analytics/officers/off-wgl-1/day-replay", "owner").status).toBe(422);
+  });
+
+  it("farmers: search, filters, sort and cursor pagination; masked phones", () => {
+    const first = get("analytics/farmers", "owner", "limit=20&sort=name")
+      .json as FarmerDirectoryOut;
+    expect(first.total).toBe(72);
+    expect(first.items).toHaveLength(20);
+    expect(first.next_cursor).toBe("o20");
+    expect(first.items.every((f) => f.phone_masked.startsWith("*********"))).toBe(true);
+    const names = first.items.map((f) => f.name);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+    const next = get("analytics/farmers", "owner", "limit=20&sort=name&cursor=o20")
+      .json as FarmerDirectoryOut;
+    expect(next.items[0]!.id).not.toBe(first.items[0]!.id);
+    const search = get("analytics/farmers", "owner", "q=ramesh").json as FarmerDirectoryOut;
+    expect(search.items.length).toBeGreaterThan(0);
+    expect(search.items.every((f) => f.name.toLowerCase().includes("ramesh"))).toBe(true);
+    const risky = get("analytics/farmers", "owner", "credit_risk=high").json as FarmerDirectoryOut;
+    expect(risky.items.every((f) => f.credit_risk === "high")).toBe(true);
+    expect(get("analytics/farmers", "owner", "sort=bogus").status).toBe(422);
+    expect(get("analytics/farmers", "owner", "cursor=zzz").status).toBe(400);
+  });
+
+  it("farmer 360 and store detail with P&L by month", () => {
+    const f = get("analytics/farmers/farmer-001/360", "owner").json as Farmer360Out;
+    expect(f.profile.phone).toMatch(/^\+91/);
+    expect(f.farms[0]!.boundary!.type).toBe("Polygon");
+    expect(f.consent.history.length).toBeGreaterThan(0);
+    expect(get("analytics/farmers/farmer-999/360", "owner").status).toBe(404);
+    const s = get("analytics/stores/store-wgl", "owner", "from=2025-10-01&to=2026-09-18")
+      .json as StoreDetailOut;
+    expect(s.pnl.map((m) => m.month)).toHaveLength(12);
+    expect(s.pnl.at(-1)).toMatchObject({ month: "2026-09", partial: true });
+    expect(s.pnl[0]).toMatchObject({ month: "2025-10", partial: false });
+    for (const m of s.pnl) {
+      expect(m.gross_sales_paise - m.discounts_paise).toBe(m.net_sales_paise);
+      expect(m.net_sales_paise - m.cogs_paise).toBe(m.gross_margin_paise);
+      expect(m.gross_margin_paise - m.write_offs_paise).toBe(m.contribution_paise);
+    }
+    expect(s.pnl_opex_included).toBe(false);
+    expect(get("analytics/stores/store-knr", "store_manager").status).toBe(404);
+  });
+
+  it("fixtures: 24 stores in three states, 30 officers", () => {
+    expect(MOCK_STORES).toHaveLength(24);
+    expect(new Set(MOCK_STORES.map((s) => s.cluster_id)).size).toBe(3);
+    expect(MOCK_OFFICERS).toHaveLength(30);
+    expect(new Set(MOCK_OFFICERS.map((o) => o.id)).size).toBe(30);
+  });
+});
