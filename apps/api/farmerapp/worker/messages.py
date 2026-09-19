@@ -47,14 +47,17 @@ class PushEnvelope(BaseModel):
     def topic(self) -> Topic | None:
         """Topic from the ``topic`` attribute, else derived from the subscription name.
 
-        Subscriptions are named ``<topic-with-dashes>-worker`` in Terraform
-        (e.g. ``visit-created-worker`` -> ``visit.created``).
+        Terraform names the push subscriptions ``<topic>.worker`` (``diagnosis.requested.worker``,
+        infra/modules/pubsub); the older ``<topic-with-dashes>-worker`` form is still accepted.
         """
         name = self.message.attributes.get("topic")
         if name is None and self.subscription:
             leaf = self.subscription.rsplit("/", 1)[-1]
-            leaf = leaf.removesuffix("-worker").removesuffix("-push")
-            name = leaf.replace("-", ".")
+            if leaf.endswith(".worker"):
+                name = leaf.removesuffix(".worker")
+            else:
+                leaf = leaf.removesuffix("-worker").removesuffix("-push")
+                name = leaf.replace("-", ".")
         try:
             return Topic(name) if name else None
         except ValueError:

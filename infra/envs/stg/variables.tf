@@ -181,3 +181,39 @@ variable "cors_origins" {
   type        = list(string)
   default     = []
 }
+
+# --- M6 diagnosis engine (DX-002 / DX-004, OPS-009) ---
+variable "diagnosis_encoder_name" {
+  description = "DX-005 pinned encoder served by `embed` (DIAGNOSIS_ENCODER_NAME). Changing it = full corpus re-embedding (DX-012)."
+  type        = string
+  default     = "siglip-base-patch16-224"
+}
+
+variable "diagnosis_encoder_version" {
+  description = "DX-005 pinned encoder weights version (DIAGNOSIS_ENCODER_VERSION)."
+  type        = string
+  default     = "2024-01"
+}
+
+variable "diagnosis_llm" {
+  description = "DX-004 LLM fallback: claude (needs a version in the anthropic-api-key secret) or off (every fallback goes to the agronomist queue). fake is never deployed."
+  type        = string
+  default     = "claude"
+
+  validation {
+    condition     = contains(["claude", "off"], var.diagnosis_llm)
+    error_message = "The diagnosis_llm value must be claude or off."
+  }
+}
+
+variable "diagnosis_llm_model" {
+  description = "DX-004 model id (DIAGNOSIS_LLM_MODEL)."
+  type        = string
+  default     = "claude-opus-5"
+}
+
+variable "diagnosis_alerts_enabled" {
+  description = "OPS-009 log-based alerts: review queue older than 18 h, LLM fallback rate > 40 % in a day."
+  type        = bool
+  default     = true
+}

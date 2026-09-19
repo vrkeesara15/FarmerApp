@@ -7,6 +7,7 @@
 #   slo.tf          12.1 SLOs on the api service + burn-rate / latency alerts
 #   dashboards.tf   12.4 platform, business ops and cost dashboards
 #   audit.tf        SEC-017 Data Access audit logs -> locked 400-day log bucket
+#   diagnosis.tf    OPS-009 diagnosis review queue age and LLM fallback rate (log-based)
 #
 # Every alert policy carries (SPEC 12: "every alert has an owner, a severity and a runbook
 # link"): user_labels {ops, owner, sev}, the Cloud Monitoring severity, and a documentation
@@ -44,6 +45,8 @@ locals {
     location = "${var.runbook_base_url}/mass-location-anomaly.md"
     jobs     = "${var.runbook_base_url}/job-failure.md"
     breach   = "${var.runbook_base_url}/suspected-data-breach.md"
+    # OPS-009 steps live in the observability runbook (section anchor).
+    diagnosis = "${var.runbook_base_url}/observability.md#ops-009-diagnosis-review-queue-and-llm-fallback"
   }
 }
 

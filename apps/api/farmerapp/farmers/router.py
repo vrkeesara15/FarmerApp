@@ -27,6 +27,7 @@ from farmerapp.auth.providers import mask_phone
 from farmerapp.auth.scope import farmer_filters
 from farmerapp.farmers import service
 from farmerapp.farmers.models import Farmer
+from farmerapp.farmers.officer import officer_out
 from farmerapp.farmers.phone_verify import PURPOSE, issue_token
 from farmerapp.farmers.schemas import (
     ConsentCreate,
@@ -266,7 +267,9 @@ async def get_farmer(
     session: DbSession,
 ) -> FarmerDetailOut:
     farmer = await service.visible_farmer(session, actor, id)
-    return await service.farmer_detail(session, farmer, redact_pii=_redact(actor))
+    detail = await service.farmer_detail(session, farmer, redact_pii=_redact(actor))
+    detail.officer = await officer_out(session, farmer, actor)
+    return detail
 
 
 @router.patch(

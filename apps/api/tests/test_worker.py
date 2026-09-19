@@ -42,6 +42,11 @@ def test_topic_resolution() -> None:
     assert env.topic() == Topic.VISIT_CREATED
     assert env.message.json_body() == {"a": 1}
 
+    env = PushEnvelope.model_validate(
+        _envelope(None, "projects/p/subscriptions/diagnosis.requested.worker", {})
+    )
+    assert env.topic() == Topic.DIAGNOSIS_REQUESTED
+
     env = PushEnvelope.model_validate(_envelope("notify.send", "", {}))
     assert env.topic() == Topic.NOTIFY_SEND
 

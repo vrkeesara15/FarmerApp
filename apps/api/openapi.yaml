@@ -317,7 +317,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserOut'
+                $ref: '#/components/schemas/MeOut'
         default:
           description: Error (RFC 9457 problem+json)
           content:
@@ -9239,6 +9239,32 @@ components:
       required:
       - user_id
       title: AssignIn
+    AssignedOfficerOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        phone:
+          type: string
+          title: Phone
+      type: object
+      required:
+      - id
+      - name
+      - phone
+      title: AssignedOfficerOut
+      description: 'FM-011 / F62: the farmer''s field officer (call / WhatsApp from the farmer app).
+
+
+        ``phone`` is the decrypted number (SEC-026 field cipher) for the farmer themself, the
+
+        officer themself and the roles that read user profiles (``GET /v1/users``); masked
+
+        (``+91******3210``) for every other reader.'
     AuditLogOut:
       properties:
         id:
@@ -13053,6 +13079,13 @@ components:
             type: string
           type: array
           title: Warnings
+        officer:
+          anyOf:
+          - $ref: '#/components/schemas/AssignedOfficerOut'
+          - type: 'null'
+          description: 'FM-011 / F62 (reads only): the registering field officer while active, else the
+            active field officer of the village''s store; phone masked unless the reader is the farmer,
+            the officer or a user-profile reader role.'
       type: object
       required:
       - id
@@ -15249,6 +15282,66 @@ components:
       required:
       - refresh_token
       title: LogoutRequest
+    MeOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        phone:
+          type: string
+          title: Phone
+        name:
+          type: string
+          title: Name
+        role:
+          type: string
+          title: Role
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        cluster_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Cluster Id
+        language:
+          type: string
+          title: Language
+        status:
+          type: string
+          title: Status
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        officer:
+          anyOf:
+          - $ref: '#/components/schemas/AssignedOfficerOut'
+          - type: 'null'
+          description: 'Farmer logins only: who registered them, else their village store''s officer.'
+      type: object
+      required:
+      - id
+      - tenant_id
+      - phone
+      - name
+      - role
+      - store_id
+      - cluster_id
+      - language
+      - status
+      - created_at
+      title: MeOut
+      description: '``GET /v1/me``: the profile plus, for a farmer login, their field officer (FM-011).'
     ModeTotal:
       properties:
         mode:

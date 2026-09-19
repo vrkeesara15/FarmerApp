@@ -16,6 +16,7 @@ from farmerapp.auth.policy import PUBLIC, Role, require_roles
 from farmerapp.auth.providers import mask_phone
 from farmerapp.auth.schemas import (
     LogoutRequest,
+    MeOut,
     OtpSendRequest,
     OtpSendResponse,
     OtpVerifyRequest,
@@ -28,6 +29,7 @@ from farmerapp.auth.schemas import (
 from farmerapp.auth.stepup import issue_step_up_token
 from farmerapp.db import audit
 from farmerapp.db.session import set_tenant
+from farmerapp.farmers.officer import officer_out, own_farmer
 from farmerapp.integrity.deps import integrity_for
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -193,10 +195,15 @@ async def logout(
     "/me",
     operation_id="getMe",
     summary="Profile of the authenticated user",
-    response_model=UserOut,
+    response_model=MeOut,
 )
-async def get_me(user: Annotated[User, require_roles(*Role)]) -> UserOut:
-    return UserOut.from_user(user)
+async def get_me(user: Annotated[User, require_roles(*Role)], session: DbSession) -> MeOut:
+    me = MeOut.model_validate(user)
+    if user.role == Role.FARMER:
+        farmer = await own_farmer(session, user)
+        if farmer is not None:
+            me.officer = await officer_out(session, farmer, user)
+    return me
 
 
 @router.post(
