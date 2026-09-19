@@ -53,7 +53,7 @@ Run on **stg** (never restore over prd). Record results in `docs/postmortems/dri
 - [ ] Restore it into a new instance (`gcloud sql instances create ... && gcloud sql backups restore ...` as above), timing each step.
 - [ ] PITR clone of `farmerapp-stg` to 1 h ago succeeds (`gcloud sql instances clone ... --point-in-time`), if PITR is enabled for the drill.
 - [ ] Forced HA failover on a HA test instance (`gcloud sql instances failover`), API errors during the switch < 2 min.
-- [ ] Point a stg api revision at the restored instance (`--update-env-vars DB_HOST=`), run `alembic current` via the `migrate` job image, smoke tests pass (`scripts/smoke.sh`).
+- [ ] Point a stg api revision at the restored instance (`--update-env-vars DB_INSTANCE_CONNECTION_NAME=<project>:<region>:<restored>`), run `alembic current` via the `migrate` job image, smoke tests pass (`scripts/smoke.sh`).
 - [ ] Row counts per tenant match the source at backup time (script in the drill record).
 - [ ] Replay one message from a DLQ ([payment-webhook-backlog.md](payment-webhook-backlog.md)).
 - [ ] Measured RTO < 4 h and RPO within target; gaps become tickets.

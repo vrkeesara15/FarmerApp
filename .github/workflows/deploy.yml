@@ -125,7 +125,11 @@ jobs:
 
       - uses: google-github-actions/setup-gcloud@v2
 
-      # The migrate job must use the new image before the service rolls (SPEC 10.4).
+      # The migrate job must use the new image before the service rolls (SPEC 10.4). It runs
+      # `alembic upgrade head` from the api image as the farmerapp-migrate service account
+      # (Cloud SQL IAM login, the only farmerapp_migrate member; SEC-011). Only the image
+      # changes here: its environment is Terraform's (docs/deploy/configuration.md), and so is
+      # every service's and job's below; never pass --set-env-vars / --update-env-vars.
       - name: Run migrations (Cloud Run Job)
         run: |
           gcloud run jobs update migrate \
@@ -162,8 +166,8 @@ jobs:
       - name: Update job images
         run: |
           for job in run-rules-batch flags-sla-escalation officer-sync-silence auto-end-duty \
-                     ensure-partitions purge-location-points purge-expired reconcile-payments \
-                     backfill-farm-photo-phash; do
+                     ensure-partitions purge-location-points purge-expired store-day-watch \
+                     diagnosis-queue-age reconcile-payments backfill-farm-photo-phash; do
             gcloud run jobs update "$job" --region "$REGION" --project "$DEV_PROJECT" \
               --image "${REGISTRY}/jobs:${{ needs.build.outputs.tag }}" --quiet
           done

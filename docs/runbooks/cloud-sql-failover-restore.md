@@ -44,7 +44,7 @@ gcloud sql instances clone farmerapp-$ENV farmerapp-$ENV-pitr-$(date -u +%Y%m%d%
      for j in $(gcloud scheduler jobs list --location $REGION --project $PROJECT --format='value(ID)'); do
        gcloud scheduler jobs pause "$j" --location $REGION --project $PROJECT; done
      ```
-  2. Point api / worker / jobs at the clone: `gcloud run services update api --region $REGION --project $PROJECT --update-env-vars DB_HOST=<clone-private-ip>` (same for `worker`, and `gcloud run jobs update <job> --update-env-vars ...`), then make it permanent in Terraform (import the clone as `module.sql`, human apply).
+  2. Point api / worker / jobs at the clone: `gcloud run services update api --region $REGION --project $PROJECT --update-env-vars DB_INSTANCE_CONNECTION_NAME=<project>:<region>:<clone>` (same for `worker`, the `migrate` job and every other job with `gcloud run jobs update <job> --update-env-vars ...`; the Cloud SQL connector reaches the clone over its private IP with IAM auth, docs/deploy/configuration.md; the IAM database users must exist on the clone), then make it permanent in Terraform (import the clone as `module.sql`, human apply).
   3. Re-grant the Postgres roles on the clone (`GRANT farmerapp_app TO ...`, statements in `infra/modules/sql/main.tf`).
   4. Reopen: `gcloud run services update api --ingress internal-and-cloud-load-balancing ...` and `gcloud scheduler jobs resume ...`.
 - Human approval (platform lead + product owner) before any whole-instance switch in prd.

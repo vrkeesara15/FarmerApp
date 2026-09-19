@@ -18,16 +18,16 @@ So a degraded SMS provider already degrades to WhatsApp automatically; this runb
    gcloud logging read 'resource.labels.service_name="api" AND jsonPayload.event=("otp_sent" OR "otp_delivered" OR "otp_sms_failed" OR "otp_sms_undelivered" OR "otp_fallback_whatsapp")' \
      --project $PROJECT --freshness 30m --format='value(jsonPayload.event)' | sort | uniq -c
    ```
-2. Check the provider status page / account (DLT template approval, balance, sender id). Provider credentials are in Secret Manager `otp-provider`; never paste them in chat.
+2. Check the provider status page / account (DLT template approval, balance, sender id). The api sends through the gateway endpoints in Secret Manager `otp-sms-provider-url` / `otp-whatsapp-provider-url` (mounted as `SMS_PROVIDER_URL` / `WHATSAPP_PROVIDER_URL`, docs/deploy/configuration.md); `otp-provider` is reserved for the DLT adapter config. Never paste either in chat.
 3. SMS pumping instead of an outage (sends spike, delivery rate falls, many unknown numbers): confirm Cloud Armor OTP rate limiting is enforcing (prd) and look at the top client IPs:
    ```bash
    gcloud logging read 'resource.type="http_load_balancer" AND httpRequest.requestUrl:"/v1/auth/otp/send"' \
      --project $PROJECT --freshness 1h --format='value(httpRequest.remoteIp)' | sort | uniq -c | sort -rn | head
    ```
    Block an abusive range with a temporary Armor rule (priority 1500, `deny(403)`, `inIpRange(origin.ip, '<cidr>')`) and open a Sev 1 security ticket ([suspected-data-breach.md](suspected-data-breach.md) if accounts may be compromised).
-4. Fail over to the secondary SMS provider (the `otp-provider` secret holds the provider config; the adapter choice is part of it). An admin adds a new secret version with the secondary's config, then forces a new revision so the API reads `latest`:
+4. Fail over to the secondary SMS provider. Until the DLT adapter reads `otp-provider`, an admin adds a new version of `otp-sms-provider-url` (and `otp-whatsapp-provider-url`) pointing at the secondary; otherwise of `otp-provider` with the secondary's config. Then force a new revision so the API reads `latest`:
    ```bash
-   gcloud secrets versions add otp-provider --project $PROJECT --data-file=secondary-otp-provider.json   # admin only
+   printf %s "$SECONDARY_SMS_URL" | gcloud secrets versions add otp-sms-provider-url --project $PROJECT --data-file=-   # admin only
    gcloud run services update api --region $REGION --project $PROJECT \
      --update-env-vars OTP_FAILOVER_AT=$(date -u +%Y%m%dT%H%M%SZ)
    gcloud run services update worker --region $REGION --project $PROJECT \

@@ -63,7 +63,9 @@ cd infra/envs/dev
 terraform init
 terraform apply
 openssl rand -base64 48 | gcloud secrets versions add jwt-signing-key --project farmerapp-dev --data-file=-
-# … repeat for otp-provider, razorpay-key-id, razorpay-key-secret, razorpay-webhook-secret, anthropic-api-key
+# … and otp-pepper, pii-hash-pepper (>= 32 chars each), otp-sms-provider-url, otp-whatsapp-provider-url,
+# razorpay-key-id, razorpay-key-secret, razorpay-webhook-secret, anthropic-api-key: every mounted secret
+# needs a version before its service / job can start (docs/deploy/configuration.md)
 ```
 
 Point DNS `api.dev.farmerapp.in` and `console.dev.farmerapp.in` at `terraform output lb_ip`; the managed
@@ -87,12 +89,13 @@ tools that are missing so it still passes locally; CI always runs all four.
 | Piece | Module | Notes |
 |---|---|---|
 | VPC, subnet, Cloud NAT, PSA, deny-all ingress | `network` | Direct VPC egress from Cloud Run, no connector |
-| Per-service SAs + observability roles | `iam` | api, worker, jobs, console, embed, pubsub-push, scheduler |
+| Per-service SAs + observability roles | `iam` | api, worker, jobs, migrate (SEC-011 DDL identity), console, embed, pubsub-push, scheduler |
 | Postgres 16, private IP only, TLS `ENCRYPTED_ONLY`, IAM auth (`cloudsql.iam_authentication=on`, `google_sql_user` per SA), logical decoding, PITR/HA in prd, replica in prd | `sql` | SPEC 9.4 verbatim; SEC-011 |
-| Secrets, created empty | `secrets` | otp-provider, razorpay-*, anthropic-api-key (worker only), jwt-signing-key |
+| Secrets, created empty | `secrets` | derived from the per-process mounts (`local.secret_env`): jwt-signing-key, otp-pepper, pii-hash-pepper, otp-sms/whatsapp-provider-url, razorpay-*, anthropic-api-key (worker only); otp-provider reserved |
+| PII key-encryption key (SEC-026) | `kms` | key ring `farmerapp-<env>`, key `pii`, 90-day rotation, encrypter/decrypter for api / worker / jobs |
 | photos / exports / corpus buckets with 9.2 lifecycle rules | `storage` | private, uniform access |
 | api, console, worker, embed | `run_service` | ingress internal-LB (api/console, invoker IAM disabled: the LB is the only path, SEC-015) or internal-only (worker/embed); min 1/1 api/console in prd (NF-006) |
-| migrate + 9 jobs (`python -m farmerapp.jobs <command>`) | `run_job` | Cloud Scheduler in Asia/Kolkata: run-rules 02:00, flags-sla hourly, sync-silence /15 min, auto-end-duty /10 min, ensure-partitions 00:30, purge-location-points 04:00 (`--apply` prd only), purge-expired hourly, reconcile-payments 06:00, backfill-farm-photo-phash manual. Per-tenant jobs need `job_tenant_ids` |
+| migrate + 11 jobs (`python -m farmerapp.jobs <command>`) | `run_job` | Cloud Scheduler in Asia/Kolkata: run-rules 02:00, flags-sla hourly, sync-silence /15 min, auto-end-duty /10 min, ensure-partitions 00:30, purge-location-points 04:00 (`--apply` prd only), purge-expired hourly, store-day-watch 22:15, diagnosis-queue-age hourly, reconcile-payments 06:00, backfill-farm-photo-phash manual. Per-tenant jobs need `job_tenant_ids`. The migrate job runs as the `migrate` SA |
 | 7 topics, each with `.dlq` + push sub to worker | `pubsub` | 7-day retention, 5 attempts |
 | HTTPS LB, managed cert, Cloud Armor (OWASP CRS, OTP 5/min/IP, login 10/min/IP, India geo for field APIs; stg preview, prd enforce), optional console IAP | `lb` | SEC-014/015; reCAPTCHA bot management is a TODO needing keys |
 | BigQuery datasets; Datastream CDC when enabled | `analytics` | `datastream_enabled=false` in dev until M7 |
@@ -103,9 +106,16 @@ Database roles (SEC-011, FA-003): Terraform only creates the IAM users. Migratio
 the Postgres groups `farmerapp_app` (DML only, RLS) and `farmerapp_migrate` (DDL). Once per
 environment an admin grants membership: api/worker/jobs SAs → `farmerapp_app`, the migrate
 job's SA → `farmerapp_migrate` (statements in `modules/sql/main.tf`). The runtime must never
-be a member of `farmerapp_migrate`. Follow-up: a dedicated `migrate` service account (the
-migrate job runs as the jobs SA today, `DB_ROLE=migrator` is a placeholder until the app reads
-IAM credentials); `MIGRATION_DATABASE_URL` / `DATABASE_URL` are then set per job/service.
+be a member of `farmerapp_migrate`. The app connects with the Cloud SQL Python Connector and IAM
+auth (`DB_IAM_AUTH=true`, `DB_INSTANCE_CONNECTION_NAME`, `DB_USER`, `DB_NAME`); the migrate job
+runs as its own `farmerapp-migrate` SA. No password URL is deployed anywhere.
+
+App settings: every env var of api / worker / jobs / migrate, its source and per-env value is in
+[docs/deploy/configuration.md](../docs/deploy/configuration.md). `local.required_env` in
+`envs/*/main.tf` mirrors `CLOUD_REQUIRED_ENV` in `apps/api/farmerapp/settings.py`; the
+`run_service` / `run_job` preconditions fail the plan when a service lacks one (or receives a
+dev-only name), `terraform test` in those modules proves the preconditions, and
+`apps/api/tests/deploy/test_terraform_env.py` fails when Terraform and `settings.py` drift apart.
 
 Bootstrap also holds the SEC-018 project-level org policies (`bootstrap/security.tf`: India-only
 resource locations on the env projects, `sql.restrictPublicIp`, `compute.requireOsLogin`,

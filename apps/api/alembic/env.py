@@ -1,7 +1,9 @@
 """Async Alembic environment.
 
 URL comes from ``sqlalchemy.url`` (tests) or ``MIGRATION_DATABASE_URL``: migrations run as the
-owner/DDL role, never as the runtime app role (SEC-011).
+owner/DDL role, never as the runtime app role (SEC-011). With ``DB_IAM_AUTH=true`` (the Cloud
+Run ``migrate`` job) the Cloud SQL connector logs in as the job's own service account
+(``DB_USER``), the only identity granted ``farmerapp_migrate`` (``farmerapp.db.connect``).
 """
 
 from __future__ import annotations
@@ -15,14 +17,18 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 import farmerapp.db.models  # noqa: F401  (registers models on Base.metadata)
 from farmerapp.db.base import Base
+from farmerapp.db.connect import create_engine
 from farmerapp.settings import get_settings
 
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-if not config.get_main_option("sqlalchemy.url"):
-    config.set_main_option("sqlalchemy.url", get_settings().migration_database_url)
+settings = get_settings()
+#: Cloud SQL IAM login through the connector (no URL to put in the config).
+USE_IAM = not config.get_main_option("sqlalchemy.url") and settings.db_iam_auth
+if not config.get_main_option("sqlalchemy.url") and not USE_IAM:
+    config.set_main_option("sqlalchemy.url", settings.migration_database_url)
 
 target_metadata = Base.metadata
 
@@ -40,7 +46,8 @@ def include_object(obj: object, name: str | None, type_: str, *_: object) -> boo
 
 def run_migrations_offline() -> None:
     context.configure(
-        url=config.get_main_option("sqlalchemy.url"),
+        # IAM mode has no URL; offline SQL only needs the dialect.
+        url=config.get_main_option("sqlalchemy.url") or "postgresql+asyncpg://",
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -63,10 +70,14 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
+    connectable = (
+        create_engine(settings, migrate=True)
+        if USE_IAM
+        else async_engine_from_config(
+            config.get_section(config.config_ini_section, {}),
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
     )
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

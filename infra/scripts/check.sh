@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Local equivalent of ci-infra.yml's static job (SPEC 9.7):
-#   terraform fmt -check, init -backend=false + validate for bootstrap and every
-#   env, then tflint and checkov when installed (SKIP with a message otherwise).
+#   terraform fmt -check, init -backend=false + validate for bootstrap and every env,
+#   terraform test of the settings-contract preconditions (run_service, run_job), then
+#   tflint and checkov when installed (SKIP with a message otherwise).
 # Usage: cd infra && ./scripts/check.sh
 set -euo pipefail
 
@@ -30,6 +31,16 @@ for d in "${DIRS[@]}"; do
     cd "$d"
     terraform init -backend=false -input=false -no-color >/dev/null
     terraform validate -no-color
+  ) || status=1
+done
+
+# Settings-contract preconditions (modules/*/tests, mock providers: no credentials needed).
+for d in modules/run_service modules/run_job; do
+  step "terraform test: $d"
+  (
+    cd "$d"
+    terraform init -backend=false -input=false -no-color >/dev/null
+    terraform test -no-color
   ) || status=1
 done
 

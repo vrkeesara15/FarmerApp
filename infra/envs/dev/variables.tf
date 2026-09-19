@@ -217,3 +217,37 @@ variable "diagnosis_alerts_enabled" {
   type        = bool
   default     = true
 }
+
+# --- App settings (docs/deploy/configuration.md) ---
+variable "log_level" {
+  description = "LOG_LEVEL of api / worker / jobs / migrate."
+  type        = string
+  default     = "INFO"
+
+  validation {
+    condition     = contains(["DEBUG", "INFO", "WARNING", "ERROR"], var.log_level)
+    error_message = "The log_level value must be DEBUG, INFO, WARNING or ERROR."
+  }
+}
+
+variable "otel_sample_ratio" {
+  description = "NF-014 OTEL_SAMPLE_RATIO: head sampling of new traces (Cloud Trace)."
+  type        = number
+  default     = 1.0
+
+  validation {
+    condition     = var.otel_sample_ratio >= 0 && var.otel_sample_ratio <= 1
+    error_message = "The otel_sample_ratio value must be between 0 and 1."
+  }
+}
+
+variable "razorpay_base_url" {
+  description = "RAZORPAY_BASE_URL (FA-021). The same host serves test and live mode; the key pair in Secret Manager decides (test keys outside prd)."
+  type        = string
+  default     = "https://api.razorpay.com"
+
+  validation {
+    condition     = startswith(var.razorpay_base_url, "https://")
+    error_message = "The razorpay_base_url value must be an https URL (the local mockserver is never deployed)."
+  }
+}

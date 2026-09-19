@@ -21,6 +21,15 @@ PRD_PII_AND_BLOBS: dict[str, Any] = {
 }
 
 
+#: The test suite runs with fake providers (conftest); a prd process never does.
+PRD_REAL: dict[str, Any] = {
+    "app_env": "prd",
+    "otp_provider": "mockserver",
+    "payment_provider": "razorpay",
+    "diagnosis_llm": "claude",
+}
+
+
 def test_prd_rejects_dev_otp_code() -> None:
     with pytest.raises(ValueError, match="OTP_DEV_CODE"):
         Settings(app_env="prd", otp_dev_code="123456", jwt_signing_key=STRONG, otp_pepper=STRONG)
@@ -94,3 +103,50 @@ def test_prd_requires_the_remote_encoder_and_a_real_llm() -> None:
     with pytest.raises(ValueError, match="DIAGNOSIS_LLM=fake"):
         _prd(diagnosis_llm="fake")
     assert _prd(diagnosis_llm="off").diagnosis_llm == "off"
+
+
+def test_prd_guard_rails_are_scoped_to_what_the_process_uses() -> None:
+    """Least privilege (SEC-013): the migrate job mounts no secret, the worker no JWT key or OTP
+    pepper; neither may refuse to start only because the api needs them."""
+    migrate = Settings.model_validate({**PRD_REAL, "service_name": "migrate"})
+    assert migrate.service_name == "migrate"
+    worker = Settings.model_validate(
+        {
+            **PRD_REAL,
+            "service_name": "worker",
+            "razorpay_key_secret": STRONG,
+            "razorpay_webhook_secret": STRONG,
+            **PRD_PII_AND_BLOBS,
+        }
+    )
+    assert worker.pii_kek_backend == "kms"
+    jobs = {**PRD_REAL, "service_name": "jobs", **PRD_PII_AND_BLOBS}
+    assert Settings.model_validate(jobs).service_name == "jobs"
+    with pytest.raises(ValueError, match="PII_HASH_PEPPER"):
+        Settings.model_validate({**jobs, "pii_hash_pepper": "short"})
+    # An unknown process gets every check (the api's).
+    with pytest.raises(ValueError, match="JWT_SIGNING_KEY"):
+        Settings.model_validate({**PRD_REAL, "service_name": "cron", **PRD_PII_AND_BLOBS})
+    # Checks every process shares.
+    with pytest.raises(ValueError, match="OTP_DEV_CODE"):
+        Settings.model_validate({**PRD_REAL, "service_name": "migrate", "otp_dev_code": "1"})
+
+
+def test_prd_iam_database_login_needs_instance_and_user() -> None:
+    """SEC-011 with Cloud SQL IAM auth (DB_IAM_AUTH=true): no password URL, but an instance
+    and a user; the two-URL role check applies only without IAM."""
+    iam: dict[str, Any] = {**PRD_REAL, "service_name": "migrate", "db_iam_auth": True}
+    with pytest.raises(ValueError, match="DB_INSTANCE_CONNECTION_NAME and DB_USER"):
+        Settings.model_validate(iam)
+    same_urls = {"database_url": "x", "migration_database_url": "x"}
+    ok = Settings.model_validate(
+        {
+            **iam,
+            **same_urls,
+            "db_instance_connection_name": "p:asia-south1:i",
+            "db_user": "farmerapp-migrate@p.iam",
+        }
+    )
+    assert ok.db_iam_auth
+    with pytest.raises(ValueError, match="MIGRATION_DATABASE_URL must use a different role"):
+        Settings.model_validate({**PRD_REAL, "service_name": "migrate", **same_urls})
