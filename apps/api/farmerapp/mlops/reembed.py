@@ -47,19 +47,21 @@ class EncoderNotStagedError(ConflictError):
 
 
 #: Live images of the tenant that are not on the target encoder yet (bound parameters only).
+#: The two statements below concatenate this literal; nothing user-supplied reaches the SQL
+#: (tenant, encoder name and version are bound parameters), hence the B608 markers.
 _LIVE = (
     "ci.tenant_id = :t AND ci.deleted_at IS NULL AND ci.status <> 'retired' "
     "AND NOT (ci.encoder_name = :n AND ci.encoder_version = :v)"
 )
 _KEEP_PREVIOUS = (
-    "INSERT INTO corpus_embedding "
+    "INSERT INTO corpus_embedding "  # nosec B608
     "(tenant_id, corpus_image_id, encoder_name, encoder_version, embedding) "
     "SELECT ci.tenant_id, ci.id, ci.encoder_name, ci.encoder_version, ci.embedding "
     "FROM corpus_image ci WHERE " + _LIVE + " "
     "ON CONFLICT (corpus_image_id, encoder_name, encoder_version) DO NOTHING"
 )
 _FLIP = (
-    "UPDATE corpus_image ci SET embedding = ce.embedding, encoder_name = :n, "
+    "UPDATE corpus_image ci SET embedding = ce.embedding, encoder_name = :n, "  # nosec B608
     "encoder_version = :v, updated_at = now(), version = ci.version + 1 "
     "FROM corpus_embedding ce WHERE ce.corpus_image_id = ci.id "
     "AND ce.encoder_name = :n AND ce.encoder_version = :v AND " + _LIVE

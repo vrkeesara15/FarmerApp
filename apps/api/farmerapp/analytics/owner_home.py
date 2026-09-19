@@ -4,7 +4,13 @@ KPI row (revenue, own-brand share, credit outstanding and overdue, verified visi
 farmers, open flags), each with the value over the range, a target, the same period last
 year and a trend (daily up to 31 days, else weekly); the revenue and own-brand share lines;
 the store map; the top / bottom five officers by verified visits per duty day; open
-high-severity flags (``FlagCountsPort``); crop health alerts (AN-006, P1: empty).
+high-severity flags (``FlagCountsPort``); crop health alerts (AN-006).
+
+The crop health card (WC-001) lists the tenant's active ``outbreak_alert`` rows (FM-009 /
+DX-013), newest week first, at most ``TOP_N``. Each item carries the structured alert (the
+fields of ``OutbreakAlertOut``) plus a ready-to-show ``title`` and ``problem``, so the console
+card renders without a console change; the district-level detail is ``GET /v1/analytics/crop-
+health`` (AN-014: no farm location and no farmer identity in either).
 
 Targets come from the tenant setting ``targets`` (WC-009 will write it)::
 
@@ -53,6 +59,7 @@ from farmerapp.analytics.schemas import (
 )
 from farmerapp.db.models.tenant import Tenant
 from farmerapp.khata.ledger import credit_settings
+from farmerapp.tenants.settings import parse_settings
 
 TOP_N = 5
 MONTH_DAYS = 30
@@ -133,6 +140,55 @@ def rank_officers(
         rows,
         key=lambda r: (-(r.verified_visits_per_day or 0.0), -r.verified_visits, r.name, str(r.id)),
     )
+
+
+async def crop_health_alerts(
+    session: AsyncSession, scope: Scope, settings: Mapping[str, Any]
+) -> list[dict[str, Any]]:
+    """WC-001 / AN-006 crop health card: the tenant's active outbreak alerts (FM-009).
+
+    District x crop x problem x ISO week only — no farm location and no farmer identity
+    (AN-014). ``title`` and ``problem`` are composed from the localized crop and problem names
+    already on the rows so the console card can render the list as it stands; everything the
+    card may want later is in the same item.
+    """
+    from farmerapp.advisory import outbreaks
+
+    rule = parse_settings(settings).outbreak
+    rows = await outbreaks.active_alerts(
+        session, scope.tenant_id, districts=None, today=scope.filters.to, rule=rule
+    )
+    items: list[dict[str, Any]] = []
+    for row in rows[:TOP_N]:
+        a = row.alert
+        crop = row.crop.name or row.crop.code
+        problem = (
+            (row.problem.names or {}).get("en") or row.problem_code or row.problem.problem_type
+        )
+        title = f"{crop} \u2014 {problem} \u00b7 {a.district} \u00b7 {a.week_start.isoformat()}"
+        items.append(
+            {
+                "id": str(a.id),
+                "title": title,
+                "problem": problem,
+                "district": a.district,
+                "crop_id": str(a.crop_id),
+                "crop_code": row.crop.code,
+                "crop_names": {"en": row.crop.name, **(row.crop.names or {})},
+                "problem_id": str(a.problem_id),
+                "problem_code": row.problem_code,
+                "problem_type": row.problem.problem_type,
+                "problem_names": dict(row.problem.names or {}),
+                "week_start": a.week_start.isoformat(),
+                "iso_year": a.iso_year,
+                "iso_week": a.iso_week,
+                "case_count": a.case_count,
+                "farmers_affected": a.farmers_affected,
+                "baseline_mean": float(a.baseline_mean),
+                "status": a.status,
+            }
+        )
+    return items
 
 
 async def owner_home(session: AsyncSession, scope: Scope, flags: FlagCountsPort) -> OwnerHomeOut:
@@ -287,7 +343,8 @@ async def owner_home(session: AsyncSession, scope: Scope, flags: FlagCountsPort)
         verified_by[v.officer_id] += 1
     ranked = rank_officers(scope, verified_by, {k: len(v) for k, v in duty_days.items()})
 
-    notes = {"crop_health_alerts": "pending_an006"}
+    alerts = await crop_health_alerts(session, scope, settings)
+    notes: dict[str, str] = {}
     if isinstance(flags, NullFlagCounts):
         notes["open_flags"] = "pending_flags_branch"
     return OwnerHomeOut(
@@ -304,9 +361,17 @@ async def owner_home(session: AsyncSession, scope: Scope, flags: FlagCountsPort)
         officers_top=ranked[:TOP_N],
         officers_bottom=list(reversed(ranked))[:TOP_N],
         high_severity_flags=[FlagOut.model_validate(h, from_attributes=True) for h in high],
-        crop_health_alerts=[],
+        crop_health_alerts=alerts,
         notes=notes,
     )
 
 
-__all__ = ["band", "owner_home", "rank_officers", "target", "targets_of", "tenant_settings"]
+__all__ = [
+    "band",
+    "crop_health_alerts",
+    "owner_home",
+    "rank_officers",
+    "target",
+    "targets_of",
+    "tenant_settings",
+]

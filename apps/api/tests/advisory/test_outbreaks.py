@@ -278,3 +278,40 @@ async def test_crop_health_map(
         headers=bearer(world.a.user(UserRole.AGRONOMIST)),
     )
     assert filtered.json()["items"] == []
+
+
+async def test_owner_home_crop_health_card_lists_the_active_alerts(
+    client: AsyncClient,
+    bearer: Bearer,
+    db_session: AsyncSession,
+    world: World,
+    login: FarmerLogin,
+) -> None:
+    """WC-001 / AN-006: the owner home card is no longer empty once an alert is raised, and it
+    stays district-level (AN-014). The console renders `title` as it stands."""
+    problem = await approved_problem(db_session, world.a.tenant.id)
+    now = datetime.now(UTC)
+    empty = await client.get("/v1/analytics/owner-home", headers=bearer(world.a.owner))
+    assert empty.status_code == 200, empty.text
+    assert empty.json()["crop_health_alerts"] == []
+
+    await _cluster(db_session, world, login, problem, 4, now - timedelta(minutes=5))
+    await detect_outbreaks(db_session, tenant_id=world.a.tenant.id, now=now)
+    resp = await client.get("/v1/analytics/owner-home", headers=bearer(world.a.owner))
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    card = body["crop_health_alerts"]
+    assert len(card) == 1
+    item = card[0]
+    assert item["district"] == login.district and item["case_count"] == 4
+    assert item["status"] == "active" and item["title"] and login.district in item["title"]
+    assert (
+        item["problem"]
+        and item["week_start"]
+        == week_start((now + timedelta(hours=5, minutes=30)).date()).isoformat()
+    )
+    assert "pending_an006" not in resp.text
+    assert "latitude" not in resp.text and "farmer_id" not in resp.text
+
+    other = await client.get("/v1/analytics/owner-home", headers=bearer(world.b.owner))
+    assert other.json()["crop_health_alerts"] == []

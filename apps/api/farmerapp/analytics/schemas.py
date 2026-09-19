@@ -93,7 +93,10 @@ class OwnerHomeOut(BaseModel):
     officers_bottom: list[OfficerRankOut]
     high_severity_flags: list[FlagOut]
     crop_health_alerts: list[dict[str, Any]] = Field(
-        description="Always empty until AN-006 (crop health map, P1)."
+        description="AN-006: the tenant's active outbreak alerts (FM-009 / DX-013), newest week "
+        "first, at most five. Each item carries the fields of `OutbreakAlertOut` plus `title` "
+        "and `problem` for the card; district level only (AN-014). `GET /v1/alerts` and "
+        "`GET /v1/analytics/crop-health` are the full reads."
     )
     notes: dict[str, str]
 

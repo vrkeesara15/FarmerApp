@@ -5,7 +5,7 @@ region              = "asia-south1"
 domain              = "dev.farmerapp.in"
 sql_tier            = "db-g1-small"
 sql_read_replica    = false
-sql_max_connections = 100 # max_connections flag (tier default 50 cannot fit 17 jobs + the reserve); budget 67 / 80
+sql_max_connections = 100 # max_connections flag (tier default 50 cannot fit 17 jobs + the reserve); budget 67 / 80 -- room for 6 more jobs
 min_instances       = { api = 0, console = 0, worker = 0, embed = 0 }
 max_instances       = { api = 3, console = 2, worker = 2, embed = 1 }
 cloud_armor_enabled = false

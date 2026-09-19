@@ -5,7 +5,7 @@ region              = "asia-south1"
 domain              = "stg.farmerapp.in"
 sql_tier            = "db-custom-1-3840"
 sql_read_replica    = false
-sql_max_connections = 100 # max_connections flag (= the tier default); budget 79 / 80 (one more job needs a bigger flag or smaller pools)
+sql_max_connections = 125 # max_connections flag (tier default 100); budget 79 / 100 -- room for 10 more jobs. HUMAN APPLY + instance restart (docs/deploy/configuration.md)
 min_instances       = { api = 0, console = 0, worker = 0, embed = 0 }
 max_instances       = { api = 5, console = 3, worker = 5, embed = 2 }
 cloud_armor_enabled = true

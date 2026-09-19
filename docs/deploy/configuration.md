@@ -66,7 +66,7 @@ guard** = the process also refuses to start in prd without a real value.
 
 Each api / worker instance and each job task opens its own SQLAlchemy pool of up to
 `DB_POOL_SIZE + DB_MAX_OVERFLOW` connections (the app defaults 5 + 10 on 20 api instances alone
-are 300 against prd's 200). `module.db_budget` (`infra/modules/db_budget`) sizes them per
+are 300 against prd's 250). `module.db_budget` (`infra/modules/db_budget`) sizes them per
 environment from `var.db_pool` and fails `terraform plan` (precondition on its `env` output)
 unless
 
@@ -76,8 +76,8 @@ unless
 ```
 
 * `instances` = `var.max_instances.api` / `.worker` (Cloud Run scale-out ceiling); for jobs,
-  the number of Cloud Run jobs (`length(local.jobs)`, 11), each one task, all assumed to
-  overlap. Console and embed hold no database pool.
+  the number of Cloud Run jobs (`length(local.jobs)`, 17 after M7), each one task, all assumed
+  to overlap. Console and embed hold no database pool.
 * `reserve` = 20: the migrate job (NullPool, one connection), Datastream, Cloud SQL Studio,
   `gcloud sql connect` and admins.
 * `max_connections` = `var.sql_max_connections`, now also set as the `max_connections`
@@ -86,22 +86,36 @@ unless
 * `pool_size + max_overflow >= 2` per process (variable validation): a tenant-bound session
   holds one connection while `ensure_tenant_key` loads the tenant's data key on a second one
   (`farmerapp/pii/keys.py`).
-* `terraform test` in `infra/modules/db_budget` proves the check (fits, exactly at the
-  ceiling, the app defaults and one connection over fail, a pool below 2 is refused);
+* `terraform test` in `infra/modules/db_budget` proves the check (fits, still fits with four
+  more jobs, exactly at the ceiling, the app defaults and one connection over fail, a pool
+  below 2 is refused);
   `tests/deploy/test_terraform_env.py` recomputes each env from its tfvars and checks this
   table.
 
-| env | max_connections | api | worker | jobs | reserve | total | 80% ceiling |
-|---|---|---|---|---|---|---|---|
-| dev | 100 (flag; the db-g1-small default of 50 cannot hold 17 jobs + the reserve) | 3 x (2 + 1) = 9 | 2 x (2 + 0) = 4 | 17 x (1 + 1) = 34 | 20 | 67 | 80 |
-| stg | 100 | 5 x (2 + 1) = 15 | 5 x (2 + 0) = 10 | 17 x (1 + 1) = 34 | 20 | 79 | 80 |
-| prd | 200 | 20 x (2 + 1) = 60 | 20 x (2 + 0) = 40 | 17 x (1 + 1) = 34 | 20 | 154 | 160 |
+| env | max_connections | api | worker | jobs | reserve | more jobs that fit | total | 80% ceiling |
+|---|---|---|---|---|---|---|---|---|
+| dev | 100 (flag; the db-g1-small default of 50 cannot hold 17 jobs + the reserve) | 3 x (2 + 1) = 9 | 2 x (2 + 0) = 4 | 17 x (1 + 1) = 34 | 20 | 6 | 67 | 80 |
+| stg | 125 (flag; the tier default is 100) | 5 x (2 + 1) = 15 | 5 x (2 + 0) = 10 | 17 x (1 + 1) = 34 | 20 | 10 | 79 | 100 |
+| prd | 250 (flag; the tier default for 7.5 GB is 200) | 20 x (2 + 1) = 60 | 20 x (2 + 0) = 40 | 17 x (1 + 1) = 34 | 20 | 23 | 154 | 200 |
 
-dev and stg now set `max_instances` in their tfvars (dev api 3 / worker 2, stg api 5 /
+"more jobs that fit" = `floor((ceiling - total) / (jobs pool_size + max_overflow))`: how many
+Cloud Run jobs may still be added before the plan precondition fails. **Every environment has
+room for at least four more jobs** (M7 API integration): stg was at 79 of 80 once the farmer P1
+jobs landed, so `sql_max_connections` went 100 -> 125 there and 200 -> 250 in prd. The pools
+stay at the validated minimum (`pool_size + max_overflow >= 2`) — a tenant-bound session plus
+the PII key load need both connections, so shrinking them is not an option. dev already had room
+for six more jobs at 100 and is unchanged.
+
+**HUMAN GATE**: changing the `max_connections` flag restarts the Cloud SQL instance (in prd the
+primary *and* the read replica, which carries the same flag), so the stg and prd applies are
+human-only and belong in a maintenance window. Nothing else changes: the flag is the only
+value that moves, the rendered env of api / worker / jobs is identical, and no service is
+redeployed.
+
+dev and stg set `max_instances` in their tfvars (dev api 3 / worker 2, stg api 5 /
 worker 5; console and embed lowered alike); prd keeps the defaults (api 20, worker 20). To scale
-further, raise `sql_max_connections` (a flag change restarts the instance: human apply in stg /
-prd) or the tier, then the pools; the plan tells you when a change does not fit. Setting the
-flag is itself a restart on the first apply after this change.
+further, raise `sql_max_connections` again or the tier, then the pools; the plan tells you when
+a change does not fit.
 
 The connector (`farmerapp/db/connect.py`, `cloud-sql-python-connector[asyncpg]`) is created
 in the running event loop on the first connection, with lazy certificate refresh (Cloud Run CPU
