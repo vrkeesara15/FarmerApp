@@ -11,6 +11,8 @@ environment:
 dependencies:
   farmerapp_core:
     path: ../../packages/core
+  firebase_core: ^4.1.1
+  firebase_messaging: ^16.0.3
   flutter:
     sdk: flutter
   flutter_localizations:

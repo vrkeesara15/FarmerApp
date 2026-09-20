@@ -217,6 +217,51 @@ class KisanRepository {
     return KisanWrite.done;
   }
 
+  /// F41: adds a crop plot to [farmId] from the tile answers (crop,
+  /// sowing date, and the farm's water and soil when the farmer changed
+  /// them). The server regenerates the crop calendar for the new plot.
+  Future<KisanWrite> addCrop({
+    required String farmId,
+    required String cropId,
+    required DateTime sowingDate,
+    String? irrigation,
+    String? soil,
+    double? areaAcres,
+  }) async {
+    final profile = (await _profile())?.value;
+    final farm = profile?.farms.where((f) => f.id == farmId).firstOrNull;
+    if (farm != null && (irrigation != null || soil != null)) {
+      final changed = <String, Object?>{
+        if (irrigation != null && irrigation != farm.irrigation)
+          'irrigation': irrigation,
+        if (soil != null && soil != farm.soil) 'soil': soil,
+      };
+      if (changed.isNotEmpty) {
+        final r = await api.updateFarm(farm.id, <String, Object?>{
+          'version': farm.version,
+          ...changed,
+        });
+        if (r.isNetworkFailure) return KisanWrite.offline;
+      }
+    }
+    final day = sowingDate.toUtc();
+    final iso =
+        '${day.year.toString().padLeft(4, '0')}-'
+        '${day.month.toString().padLeft(2, '0')}-'
+        '${day.day.toString().padLeft(2, '0')}';
+    final r = await api.createCropPlot(farmId, <String, Object?>{
+      'id': _newId(),
+      'crop_id': cropId,
+      'season': Seasons.forDate(day),
+      'sowing_date': iso,
+      'area_acres': ?areaAcres,
+    });
+    if (r.isNetworkFailure) return KisanWrite.offline;
+    if (!r.ok) return KisanWrite.refused;
+    await refreshProfile();
+    return KisanWrite.done;
+  }
+
   // --- consent (FM-002) -----------------------------------------------------
 
   /// Records a grant or withdrawal: online `POST /consents`

@@ -15,6 +15,7 @@ List<String> allPaths(List<RouteBase> routes, [String parent = '']) {
     ':skuId': 'sku-neem',
     ':id': 'o-1',
     ':visitId': 'v-1',
+    ':cropPlotId': 'plot-1',
   };
   final out = <String>[];
   for (final r in routes) {
@@ -37,7 +38,7 @@ void main() {
   final paths = allPaths(buildRouter().configuration.routes);
 
   test('the walk covers every farmer screen', () {
-    expect(paths, hasLength(greaterThanOrEqualTo(20)));
+    expect(paths, hasLength(greaterThanOrEqualTo(26)));
     expect(
       paths,
       containsAll(<String>[
@@ -59,6 +60,11 @@ void main() {
         AppRoutes.orders,
         AppRoutes.order('o-1'),
         AppRoutes.crops,
+        AppRoutes.addCrop,
+        AppRoutes.calendar('plot-1'),
+        AppRoutes.weather,
+        AppRoutes.alerts,
+        AppRoutes.inbox,
         AppRoutes.khata,
         AppRoutes.receipt,
         AppRoutes.visit('v-1'),
@@ -76,8 +82,10 @@ void main() {
     testWidgets('route $path', (tester) async {
       usePhoneSurface(tester);
       final deps = KisanDeps()..seedWorld(khataBalance: 1000);
+      deps.seedAdvisory();
       addTearDown(deps.dispose);
       await real(tester, () => deps.signIn(welcomeDone: false));
+      await real(tester, deps.primeAdvisory);
       await pumpApp(tester, deps.app(initialLocation: path));
       final fields = find.byType(EditableText, skipOffstage: false);
       if (AppRoutes.typingAllowed.contains(path)) {

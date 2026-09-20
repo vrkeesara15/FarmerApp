@@ -53,13 +53,25 @@ Future<String?> showChoiceSheet(
 /// (FM-003 "confirm or edit simple fields").
 class FarmSummaryCard extends ConsumerWidget {
   /// Creates the card.
-  const FarmSummaryCard({required this.farm, this.editable = false, super.key});
+  const FarmSummaryCard({
+    required this.farm,
+    this.editable = false,
+    this.calendar,
+    this.onOpenCalendar,
+    super.key,
+  });
 
   /// The farm.
   final KisanFarm farm;
 
   /// Values are tappable.
   final bool editable;
+
+  /// The synced crop calendar, for "next task" per plot (FM-007).
+  final CropCalendar? calendar;
+
+  /// Opens F42 for a crop plot.
+  final void Function(String cropPlotId)? onOpenCalendar;
 
   Future<void> _report(BuildContext context, KisanWrite result) async {
     final l10n = CoreLocalizations.of(context);
@@ -188,10 +200,20 @@ class FarmSummaryCard extends ConsumerWidget {
                       cropName(context, crops, plot.cropId),
                       style: app.text.label,
                     ),
-                    subtitle: Text(
-                      plot.stage == null
-                          ? l10n.kisanStageUnknown
-                          : CropStages.label(l10n, plot.stage!),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          plot.stage == null
+                              ? l10n.kisanStageUnknown
+                              : CropStages.label(l10n, plot.stage!),
+                        ),
+                        _NextTask(
+                          plot: plot,
+                          calendar: calendar,
+                          onOpen: onOpenCalendar,
+                        ),
+                      ],
                     ),
                     trailing: editable
                         ? Icon(Icons.edit_outlined, color: p.primary)
@@ -227,6 +249,61 @@ class FarmSummaryCard extends ConsumerWidget {
 
   static String _acres(double a) =>
       a == a.roundToDouble() ? a.toStringAsFixed(0) : a.toStringAsFixed(1);
+}
+
+/// FM-007: the plot's next task with a link to F42, or nothing when the
+/// calendar has not been synced yet.
+class _NextTask extends StatelessWidget {
+  const _NextTask({
+    required this.plot,
+    required this.calendar,
+    required this.onOpen,
+  });
+
+  final KisanCropPlot plot;
+  final CropCalendar? calendar;
+  final void Function(String cropPlotId)? onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = context.app;
+    final l10n = CoreLocalizations.of(context);
+    final lang = Localizations.localeOf(context).languageCode;
+    final plotCalendar = calendar?.plot(plot.id);
+    if (plotCalendar == null) {
+      return Text(
+        l10n.kisanNextTaskSoon,
+        style: app.text.caption.copyWith(color: app.palette.textSecondary),
+      );
+    }
+    final next = plotCalendar.nextTask(calendar!.today);
+    final label = next == null
+        ? l10n.calendarAllDone
+        : l10n.calendarNextTask(next.titleIn(lang) ?? next.taskKey);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          label,
+          key: Key('plot-next-${plot.id}'),
+          style: app.text.caption.copyWith(color: app.palette.textSecondary),
+        ),
+        if (onOpen != null)
+          TextButton.icon(
+            key: Key('plot-calendar-${plot.id}'),
+            onPressed: () => onOpen!(plot.id),
+            icon: const Icon(Icons.event_note_outlined),
+            label: Text(l10n.kisanCropCalendar),
+            style: TextButton.styleFrom(
+              minimumSize: const Size(
+                Tokens.sizeTouchTargetMin,
+                Tokens.sizeTouchTargetMin,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }
 
 class _ValueChip extends StatelessWidget {

@@ -2,6 +2,12 @@
 /// formatting utilities, local database and auth interfaces.
 library;
 
+export 'src/advisory/advisory_api.dart';
+export 'src/advisory/advisory_models.dart';
+export 'src/advisory/advisory_providers.dart';
+export 'src/advisory/advisory_repository.dart';
+export 'src/advisory/push_controller.dart';
+export 'src/advisory/push_service.dart';
 export 'src/auth/api_config.dart';
 export 'src/auth/auth_api.dart';
 export 'src/auth/auth_copy.dart';

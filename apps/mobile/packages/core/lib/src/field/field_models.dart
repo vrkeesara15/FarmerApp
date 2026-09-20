@@ -1,37 +1,41 @@
 import 'package:flutter/foundation.dart' show immutable, listEquals;
 
 import '../geo/geo.dart';
+import '../sync/sync_models.dart';
 
 /// Wire names of the M7 field entities the officer app writes through
 /// `/v1/sync` (docs/prs/M7-field-p1-api.md "Sync").
 ///
 /// None of them has a typed Drift table: they live in `sync_docs` as JSON,
 /// which is why adding them is additive for both apps.
+///
+/// The names themselves live on [SyncEntities] — the single registry both
+/// apps read — and are aliased here with the officer-side documentation.
 abstract final class FieldEntities {
   /// FA-007 inbox row; the device only ever updates `{read_at}`.
-  static const String notification = 'notification';
+  static const String notification = SyncEntities.notification;
 
   /// VV-008 tracking gap; the device writes `{reason, note}` on the gap id
   /// that `/v1/me/day` handed out.
-  static const String trackGap = 'track_gap';
+  static const String trackGap = SyncEntities.trackGap;
 
   /// FA-018 beat plan; the device writes the whole ordered `{items}`.
-  static const String beatPlan = 'beat_plan';
+  static const String beatPlan = SyncEntities.beatPlan;
 
   /// FA-023 expense claim (create only; the receipt is uploaded first).
-  static const String travelClaim = 'travel_claim';
+  static const String travelClaim = SyncEntities.travelClaim;
 
   /// FA-026 demo plot.
-  static const String demoPlot = 'demo_plot';
+  static const String demoPlot = SyncEntities.demoPlot;
 
   /// FA-026 stage observation.
-  static const String demoObservation = 'demo_observation';
+  static const String demoObservation = SyncEntities.demoObservation;
 
   /// FA-027 village meeting.
-  static const String farmerMeeting = 'farmer_meeting';
+  static const String farmerMeeting = SyncEntities.farmerMeeting;
 
   /// FA-027 attendance row (OTP online, QR offline).
-  static const String meetingAttendance = 'meeting_attendance';
+  static const String meetingAttendance = SyncEntities.meetingAttendance;
 
   /// Every entity above, for the sync registry.
   static const Set<String> all = <String>{

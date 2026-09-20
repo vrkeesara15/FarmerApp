@@ -6,20 +6,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../router.dart';
+import '../widgets/advisory_widgets.dart';
 import '../widgets/kisan_widgets.dart';
 
 /// Refreshes everything the farmer app caches (pull to refresh, start):
 /// profile, orders, khata, deletion ticket, and sends queued writes.
 Future<void> refreshKisan(WidgetRef ref) async {
   final repo = ref.read(kisanRepositoryProvider);
+  final advisory = ref.read(advisoryRepositoryProvider);
   final farmerId = await repo.farmerId();
   await Future.wait(<Future<Object?>>[
     repo.refreshProfile(),
     repo.refreshOrders(),
     repo.refreshDeletion(),
+    advisory.refreshCalendar(),
+    advisory.refreshAlerts(),
+    advisory.refreshInbox(),
     if (farmerId != null) ref.read(khataRepositoryProvider).refresh(farmerId),
     ref.read(kisanFlushProvider)().catchError((Object _) {}),
   ]);
+  // The forecast needs a farm, so it is fetched after the profile landed.
+  final farms = (await repo.watchProfile().first)?.value.farms;
+  if (farms != null && farms.isNotEmpty) {
+    await advisory.refreshWeather(farms.first.id);
+  }
 }
 
 /// F10 Home: greeting, pending visit question, weather strip (FM-008 P1:
@@ -59,9 +69,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .toList();
     final lang = Localizations.localeOf(context).languageCode;
     final name = profile?.value.firstName ?? '';
+    final calendar = ref.watch(cropCalendarProvider).value?.value;
+    final farms = profile?.value.farms ?? const <KisanFarm>[];
     return KisanTabScaffold(
       tab: KisanTab.home,
       title: l10n.appNameFarmer,
+      actions: const <Widget>[_InboxAction()],
       body: RefreshIndicator(
         onRefresh: () => refreshKisan(ref),
         child: ListView(
@@ -105,7 +118,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
               ),
-            _WeatherStrip(),
+            _WeatherStrip(farmId: farms.isEmpty ? null : farms.first.id),
             const SizedBox(height: Tokens.space3),
             SizedBox(
               height: 112,
@@ -169,7 +182,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     key: Key('home-crop-${plot.id}'),
                     icon: stageIcon(plot.stage),
                     title: cropName(context, crops, plot.cropId),
-                    onTap: () => context.push(AppRoutes.crops),
+                    onTap: () => context.push(AppRoutes.calendar(plot.id)),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
@@ -181,11 +194,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                           style: app.text.body,
                         ),
-                        Text(
-                          l10n.kisanNextTaskSoon,
-                          style: app.text.caption.copyWith(
-                            color: p.textSecondary,
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final plotCalendar = calendar?.plot(plot.id);
+                            final next = plotCalendar?.nextTask(
+                              calendar!.today,
+                            );
+                            return Text(
+                              plotCalendar == null
+                                  ? l10n.kisanNextTaskSoon
+                                  : next == null
+                                  ? l10n.calendarAllDone
+                                  : l10n.calendarNextTask(
+                                      next.titleIn(lang) ?? next.taskKey,
+                                    ),
+                              key: Key('home-next-${plot.id}'),
+                              style: app.text.caption.copyWith(
+                                color: p.textSecondary,
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -221,54 +249,142 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-class _WeatherStrip extends StatelessWidget {
+/// FM-008 strip: today's sky, temperature and rain chance; tapping opens
+/// F43. Falls back to the "coming soon" line while nothing is cached.
+class _WeatherStrip extends ConsumerWidget {
+  const _WeatherStrip({required this.farmId});
+
+  final String? farmId;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final app = context.app;
     final l10n = CoreLocalizations.of(context);
-    return Container(
-      key: const Key('home-weather'),
-      padding: const EdgeInsets.all(Tokens.space3),
-      decoration: BoxDecoration(
-        color: app.palette.surface,
+    final weather = farmId == null
+        ? null
+        : ref.watch(farmWeatherProvider(farmId!)).value?.value;
+    final today = (weather?.daily.isNotEmpty ?? false)
+        ? weather!.daily.first
+        : null;
+    return Material(
+      color: app.palette.surface,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(Tokens.radiusCard),
-        border: Border.fromBorderSide(app.borderSide),
+        side: app.borderSide,
       ),
-      child: Row(
-        children: <Widget>[
-          Icon(Icons.wb_cloudy_outlined, color: app.palette.textSecondary),
-          const SizedBox(width: Tokens.space2),
-          Expanded(
-            child: Text(
-              l10n.kisanWeatherSoon,
-              style: app.text.body.copyWith(color: app.palette.textSecondary),
-            ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: const Key('home-weather'),
+        onTap: () => context.push(AppRoutes.weather),
+        child: Padding(
+          padding: const EdgeInsets.all(Tokens.space3),
+          child: Row(
+            children: <Widget>[
+              Icon(
+                today == null
+                    ? Icons.wb_cloudy_outlined
+                    : weatherIcon(today.weatherCode),
+                color: today == null
+                    ? app.palette.textSecondary
+                    : app.palette.primary,
+              ),
+              const SizedBox(width: Tokens.space2),
+              Expanded(
+                child: Text(
+                  today == null
+                      ? l10n.kisanWeatherSoon
+                      : '${weatherSky(l10n, today.weatherCode)} \u00b7 '
+                            '${l10n.weatherTempRange(today.temperatureMinC.round().toString(), today.temperatureMaxC.round().toString())}',
+                  style: app.text.body.copyWith(
+                    color: today == null ? app.palette.textSecondary : null,
+                  ),
+                ),
+              ),
+              if (today != null)
+                Text(
+                  l10n.weatherRainChance(today.precipitationProbabilityPct),
+                  style: app.text.caption.copyWith(
+                    color: app.palette.textSecondary,
+                  ),
+                ),
+              Icon(Icons.chevron_right, color: app.palette.textSecondary),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _AlertsBanner extends StatelessWidget {
+/// FM-009 banner: the most severe district alert; tapping opens F44.
+class _AlertsBanner extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final app = context.app;
     final l10n = CoreLocalizations.of(context);
-    return Container(
-      key: const Key('home-alerts'),
-      padding: const EdgeInsets.all(Tokens.space3),
-      decoration: BoxDecoration(
-        color: app.tint(app.palette.primaryContainer),
+    final lang = Localizations.localeOf(context).languageCode;
+    final alerts =
+        ref.watch(outbreakAlertsProvider).value?.value ??
+        const <OutbreakAlert>[];
+    final top = alerts.isEmpty ? null : alerts.first;
+    return Material(
+      color: app.tint(app.palette.primaryContainer),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(Tokens.radiusCard),
-        border: Border.fromBorderSide(app.borderSide),
+        side: app.borderSide,
       ),
-      child: Row(
-        children: <Widget>[
-          Icon(Icons.notifications_none, color: app.palette.primary),
-          const SizedBox(width: Tokens.space2),
-          Expanded(child: Text(l10n.kisanNoAlerts, style: app.text.body)),
-        ],
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: const Key('home-alerts'),
+        onTap: () => context.push(AppRoutes.alerts),
+        child: Padding(
+          padding: const EdgeInsets.all(Tokens.space3),
+          child: Row(
+            children: <Widget>[
+              Icon(
+                top == null
+                    ? Icons.notifications_none
+                    : Icons.warning_amber_outlined,
+                color: top == null
+                    ? app.palette.primary
+                    : app.palette.statusWarning,
+              ),
+              const SizedBox(width: Tokens.space2),
+              Expanded(
+                child: Text(
+                  top == null
+                      ? l10n.kisanNoAlerts
+                      : '${top.problemNameIn(lang) ?? top.problemCode ?? ''} \u00b7 '
+                            '${top.cropNameIn(lang) ?? top.cropCode}',
+                  style: app.text.body,
+                ),
+              ),
+              if (top != null) SeverityChip(top.severity),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// FA-007 inbox action with the unread badge.
+class _InboxAction extends ConsumerWidget {
+  const _InboxAction();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = CoreLocalizations.of(context);
+    final unread = ref.watch(inboxUnreadProvider).value ?? 0;
+    return IconButton(
+      key: const Key('home-inbox'),
+      onPressed: () => context.push(AppRoutes.inbox),
+      tooltip: l10n.inboxTitle,
+      icon: Badge.count(
+        key: const Key('home-inbox-badge'),
+        count: unread,
+        isLabelVisible: unread > 0,
+        child: const Icon(Icons.notifications_none),
       ),
     );
   }

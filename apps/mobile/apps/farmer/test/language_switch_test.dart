@@ -5,6 +5,7 @@ import 'package:farmerapp_farmer/screens/phone_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
 /// FA-004: language switch without restart, persisted across app starts,
@@ -14,10 +15,23 @@ final CoreLocalizations mr = lookupCoreLocalizations(const Locale('mr'));
 final CoreLocalizations en = lookupCoreLocalizations(const Locale('en'));
 
 void main() {
+  late AppDatabase appDb;
+
+  setUp(() => appDb = openInMemoryDatabase());
+  tearDown(() => appDb.close());
+
+  // The app arms the FA-007 push listener on start, so every scope that
+  // builds KisanApp needs the encrypted database.
+  List<Override> dbOverride([AppDatabase? db]) => <Override>[
+    appDatabaseProvider.overrideWithValue(db ?? appDb),
+  ];
+
   testWidgets('F01: choosing Hindi re-localises the login screen live', (
     tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: KisanApp()));
+    await tester.pumpWidget(
+      ProviderScope(overrides: dbOverride(), child: const KisanApp()),
+    );
     await tester.pumpAndSettle();
     expect(find.text(en.languagePickerTitle), findsOneWidget);
 
@@ -45,7 +59,9 @@ void main() {
   testWidgets('MaterialApp lists the five launch locales and delegates', (
     tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: KisanApp()));
+    await tester.pumpWidget(
+      ProviderScope(overrides: dbOverride(), child: const KisanApp()),
+    );
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
     expect(app.supportedLocales.map((l) => l.languageCode).toSet(), <String>{
       'en',
@@ -78,7 +94,10 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: await settingsOverrides(store),
+        overrides: <Override>[
+          ...await settingsOverrides(store),
+          ...dbOverride(db),
+        ],
         child: const KisanApp(),
       ),
     );
@@ -90,7 +109,10 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpWidget(
       ProviderScope(
-        overrides: await settingsOverrides(store),
+        overrides: <Override>[
+          ...await settingsOverrides(store),
+          ...dbOverride(db),
+        ],
         child: const KisanApp(),
       ),
     );
@@ -109,8 +131,9 @@ void main() {
     );
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
+        overrides: <Override>[
           ...await settingsOverrides(store),
+          ...dbOverride(),
           routerProvider.overrideWithValue(
             buildRouter(initialLocation: AppRoutes.settings),
           ),

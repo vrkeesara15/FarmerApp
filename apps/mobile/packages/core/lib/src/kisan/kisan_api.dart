@@ -33,6 +33,9 @@ abstract interface class KisanApi {
   /// `POST /v1/farmers/{id}/farms` (`FarmCreate` with crop plots).
   Future<RestResponse> createFarm(String farmerId, Map<String, Object?> body);
 
+  /// `POST /v1/farms/{id}/crop-plots` (`CropPlotCreate`, F41).
+  Future<RestResponse> createCropPlot(String farmId, Map<String, Object?> body);
+
   /// `GET /v1/orders?limit=50` (own orders, newest first).
   Future<RestResponse> orders();
 
@@ -99,6 +102,12 @@ class HttpKisanApi implements KisanApi {
   @override
   Future<RestResponse> createFarm(String farmerId, Map<String, Object?> body) =>
       _rest.post('/v1/farmers/$farmerId/farms', body);
+
+  @override
+  Future<RestResponse> createCropPlot(
+    String farmId,
+    Map<String, Object?> body,
+  ) => _rest.post('/v1/farms/$farmId/crop-plots', body);
 
   @override
   Future<RestResponse> orders() =>
@@ -332,6 +341,28 @@ class FakeKisanApi implements KisanApi {
         f['farms'] = <Object?>[..._farms(), farm];
         return _answer(201, farm);
       }, body: body);
+
+  @override
+  Future<RestResponse> createCropPlot(
+    String farmId,
+    Map<String, Object?> body,
+  ) => _handle('POST /v1/farms/$farmId/crop-plots', () {
+    for (final f in _farms()) {
+      if (f['id'] != farmId) continue;
+      final plot = <String, Object?>{
+        ...body,
+        'id': body['id'] ?? 'plot-${++_n}',
+        'farm_id': farmId,
+        'version': 1,
+      };
+      f['crop_plots'] = <Object?>[
+        ...(f['crop_plots'] as List?) ?? const <Object?>[],
+        plot,
+      ];
+      return _answer(201, plot);
+    }
+    return _answer(404, <String, Object?>{'code': 'not_found'});
+  }, body: body);
 
   @override
   Future<RestResponse> orders() => _handle('GET /v1/orders', () {

@@ -3214,5 +3214,565 @@
   },
   "demoStart": "Start demo",
   "demoReport": "Mark reported",
-  "demoComparison": "Demo vs farmer practice"
+  "demoComparison": "Demo vs farmer practice",
+  "visitVoiceInputSoon": "Voice input arrives in a later update",
+  "kisanAddCrop": "Add a crop",
+  "@kisanAddCrop": {
+    "description": "Farmer app F40 my crops (FM-003 / FM-007)"
+  },
+  "kisanCropCalendar": "Crop calendar",
+  "@kisanCropCalendar": {
+    "description": "Farmer app F40 my crops (FM-003 / FM-007)"
+  },
+  "kisanWeather": "Weather",
+  "@kisanWeather": {
+    "description": "Farmer app F40 my crops (FM-003 / FM-007)"
+  },
+  "kisanAlerts": "Pest alerts",
+  "@kisanAlerts": {
+    "description": "Farmer app F40 my crops (FM-003 / FM-007)"
+  },
+  "kisanMessages": "Messages",
+  "@kisanMessages": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "addCropTitle": "Add a crop",
+  "@addCropTitle": {
+    "description": "Farmer app F41 add crop (FM-007)"
+  },
+  "addCropHelp": "Tap the pictures. You do not need to type.",
+  "@addCropHelp": {
+    "description": "Farmer app F41 add crop (FM-007)"
+  },
+  "addCropWhichCrop": "Which crop did you sow?",
+  "@addCropWhichCrop": {
+    "description": "Farmer app F41 add crop (FM-007)"
+  },
+  "addCropWhichFarm": "Which farm?",
+  "@addCropWhichFarm": {
+    "description": "Farmer app F41 add crop (FM-007)"
+  },
+  "addCropWhenSown": "When did you sow it?",
+  "@addCropWhenSown": {
+    "description": "Farmer app F41 add crop (FM-007)"
+  },
+  "addCropWater": "How do you water it?",
+  "@addCropWater": {
+    "description": "Farmer app F41 add crop (FM-007)"
+  },
+  "addCropSoil": "What soil is it?",
+  "@addCropSoil": {
+    "description": "Farmer app F41 add crop (FM-007)"
+  },
+  "addCropSave": "Save crop",
+  "@addCropSave": {
+    "description": "Farmer app F41 add crop (FM-007)"
+  },
+  "addCropSaved": "Crop added. Your calendar is ready.",
+  "@addCropSaved": {
+    "description": "Farmer app F41 add crop (FM-007)"
+  },
+  "addCropSownOn": "Sown on {date}",
+  "@addCropSownOn": {
+    "description": "Farmer app F41 add crop (FM-007)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "addCropNoFarm": "Add your farm first",
+  "@addCropNoFarm": {
+    "description": "Farmer app F41 add crop (FM-007)"
+  },
+  "calendarTitle": "Crop calendar",
+  "@calendarTitle": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "calendarHelp": "Your tasks week by week. Tap the speaker to listen.",
+  "@calendarHelp": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "calendarWeek": "Week {week}",
+  "@calendarWeek": {
+    "description": "Farmer app F42 crop calendar (FM-007)",
+    "placeholders": {
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarSownOn": "Sown on {date}",
+  "@calendarSownOn": {
+    "description": "Farmer app F42 crop calendar (FM-007)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarDueOn": "Do it on {date}",
+  "@calendarDueOn": {
+    "description": "Farmer app F42 crop calendar (FM-007)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarDueBetween": "Do it between {from} and {to}",
+  "@calendarDueBetween": {
+    "description": "Farmer app F42 crop calendar (FM-007)",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarLate": "Late",
+  "@calendarLate": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "calendarMarkDone": "Mark done",
+  "@calendarMarkDone": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "calendarDone": "Done",
+  "@calendarDone": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "calendarRemindMe": "Remind me",
+  "@calendarRemindMe": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "calendarReminderOff": "No reminder",
+  "@calendarReminderOff": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "calendarNoTasks": "No tasks yet",
+  "@calendarNoTasks": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "calendarNoTasksHelp": "Add the sowing date and your tasks will come.",
+  "@calendarNoTasksHelp": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "calendarChangedTitle": "Your calendar changed",
+  "@calendarChangedTitle": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "calendarChangedLater": "Sowing moved {days} days later, so {count} tasks moved too.",
+  "@calendarChangedLater": {
+    "description": "Farmer app F42 crop calendar (FM-007)",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarChangedEarlier": "Sowing moved {days} days earlier, so {count} tasks moved too.",
+  "@calendarChangedEarlier": {
+    "description": "Farmer app F42 crop calendar (FM-007)",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarChangedTasks": "{count} tasks changed.",
+  "@calendarChangedTasks": {
+    "description": "Farmer app F42 crop calendar (FM-007)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarChangedDoneKept": "The work you already finished stays finished.",
+  "@calendarChangedDoneKept": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "calendarGotIt": "Got it",
+  "@calendarGotIt": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "calendarNextTask": "Next: {task}",
+  "@calendarNextTask": {
+    "description": "Farmer app F42 crop calendar (FM-007)",
+    "placeholders": {
+      "task": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarAllDone": "All tasks done",
+  "@calendarAllDone": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "calendarSavedOffline": "Saved on this phone. It will be sent when you are online.",
+  "@calendarSavedOffline": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "taskTypeSow": "Sow",
+  "@taskTypeSow": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "taskTypeIrrigate": "Water",
+  "@taskTypeIrrigate": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "taskTypeFertilise": "Fertiliser",
+  "@taskTypeFertilise": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "taskTypeSpray": "Spray",
+  "@taskTypeSpray": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "taskTypeHarvest": "Harvest",
+  "@taskTypeHarvest": {
+    "description": "Farmer app F42 crop calendar (FM-007)"
+  },
+  "weatherTitle": "Weather",
+  "@weatherTitle": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherSevenDays": "Next 7 days",
+  "@weatherSevenDays": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherRainChance": "Rain {percent}%",
+  "@weatherRainChance": {
+    "description": "Farmer app F43 weather (FM-008)",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "weatherTempRange": "{min}° to {max}°",
+  "@weatherTempRange": {
+    "description": "Farmer app F43 weather (FM-008)",
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherWind": "Wind {speed} km/h",
+  "@weatherWind": {
+    "description": "Farmer app F43 weather (FM-008)",
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherSprayTitle": "When to spray",
+  "@weatherSprayTitle": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherSprayNextDays": "Next 3 days",
+  "@weatherSprayNextDays": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherSprayGood": "Good time to spray",
+  "@weatherSprayGood": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherSprayAvoid": "Do not spray",
+  "@weatherSprayAvoid": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherSprayNone": "No good spray time in the next 3 days",
+  "@weatherSprayNone": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherWindowTime": "{from} to {to}",
+  "@weatherWindowTime": {
+    "description": "Farmer app F43 weather (FM-008)",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherReasonRainLikely": "Rain is likely",
+  "@weatherReasonRainLikely": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherReasonRain": "It will rain",
+  "@weatherReasonRain": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherReasonWindHigh": "Wind is too strong",
+  "@weatherReasonWindHigh": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherCautionHeat": "Very hot",
+  "@weatherCautionHeat": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherCautionHumidityHigh": "Very humid",
+  "@weatherCautionHumidityHigh": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherCautionHumidityLow": "Air is very dry",
+  "@weatherCautionHumidityLow": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherAdviceOnly": "This is advice only. Look at your field before you spray.",
+  "@weatherAdviceOnly": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherNone": "No weather for your farm yet",
+  "@weatherNone": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherNoneHelp": "Your field officer can put your farm on the map.",
+  "@weatherNoneHelp": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherSkyClear": "Clear",
+  "@weatherSkyClear": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherSkyCloudy": "Cloudy",
+  "@weatherSkyCloudy": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherSkyFog": "Fog",
+  "@weatherSkyFog": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherSkyDrizzle": "Light rain",
+  "@weatherSkyDrizzle": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherSkyRain": "Rain",
+  "@weatherSkyRain": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherSkyShowers": "Heavy showers",
+  "@weatherSkyShowers": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "weatherSkyThunder": "Thunderstorm",
+  "@weatherSkyThunder": {
+    "description": "Farmer app F43 weather (FM-008)"
+  },
+  "alertsTitle": "Pest alerts",
+  "@alertsTitle": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertsNone": "No pest alerts in your district",
+  "@alertsNone": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertsNoneHelp": "We will tell you if a problem spreads near you.",
+  "@alertsNoneHelp": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSeverityHigh": "High",
+  "@alertSeverityHigh": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSeverityMedium": "Medium",
+  "@alertSeverityMedium": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSeverityLow": "Low",
+  "@alertSeverityLow": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertGrowsCrop": "You grow this crop",
+  "@alertGrowsCrop": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertFarmersAffected": "{count} farmers affected",
+  "@alertFarmersAffected": {
+    "description": "Farmer app F44 pest alerts (FM-009)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "alertWeekOf": "Week of {date}",
+  "@alertWeekOf": {
+    "description": "Farmer app F44 pest alerts (FM-009)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "alertLookForTitle": "What to look for",
+  "@alertLookForTitle": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertDoTitle": "What to do",
+  "@alertDoTitle": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertCheckCrop": "Take a photo of my crop",
+  "@alertCheckCrop": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSeeProducts": "See products at the store",
+  "@alertSeeProducts": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertDismiss": "Hide this alert",
+  "@alertDismiss": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertHidden": "Alert hidden",
+  "@alertHidden": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSignPestUnderLeaf": "Look under the leaves for insects or eggs",
+  "@alertSignPestUnderLeaf": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSignPestHoles": "Look for holes or chewed leaf edges",
+  "@alertSignPestHoles": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSignPestWilting": "Look for drooping or dying shoots",
+  "@alertSignPestWilting": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSignDiseaseSpots": "Look for spots on the leaves",
+  "@alertSignDiseaseSpots": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSignDiseasePowder": "Look for white or grey powder on the leaves",
+  "@alertSignDiseasePowder": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSignDiseaseRot": "Look for rotting stems or fruit",
+  "@alertSignDiseaseRot": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSignDeficiencyColour": "Look for yellow or pale leaves",
+  "@alertSignDeficiencyColour": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSignDeficiencyGrowth": "Look for slow growth or small leaves",
+  "@alertSignDeficiencyGrowth": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSignWeedPatches": "Look for weed patches between the plants",
+  "@alertSignWeedPatches": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "alertSignWalkField": "Walk your field and look at 10 plants",
+  "@alertSignWalkField": {
+    "description": "Farmer app F44 pest alerts (FM-009)"
+  },
+  "farmerInboxTitle": "Messages",
+  "@farmerInboxTitle": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "farmerInboxEmpty": "No messages yet",
+  "@farmerInboxEmpty": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "farmerInboxEmptyHelp": "Crop check results, orders and alerts come here.",
+  "@farmerInboxEmptyHelp": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "farmerInboxMarkAllRead": "Mark all read",
+  "@farmerInboxMarkAllRead": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "farmerInboxUnread": "{count} new",
+  "@farmerInboxUnread": {
+    "description": "Farmer app inbox (FA-007)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notifDiagnosisReadyTitle": "Your crop check is ready",
+  "@notifDiagnosisReadyTitle": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "notifDiagnosisReadyBody": "Tap to see the problem and what to do.",
+  "@notifDiagnosisReadyBody": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "notifDiagnosisReviewedTitle": "Our expert checked your photo",
+  "@notifDiagnosisReviewedTitle": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "notifDiagnosisReviewedBody": "The answer was updated. Tap to read it.",
+  "@notifDiagnosisReviewedBody": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "notifDiagnosisExpertTitle": "An expert is looking at your photo",
+  "@notifDiagnosisExpertTitle": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "notifDiagnosisExpertBody": "We will tell you within 24 hours.",
+  "@notifDiagnosisExpertBody": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "farmerNotifOrderStatusTitle": "Your order moved on",
+  "@farmerNotifOrderStatusTitle": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "farmerNotifOrderStatusBody": "Tap to see your order.",
+  "@farmerNotifOrderStatusBody": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "notifOutbreakAlertTitle": "Pest alert in your district",
+  "@notifOutbreakAlertTitle": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "notifOutbreakAlertBody": "Check your field today.",
+  "@notifOutbreakAlertBody": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "notifCropTaskReminderTitle": "A farm task is due today",
+  "@notifCropTaskReminderTitle": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "notifCropTaskReminderBody": "Tap to open your crop calendar.",
+  "@notifCropTaskReminderBody": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "farmerNotifVisitConfirmTitle": "Did your officer visit?",
+  "@farmerNotifVisitConfirmTitle": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "farmerNotifVisitConfirmBody": "Tap to answer yes or no.",
+  "@farmerNotifVisitConfirmBody": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "farmerNotifGenericTitle": "Update",
+  "@farmerNotifGenericTitle": {
+    "description": "Farmer app inbox (FA-007)"
+  },
+  "farmerNotifGenericBody": "Tap to see it.",
+  "@farmerNotifGenericBody": {
+    "description": "Farmer app inbox (FA-007)"
+  }
 }

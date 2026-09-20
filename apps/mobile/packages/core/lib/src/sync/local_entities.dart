@@ -86,15 +86,18 @@ class LocalEntities {
     SyncEntities.payment: 'server_wins',
     SyncEntities.khataEntry: 'server_wins',
     SyncEntities.diagnosis: 'server_wins',
-    // M7 field P1 (`sync_docs`; docs/prs/M7-field-p1-api.md "Sync").
-    'notification': 'last_writer_wins',
-    'track_gap': 'last_writer_wins',
-    'beat_plan': 'last_writer_wins',
-    'travel_claim': 'server_wins',
-    'demo_plot': 'last_writer_wins',
-    'demo_observation': 'server_wins',
-    'farmer_meeting': 'last_writer_wins',
-    'meeting_attendance': 'server_wins',
+    // M7 advisory (`sync_docs`; docs/prs/M7-farmer-p1-api.md "Sync").
+    SyncEntities.cropPlotTask: 'merge_fields',
+    // M7 field P1 (`sync_docs`; docs/prs/M7-field-p1-api.md "Sync"). The
+    // `notification` rule is shared by both apps and stated once.
+    SyncEntities.notification: 'last_writer_wins',
+    SyncEntities.trackGap: 'last_writer_wins',
+    SyncEntities.beatPlan: 'last_writer_wins',
+    SyncEntities.travelClaim: 'server_wins',
+    SyncEntities.demoPlot: 'last_writer_wins',
+    SyncEntities.demoObservation: 'server_wins',
+    SyncEntities.farmerMeeting: 'last_writer_wins',
+    SyncEntities.meetingAttendance: 'server_wins',
   };
 
   LocalRow? _row(String entity, String id, Map<String, Object?>? data) {

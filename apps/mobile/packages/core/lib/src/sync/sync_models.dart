@@ -61,6 +61,38 @@ abstract final class SyncEntities {
   /// change feed).
   static const String diagnosis = 'diagnosis';
 
+  /// FM-007 crop calendar task (`sync_docs`; update only, `merge_fields`:
+  /// the device owns `status` and `reminder_enabled`, every other field is
+  /// server-generated from the templates and the sowing date).
+  static const String cropPlotTask = 'crop_plot_task';
+
+  /// FA-007 notification row (`sync_docs`; update only, `{read_at}`).
+  ///
+  /// One entity for both apps: the officer's A13 inbox and the farmer's
+  /// F-inbox read the same rows (`FieldEntities.notification` aliases it).
+  static const String notification = 'notification';
+
+  /// VV-008 tracking gap (`sync_docs`; the device writes `{reason, note}`).
+  static const String trackGap = 'track_gap';
+
+  /// FA-018 beat plan (`sync_docs`; the device writes the ordered `items`).
+  static const String beatPlan = 'beat_plan';
+
+  /// FA-023 expense claim (`sync_docs`; create only).
+  static const String travelClaim = 'travel_claim';
+
+  /// FA-026 demo plot (`sync_docs`).
+  static const String demoPlot = 'demo_plot';
+
+  /// FA-026 demo stage observation (`sync_docs`).
+  static const String demoObservation = 'demo_observation';
+
+  /// FA-027 village meeting (`sync_docs`).
+  static const String farmerMeeting = 'farmer_meeting';
+
+  /// FA-027 meeting attendance row (`sync_docs`).
+  static const String meetingAttendance = 'meeting_attendance';
+
   /// Entities whose create payload must not repeat the id (the server
   /// validates the body strictly and takes the id from `entity_id`).
   static const Set<String> createPayloadWithoutId = <String>{
@@ -86,15 +118,18 @@ abstract final class SyncEntities {
     order,
     payment,
     diagnosis,
-    // M7 field P1 (docs/prs/M7-field-p1-api.md "Sync").
-    'notification',
-    'track_gap',
-    'beat_plan',
-    'travel_claim',
-    'demo_plot',
-    'demo_observation',
-    'farmer_meeting',
-    'meeting_attendance',
+    // M7 advisory (docs/prs/M7-farmer-p1-api.md "Sync").
+    cropPlotTask,
+    // M7 field P1 (docs/prs/M7-field-p1-api.md "Sync"); `notification` is
+    // shared by both apps and registered once.
+    notification,
+    trackGap,
+    beatPlan,
+    travelClaim,
+    demoPlot,
+    demoObservation,
+    farmerMeeting,
+    meetingAttendance,
   };
 }
 

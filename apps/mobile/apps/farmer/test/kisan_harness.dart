@@ -206,6 +206,238 @@ String visitToken(String visitId, {String channel = 'qr'}) {
       '.sig';
 }
 
+/// `CalendarOut` for [farmerId]: cotton on plot-1 (sown 2026-06-15, four
+/// tasks, the first already done) and chilli on plot-2 (sown 2026-07-01,
+/// one task). Dates are around `t0` (2026-09-19 IST).
+Map<String, Object?> calendarBody({String today = '2026-09-19'}) =>
+    <String, Object?>{
+      'farmer_id': farmerId,
+      'today': today,
+      'plots': <Object?>[
+        <String, Object?>{
+          'crop_plot_id': 'plot-1',
+          'farm_id': 'farm-1',
+          'crop_id': 'pilot:cotton',
+          'crop_code': 'cotton',
+          'crop_names': <String, Object?>{'en': 'Cotton', 'te': 'పత్తి'},
+          'season': 'kharif',
+          'sowing_date': '2026-06-15',
+          'tasks': <Object?>[
+            calendarTask(
+              id: 'task-1',
+              key: 'cotton.sow',
+              type: 'sow',
+              due: '2026-06-15',
+              title: 'Sow the seed',
+              titleTe: 'విత్తనం వేయండి',
+              instruction: 'Sow in rows 90 cm apart.',
+              status: 'done',
+            ),
+            calendarTask(
+              id: 'task-2',
+              key: 'cotton.top_dress_1',
+              type: 'fertilise',
+              due: '2026-07-20',
+              title: 'First top dressing',
+              titleTe: 'మొదటి పైపాటు ఎరువు',
+              instruction: 'Apply the first split of nitrogen.',
+            ),
+            calendarTask(
+              id: 'task-3',
+              key: 'cotton.spray_1',
+              type: 'spray',
+              due: '2026-09-21',
+              end: '2026-09-23',
+              title: 'Check for sucking pests',
+              titleTe: 'రసం పీల్చే పురుగులు చూడండి',
+              instruction: 'Spray only if you see the pest.',
+            ),
+            calendarTask(
+              id: 'task-4',
+              key: 'cotton.harvest',
+              type: 'harvest',
+              due: '2026-11-10',
+              title: 'First picking',
+              titleTe: 'మొదటి కోత',
+              instruction: 'Pick when the bolls open fully.',
+              reminder: false,
+            ),
+          ],
+        },
+        <String, Object?>{
+          'crop_plot_id': 'plot-2',
+          'farm_id': 'farm-1',
+          'crop_id': 'pilot:chilli',
+          'crop_code': 'chilli',
+          'crop_names': <String, Object?>{'en': 'Chilli', 'te': 'మిరప'},
+          'season': 'kharif',
+          'sowing_date': '2026-07-01',
+          'tasks': <Object?>[
+            calendarTask(
+              id: 'task-5',
+              key: 'chilli.irrigate_1',
+              type: 'irrigate',
+              due: '2026-09-25',
+              title: 'Water the field',
+              titleTe: 'పొలానికి నీరు పెట్టండి',
+              instruction: 'Give light irrigation in the morning.',
+            ),
+          ],
+        },
+      ],
+    };
+
+/// One `CropPlotTaskOut` row.
+Map<String, Object?> calendarTask({
+  required String id,
+  required String key,
+  required String type,
+  required String due,
+  required String title,
+  required String instruction,
+  String? titleTe,
+  String? end,
+  String status = 'pending',
+  bool reminder = true,
+  int version = 1,
+}) => <String, Object?>{
+  'id': id,
+  'task_key': key,
+  'task_type': type,
+  'stage': 'vegetative',
+  'due_date': due,
+  'end_date': end ?? due,
+  'titles': <String, Object?>{'en': title, 'te': ?titleTe},
+  'instructions': <String, Object?>{'en': instruction},
+  'product_category': null,
+  'sort_order': 10,
+  'status': status,
+  'done_at': status == 'done' ? '2026-06-15T05:00:00Z' : null,
+  'reminder_enabled': reminder,
+  'reminded_at': null,
+  'basis_sowing_date': null,
+  'version': version,
+};
+
+/// `WeatherOut` for farm-1: seven days from 2026-09-19 and four 3-hour
+/// spray windows — one good, one hidden for rain, one hidden for wind,
+/// and one the server calls good although its wind breaches the
+/// threshold (the app re-checks and must not show it as good).
+Map<String, Object?> weatherBody() => <String, Object?>{
+  'farm_id': 'farm-1',
+  'latitude': 17.4,
+  'longitude': 78.4,
+  'location_source': 'farm',
+  'provider': 'open_meteo',
+  'fetched_at': t0.toIso8601String(),
+  'cached': false,
+  'timezone': 'Asia/Kolkata',
+  'daily': <Object?>[
+    for (var i = 0; i < 7; i++)
+      <String, Object?>{
+        'date': isoDay(DateTime.utc(2026, 9, 19).add(Duration(days: i))),
+        'temperature_max_c': 31.0 + i,
+        'temperature_min_c': 22.0 + i,
+        'precipitation_mm': i == 1 ? 12.0 : 0.0,
+        'precipitation_probability_pct': i == 1 ? 80 : 10,
+        'wind_max_kmh': 8.0 + i,
+        'weather_code': i == 1 ? 61 : 1,
+      },
+  ],
+  'hourly': const <Object?>[],
+  'spray': <String, Object?>{
+    'windows': <Object?>[
+      sprayWindow(hourIst: 6, advice: 'good'),
+      // The server called this one good; its wind is over the threshold.
+      sprayWindow(hourIst: 18, advice: 'good', wind: 21),
+    ],
+    'avoided': <Object?>[
+      sprayWindow(
+        hourIst: 9,
+        advice: 'avoid',
+        reasons: <String>['rain_likely'],
+        rainProbability: 70,
+      ),
+      sprayWindow(
+        hourIst: 12,
+        advice: 'avoid',
+        reasons: <String>['wind_high'],
+        wind: 24,
+      ),
+    ],
+    'thresholds': <String, Object?>{
+      'max_rain_probability_pct': 30,
+      'max_rain_mm': 0.5,
+      'max_wind_kmh': 15,
+      'caution_max_temperature_c': 35,
+      'caution_max_humidity_pct': 90,
+      'caution_min_humidity_pct': 30,
+    },
+  },
+};
+
+/// A 3-hour spray window starting at [hourIst] IST on 2026-09-19.
+Map<String, Object?> sprayWindow({
+  required int hourIst,
+  required String advice,
+  List<String> reasons = const <String>[],
+  List<String> cautions = const <String>[],
+  int rainProbability = 10,
+  double rain = 0,
+  double wind = 8,
+  double temperature = 30,
+}) {
+  final start = DateTime.utc(2026, 9, 19, hourIst - 5, 30);
+  return <String, Object?>{
+    'start': start.toIso8601String(),
+    'end': start.add(const Duration(hours: 3)).toIso8601String(),
+    'advice': advice,
+    'reasons': reasons,
+    'cautions': cautions,
+    'max_precipitation_probability_pct': rainProbability,
+    'precipitation_mm': rain,
+    'max_wind_kmh': wind,
+    'max_temperature_c': temperature,
+    'min_relative_humidity_pct': 45,
+    'max_relative_humidity_pct': 70,
+  };
+}
+
+/// One `OutbreakAlertOut` row.
+Map<String, Object?> alertRow({
+  String id = 'alert-1',
+  String district = 'Medak',
+  String cropCode = 'cotton',
+  String cropId = 'pilot:cotton',
+  String problemCode = 'pink_bollworm',
+  String problemType = 'pest',
+  String problemName = 'Pink bollworm',
+  String problemNameTe = 'గులాబీ కాయ తొలుచు పురుగు',
+  int cases = 12,
+  int farmers = 9,
+  double baseline = 2,
+  bool growsCrop = true,
+}) => <String, Object?>{
+  'id': id,
+  'district': district,
+  'crop_id': cropId,
+  'crop_code': cropCode,
+  'crop_names': <String, Object?>{'en': 'Cotton', 'te': 'పత్తి'},
+  'problem_id': 'problem-$problemCode',
+  'problem_code': problemCode,
+  'problem_type': problemType,
+  'problem_names': <String, Object?>{'en': problemName, 'te': problemNameTe},
+  'week_start': '2026-09-14',
+  'iso_year': 2026,
+  'iso_week': 38,
+  'case_count': cases,
+  'farmers_affected': farmers,
+  'baseline_mean': baseline,
+  'status': 'active',
+  'grows_crop': growsCrop,
+  'created_at': '2026-09-18T02:00:00Z',
+};
+
 /// Everything the farmer screens talk to, scriptable.
 class KisanDeps {
   /// Creates the dependencies over an in-memory database.
@@ -213,6 +445,7 @@ class KisanDeps {
     : db = openInMemoryDatabase(),
       connectivity = FakeConnectivityMonitor(online: online) {
     kisan = FakeKisanApi(clock: () => now);
+    advisory = FakeAdvisoryApi(clock: () => now);
     payApi = FakePaymentsApi(clock: () => now);
     diagnosisServer = FakeDiagnosisServer(
       sync: syncApi,
@@ -253,6 +486,12 @@ class KisanDeps {
 
   /// Farmer REST calls.
   late final FakeKisanApi kisan;
+
+  /// M7 advisory REST calls (calendar, weather, alerts, inbox, push token).
+  late final FakeAdvisoryApi advisory;
+
+  /// FA-007 push transport.
+  final FakePushService push = FakePushService();
 
   /// Payments.
   late final FakePaymentsApi payApi;
@@ -340,6 +579,34 @@ class KisanDeps {
     khataApi.khatas[farmerId] = khataOf(khataBalance);
   }
 
+  /// Seeds the M7 advisory data: the crop calendar, the farm forecast and
+  /// one district alert.
+  void seedAdvisory({
+    bool calendar = true,
+    bool weather = true,
+    bool alerts = true,
+  }) {
+    if (calendar) advisory.calendarBody = calendarBody();
+    if (weather) advisory.weatherByFarm['farm-1'] = weatherBody();
+    if (alerts) {
+      advisory.districts.add('Medak');
+      advisory.alertRows.add(alertRow());
+    }
+  }
+
+  /// Fills the advisory caches the way a refresh would, so a screen opens
+  /// with data even when the test runs it offline.
+  Future<void> primeAdvisory() async {
+    final c = container();
+    await c.read(kisanRepositoryProvider).refreshProfile();
+    final repo = c.read(advisoryRepositoryProvider);
+    await repo.refreshCalendar();
+    await repo.refreshWeather('farm-1');
+    await repo.refreshAlerts();
+    await repo.refreshInbox();
+    c.dispose();
+  }
+
   /// Signs the farmer in (farmer id known, welcome done) for screens
   /// behind the login.
   Future<void> signIn({bool welcomeDone = true}) async {
@@ -357,6 +624,10 @@ class KisanDeps {
     clockProvider.overrideWithValue(() => now),
     idGeneratorProvider.overrideWithValue(ids.call),
     kisanApiProvider.overrideWithValue(kisan),
+    advisoryApiProvider.overrideWithValue(advisory),
+    pushServiceProvider.overrideWithValue(push),
+    pushAppVersionProvider.overrideWithValue('0.1.0+1'),
+    pushDeviceIdProvider.overrideWithValue('dev-1'),
     authApiProvider.overrideWithValue(auth),
     paymentsApiProvider.overrideWithValue(payApi),
     khataApiProvider.overrideWithValue(khataApi),
@@ -424,6 +695,7 @@ class KisanDeps {
 
   /// Closes everything.
   Future<void> dispose() async {
+    await push.dispose();
     await connectivity.dispose();
     await db.close();
   }
