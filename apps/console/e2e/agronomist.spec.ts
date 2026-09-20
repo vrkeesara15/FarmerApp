@@ -244,9 +244,11 @@ test("owners read C60-C62 without review or workflow actions", async ({ page }) 
 
   await page.getByRole("link", { name: "Diagnosis quality" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Diagnosis quality" })).toBeVisible();
-  await expect(page.getByTestId("quality-interim")).toContainText("AN-007");
+  // AN-007: the figures come from `GET /v1/diagnoses/quality`, not from the browser.
   await expect(page.getByTestId("kpi-card")).toHaveCount(4);
   await expect(page.getByTestId("quality-sources")).toContainText("Corpus");
-  await expect(page.getByTestId("quality-queue-age").getByTestId("bar-gt24")).toContainText("1");
+  await expect(page.getByTestId("quality-statuses")).toContainText("Confirmed");
+  await expect(page.getByTestId("quality-review")).toContainText("Average");
   await expect(page.getByTestId("unknown-row").first()).toBeVisible();
+  await expect(page.getByTestId("eval-top1")).toBeVisible();
 });

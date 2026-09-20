@@ -23,6 +23,7 @@ export function AgronomistSubNav() {
     { href: "/agronomist", label: t("agronomist.nav.queue") },
     { href: "/agronomist/corpus", label: t("agronomist.nav.corpus") },
     { href: "/agronomist/quality", label: t("agronomist.nav.quality") },
+    { href: "/agronomist/models", label: t("quality.nav.models") },
   ];
   return (
     <nav aria-label={t("agronomist.subnav")} className="flex gap-1 border-b border-border">

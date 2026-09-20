@@ -38,6 +38,8 @@ import { useUserNames } from "@/lib/hooks/admin";
 import { useFlagInbox } from "@/lib/hooks/flags";
 import { useT } from "@/lib/i18n-client";
 import { useSession } from "@/lib/session-context";
+import { Tabs } from "@/components/ds/Tabs";
+import { DataQuality } from "./DataQuality";
 import { FlagStatusBadge } from "./FlagStatusBadge";
 import { SlaTimer } from "./SlaTimer";
 
@@ -48,12 +50,28 @@ type StatusFilter = "unresolved" | "all" | FlagStatus;
 
 export function FlagInbox() {
   const t = useT();
+  const [tab, setTab] = React.useState<"inbox" | "quality">("inbox");
   return (
     <div className="flex flex-col gap-4" data-screen="C70">
-      <PageHeader title={t("flags.title")} subtitle={t("flags.subtitle")} />
+      <PageHeader
+        title={tab === "quality" ? t("dataQuality.title") : t("flags.title")}
+        subtitle={tab === "quality" ? t("dataQuality.subtitle") : t("flags.subtitle")}
+      />
       <SessionGate>
         <RoleGate roles={FLAG_READ_ROLES}>
-          <InboxContent />
+          <Tabs
+            label={t("flags.title")}
+            value={tab}
+            onValueChange={(v) => setTab(v)}
+            items={[
+              { value: "inbox" as const, label: t("flags.tab.inbox"), content: <InboxContent /> },
+              {
+                value: "quality" as const,
+                label: t("flags.tab.dataQuality"),
+                content: <DataQuality />,
+              },
+            ]}
+          />
         </RoleGate>
       </SessionGate>
     </div>

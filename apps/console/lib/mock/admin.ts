@@ -371,6 +371,11 @@ function stepUpOk(headers: Headers, actor: MockActor): boolean {
   return !!held && held.userId === actor.id && held.expiresAt > Date.now();
 }
 
+/** Step-up check for the other mock modules (WC-009 close, WC-013 exports, DX-012 decisions). */
+export function mockStepUpOk(headers: Headers, actor: MockActor): boolean {
+  return stepUpOk(headers, actor);
+}
+
 const stepUpRequired = () =>
   problem(401, "step_up_required", "This action needs a fresh one-time code.", {
     step_up_url: "/v1/auth/step-up/send",
