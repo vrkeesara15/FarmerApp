@@ -61,6 +61,14 @@ abstract final class SyncEntities {
   /// change feed).
   static const String diagnosis = 'diagnosis';
 
+  /// FM-007 crop calendar task (`sync_docs`; update only, `merge_fields`:
+  /// the device owns `status` and `reminder_enabled`, every other field is
+  /// server-generated from the templates and the sowing date).
+  static const String cropPlotTask = 'crop_plot_task';
+
+  /// FA-007 notification row (`sync_docs`; update only, `{read_at}`).
+  static const String notification = 'notification';
+
   /// Entities whose create payload must not repeat the id (the server
   /// validates the body strictly and takes the id from `entity_id`).
   static const Set<String> createPayloadWithoutId = <String>{
@@ -83,6 +91,8 @@ abstract final class SyncEntities {
     order,
     payment,
     diagnosis,
+    cropPlotTask,
+    notification,
   };
 }
 

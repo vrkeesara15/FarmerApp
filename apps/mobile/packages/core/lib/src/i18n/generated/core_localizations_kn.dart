@@ -4133,4 +4133,390 @@ class CoreLocalizationsKn extends CoreLocalizations {
 
   @override
   String get cropDoctorNotOnPhone => 'ಈ ಬೆಳೆ ಪರೀಕ್ಷೆ ಈ ಫೋನ್‌ನಲ್ಲಿ ಇಲ್ಲ';
+
+  @override
+  String get kisanAddCrop => 'ಬೆಳೆ ಸೇರಿಸಿ';
+
+  @override
+  String get kisanCropCalendar => 'ಬೆಳೆ ಕ್ಯಾಲೆಂಡರ್';
+
+  @override
+  String get kisanWeather => 'ಹವಾಮಾನ';
+
+  @override
+  String get kisanAlerts => 'ಕೀಟ ಎಚ್ಚರಿಕೆಗಳು';
+
+  @override
+  String get kisanMessages => 'ಸಂದೇಶಗಳು';
+
+  @override
+  String get addCropTitle => 'ಬೆಳೆ ಸೇರಿಸಿ';
+
+  @override
+  String get addCropHelp => 'ಚಿತ್ರಗಳನ್ನು ಸ್ಪರ್ಶಿಸಿ. ಟೈಪ್ ಮಾಡುವ ಅಗತ್ಯವಿಲ್ಲ.';
+
+  @override
+  String get addCropWhichCrop => 'ನೀವು ಯಾವ ಬೆಳೆ ಬಿತ್ತಿದ್ದೀರಿ?';
+
+  @override
+  String get addCropWhichFarm => 'ಯಾವ ಜಮೀನು?';
+
+  @override
+  String get addCropWhenSown => 'ಯಾವಾಗ ಬಿತ್ತಿದ್ದೀರಿ?';
+
+  @override
+  String get addCropWater => 'ನೀರು ಹೇಗೆ ಕೊಡುತ್ತೀರಿ?';
+
+  @override
+  String get addCropSoil => 'ಯಾವ ಮಣ್ಣು?';
+
+  @override
+  String get addCropSave => 'ಬೆಳೆ ಉಳಿಸಿ';
+
+  @override
+  String get addCropSaved => 'ಬೆಳೆ ಸೇರಿದೆ. ನಿಮ್ಮ ಕ್ಯಾಲೆಂಡರ್ ಸಿದ್ಧವಾಗಿದೆ.';
+
+  @override
+  String addCropSownOn(String date) {
+    return '$date ರಂದು ಬಿತ್ತಲಾಗಿದೆ';
+  }
+
+  @override
+  String get addCropNoFarm => 'ಮೊದಲು ನಿಮ್ಮ ಜಮೀನು ಸೇರಿಸಿ';
+
+  @override
+  String get calendarTitle => 'ಬೆಳೆ ಕ್ಯಾಲೆಂಡರ್';
+
+  @override
+  String get calendarHelp => 'ವಾರವಾರು ನಿಮ್ಮ ಕೆಲಸಗಳು. ಕೇಳಲು ಸ್ಪೀಕರ್ ಸ್ಪರ್ಶಿಸಿ.';
+
+  @override
+  String calendarWeek(int week) {
+    return '$weekನೇ ವಾರ';
+  }
+
+  @override
+  String calendarSownOn(String date) {
+    return '$date ರಂದು ಬಿತ್ತಲಾಗಿದೆ';
+  }
+
+  @override
+  String calendarDueOn(String date) {
+    return '$date ರಂದು ಮಾಡಿ';
+  }
+
+  @override
+  String calendarDueBetween(String from, String to) {
+    return '$from ಮತ್ತು $to ನಡುವೆ ಮಾಡಿ';
+  }
+
+  @override
+  String get calendarLate => 'ತಡವಾಗಿದೆ';
+
+  @override
+  String get calendarMarkDone => 'ಮುಗಿದಿದೆ ಎಂದು ಗುರುತಿಸಿ';
+
+  @override
+  String get calendarDone => 'ಮುಗಿದಿದೆ';
+
+  @override
+  String get calendarRemindMe => 'ನೆನಪಿಸಿ';
+
+  @override
+  String get calendarReminderOff => 'ನೆನಪಿಸಬೇಡಿ';
+
+  @override
+  String get calendarNoTasks => 'ಇನ್ನೂ ಕೆಲಸಗಳಿಲ್ಲ';
+
+  @override
+  String get calendarNoTasksHelp => 'ಬಿತ್ತನೆ ದಿನಾಂಕ ಸೇರಿಸಿ, ಕೆಲಸಗಳು ಬರುತ್ತವೆ.';
+
+  @override
+  String get calendarChangedTitle => 'ನಿಮ್ಮ ಕ್ಯಾಲೆಂಡರ್ ಬದಲಾಗಿದೆ';
+
+  @override
+  String calendarChangedLater(int days, int count) {
+    return 'ಬಿತ್ತನೆ ದಿನಾಂಕ $days ದಿನ ಮುಂದೆ ಹೋಯಿತು, ಆದ್ದರಿಂದ $count ಕೆಲಸಗಳೂ ಮುಂದೆ ಹೋದವು.';
+  }
+
+  @override
+  String calendarChangedEarlier(int days, int count) {
+    return 'ಬಿತ್ತನೆ ದಿನಾಂಕ $days ದಿನ ಹಿಂದೆ ಬಂತು, ಆದ್ದರಿಂದ $count ಕೆಲಸಗಳೂ ಹಿಂದೆ ಬಂದವು.';
+  }
+
+  @override
+  String calendarChangedTasks(int count) {
+    return '$count ಕೆಲಸಗಳು ಬದಲಾದವು.';
+  }
+
+  @override
+  String get calendarChangedDoneKept =>
+      'ನೀವು ಈಗಾಗಲೇ ಮಾಡಿದ ಕೆಲಸ ಮುಗಿದಂತೆಯೇ ಇರುತ್ತದೆ.';
+
+  @override
+  String get calendarGotIt => 'ಅರ್ಥವಾಯಿತು';
+
+  @override
+  String calendarNextTask(String task) {
+    return 'ಮುಂದಿನದು: $task';
+  }
+
+  @override
+  String get calendarAllDone => 'ಎಲ್ಲಾ ಕೆಲಸಗಳು ಮುಗಿದಿವೆ';
+
+  @override
+  String get calendarSavedOffline =>
+      'ಈ ಫೋನ್‌ನಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ. ಆನ್‌ಲೈನ್ ಆದಾಗ ಕಳುಹಿಸುತ್ತೇವೆ.';
+
+  @override
+  String get taskTypeSow => 'ಬಿತ್ತನೆ';
+
+  @override
+  String get taskTypeIrrigate => 'ನೀರು';
+
+  @override
+  String get taskTypeFertilise => 'ಗೊಬ್ಬರ';
+
+  @override
+  String get taskTypeSpray => 'ಸಿಂಪಡಣೆ';
+
+  @override
+  String get taskTypeHarvest => 'ಕೊಯ್ಲು';
+
+  @override
+  String get weatherTitle => 'ಹವಾಮಾನ';
+
+  @override
+  String get weatherSevenDays => 'ಮುಂದಿನ 7 ದಿನ';
+
+  @override
+  String weatherRainChance(int percent) {
+    return 'ಮಳೆ $percent%';
+  }
+
+  @override
+  String weatherTempRange(String min, String max) {
+    return '$min° ರಿಂದ $max°';
+  }
+
+  @override
+  String weatherWind(String speed) {
+    return 'ಗಾಳಿ $speed ಕಿ.ಮೀ/ಗಂ';
+  }
+
+  @override
+  String get weatherSprayTitle => 'ಯಾವಾಗ ಸಿಂಪಡಿಸಬೇಕು';
+
+  @override
+  String get weatherSprayNextDays => 'ಮುಂದಿನ 3 ದಿನ';
+
+  @override
+  String get weatherSprayGood => 'ಸಿಂಪಡಣೆಗೆ ಒಳ್ಳೆಯ ಸಮಯ';
+
+  @override
+  String get weatherSprayAvoid => 'ಸಿಂಪಡಿಸಬೇಡಿ';
+
+  @override
+  String get weatherSprayNone => 'ಮುಂದಿನ 3 ದಿನಗಳಲ್ಲಿ ಸಿಂಪಡಣೆಗೆ ಒಳ್ಳೆಯ ಸಮಯವಿಲ್ಲ';
+
+  @override
+  String weatherWindowTime(String from, String to) {
+    return '$from ರಿಂದ $to';
+  }
+
+  @override
+  String get weatherReasonRainLikely => 'ಮಳೆ ಬರುವ ಸಾಧ್ಯತೆ ಇದೆ';
+
+  @override
+  String get weatherReasonRain => 'ಮಳೆ ಬರುತ್ತದೆ';
+
+  @override
+  String get weatherReasonWindHigh => 'ಗಾಳಿ ತುಂಬಾ ಜೋರಾಗಿದೆ';
+
+  @override
+  String get weatherCautionHeat => 'ತುಂಬಾ ಬಿಸಿ';
+
+  @override
+  String get weatherCautionHumidityHigh => 'ತುಂಬಾ ತೇವ';
+
+  @override
+  String get weatherCautionHumidityLow => 'ಗಾಳಿ ತುಂಬಾ ಒಣ';
+
+  @override
+  String get weatherAdviceOnly =>
+      'ಇದು ಕೇವಲ ಸಲಹೆ. ಸಿಂಪಡಿಸುವ ಮೊದಲು ನಿಮ್ಮ ಹೊಲವನ್ನು ನೋಡಿ.';
+
+  @override
+  String get weatherNone => 'ಇನ್ನೂ ನಿಮ್ಮ ಜಮೀನಿನ ಹವಾಮಾನ ಇಲ್ಲ';
+
+  @override
+  String get weatherNoneHelp =>
+      'ನಿಮ್ಮ ಫೀಲ್ಡ್ ಅಧಿಕಾರಿ ನಿಮ್ಮ ಜಮೀನನ್ನು ನಕ್ಷೆಯಲ್ಲಿ ಹಾಕಬಹುದು.';
+
+  @override
+  String get weatherSkyClear => 'ಸ್ವಚ್ಛ';
+
+  @override
+  String get weatherSkyCloudy => 'ಮೋಡ';
+
+  @override
+  String get weatherSkyFog => 'ಮಂಜು';
+
+  @override
+  String get weatherSkyDrizzle => 'ತುಂತುರು ಮಳೆ';
+
+  @override
+  String get weatherSkyRain => 'ಮಳೆ';
+
+  @override
+  String get weatherSkyShowers => 'ಭಾರೀ ಮಳೆ';
+
+  @override
+  String get weatherSkyThunder => 'ಗುಡುಗು ಮಳೆ';
+
+  @override
+  String get alertsTitle => 'ಕೀಟ ಎಚ್ಚರಿಕೆಗಳು';
+
+  @override
+  String get alertsNone => 'ನಿಮ್ಮ ಜಿಲ್ಲೆಯಲ್ಲಿ ಎಚ್ಚರಿಕೆಗಳಿಲ್ಲ';
+
+  @override
+  String get alertsNoneHelp => 'ನಿಮ್ಮ ಹತ್ತಿರ ಸಮಸ್ಯೆ ಹರಡಿದರೆ ನಾವು ಹೇಳುತ್ತೇವೆ.';
+
+  @override
+  String get alertSeverityHigh => 'ಹೆಚ್ಚು';
+
+  @override
+  String get alertSeverityMedium => 'ಮಧ್ಯಮ';
+
+  @override
+  String get alertSeverityLow => 'ಕಡಿಮೆ';
+
+  @override
+  String get alertGrowsCrop => 'ನೀವು ಈ ಬೆಳೆ ಬೆಳೆಯುತ್ತೀರಿ';
+
+  @override
+  String alertFarmersAffected(int count) {
+    return '$count ರೈತರಿಗೆ ತೊಂದರೆ';
+  }
+
+  @override
+  String alertWeekOf(String date) {
+    return '$date ವಾರ';
+  }
+
+  @override
+  String get alertLookForTitle => 'ಏನನ್ನು ನೋಡಬೇಕು';
+
+  @override
+  String get alertDoTitle => 'ಏನು ಮಾಡಬೇಕು';
+
+  @override
+  String get alertCheckCrop => 'ನನ್ನ ಬೆಳೆಯ ಫೋಟೋ ತೆಗೆಯಿರಿ';
+
+  @override
+  String get alertSeeProducts => 'ಅಂಗಡಿಯಲ್ಲಿ ಉತ್ಪನ್ನಗಳನ್ನು ನೋಡಿ';
+
+  @override
+  String get alertDismiss => 'ಈ ಎಚ್ಚರಿಕೆಯನ್ನು ಮರೆಮಾಡಿ';
+
+  @override
+  String get alertHidden => 'ಎಚ್ಚರಿಕೆ ಮರೆಯಾಗಿದೆ';
+
+  @override
+  String get alertSignPestUnderLeaf => 'ಎಲೆಗಳ ಕೆಳಗೆ ಕೀಟ ಅಥವಾ ಮೊಟ್ಟೆ ಇದೆಯೇ ನೋಡಿ';
+
+  @override
+  String get alertSignPestHoles => 'ಎಲೆಗಳಲ್ಲಿ ರಂಧ್ರ ಅಥವಾ ಕಚ್ಚಿದ ಅಂಚು ನೋಡಿ';
+
+  @override
+  String get alertSignPestWilting => 'ಬಾಡಿದ ಅಥವಾ ಸಾಯುತ್ತಿರುವ ಚಿಗುರು ನೋಡಿ';
+
+  @override
+  String get alertSignDiseaseSpots => 'ಎಲೆಗಳ ಮೇಲೆ ಕಲೆ ನೋಡಿ';
+
+  @override
+  String get alertSignDiseasePowder => 'ಎಲೆಗಳ ಮೇಲೆ ಬಿಳಿ ಅಥವಾ ಬೂದು ಪುಡಿ ನೋಡಿ';
+
+  @override
+  String get alertSignDiseaseRot => 'ಕೊಳೆತ ಕಾಂಡ ಅಥವಾ ಹಣ್ಣು ನೋಡಿ';
+
+  @override
+  String get alertSignDeficiencyColour => 'ಹಳದಿ ಅಥವಾ ಬಿಳಿಚಿದ ಎಲೆ ನೋಡಿ';
+
+  @override
+  String get alertSignDeficiencyGrowth => 'ನಿಧಾನ ಬೆಳವಣಿಗೆ ಅಥವಾ ಸಣ್ಣ ಎಲೆ ನೋಡಿ';
+
+  @override
+  String get alertSignWeedPatches => 'ಗಿಡಗಳ ನಡುವೆ ಕಳೆ ನೋಡಿ';
+
+  @override
+  String get alertSignWalkField => 'ಹೊಲದಲ್ಲಿ ನಡೆದು 10 ಗಿಡ ನೋಡಿ';
+
+  @override
+  String get inboxTitle => 'ಸಂದೇಶಗಳು';
+
+  @override
+  String get inboxEmpty => 'ಇನ್ನೂ ಸಂದೇಶಗಳಿಲ್ಲ';
+
+  @override
+  String get inboxEmptyHelp =>
+      'ಬೆಳೆ ಪರೀಕ್ಷೆಯ ಫಲಿತಾಂಶ, ಆರ್ಡರ್ ಮತ್ತು ಎಚ್ಚರಿಕೆ ಇಲ್ಲಿ ಬರುತ್ತವೆ.';
+
+  @override
+  String get inboxMarkAllRead => 'ಎಲ್ಲವನ್ನೂ ಓದಿದೆ ಎಂದು ಗುರುತಿಸಿ';
+
+  @override
+  String inboxUnread(int count) {
+    return '$count ಹೊಸದು';
+  }
+
+  @override
+  String get notifDiagnosisReadyTitle => 'ನಿಮ್ಮ ಬೆಳೆ ಪರೀಕ್ಷೆ ಸಿದ್ಧವಾಗಿದೆ';
+
+  @override
+  String get notifDiagnosisReadyBody => 'ಸಮಸ್ಯೆ ಮತ್ತು ಪರಿಹಾರ ನೋಡಲು ಸ್ಪರ್ಶಿಸಿ.';
+
+  @override
+  String get notifDiagnosisReviewedTitle => 'ನಮ್ಮ ತಜ್ಞರು ನಿಮ್ಮ ಫೋಟೋ ನೋಡಿದ್ದಾರೆ';
+
+  @override
+  String get notifDiagnosisReviewedBody => 'ಉತ್ತರ ಬದಲಾಗಿದೆ. ಓದಲು ಸ್ಪರ್ಶಿಸಿ.';
+
+  @override
+  String get notifDiagnosisExpertTitle => 'ತಜ್ಞರು ನಿಮ್ಮ ಫೋಟೋ ನೋಡುತ್ತಿದ್ದಾರೆ';
+
+  @override
+  String get notifDiagnosisExpertBody => '24 ಗಂಟೆಯೊಳಗೆ ತಿಳಿಸುತ್ತೇವೆ.';
+
+  @override
+  String get notifOrderStatusTitle => 'ನಿಮ್ಮ ಆರ್ಡರ್ ಮುಂದೆ ಹೋಗಿದೆ';
+
+  @override
+  String get notifOrderStatusBody => 'ನಿಮ್ಮ ಆರ್ಡರ್ ನೋಡಲು ಸ್ಪರ್ಶಿಸಿ.';
+
+  @override
+  String get notifOutbreakAlertTitle => 'ನಿಮ್ಮ ಜಿಲ್ಲೆಯಲ್ಲಿ ಕೀಟ ಎಚ್ಚರಿಕೆ';
+
+  @override
+  String get notifOutbreakAlertBody => 'ಇಂದೇ ನಿಮ್ಮ ಹೊಲ ನೋಡಿ.';
+
+  @override
+  String get notifCropTaskReminderTitle => 'ಇಂದು ಒಂದು ಕೆಲಸ ಇದೆ';
+
+  @override
+  String get notifCropTaskReminderBody =>
+      'ನಿಮ್ಮ ಬೆಳೆ ಕ್ಯಾಲೆಂಡರ್ ತೆರೆಯಲು ಸ್ಪರ್ಶಿಸಿ.';
+
+  @override
+  String get notifVisitConfirmTitle => 'ನಿಮ್ಮ ಅಧಿಕಾರಿ ಬಂದಿದ್ದರೇ?';
+
+  @override
+  String get notifVisitConfirmBody => 'ಹೌದು ಅಥವಾ ಇಲ್ಲ ಹೇಳಲು ಸ್ಪರ್ಶಿಸಿ.';
+
+  @override
+  String get notifGenericTitle => 'ಹೊಸ ಮಾಹಿತಿ';
+
+  @override
+  String get notifGenericBody => 'ನೋಡಲು ಸ್ಪರ್ಶಿಸಿ.';
 }

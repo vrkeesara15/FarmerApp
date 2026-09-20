@@ -86,6 +86,8 @@ class LocalEntities {
     SyncEntities.payment: 'server_wins',
     SyncEntities.khataEntry: 'server_wins',
     SyncEntities.diagnosis: 'server_wins',
+    SyncEntities.cropPlotTask: 'merge_fields',
+    SyncEntities.notification: 'last_writer_wins',
   };
 
   LocalRow? _row(String entity, String id, Map<String, Object?>? data) {

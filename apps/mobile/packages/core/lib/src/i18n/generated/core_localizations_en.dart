@@ -4117,4 +4117,397 @@ class CoreLocalizationsEn extends CoreLocalizations {
 
   @override
   String get cropDoctorNotOnPhone => 'This crop check is not on this phone';
+
+  @override
+  String get kisanAddCrop => 'Add a crop';
+
+  @override
+  String get kisanCropCalendar => 'Crop calendar';
+
+  @override
+  String get kisanWeather => 'Weather';
+
+  @override
+  String get kisanAlerts => 'Pest alerts';
+
+  @override
+  String get kisanMessages => 'Messages';
+
+  @override
+  String get addCropTitle => 'Add a crop';
+
+  @override
+  String get addCropHelp => 'Tap the pictures. You do not need to type.';
+
+  @override
+  String get addCropWhichCrop => 'Which crop did you sow?';
+
+  @override
+  String get addCropWhichFarm => 'Which farm?';
+
+  @override
+  String get addCropWhenSown => 'When did you sow it?';
+
+  @override
+  String get addCropWater => 'How do you water it?';
+
+  @override
+  String get addCropSoil => 'What soil is it?';
+
+  @override
+  String get addCropSave => 'Save crop';
+
+  @override
+  String get addCropSaved => 'Crop added. Your calendar is ready.';
+
+  @override
+  String addCropSownOn(String date) {
+    return 'Sown on $date';
+  }
+
+  @override
+  String get addCropNoFarm => 'Add your farm first';
+
+  @override
+  String get calendarTitle => 'Crop calendar';
+
+  @override
+  String get calendarHelp =>
+      'Your tasks week by week. Tap the speaker to listen.';
+
+  @override
+  String calendarWeek(int week) {
+    return 'Week $week';
+  }
+
+  @override
+  String calendarSownOn(String date) {
+    return 'Sown on $date';
+  }
+
+  @override
+  String calendarDueOn(String date) {
+    return 'Do it on $date';
+  }
+
+  @override
+  String calendarDueBetween(String from, String to) {
+    return 'Do it between $from and $to';
+  }
+
+  @override
+  String get calendarLate => 'Late';
+
+  @override
+  String get calendarMarkDone => 'Mark done';
+
+  @override
+  String get calendarDone => 'Done';
+
+  @override
+  String get calendarRemindMe => 'Remind me';
+
+  @override
+  String get calendarReminderOff => 'No reminder';
+
+  @override
+  String get calendarNoTasks => 'No tasks yet';
+
+  @override
+  String get calendarNoTasksHelp =>
+      'Add the sowing date and your tasks will come.';
+
+  @override
+  String get calendarChangedTitle => 'Your calendar changed';
+
+  @override
+  String calendarChangedLater(int days, int count) {
+    return 'Sowing moved $days days later, so $count tasks moved too.';
+  }
+
+  @override
+  String calendarChangedEarlier(int days, int count) {
+    return 'Sowing moved $days days earlier, so $count tasks moved too.';
+  }
+
+  @override
+  String calendarChangedTasks(int count) {
+    return '$count tasks changed.';
+  }
+
+  @override
+  String get calendarChangedDoneKept =>
+      'The work you already finished stays finished.';
+
+  @override
+  String get calendarGotIt => 'Got it';
+
+  @override
+  String calendarNextTask(String task) {
+    return 'Next: $task';
+  }
+
+  @override
+  String get calendarAllDone => 'All tasks done';
+
+  @override
+  String get calendarSavedOffline =>
+      'Saved on this phone. It will be sent when you are online.';
+
+  @override
+  String get taskTypeSow => 'Sow';
+
+  @override
+  String get taskTypeIrrigate => 'Water';
+
+  @override
+  String get taskTypeFertilise => 'Fertiliser';
+
+  @override
+  String get taskTypeSpray => 'Spray';
+
+  @override
+  String get taskTypeHarvest => 'Harvest';
+
+  @override
+  String get weatherTitle => 'Weather';
+
+  @override
+  String get weatherSevenDays => 'Next 7 days';
+
+  @override
+  String weatherRainChance(int percent) {
+    return 'Rain $percent%';
+  }
+
+  @override
+  String weatherTempRange(String min, String max) {
+    return '$min° to $max°';
+  }
+
+  @override
+  String weatherWind(String speed) {
+    return 'Wind $speed km/h';
+  }
+
+  @override
+  String get weatherSprayTitle => 'When to spray';
+
+  @override
+  String get weatherSprayNextDays => 'Next 3 days';
+
+  @override
+  String get weatherSprayGood => 'Good time to spray';
+
+  @override
+  String get weatherSprayAvoid => 'Do not spray';
+
+  @override
+  String get weatherSprayNone => 'No good spray time in the next 3 days';
+
+  @override
+  String weatherWindowTime(String from, String to) {
+    return '$from to $to';
+  }
+
+  @override
+  String get weatherReasonRainLikely => 'Rain is likely';
+
+  @override
+  String get weatherReasonRain => 'It will rain';
+
+  @override
+  String get weatherReasonWindHigh => 'Wind is too strong';
+
+  @override
+  String get weatherCautionHeat => 'Very hot';
+
+  @override
+  String get weatherCautionHumidityHigh => 'Very humid';
+
+  @override
+  String get weatherCautionHumidityLow => 'Air is very dry';
+
+  @override
+  String get weatherAdviceOnly =>
+      'This is advice only. Look at your field before you spray.';
+
+  @override
+  String get weatherNone => 'No weather for your farm yet';
+
+  @override
+  String get weatherNoneHelp =>
+      'Your field officer can put your farm on the map.';
+
+  @override
+  String get weatherSkyClear => 'Clear';
+
+  @override
+  String get weatherSkyCloudy => 'Cloudy';
+
+  @override
+  String get weatherSkyFog => 'Fog';
+
+  @override
+  String get weatherSkyDrizzle => 'Light rain';
+
+  @override
+  String get weatherSkyRain => 'Rain';
+
+  @override
+  String get weatherSkyShowers => 'Heavy showers';
+
+  @override
+  String get weatherSkyThunder => 'Thunderstorm';
+
+  @override
+  String get alertsTitle => 'Pest alerts';
+
+  @override
+  String get alertsNone => 'No pest alerts in your district';
+
+  @override
+  String get alertsNoneHelp =>
+      'We will tell you if a problem spreads near you.';
+
+  @override
+  String get alertSeverityHigh => 'High';
+
+  @override
+  String get alertSeverityMedium => 'Medium';
+
+  @override
+  String get alertSeverityLow => 'Low';
+
+  @override
+  String get alertGrowsCrop => 'You grow this crop';
+
+  @override
+  String alertFarmersAffected(int count) {
+    return '$count farmers affected';
+  }
+
+  @override
+  String alertWeekOf(String date) {
+    return 'Week of $date';
+  }
+
+  @override
+  String get alertLookForTitle => 'What to look for';
+
+  @override
+  String get alertDoTitle => 'What to do';
+
+  @override
+  String get alertCheckCrop => 'Take a photo of my crop';
+
+  @override
+  String get alertSeeProducts => 'See products at the store';
+
+  @override
+  String get alertDismiss => 'Hide this alert';
+
+  @override
+  String get alertHidden => 'Alert hidden';
+
+  @override
+  String get alertSignPestUnderLeaf =>
+      'Look under the leaves for insects or eggs';
+
+  @override
+  String get alertSignPestHoles => 'Look for holes or chewed leaf edges';
+
+  @override
+  String get alertSignPestWilting => 'Look for drooping or dying shoots';
+
+  @override
+  String get alertSignDiseaseSpots => 'Look for spots on the leaves';
+
+  @override
+  String get alertSignDiseasePowder =>
+      'Look for white or grey powder on the leaves';
+
+  @override
+  String get alertSignDiseaseRot => 'Look for rotting stems or fruit';
+
+  @override
+  String get alertSignDeficiencyColour => 'Look for yellow or pale leaves';
+
+  @override
+  String get alertSignDeficiencyGrowth =>
+      'Look for slow growth or small leaves';
+
+  @override
+  String get alertSignWeedPatches => 'Look for weed patches between the plants';
+
+  @override
+  String get alertSignWalkField => 'Walk your field and look at 10 plants';
+
+  @override
+  String get inboxTitle => 'Messages';
+
+  @override
+  String get inboxEmpty => 'No messages yet';
+
+  @override
+  String get inboxEmptyHelp =>
+      'Crop check results, orders and alerts come here.';
+
+  @override
+  String get inboxMarkAllRead => 'Mark all read';
+
+  @override
+  String inboxUnread(int count) {
+    return '$count new';
+  }
+
+  @override
+  String get notifDiagnosisReadyTitle => 'Your crop check is ready';
+
+  @override
+  String get notifDiagnosisReadyBody =>
+      'Tap to see the problem and what to do.';
+
+  @override
+  String get notifDiagnosisReviewedTitle => 'Our expert checked your photo';
+
+  @override
+  String get notifDiagnosisReviewedBody =>
+      'The answer was updated. Tap to read it.';
+
+  @override
+  String get notifDiagnosisExpertTitle => 'An expert is looking at your photo';
+
+  @override
+  String get notifDiagnosisExpertBody => 'We will tell you within 24 hours.';
+
+  @override
+  String get notifOrderStatusTitle => 'Your order moved on';
+
+  @override
+  String get notifOrderStatusBody => 'Tap to see your order.';
+
+  @override
+  String get notifOutbreakAlertTitle => 'Pest alert in your district';
+
+  @override
+  String get notifOutbreakAlertBody => 'Check your field today.';
+
+  @override
+  String get notifCropTaskReminderTitle => 'A farm task is due today';
+
+  @override
+  String get notifCropTaskReminderBody => 'Tap to open your crop calendar.';
+
+  @override
+  String get notifVisitConfirmTitle => 'Did your officer visit?';
+
+  @override
+  String get notifVisitConfirmBody => 'Tap to answer yes or no.';
+
+  @override
+  String get notifGenericTitle => 'Update';
+
+  @override
+  String get notifGenericBody => 'Tap to see it.';
 }

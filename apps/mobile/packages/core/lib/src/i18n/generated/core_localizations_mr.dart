@@ -4103,4 +4103,393 @@ class CoreLocalizationsMr extends CoreLocalizations {
 
   @override
   String get cropDoctorNotOnPhone => 'ही पीक तपासणी या फोनवर नाही';
+
+  @override
+  String get kisanAddCrop => 'पीक जोडा';
+
+  @override
+  String get kisanCropCalendar => 'पीक दिनदर्शिका';
+
+  @override
+  String get kisanWeather => 'हवामान';
+
+  @override
+  String get kisanAlerts => 'कीड इशारे';
+
+  @override
+  String get kisanMessages => 'संदेश';
+
+  @override
+  String get addCropTitle => 'पीक जोडा';
+
+  @override
+  String get addCropHelp => 'चित्रांना स्पर्श करा. टाइप करण्याची गरज नाही.';
+
+  @override
+  String get addCropWhichCrop => 'तुम्ही कोणते पीक पेरले?';
+
+  @override
+  String get addCropWhichFarm => 'कोणते शेत?';
+
+  @override
+  String get addCropWhenSown => 'कधी पेरले?';
+
+  @override
+  String get addCropWater => 'पाणी कसे देता?';
+
+  @override
+  String get addCropSoil => 'कोणती माती आहे?';
+
+  @override
+  String get addCropSave => 'पीक जतन करा';
+
+  @override
+  String get addCropSaved => 'पीक जोडले. तुमची दिनदर्शिका तयार आहे.';
+
+  @override
+  String addCropSownOn(String date) {
+    return '$date रोजी पेरले';
+  }
+
+  @override
+  String get addCropNoFarm => 'आधी तुमचे शेत जोडा';
+
+  @override
+  String get calendarTitle => 'पीक दिनदर्शिका';
+
+  @override
+  String get calendarHelp =>
+      'आठवड्यानुसार तुमची कामे. ऐकण्यासाठी स्पीकरला स्पर्श करा.';
+
+  @override
+  String calendarWeek(int week) {
+    return 'आठवडा $week';
+  }
+
+  @override
+  String calendarSownOn(String date) {
+    return '$date रोजी पेरले';
+  }
+
+  @override
+  String calendarDueOn(String date) {
+    return '$date रोजी करा';
+  }
+
+  @override
+  String calendarDueBetween(String from, String to) {
+    return '$from ते $to दरम्यान करा';
+  }
+
+  @override
+  String get calendarLate => 'उशीर झाला';
+
+  @override
+  String get calendarMarkDone => 'झाले म्हणून खूण करा';
+
+  @override
+  String get calendarDone => 'झाले';
+
+  @override
+  String get calendarRemindMe => 'आठवण करा';
+
+  @override
+  String get calendarReminderOff => 'आठवण नको';
+
+  @override
+  String get calendarNoTasks => 'अजून कामे नाहीत';
+
+  @override
+  String get calendarNoTasksHelp => 'पेरणीची तारीख जोडा, कामे येतील.';
+
+  @override
+  String get calendarChangedTitle => 'तुमची दिनदर्शिका बदलली';
+
+  @override
+  String calendarChangedLater(int days, int count) {
+    return 'पेरणीची तारीख $days दिवस पुढे गेली, म्हणून $count कामेही पुढे गेली.';
+  }
+
+  @override
+  String calendarChangedEarlier(int days, int count) {
+    return 'पेरणीची तारीख $days दिवस आधी आली, म्हणून $count कामेही आधी आली.';
+  }
+
+  @override
+  String calendarChangedTasks(int count) {
+    return '$count कामे बदलली.';
+  }
+
+  @override
+  String get calendarChangedDoneKept => 'तुम्ही आधीच केलेले काम झालेलेच राहील.';
+
+  @override
+  String get calendarGotIt => 'समजले';
+
+  @override
+  String calendarNextTask(String task) {
+    return 'पुढे: $task';
+  }
+
+  @override
+  String get calendarAllDone => 'सर्व कामे झाली';
+
+  @override
+  String get calendarSavedOffline =>
+      'या फोनमध्ये जतन केले. ऑनलाइन झाल्यावर पाठवू.';
+
+  @override
+  String get taskTypeSow => 'पेरणी';
+
+  @override
+  String get taskTypeIrrigate => 'पाणी';
+
+  @override
+  String get taskTypeFertilise => 'खत';
+
+  @override
+  String get taskTypeSpray => 'फवारणी';
+
+  @override
+  String get taskTypeHarvest => 'कापणी';
+
+  @override
+  String get weatherTitle => 'हवामान';
+
+  @override
+  String get weatherSevenDays => 'पुढचे 7 दिवस';
+
+  @override
+  String weatherRainChance(int percent) {
+    return 'पाऊस $percent%';
+  }
+
+  @override
+  String weatherTempRange(String min, String max) {
+    return '$min° ते $max°';
+  }
+
+  @override
+  String weatherWind(String speed) {
+    return 'वारा $speed किमी/तास';
+  }
+
+  @override
+  String get weatherSprayTitle => 'कधी फवारणी करावी';
+
+  @override
+  String get weatherSprayNextDays => 'पुढचे 3 दिवस';
+
+  @override
+  String get weatherSprayGood => 'फवारणीसाठी चांगली वेळ';
+
+  @override
+  String get weatherSprayAvoid => 'फवारणी करू नका';
+
+  @override
+  String get weatherSprayNone => 'पुढच्या 3 दिवसांत फवारणीसाठी चांगली वेळ नाही';
+
+  @override
+  String weatherWindowTime(String from, String to) {
+    return '$from ते $to';
+  }
+
+  @override
+  String get weatherReasonRainLikely => 'पाऊस येऊ शकतो';
+
+  @override
+  String get weatherReasonRain => 'पाऊस पडेल';
+
+  @override
+  String get weatherReasonWindHigh => 'वारा खूप जोरात आहे';
+
+  @override
+  String get weatherCautionHeat => 'खूप उष्ण';
+
+  @override
+  String get weatherCautionHumidityHigh => 'खूप दमट';
+
+  @override
+  String get weatherCautionHumidityLow => 'हवा खूप कोरडी आहे';
+
+  @override
+  String get weatherAdviceOnly =>
+      'हा फक्त सल्ला आहे. फवारणीपूर्वी तुमचे शेत पाहा.';
+
+  @override
+  String get weatherNone => 'अजून तुमच्या शेताचे हवामान नाही';
+
+  @override
+  String get weatherNoneHelp =>
+      'तुमचा फील्ड अधिकारी तुमचे शेत नकाशावर टाकू शकतो.';
+
+  @override
+  String get weatherSkyClear => 'स्वच्छ';
+
+  @override
+  String get weatherSkyCloudy => 'ढगाळ';
+
+  @override
+  String get weatherSkyFog => 'धुके';
+
+  @override
+  String get weatherSkyDrizzle => 'हलका पाऊस';
+
+  @override
+  String get weatherSkyRain => 'पाऊस';
+
+  @override
+  String get weatherSkyShowers => 'जोरदार सरी';
+
+  @override
+  String get weatherSkyThunder => 'गडगडाटी वादळ';
+
+  @override
+  String get alertsTitle => 'कीड इशारे';
+
+  @override
+  String get alertsNone => 'तुमच्या जिल्ह्यात इशारे नाहीत';
+
+  @override
+  String get alertsNoneHelp => 'तुमच्या जवळ समस्या पसरली तर आम्ही सांगू.';
+
+  @override
+  String get alertSeverityHigh => 'जास्त';
+
+  @override
+  String get alertSeverityMedium => 'मध्यम';
+
+  @override
+  String get alertSeverityLow => 'कमी';
+
+  @override
+  String get alertGrowsCrop => 'तुम्ही हे पीक घेता';
+
+  @override
+  String alertFarmersAffected(int count) {
+    return '$count शेतकरी बाधित';
+  }
+
+  @override
+  String alertWeekOf(String date) {
+    return '$date चा आठवडा';
+  }
+
+  @override
+  String get alertLookForTitle => 'काय पाहावे';
+
+  @override
+  String get alertDoTitle => 'काय करावे';
+
+  @override
+  String get alertCheckCrop => 'माझ्या पिकाचा फोटो घ्या';
+
+  @override
+  String get alertSeeProducts => 'दुकानातील उत्पादने पाहा';
+
+  @override
+  String get alertDismiss => 'हा इशारा लपवा';
+
+  @override
+  String get alertHidden => 'इशारा लपवला';
+
+  @override
+  String get alertSignPestUnderLeaf => 'पानांखाली कीड किंवा अंडी आहेत का पाहा';
+
+  @override
+  String get alertSignPestHoles => 'पानांना छिद्रे किंवा कुरतडलेल्या कडा पाहा';
+
+  @override
+  String get alertSignPestWilting => 'कोमेजलेल्या किंवा सुकणाऱ्या फांद्या पाहा';
+
+  @override
+  String get alertSignDiseaseSpots => 'पानांवर डाग पाहा';
+
+  @override
+  String get alertSignDiseasePowder => 'पानांवर पांढरी किंवा करडी पावडर पाहा';
+
+  @override
+  String get alertSignDiseaseRot => 'कुजलेली खोडे किंवा फळे पाहा';
+
+  @override
+  String get alertSignDeficiencyColour => 'पिवळी किंवा फिकट पाने पाहा';
+
+  @override
+  String get alertSignDeficiencyGrowth => 'मंद वाढ किंवा लहान पाने पाहा';
+
+  @override
+  String get alertSignWeedPatches => 'रोपांमध्ये तण पाहा';
+
+  @override
+  String get alertSignWalkField => 'शेतात फिरून 10 रोपे पाहा';
+
+  @override
+  String get inboxTitle => 'संदेश';
+
+  @override
+  String get inboxEmpty => 'अजून संदेश नाहीत';
+
+  @override
+  String get inboxEmptyHelp =>
+      'पीक तपासणीचे निकाल, ऑर्डर आणि इशारे येथे येतील.';
+
+  @override
+  String get inboxMarkAllRead => 'सर्व वाचले म्हणून खूण करा';
+
+  @override
+  String inboxUnread(int count) {
+    return '$count नवीन';
+  }
+
+  @override
+  String get notifDiagnosisReadyTitle => 'तुमची पीक तपासणी तयार आहे';
+
+  @override
+  String get notifDiagnosisReadyBody =>
+      'समस्या आणि उपाय पाहण्यासाठी स्पर्श करा.';
+
+  @override
+  String get notifDiagnosisReviewedTitle =>
+      'आमच्या तज्ज्ञाने तुमचा फोटो पाहिला';
+
+  @override
+  String get notifDiagnosisReviewedBody =>
+      'उत्तर बदलले आहे. वाचण्यासाठी स्पर्श करा.';
+
+  @override
+  String get notifDiagnosisExpertTitle => 'तज्ज्ञ तुमचा फोटो पाहत आहेत';
+
+  @override
+  String get notifDiagnosisExpertBody => '24 तासांत सांगू.';
+
+  @override
+  String get notifOrderStatusTitle => 'तुमची ऑर्डर पुढे गेली';
+
+  @override
+  String get notifOrderStatusBody => 'तुमची ऑर्डर पाहण्यासाठी स्पर्श करा.';
+
+  @override
+  String get notifOutbreakAlertTitle => 'तुमच्या जिल्ह्यात कीड इशारा';
+
+  @override
+  String get notifOutbreakAlertBody => 'आजच तुमचे शेत पाहा.';
+
+  @override
+  String get notifCropTaskReminderTitle => 'आज एक काम आहे';
+
+  @override
+  String get notifCropTaskReminderBody =>
+      'तुमची पीक दिनदर्शिका उघडण्यासाठी स्पर्श करा.';
+
+  @override
+  String get notifVisitConfirmTitle => 'तुमचा अधिकारी आला होता का?';
+
+  @override
+  String get notifVisitConfirmBody => 'होय किंवा नाही सांगण्यासाठी स्पर्श करा.';
+
+  @override
+  String get notifGenericTitle => 'नवीन माहिती';
+
+  @override
+  String get notifGenericBody => 'पाहण्यासाठी स्पर्श करा.';
 }

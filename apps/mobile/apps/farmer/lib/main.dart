@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
 import 'main_version.dart';
 import 'platform.dart';
+import 'push.dart';
 import 'router.dart';
 import 'security.dart';
 
@@ -53,6 +54,9 @@ Future<void> startKisan() async {
   final qualityModel = TfliteQualityModel(
     loader: TfliteFlutterInterpreter.load,
   );
+  // FA-007: FCM when the build has a Firebase configuration, otherwise a
+  // transport that never produces a token (the inbox still works).
+  final push = await FirebasePushService.create();
   final container = ProviderContainer(
     overrides: [
       ...settings,
@@ -89,6 +93,11 @@ Future<void> startKisan() async {
       onDeviceQualityModelProvider.overrideWithValue(qualityModel),
       photoStoreProvider.overrideWithValue(const DocumentsPhotoStore()),
       diagnosisApiProvider.overrideWithValue(HttpDiagnosisApi(rest)),
+      // M7 advisory (FM-007, FM-008, FM-009) and the FA-007 inbox / push.
+      advisoryApiProvider.overrideWithValue(HttpAdvisoryApi(rest)),
+      pushServiceProvider.overrideWithValue(push),
+      pushAppVersionProvider.overrideWithValue(farmerAppVersion),
+      pushDeviceIdProvider.overrideWithValue(await store.deviceId()),
     ],
   );
   StreamSubscription<bool>? onlineSub;
@@ -100,6 +109,7 @@ Future<void> startKisan() async {
       tokens: store,
       reason: reason,
       directories: appCacheDirectories,
+      push: container.read(pushControllerProvider),
     ),
     teardown: () async {
       runApp(const WipeInProgressView());
@@ -125,7 +135,25 @@ Future<void> startKisan() async {
     // network returns (NF-002; the farmer app has no background sync).
     Future<void> flush() =>
         container.read(kisanFlushProvider)().catchError((Object _) {});
-    if (signedIn) unawaited(flush());
+    if (signedIn) {
+      unawaited(flush());
+      // FA-007: register the FCM token after login (and on every start,
+      // which also covers a token that rotated while the app was closed).
+      unawaited(
+        container
+            .read(pushControllerProvider)
+            .signedIn()
+            .then<void>((_) {})
+            .catchError((Object _) {}),
+      );
+      unawaited(
+        container
+            .read(pushControllerProvider)
+            .openingMessage()
+            .then<void>((_) {})
+            .catchError((Object _) {}),
+      );
+    }
     onlineSub = connectivity.onlineChanges.listen((online) {
       if (!online) return;
       unawaited(container.read(tenantSettingsSyncProvider).pullIfStale());

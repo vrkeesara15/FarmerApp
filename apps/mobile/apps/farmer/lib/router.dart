@@ -2,6 +2,11 @@ import 'package:farmerapp_core/farmerapp_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'screens/advisory/add_crop_screen.dart';
+import 'screens/advisory/alerts_screen.dart';
+import 'screens/advisory/crop_calendar_screen.dart';
+import 'screens/advisory/inbox_screen.dart';
+import 'screens/advisory/weather_screen.dart';
 import 'screens/consent_screen.dart';
 import 'screens/consent_settings_screen.dart';
 import 'screens/crop_doctor/crop_camera_screen.dart';
@@ -84,6 +89,21 @@ abstract final class AppRoutes {
   /// F40 My crops and farms.
   static const String crops = '/crops';
 
+  /// F41 Add a crop (tiles + sowing-date calendar).
+  static const String addCrop = '/crops/add';
+
+  /// F42 Crop calendar of one plot: `/crops/<cropPlotId>/calendar`.
+  static String calendar(String cropPlotId) => '/crops/$cropPlotId/calendar';
+
+  /// F43 Weather, 7 days and spray windows.
+  static const String weather = '/weather';
+
+  /// F44 District pest and disease alerts.
+  static const String alerts = '/alerts';
+
+  /// FA-007 notification inbox.
+  static const String inbox = '/inbox';
+
   /// F50 Khata.
   static const String khata = '/khata';
 
@@ -119,6 +139,45 @@ abstract final class AppRoutes {
 
   /// Routes where typing is allowed (NF-010: phone number and OTP only).
   static const Set<String> typingAllowed = <String>{phone, otp};
+}
+
+/// FA-007: where a notification (push payload or inbox row) opens.
+///
+/// The server sends a `route` for the kinds it knows how to address and
+/// `/inbox` for the rest; the app maps its own paths on top, because the
+/// farmer app's routes are not the officer app's. Returns null when
+/// nothing can be opened.
+String? farmerDeepLink({
+  required String kind,
+  String? route,
+  Map<String, String> data = const <String, String>{},
+}) {
+  switch (kind) {
+    case NotificationKinds.diagnosisReady:
+    case NotificationKinds.diagnosisReviewed:
+    case NotificationKinds.diagnosisExpertRequested:
+      final id = data['diagnosis_id'] ?? _idAfter(route, '/diagnoses/');
+      return id == null ? AppRoutes.inbox : AppRoutes.cropResult(id);
+    case NotificationKinds.orderStatus:
+      final id = data['order_id'] ?? _idAfter(route, '/orders/');
+      return id == null ? AppRoutes.orders : AppRoutes.order(id);
+    case NotificationKinds.visitConfirmRequest:
+      final id = data['visit_id'] ?? _idAfter(route, '/visits/');
+      return id == null ? AppRoutes.inbox : AppRoutes.visit(id);
+    case NotificationKinds.cropTaskReminder:
+      final plot = data['crop_plot_id'];
+      return plot == null ? AppRoutes.crops : AppRoutes.calendar(plot);
+    case NotificationKinds.outbreakAlert:
+      return AppRoutes.alerts;
+    default:
+      return AppRoutes.inbox;
+  }
+}
+
+String? _idAfter(String? route, String prefix) {
+  if (route == null || !route.startsWith(prefix)) return null;
+  final rest = route.substring(prefix.length).split('/').first;
+  return rest.isEmpty ? null : rest;
 }
 
 /// Opens on the home screen when a session is stored (set in `main`).
@@ -219,6 +278,30 @@ GoRouter buildRouter({String initialLocation = AppRoutes.language}) {
       GoRoute(
         path: AppRoutes.crops,
         builder: (context, state) => const MyCropsScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: 'add',
+            builder: (context, state) => const AddCropScreen(),
+          ),
+          GoRoute(
+            path: ':cropPlotId/calendar',
+            builder: (context, state) => CropCalendarScreen(
+              cropPlotId: state.pathParameters['cropPlotId']!,
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: AppRoutes.weather,
+        builder: (context, state) => const WeatherScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.alerts,
+        builder: (context, state) => const AlertsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.inbox,
+        builder: (context, state) => const InboxScreen(),
       ),
       GoRoute(
         path: AppRoutes.khata,
