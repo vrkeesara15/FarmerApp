@@ -18,3 +18,7 @@ export const FarmsMap = dynamic(() => import("./FarmsMap"), {
   ssr: false,
   loading: MapSkeleton,
 });
+export const CropHealthMap = dynamic(() => import("./CropHealthMap"), {
+  ssr: false,
+  loading: MapSkeleton,
+});

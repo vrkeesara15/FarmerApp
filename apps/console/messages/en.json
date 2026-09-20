@@ -54,7 +54,14 @@
     "labelClaims": "Label claims",
     "prices": "Price lists",
     "users": "Users and roles",
-    "audit": "Audit log"
+    "audit": "Audit log",
+    "campaigns": "Campaigns",
+    "incentives": "Targets and incentives",
+    "travel": "Travel claims",
+    "reports": "Reports and exports",
+    "cropHealth": "Crop health",
+    "models": "Model releases",
+    "segments": "Segments"
   },
   "topbar": {
     "searchPlaceholder": "Search farmer phone or name, officer, order id",
@@ -243,7 +250,8 @@
       "ltv": "LTV",
       "ltvRupees": "LTV (₹)",
       "app": "App user"
-    }
+    },
+    "segmentsLink": "Segments builder"
   },
   "stores": {
     "title": "Stores",
@@ -397,6 +405,10 @@
       "overdue": "Overdue by {n}",
       "resolved": "SLA closed",
       "dueAt": "SLA due {at}"
+    },
+    "tab": {
+      "inbox": "Inbox",
+      "dataQuality": "Data quality"
     }
   },
   "settings": {
@@ -1655,9 +1667,7 @@
   },
   "quality": {
     "title": "Diagnosis quality",
-    "subtitle": "Basic view from the review queue and the last {days} days of diagnoses.",
-    "interim": "Interim view computed in the browser. The full dashboard (AN-007, M7) replaces it with server figures and test-set accuracy.",
-    "sample": "{n} diagnoses in the last {days} days",
+    "subtitle": "Server figures for the last {days} days (AN-007).",
     "bySource": "Answered by source",
     "answeredByCorpus": "Answered by corpus",
     "answeredByCorpusHelp": "Share of answered diagnoses the corpus answered without the LLM.",
@@ -1667,21 +1677,654 @@
     "reviewSlaHelp": "Of the reviewed diagnoses in the period.",
     "queue": "Queue now",
     "queueHelp": "{overdue} past 18 h",
-    "queueAge": "Queue age",
-    "buckets": {
-      "lt6": "Under 6 h",
-      "h6to18": "6–18 h",
-      "h18to24": "18–24 h",
-      "gt24": "Over 24 h"
-    },
     "topUnknowns": "Top unknowns",
     "unknownsHelp": "Out-of-scope and unlabelled answers by crop and reason.",
     "unknownsEmpty": "No unknowns in the period.",
     "unknownRow": "{crop} · {reason}",
     "unknownReason": "LLM could not choose",
     "accuracy": "Test-set accuracy",
-    "accuracyPending": "Arrives with the nightly evaluation (DX-011) in AN-007.",
     "notAvailable": "Not available",
-    "count": "{n}"
+    "count": "{n}",
+    "days": "Period",
+    "daysOption": "Last {n} days",
+    "requests": "Diagnosis requests",
+    "byStatus": "By status",
+    "statusLabel": {
+      "confirmed": "Confirmed",
+      "provisional": "Provisional",
+      "corrected": "Corrected",
+      "out_of_scope": "Out of scope",
+      "queued": "Queued"
+    },
+    "reviewTitle": "Review SLA",
+    "reviewWithin": "{n} of {total} reviewed within {hours} h",
+    "reviewAvg": "Average {avg} h · median {median} h",
+    "reviewOpen": "{open} open, {overdue} overdue",
+    "evaluation": {
+      "title": "Latest evaluation (DX-011)",
+      "ranAt": "Ran {when}",
+      "cases": "Cases",
+      "top1": "Top-1 accuracy",
+      "delta": "Change",
+      "deltaPoints": "{n} pts",
+      "perCrop": "Accuracy per crop",
+      "none": "No evaluation run yet. The nightly job needs the labelled held-out set in the corpus bucket.",
+      "alerted": "Accuracy dropped past the alert threshold; agronomists and owners were notified.",
+      "column": {
+        "crop": "Crop",
+        "cases": "Cases",
+        "accuracy": "Top-1 accuracy"
+      },
+      "model": "Model {name} {version}"
+    },
+    "nav": {
+      "dashboard": "Quality",
+      "models": "Model releases"
+    }
+  },
+  "campaigns": {
+    "title": "Campaigns",
+    "subtitle": "SMS, WhatsApp and app messages to farmers who granted marketing consent.",
+    "new": "New campaign",
+    "emptyTitle": "No campaigns yet",
+    "emptyHelp": "Build a segment, write the message and schedule it.",
+    "filterStatus": "Status",
+    "column": {
+      "name": "Campaign",
+      "channel": "Channel",
+      "status": "Status",
+      "audience": "Audience",
+      "sendAt": "Send at",
+      "created": "Created"
+    },
+    "status": {
+      "draft": "Draft",
+      "scheduled": "Scheduled",
+      "sending": "Sending",
+      "sent": "Sent",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    },
+    "channel": {
+      "sms": "SMS",
+      "whatsapp": "WhatsApp",
+      "push": "App notification"
+    },
+    "builder": {
+      "title": "New campaign",
+      "subtitle": "Choose who receives it, write the message and schedule the send.",
+      "name": "Campaign name",
+      "namePlaceholder": "Cotton pink bollworm advisory",
+      "channel": "Channel",
+      "holdout": "Holdout percentage",
+      "holdoutHelp": "Farmers held back from the send so the results can be compared with a control group.",
+      "attribution": "Conversion window (days)",
+      "attributionHelp": "Orders placed within this many days of the message count as conversions.",
+      "sendAt": "Send at (IST)",
+      "sendNow": "Send as soon as possible",
+      "saveDraft": "Save draft",
+      "schedule": "Schedule campaign",
+      "scheduleHelp": "Scheduling freezes the consented audience and the holdout split. A draft can still be edited; a scheduled campaign cannot.",
+      "back": "Back to campaigns"
+    },
+    "segment": {
+      "title": "Who receives it",
+      "crops": "Crops",
+      "stages": "Crop stage",
+      "districts": "Districts",
+      "stores": "Stores",
+      "languages": "Languages",
+      "purchaseWithin": "Bought in the last (days)",
+      "minSpend": "Minimum spend (₹)",
+      "noPurchaseWithin": "Has not bought in (days)",
+      "visitedWithin": "Visited in the last (days)",
+      "notVisitedWithin": "Not visited in (days)",
+      "appUser": "App user",
+      "appActiveWithin": "Used the app in the last (days)",
+      "clear": "Clear segment",
+      "pickCriterion": "Pick at least one criterion to count the audience.",
+      "any": "Any"
+    },
+    "consent": {
+      "badge": "Consent-only audience",
+      "consentedOnly": "{count} farmers with marketing consent will receive this.",
+      "consentedOnlyExcluded": "{count} farmers with marketing consent will receive this. {excluded} matching farmers are left out because they never granted marketing consent or withdrew it.",
+      "consentedNone": "No farmer with marketing consent matches. {excluded} matching farmers were left out for consent.",
+      "always": "Consent is always applied and cannot be switched off. It is checked again for every batch at send time, so a farmer who withdraws between scheduling and sending is skipped.",
+      "counting": "Counting…"
+    },
+    "arms": {
+      "target": "Receive the message",
+      "holdout": "Holdout (control group)",
+      "split": "{target} receive the message, {holdout} are held back as the control group."
+    },
+    "message": {
+      "title": "Message per language",
+      "forLanguage": "{language} message",
+      "parts": "{parts} SMS part(s) · {chars} characters",
+      "defaultLanguage": "English is sent to farmers whose language has no message.",
+      "preview": "Phone preview",
+      "previewHelp": "How the message looks on the farmer's phone.",
+      "empty": "Write the message to see the preview.",
+      "previewLanguage": "Preview language"
+    },
+    "error": {
+      "nameTooShort": "Give the campaign a name of at least 3 characters.",
+      "nameTooLong": "The name is too long.",
+      "segmentEmpty": "Pick at least one segment criterion.",
+      "messageRequired": "Write the message in at least one language.",
+      "defaultLanguage": "An English message is required as the fallback.",
+      "messageTooLong": "A message may be at most 1000 characters.",
+      "holdoutRange": "The holdout must be a whole number between 0 and 50.",
+      "attributionRange": "The conversion window must be between 1 and 90 days.",
+      "sendAtInvalid": "That send time is not a valid date and time.",
+      "sendAtPast": "Choose a send time in the future."
+    },
+    "results": {
+      "title": "Campaign results",
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "failed": "Failed",
+      "skipped": "Skipped",
+      "opened": "Opened",
+      "orders": "Orders",
+      "revenue": "Revenue",
+      "conversion": "Conversion",
+      "ownBrandShare": "Own-brand share",
+      "holdout": "Holdout",
+      "ownBrandLift": "Own-brand lift vs holdout",
+      "conversionLift": "Conversion lift vs holdout",
+      "noHoldout": "No holdout arm. Set a holdout percentage before scheduling to measure lift against a control group.",
+      "window": "Conversion window: an order counts when a farmer who received this campaign places it within {days} days of their message and no later campaign reached them first (last touch). The holdout arm is measured over the same window from the campaign start.",
+      "pending": "Results appear once the campaign has been sent.",
+      "recipients": "Recipients",
+      "column": {
+        "farmer": "Farmer",
+        "phone": "Phone",
+        "arm": "Arm",
+        "language": "Language",
+        "status": "Status",
+        "sentAt": "Sent",
+        "reason": "Reason"
+      },
+      "recipientStatus": {
+        "pending": "Pending",
+        "sent": "Sent",
+        "delivered": "Delivered",
+        "failed": "Failed",
+        "skipped": "Skipped",
+        "holdout": "Holdout"
+      },
+      "skipReason": {
+        "consent_withdrawn": "Consent withdrawn",
+        "no_app": "No app",
+        "farmer_deleted": "Farmer removed",
+        "campaign_cancelled": "Campaign cancelled"
+      }
+    },
+    "cancel": "Cancel campaign",
+    "cancelTitle": "Cancel this campaign?",
+    "cancelHelp": "Messages not yet sent are skipped. This cannot be undone.",
+    "scheduledFor": "Scheduled for {when}",
+    "toast": {
+      "created": "Campaign saved as a draft.",
+      "scheduled": "Campaign scheduled.",
+      "cancelled": "Campaign cancelled."
+    }
+  },
+  "incentives": {
+    "title": "Targets and incentives",
+    "subtitle": "Monthly targets per officer and store, the incentive rule versions and payouts.",
+    "month": "Month",
+    "tab": {
+      "targets": "Targets",
+      "rules": "Incentive rules",
+      "payouts": "Payouts"
+    },
+    "verifiedVisits": {
+      "verifiedOnly": "Verified visits only: a visit counts towards eligibility and payout only when it passed the VV-003 checks. Unverified and partial visits are ignored.",
+      "widened": "This rule version counts visits with status {statuses} — not verified visits only. Confirm that is intended before publishing."
+    },
+    "targets": {
+      "title": "Monthly targets",
+      "subject": "Subject",
+      "subjectOfficer": "Officers",
+      "subjectStore": "Stores",
+      "column": {
+        "subject": "Officer or store",
+        "visits": "Verified visits",
+        "farmers": "New farmers",
+        "sales": "Sales",
+        "collections": "Collections",
+        "ownBrand": "Own-brand share"
+      },
+      "save": "Save targets",
+      "saved": "Targets saved.",
+      "empty": "No officers or stores in your scope for this month.",
+      "help": "Targets drive the attainment multipliers in the incentive rules."
+    },
+    "rules": {
+      "title": "Incentive rules",
+      "version": "Version {n}",
+      "activeSince": "Active since {when}",
+      "status": {
+        "draft": "Draft",
+        "active": "Active",
+        "retired": "Retired"
+      },
+      "newVersion": "New version",
+      "editVersion": "Edit as a new version",
+      "publish": "Publish version",
+      "publishHelp": "Publishing creates a new version and retires the previous active one. Payouts already closed are never recomputed.",
+      "activate": "Activate",
+      "name": "Version name",
+      "namePlaceholder": "Field incentive 2026",
+      "eligibility": "Eligibility",
+      "minVisits": "Minimum verified visits",
+      "countStatuses": "Visit statuses counted",
+      "components": "Components",
+      "addComponent": "Add component",
+      "removeComponent": "Remove component",
+      "componentId": "Id",
+      "metric": "Metric",
+      "kind": "Kind",
+      "rate": "Rate per unit (₹)",
+      "rateBp": "Rate (basis points)",
+      "threshold": "Threshold",
+      "amount": "Amount (₹)",
+      "cap": "Component cap (₹)",
+      "kinds": {
+        "per_unit": "Per unit",
+        "slab_per_unit": "Slabs, per unit",
+        "slab_flat": "Slabs, flat amount",
+        "percent": "Percent of a money metric",
+        "threshold": "Flat amount above a threshold"
+      },
+      "metrics": {
+        "verified_visits": "Verified visits",
+        "visits": "Visits (all statuses)",
+        "new_farmers": "New farmers",
+        "sales_paise": "Sales",
+        "own_brand_sales_paise": "Own-brand sales",
+        "own_brand_share": "Own-brand share",
+        "collections_paise": "Collections"
+      },
+      "slabs": "Slabs",
+      "addSlab": "Add slab",
+      "slabFrom": "From",
+      "slabTo": "To",
+      "slabOpen": "and above",
+      "multipliers": "Multipliers",
+      "addMultiplier": "Add multiplier",
+      "multiplierMetric": "On metric",
+      "multiplierGte": "At or above",
+      "multiplierFactor": "Factor",
+      "totalCap": "Total cap (₹)",
+      "clawback": "Claw back orders cancelled after their month",
+      "document": "Rule document",
+      "starter": "Load the starter rules"
+    },
+    "ruleError": {
+      "noComponents": "Add at least one component.",
+      "idInvalid": "Use a lower-case id (letters, digits and underscores).",
+      "idDuplicate": "Component ids must be unique.",
+      "metricUnknown": "That metric is not one the engine knows.",
+      "kindUnknown": "That component kind is not supported.",
+      "rateRequired": "Set a whole rate per unit.",
+      "rateBpRequired": "Set a rate in basis points above zero.",
+      "percentNeedsMoney": "A percent component only applies to a money metric.",
+      "thresholdRequired": "Set the threshold.",
+      "amountRequired": "Set the amount.",
+      "slabsRequired": "Add at least one slab.",
+      "slabFrom": "Every slab needs a start value.",
+      "slabStart": "The first slab must start at 0.",
+      "slabGap": "Slabs must join without a gap.",
+      "slabOrder": "A slab must end above where it starts.",
+      "slabAmount": "Every slab needs a whole rate or amount.",
+      "slabOpenEnd": "The last slab must be open-ended.",
+      "capInvalid": "A cap must be a whole amount above zero.",
+      "multiplierMetric": "That multiplier metric is not one the engine knows.",
+      "multiplierFactor": "A multiplier factor must be above zero.",
+      "visitStatusesEmpty": "List at least one visit status to count.",
+      "title": "Fix these before publishing"
+    },
+    "preview": {
+      "title": "Payout preview",
+      "officer": "Officer",
+      "run": "Preview payout",
+      "help": "A preview recomputes from live data; a closed month shows the frozen payout.",
+      "closed": "Closed — frozen payout",
+      "eligible": "Eligible",
+      "ineligible": "Not eligible",
+      "reason": {
+        "min_verified_visits": "Below the minimum verified visits.",
+        "no_active_incentive_rules": "No active incentive rule version."
+      },
+      "column": {
+        "component": "Component",
+        "metric": "Metric",
+        "value": "Value",
+        "amount": "Amount"
+      },
+      "gross": "Gross",
+      "clawback": "Clawback",
+      "total": "Payable",
+      "capped": "capped",
+      "empty": "Pick an officer and a month to preview the payout.",
+      "draftNote": "Previewing the unsaved rule document in the editor."
+    },
+    "payouts": {
+      "title": "Frozen payouts",
+      "total": "Total payable",
+      "close": "Close month",
+      "closeTitle": "Close {month}?",
+      "closeHelp": "Closing freezes every officer's payout for the month. It needs a one-time code and is recorded in the audit log.",
+      "closed": "Month closed.",
+      "empty": "This month has not been closed yet.",
+      "column": {
+        "officer": "Officer",
+        "amount": "Payout",
+        "status": "Status"
+      }
+    }
+  },
+  "travel": {
+    "title": "Travel allowance approvals",
+    "subtitle": "Expense claims by officer and month, with the km computed from duty tracks next to what was claimed.",
+    "filterStatus": "Status",
+    "filterOfficer": "Officer",
+    "status": {
+      "submitted": "Awaiting decision",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "type": {
+      "fuel": "Fuel",
+      "bus": "Bus",
+      "other": "Other"
+    },
+    "column": {
+      "officer": "Officer",
+      "date": "Claim date",
+      "type": "Type",
+      "claimed": "Claimed",
+      "computedKm": "Computed km",
+      "allowance": "Day allowance",
+      "status": "Status"
+    },
+    "km": "{km} km",
+    "kmHelp": "Computed km comes from the officer's duty tracks for that day (VV-006) and is capped at {cap} km. Compare it with the claim before approving.",
+    "noKm": "No duty km recorded for that day.",
+    "receipt": "Receipt",
+    "receiptAlt": "Receipt photo for {date}",
+    "noReceipt": "No receipt photo.",
+    "approve": "Approve",
+    "reject": "Reject",
+    "note": "Note",
+    "notePlaceholder": "Why this claim is approved or rejected",
+    "approveTitle": "Approve this claim?",
+    "rejectTitle": "Reject this claim?",
+    "decideHelp": "The officer sees the decision and your note in their app.",
+    "noteRequired": "Add a note explaining the rejection.",
+    "decidedBy": "Decided {when}",
+    "emptyTitle": "No claims to review",
+    "emptyHelp": "Claims submitted by officers in your cluster appear here.",
+    "statement": {
+      "title": "Monthly statement",
+      "help": "Travel allowance plus approved claims for the month.",
+      "export": "Export statement",
+      "km": "Km travelled",
+      "kmCapped": "Km after the daily cap",
+      "allowance": "Travel allowance",
+      "claims": "Approved claims",
+      "payable": "Payable",
+      "column": {
+        "date": "Date",
+        "sessions": "Duty sessions",
+        "km": "Km",
+        "kmCapped": "After cap",
+        "allowance": "Allowance"
+      },
+      "pick": "Pick an officer to see the statement."
+    },
+    "toast": {
+      "approved": "Claim approved.",
+      "rejected": "Claim rejected.",
+      "exported": "Statement downloaded."
+    }
+  },
+  "reports": {
+    "title": "Reports and exports",
+    "subtitle": "Export any list with the current filters, and schedule reports by email.",
+    "tab": {
+      "run": "Run an export",
+      "history": "Past exports",
+      "schedules": "Scheduled reports"
+    },
+    "resource": {
+      "farmers": "Farmers",
+      "orders": "Orders",
+      "payments": "Payments",
+      "visits": "Visits",
+      "flags": "Flags",
+      "stock": "Stock",
+      "audit_logs": "Audit log",
+      "consent_records": "Consent records",
+      "tally": "Tally CSV",
+      "tally_xml": "Tally vouchers (XML)",
+      "zoho": "Zoho Books CSV"
+    },
+    "format": {
+      "csv": "CSV",
+      "xlsx": "Excel (XLSX)",
+      "xml": "XML"
+    },
+    "run": {
+      "title": "Run an export",
+      "resource": "What to export",
+      "format": "Format",
+      "filters": "Filters applied",
+      "noFilters": "No filters — the export covers everything in your scope.",
+      "button": "Run export",
+      "running": "Exporting…",
+      "help": "An export needs a fresh one-time code (step-up) and is recorded in the audit log.",
+      "limit": "At most 100,000 rows per export.",
+      "columns": "Columns: {columns}"
+    },
+    "history": {
+      "title": "Past exports",
+      "column": {
+        "resource": "Resource",
+        "format": "Format",
+        "rows": "Rows",
+        "size": "Size",
+        "created": "Run at",
+        "link": "File"
+      },
+      "download": "Download",
+      "signed": "Links are signed and expire 15 minutes after they are issued.",
+      "refresh": "Get a fresh link",
+      "emptyTitle": "No exports yet",
+      "emptyHelp": "Run an export and it appears here with a signed link."
+    },
+    "schedules": {
+      "title": "Scheduled reports",
+      "add": "New schedule",
+      "edit": "Edit schedule",
+      "column": {
+        "name": "Name",
+        "resource": "Resource",
+        "recipients": "Recipients",
+        "cron": "Runs",
+        "next": "Next run",
+        "active": "Active"
+      },
+      "name": "Schedule name",
+      "recipients": "Recipients",
+      "recipientsHelp": "One email address per line.",
+      "cron": "Cron expression",
+      "cronHelp": "Cron is evaluated in IST (Asia/Kolkata).",
+      "active": "Active",
+      "paused": "Paused",
+      "save": "Save schedule",
+      "delete": "Delete schedule",
+      "deleteTitle": "Delete this schedule?",
+      "deleteHelp": "Nobody will receive this report again. This cannot be undone.",
+      "emptyTitle": "No scheduled reports",
+      "emptyHelp": "Schedule a report and it is emailed to the recipients you choose.",
+      "stepUpHelp": "Saving a schedule needs a fresh one-time code."
+    },
+    "preset": {
+      "label": "Preset",
+      "weekly": "Every Monday at 08:00 IST",
+      "daily": "Every day at 08:00 IST",
+      "monthly": "On the 1st of every month at 08:00 IST",
+      "custom": "Custom"
+    },
+    "cron": {
+      "daily": "Every day at {time} IST",
+      "weekly": "Every {days} at {time} IST",
+      "monthly": "On day {day} of every month at {time} IST",
+      "custom": "Cron {cron} (IST)",
+      "day": {
+        "sunday": "Sunday",
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday"
+      }
+    },
+    "scheduleError": {
+      "nameTooShort": "Give the schedule a name of at least 3 characters.",
+      "resourceRequired": "Choose what to export.",
+      "recipientsRequired": "Add at least one recipient.",
+      "recipientInvalid": "One of the recipients is not a valid email address.",
+      "cronInvalid": "That cron expression is not one we can read."
+    },
+    "toast": {
+      "exported": "Export ready.",
+      "scheduleSaved": "Schedule saved.",
+      "scheduleDeleted": "Schedule deleted."
+    }
+  },
+  "cropHealth": {
+    "title": "Crop health map",
+    "subtitle": "Confirmed problems by district and ISO week, with outbreak flags.",
+    "privacy": "District level only (AN-014): farm locations and farmer identities are never shown here.",
+    "filterCrop": "Crop",
+    "filterWeek": "Week",
+    "filterWeeks": "History",
+    "weeksOption": "{n} weeks",
+    "weekLabel": "Week {week} · from {start}",
+    "mapLabel": "Districts sized by confirmed cases",
+    "legend": "Confirmed cases",
+    "outbreaks": "Outbreak alerts",
+    "outbreak": "Outbreak",
+    "outbreakHelp": "An outbreak is flagged when a district, crop and problem reach at least 3 confirmed cases in the week and at least twice the previous four-week average.",
+    "noOutbreaks": "No outbreak flagged in this week.",
+    "district": "District",
+    "cases": "Confirmed cases",
+    "farmers": "Farmers affected",
+    "priorMean": "Previous 4-week average",
+    "tooltip": "{district}: {cases} confirmed cases, {farmers} farmers",
+    "drillTitle": "{district}, week {week}",
+    "drillHelp": "Select a district on the map or in the table to see its problems.",
+    "column": {
+      "district": "District",
+      "crop": "Crop",
+      "problem": "Problem",
+      "cases": "Cases",
+      "farmers": "Farmers",
+      "prior": "4-week average"
+    },
+    "emptyTitle": "No confirmed problems",
+    "emptyHelp": "Nothing was confirmed for these filters in the selected weeks."
+  },
+  "models": {
+    "title": "Model releases",
+    "subtitle": "On-device crop doctor models: candidates, evaluation numbers and the approval gate.",
+    "current": "Current approved version",
+    "currentNone": "No approved release — the apps keep the model bundled with them.",
+    "currentRow": "{name} {version}",
+    "approvedAt": "Approved {when}",
+    "column": {
+      "version": "Version",
+      "status": "Status",
+      "created": "Built",
+      "cases": "Eval cases",
+      "top1": "Top-1 accuracy",
+      "delta": "Change",
+      "decision": "Decision"
+    },
+    "status": {
+      "candidate": "Candidate",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "retired": "Retired"
+    },
+    "approve": "Approve",
+    "reject": "Reject",
+    "retire": "Retire",
+    "note": "Note",
+    "notePlaceholder": "Why this release is approved or rejected",
+    "approveTitle": "Approve {version}?",
+    "approveHelp": "Approving retires the current version. Every app downloads the new file and verifies its SHA-256 before using it. This needs a fresh one-time code.",
+    "rejectTitle": "Reject {version}?",
+    "rejectHelp": "The candidate is closed. This needs a fresh one-time code.",
+    "retireTitle": "Retire {version}?",
+    "retireHelp": "Apps fall back to the model bundled with them.",
+    "noEvaluation": "No evaluation run — this candidate cannot be approved.",
+    "evaluation": "Evaluation",
+    "sha": "SHA-256",
+    "size": "Size",
+    "labels": "Labels",
+    "emptyTitle": "No model releases",
+    "emptyHelp": "Candidates appear here after a monthly fine-tune run.",
+    "toast": {
+      "approved": "Release approved.",
+      "rejected": "Release rejected.",
+      "retired": "Release retired."
+    }
+  },
+  "segments": {
+    "title": "Farmer segments",
+    "subtitle": "Build a segment and see how many consenting farmers it reaches, then start a campaign from it.",
+    "open": "Segments builder",
+    "createCampaign": "Create a campaign from this segment",
+    "reach": "Reach",
+    "back": "Back to farmers"
+  },
+  "dataQuality": {
+    "title": "Data quality",
+    "subtitle": "Flag volume by rule, how long flags take to resolve and subjects flagged again and again (AN-009).",
+    "sample": "From {n} flags in your inbox scope.",
+    "volume": "Flags by rule",
+    "column": {
+      "rule": "Rule",
+      "total": "Flags",
+      "open": "Open",
+      "resolved": "Resolved",
+      "avgHours": "Average resolution",
+      "falsePositives": "False positives"
+    },
+    "hours": "{n} h",
+    "resolution": "Resolution time",
+    "avg": "Average",
+    "median": "Median",
+    "falsePositiveRate": "False-positive rate",
+    "falsePositiveHelp": "Share of resolved flags closed as “data valid”.",
+    "repeat": "Repeat subjects",
+    "repeatHelp": "Subjects with {n} or more flags in the last 90 days.",
+    "repeatColumn": {
+      "subject": "Subject",
+      "count": "Flags",
+      "rules": "Rules",
+      "last": "Latest"
+    },
+    "repeatEmpty": "No subject was flagged more than once.",
+    "emptyTitle": "No flags to summarise",
+    "emptyHelp": "Once the validation agents raise flags, their quality shows here."
   }
 }

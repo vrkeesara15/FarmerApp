@@ -8,10 +8,12 @@
  */
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Users } from "lucide-react";
 import { AppButton } from "@/components/ds/AppButton";
 import { DataTable, type DataTableColumn, type DataTableSort } from "@/components/ds/DataTable";
 import { SearchBar } from "@/components/ds/SearchBar";
 import { AnalyticsFilterBar } from "@/components/analytics/AnalyticsFilterBar";
+import { LinkButton } from "@/components/growth/common";
 import { Definitions } from "@/components/analytics/Definitions";
 import { AnalyticsGate, PageHeader, ScopeNote } from "@/components/analytics/Page";
 import { isBlockingProblem, ProblemState } from "@/components/analytics/ProblemState";
@@ -251,6 +253,12 @@ function Farmers() {
               </span>
             ) : null}
           </span>
+        }
+        actions={
+          <LinkButton href="/farmers/segments" variant="secondary" testId="open-segments">
+            <Users className="size-4" aria-hidden="true" />
+            {t("farmers.segmentsLink")}
+          </LinkButton>
         }
       />
       <AnalyticsFilterBar

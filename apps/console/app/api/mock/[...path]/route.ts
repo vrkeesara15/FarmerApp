@@ -9,6 +9,8 @@ import {
 } from "@/lib/mock/catalog";
 import { handleDiagnosis, handleUploads, resetMockDiagnosis } from "@/lib/mock/diagnosis";
 import { handleFlags, resetMockFlags } from "@/lib/mock/flags";
+import { handleGrowth, handleTravelDecision, resetMockGrowth } from "@/lib/mock/growth";
+import { handleMlops, resetMockMlops } from "@/lib/mock/mlops";
 
 /**
  * In-app mock of the FarmerApp API, used when NEXT_PUBLIC_API_URL is unset (dev + Playwright).
@@ -22,7 +24,10 @@ import { handleFlags, resetMockFlags } from "@/lib/mock/flags";
  * `/v1/clusters` (M4) by lib/mock/analytics.ts; `/v1/flags*` (WC-010) by lib/mock/flags.ts; `/v1/auth/step-up*`,
  * `/v1/users*`, `/v1/settings*` and `/v1/audit-logs*` (SEC-028, WC-011, WC-012, WC-103) by
  * lib/mock/admin.ts; `/v1/diagnoses*`, `/v1/corpus/*` and `/v1/uploads*` (WC-006, WC-007, NF-003) by
- * lib/mock/diagnosis.ts.
+ * lib/mock/diagnosis.ts; `/v1/campaigns*`, `/v1/targets`, `/v1/incentive*`, `/v1/travel/*`,
+ * `/v1/exports*` and `/v1/report-schedules*` (WC-008, WC-009, WC-013, AN-008) by
+ * lib/mock/growth.ts; `/v1/analytics/crop-health`, `/v1/diagnoses/quality|evaluations` and
+ * `/v1/models/*` (AN-006, AN-007, DX-011, DX-012) by lib/mock/mlops.ts.
  */
 export const MOCK_OTP = "123456";
 export const MOCK_UNKNOWN_PHONE = "+919999999999";
@@ -45,6 +50,8 @@ export function resetMockState() {
   resetMockAdmin();
   resetMockFlags();
   resetMockDiagnosis();
+  resetMockGrowth();
+  resetMockMlops();
 }
 
 function toResponse(result: MockResult): NextResponse {
@@ -64,6 +71,15 @@ export const MOCK_ROLE_BY_PHONE: Readonly<Record<string, string>> = {
   "+919000000007": "field_officer",
   "+919000000008": "agronomist",
   "+919000000009": "tenant_admin",
+  // Second number per role: spec files run in parallel and share the OTP budget per number.
+  "+919000000012": "director",
+  "+919000000013": "cluster_head",
+  "+919000000014": "store_manager",
+  "+919000000015": "auditor",
+  "+919000000016": "accountant",
+  "+919000000017": "field_officer",
+  "+919000000018": "agronomist",
+  "+919000000019": "tenant_admin",
 };
 
 const roleForPhone = (phone: string): string => MOCK_ROLE_BY_PHONE[phone] ?? "owner";
@@ -151,6 +167,9 @@ async function handle(req: NextRequest, rawPath: string[]): Promise<NextResponse
   );
   const moduleResult =
     catalogResult ??
+    handleMlops(req.method, path, req.nextUrl.searchParams, body, actorFrom(req), req.headers) ??
+    handleTravelDecision(req.method, path, body, actorFrom(req)) ??
+    handleGrowth(req.method, path, req.nextUrl.searchParams, body, actorFrom(req), req.headers) ??
     handleAnalytics(req.method, path, req.nextUrl.searchParams, actorFrom(req)) ??
     handleClusters(req.method, path, actorFrom(req)) ??
     handleFlags(req.method, path, req.nextUrl.searchParams, body, actorFrom(req)) ??
@@ -259,5 +278,8 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
   return handle(req, (await ctx.params).path);
 }
 export async function PATCH(req: NextRequest, ctx: Ctx) {
+  return handle(req, (await ctx.params).path);
+}
+export async function DELETE(req: NextRequest, ctx: Ctx) {
   return handle(req, (await ctx.params).path);
 }

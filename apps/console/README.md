@@ -53,7 +53,7 @@ Auth (FA-001): `auth.sendOtp` / `auth.verifyOtp` call the real `/v1/auth/*` endp
 
 ## Mock API roles and catalogue
 
-Any `+91` mobile signs in to the mock as the **owner** (code `123456`). Other roles use fixed numbers (`MOCK_ROLE_BY_PHONE` in `app/api/mock/[...path]/route.ts`): `9000000002` director, `…03` cluster head, `…04` store manager, `…05` auditor, `…06` accountant, `…07` field officer, **`9000000008` agronomist**, `…09` tenant admin. The role travels in the mock tokens (`mock-access-<role>-<ts>`), so a refresh keeps it.
+Any `+91` mobile signs in to the mock as the **owner** (code `123456`). Other roles use fixed numbers (`MOCK_ROLE_BY_PHONE` in `app/api/mock/[...path]/route.ts`): `9000000002` director, `…03` cluster head, `…04` store manager, `…05` auditor, `…06` accountant, `…07` field officer, **`9000000008` agronomist**, `…09` tenant admin. Each role also has a second number (`900000001X`, same last digit) so spec files running in parallel do not share one number's OTP budget. The role travels in the mock tokens (`mock-access-<role>-<ts>`), so a refresh keeps it.
 
 `/v1/catalog/*` is served by `lib/mock/catalog.ts`: an in-memory catalogue (4 products incl. one own brand and one inactive, 5 SKUs with barcodes, the 6 pilot crops, 6 pests / diseases incl. polyphagous aphids, 3 stores, one claim per status, default + store prices) with the API's roles, validation and problem codes. It lives as long as the `next start` process; `resetMockState()` (tests) restores the seed. Vitest routes `fetch` to the same handler through `test/mock-fetch.ts`.
 
