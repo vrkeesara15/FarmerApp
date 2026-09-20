@@ -1639,9 +1639,6 @@ class CoreLocalizationsHi extends CoreLocalizations {
   String get visitNotesHint => 'आपने क्या देखा या क्या सलाह दी?';
 
   @override
-  String get visitVoiceInputSoon => 'वॉइस इनपुट अगले अपडेट में आएगा';
-
-  @override
   String get visitCropStageLabel => 'फ़सल की अवस्था';
 
   @override
@@ -4108,4 +4105,557 @@ class CoreLocalizationsHi extends CoreLocalizations {
 
   @override
   String get cropDoctorNotOnPhone => 'यह फसल जाँच इस फोन पर नहीं है';
+
+  @override
+  String get voiceStart => 'बोलें';
+
+  @override
+  String get voiceStop => 'रोकें';
+
+  @override
+  String get voiceListening => 'सुन रहे हैं…';
+
+  @override
+  String get voiceUnavailable =>
+      'इस फ़ोन में वॉइस टाइपिंग नहीं है। आप टाइप कर सकते हैं।';
+
+  @override
+  String fieldAsOf(String time) {
+    return '$time तक';
+  }
+
+  @override
+  String get fieldOfflineCached => 'आख़िरी सिंक की गई कॉपी दिख रही है.';
+
+  @override
+  String get fieldPendingSync => 'सिंक होगा';
+
+  @override
+  String get meSectionTitle => 'मेरा काम';
+
+  @override
+  String get settingsLogOut => 'लॉग आउट';
+
+  @override
+  String get settingsLogOutHelp =>
+      'दोबारा साइन इन करने के लिए फ़ोन और OTP चाहिए.';
+
+  @override
+  String get inboxTitle => 'सूचनाएँ';
+
+  @override
+  String get inboxEmpty => 'कोई सूचना नहीं';
+
+  @override
+  String get inboxEmptyHelp =>
+      'विज़िट की पुष्टि, ऑर्डर और मंज़ूरी यहाँ दिखेंगी.';
+
+  @override
+  String get inboxMarkAllRead => 'सभी पढ़ा हुआ चिह्नित करें';
+
+  @override
+  String inboxUnread(int count) {
+    return '$count अपठित';
+  }
+
+  @override
+  String get navInbox => 'इनबॉक्स';
+
+  @override
+  String get notifBeatPlanReadyTitle => 'आज का बीट प्लान तैयार है';
+
+  @override
+  String get notifBeatPlanReadyBody => 'आज के किसान देखने के लिए खोलें.';
+
+  @override
+  String get notifOrderStatusTitle => 'ऑर्डर अपडेट';
+
+  @override
+  String get notifOrderStatusBody => 'स्टोर ने एक ऑर्डर की स्थिति बदली है.';
+
+  @override
+  String get notifCreditApprovalTitle => 'उधार पर निर्णय';
+
+  @override
+  String get notifCreditApprovalApproved => 'उधार बिक्री मंज़ूर हो गई.';
+
+  @override
+  String get notifCreditApprovalRejected => 'उधार बिक्री मंज़ूर नहीं हुई.';
+
+  @override
+  String get notifTravelClaimSubmittedTitle => 'नया खर्च दावा';
+
+  @override
+  String get notifTravelClaimSubmittedBody =>
+      'एक अधिकारी ने खर्च दावा भेजा है.';
+
+  @override
+  String get notifTravelClaimDecidedTitle => 'खर्च दावे पर निर्णय';
+
+  @override
+  String get notifTravelClaimApproved => 'आपका दावा मंज़ूर हुआ.';
+
+  @override
+  String get notifTravelClaimRejected => 'आपका दावा मंज़ूर नहीं हुआ.';
+
+  @override
+  String get notifFlagTitle => 'आपके काम पर एक फ़्लैग';
+
+  @override
+  String get notifFlagBody => 'अपनी सफ़ाई जोड़ने के लिए ‘मेरे फ़्लैग’ खोलें.';
+
+  @override
+  String get notifDutyAutoEndedBody => 'आपकी ड्यूटी अपने आप समाप्त हो गई.';
+
+  @override
+  String get notifDiagnosisTitle => 'फ़सल जाँच अपडेट';
+
+  @override
+  String get notifDiagnosisBody => 'एक कृषि विशेषज्ञ ने फ़सल जाँच देखी.';
+
+  @override
+  String get notifVisitConfirmTitle => 'विज़िट की पुष्टि';
+
+  @override
+  String get notifVisitConfirmBody => 'किसान की पुष्टि बाक़ी है.';
+
+  @override
+  String get notifGenericTitle => 'अपडेट';
+
+  @override
+  String get notifGenericBody => 'विवरण देखने के लिए खोलें.';
+
+  @override
+  String get beatTitle => 'आज का बीट';
+
+  @override
+  String get beatEmpty => 'अभी बीट प्लान नहीं है';
+
+  @override
+  String get beatEmptyHelp =>
+      'प्लान हर सुबह 6:00 बजे आता है. आप खुद किसान जोड़ सकते हैं.';
+
+  @override
+  String beatTarget(int done, int target) {
+    return '$target में से $done पूरे';
+  }
+
+  @override
+  String get beatReasonFollowUp => 'फ़ॉलो-अप बाक़ी';
+
+  @override
+  String get beatReasonPestAlert => 'कीट चेतावनी';
+
+  @override
+  String get beatReasonCreditDue => 'उधार बाक़ी';
+
+  @override
+  String get beatReasonDemoStage => 'डेमो चरण बाक़ी';
+
+  @override
+  String get beatShowMap => 'नक्शा';
+
+  @override
+  String get beatShowList => 'सूची';
+
+  @override
+  String get beatAddVillage => 'गाँव जोड़ें';
+
+  @override
+  String get beatRemove => 'बीट से हटाएँ';
+
+  @override
+  String get beatReorderHint => 'क्रम बदलने के लिए कार्ड दबाकर रखें';
+
+  @override
+  String get beatVillageKind => 'गाँव';
+
+  @override
+  String get myDayGapAddReason => 'कारण जोड़ें';
+
+  @override
+  String get myDayGapSheetTitle => 'अंतराल क्यों है?';
+
+  @override
+  String get myDayGapReasonNetwork => 'नेटवर्क या GPS नहीं';
+
+  @override
+  String get myDayGapReasonBreak => 'निजी विराम';
+
+  @override
+  String get myDayGapReasonVehicle => 'वाहन की समस्या';
+
+  @override
+  String get myDayGapReasonOther => 'अन्य';
+
+  @override
+  String get myDayGapNoteLabel => 'टिप्पणी';
+
+  @override
+  String get myDayGapNoteHint => 'क्या हुआ बताएँ';
+
+  @override
+  String myDayGapRange(String start, String end, int minutes) {
+    return '$start – $end · $minutes मिनट';
+  }
+
+  @override
+  String get myDayGapReasonSaved => 'कारण सहेजा गया. यह सिंक होगा.';
+
+  @override
+  String get myDayManagerSeesReasons => 'आपके क्लस्टर हेड ये कारण देखते हैं.';
+
+  @override
+  String get myDayNoGaps => 'आज कोई अंतराल नहीं';
+
+  @override
+  String myDayStops(int count) {
+    return '$count ठहराव';
+  }
+
+  @override
+  String myDayVisitPins(int count) {
+    return '$count विज़िट';
+  }
+
+  @override
+  String get myDayKmEstimated => 'इस फ़ोन पर अनुमान';
+
+  @override
+  String get myDayKmProcessed => 'सर्वर ने संसाधित किया';
+
+  @override
+  String get performanceTitle => 'मेरा प्रदर्शन';
+
+  @override
+  String get perfTargetsVsActual => 'लक्ष्य बनाम वास्तविक';
+
+  @override
+  String get perfNewFarmers => 'नए किसान';
+
+  @override
+  String get perfSales => 'बिक्री';
+
+  @override
+  String get perfIncentive => 'अर्जित प्रोत्साहन';
+
+  @override
+  String get perfIncentivePending =>
+      'कंपनी द्वारा प्रोत्साहन नियम चालू करने पर दिखेगा.';
+
+  @override
+  String get perfTrendTitle => 'सत्यापित विज़िट, पिछले 14 दिन';
+
+  @override
+  String perfOfTarget(String actual, String target) {
+    return '$target में से $actual';
+  }
+
+  @override
+  String get perfNoTarget => 'कोई लक्ष्य तय नहीं';
+
+  @override
+  String perfRank(int rank) {
+    return 'आपके क्लस्टर में $rankवाँ स्थान';
+  }
+
+  @override
+  String get perfConfirmationRate => 'किसान पुष्टि';
+
+  @override
+  String get perfEmpty => 'इस महीने अभी कुछ नहीं';
+
+  @override
+  String get perfEmptyHelp => 'विज़िट और ऑर्डर सिंक होने पर संख्याएँ दिखेंगी.';
+
+  @override
+  String get travelTitle => 'यात्रा भत्ता';
+
+  @override
+  String get travelKmByDay => 'दिन के हिसाब से किमी';
+
+  @override
+  String get travelTaTotal => 'किमी से भत्ता';
+
+  @override
+  String get travelPayable => 'अब तक देय';
+
+  @override
+  String travelCapped(int cap) {
+    return '$cap किमी तक सीमित';
+  }
+
+  @override
+  String travelDayKm(String km) {
+    return '$km किमी';
+  }
+
+  @override
+  String get travelClaimsTitle => 'खर्च दावे';
+
+  @override
+  String get travelAddClaim => 'खर्च जोड़ें';
+
+  @override
+  String get travelClaimType => 'प्रकार';
+
+  @override
+  String get travelClaimTypeFuel => 'ईंधन';
+
+  @override
+  String get travelClaimTypeBus => 'बस किराया';
+
+  @override
+  String get travelClaimTypeOther => 'अन्य';
+
+  @override
+  String get travelClaimAmount => 'राशि';
+
+  @override
+  String get travelClaimDate => 'खर्च की तारीख़';
+
+  @override
+  String get travelClaimNote => 'टिप्पणी';
+
+  @override
+  String get travelClaimReceipt => 'रसीद की फ़ोटो';
+
+  @override
+  String get travelClaimTakePhoto => 'रसीद की फ़ोटो लें';
+
+  @override
+  String get travelClaimReceiptRequired => 'रसीद की फ़ोटो ज़रूरी है.';
+
+  @override
+  String get travelClaimAmountRequired => 'राशि दर्ज करें.';
+
+  @override
+  String get travelClaimQueued => 'दावा सहेजा गया. यह सिंक होगा.';
+
+  @override
+  String get travelClaimStatusQueued => 'सिंक का इंतज़ार';
+
+  @override
+  String get travelClaimStatusSubmitted => 'क्लस्टर हेड के पास';
+
+  @override
+  String get travelClaimStatusApproved => 'मंज़ूर';
+
+  @override
+  String get travelClaimStatusRejected => 'मंज़ूर नहीं';
+
+  @override
+  String get travelEmpty => 'इस महीने अभी यात्रा नहीं';
+
+  @override
+  String get travelEmptyHelp => 'ड्यूटी पर जाएँ; किमी और भत्ता यहाँ दिखेगा.';
+
+  @override
+  String get flagsTitle => 'मेरे फ़्लैग';
+
+  @override
+  String get flagsOpenSection => 'खुले';
+
+  @override
+  String get flagsResolvedSection => 'निपटाए गए';
+
+  @override
+  String get flagsEmpty => 'आपके काम पर कोई फ़्लैग नहीं';
+
+  @override
+  String get flagsEmptyHelp => 'आप केवल अपने बारे में फ़्लैग देखते हैं.';
+
+  @override
+  String get flagAddExplanation => 'सफ़ाई जोड़ें';
+
+  @override
+  String get flagExplanationLabel => 'आपकी सफ़ाई';
+
+  @override
+  String get flagExplanationHint => 'उस दिन क्या हुआ बताएँ';
+
+  @override
+  String get flagExplanationSent => 'क्लस्टर हेड को भेज दिया गया.';
+
+  @override
+  String get flagExplanationNeedsNetwork =>
+      'सफ़ाई भेजने के लिए नेटवर्क कनेक्शन चाहिए.';
+
+  @override
+  String get flagOutcomeTitle => 'परिणाम';
+
+  @override
+  String get flagOutcomeHidden => 'यह फ़्लैग निपटने पर परिणाम दिखेगा.';
+
+  @override
+  String get flagStateOpen => 'खुला';
+
+  @override
+  String get flagStateInReview => 'समीक्षा में';
+
+  @override
+  String get flagStateResolved => 'निपटाया गया';
+
+  @override
+  String get flagSeverityLow => 'कम';
+
+  @override
+  String get flagSeverityMedium => 'मध्यम';
+
+  @override
+  String get flagSeverityHigh => 'उच्च';
+
+  @override
+  String get meetingsTitle => 'किसान बैठकें';
+
+  @override
+  String get meetingsEmpty => 'अभी कोई बैठक नहीं';
+
+  @override
+  String get meetingsEmptyHelp => 'गाँव के बैठक स्थल पर शुरू करें.';
+
+  @override
+  String get meetingNew => 'नई बैठक';
+
+  @override
+  String get meetingTopic => 'विषय';
+
+  @override
+  String get meetingTopicHint => 'बैठक किस बारे में है';
+
+  @override
+  String get meetingNotes => 'बैठक की टिप्पणी';
+
+  @override
+  String get meetingStart => 'बैठक शुरू करें';
+
+  @override
+  String get meetingAttendance => 'उपस्थिति';
+
+  @override
+  String meetingAttendees(int count) {
+    return '$count उपस्थित';
+  }
+
+  @override
+  String get meetingAddByOtp => 'OTP से जोड़ें';
+
+  @override
+  String get meetingAddByQr => 'किसान QR स्कैन करें';
+
+  @override
+  String meetingOtpSent(String phone) {
+    return '$phone पर कोड भेजा';
+  }
+
+  @override
+  String get meetingOtpNeedsNetwork =>
+      'OTP के लिए नेटवर्क चाहिए. इसके बजाय QR इस्तेमाल करें.';
+
+  @override
+  String get meetingFinish => 'बैठक समाप्त करें';
+
+  @override
+  String get meetingClosed => 'बंद';
+
+  @override
+  String get meetingQrInvalid => 'वह QR किसान उपस्थिति कोड नहीं है.';
+
+  @override
+  String get meetingAlreadyPresent => 'वह किसान पहले से सूची में है.';
+
+  @override
+  String get demoTitle => 'डेमो प्लॉट';
+
+  @override
+  String get demoEmpty => 'अभी कोई डेमो प्लॉट नहीं';
+
+  @override
+  String get demoEmptyHelp => 'किसान के फ़सल प्लॉट पर दर्ज करें.';
+
+  @override
+  String get demoNew => 'नया डेमो प्लॉट';
+
+  @override
+  String get demoTreatment => 'उत्पाद या उपचार';
+
+  @override
+  String get demoBaseline => 'किससे तुलना करें';
+
+  @override
+  String get demoBaselinePractice => 'किसान की पद्धति';
+
+  @override
+  String get demoBaselineComparison => 'तुलना प्लॉट';
+
+  @override
+  String get demoStatusCreated => 'दर्ज';
+
+  @override
+  String get demoStatusActive => 'चल रहा है';
+
+  @override
+  String get demoStatusHarvested => 'कटाई पूरी';
+
+  @override
+  String get demoStatusReported => 'रिपोर्ट किया';
+
+  @override
+  String get demoStageSown => 'बुवाई';
+
+  @override
+  String get demoStageVegetative => 'वानस्पतिक';
+
+  @override
+  String get demoStageFlowering => 'फूल आना';
+
+  @override
+  String get demoStageFruiting => 'फल लगना';
+
+  @override
+  String get demoStageMaturity => 'परिपक्वता';
+
+  @override
+  String get demoStageHarvest => 'कटाई';
+
+  @override
+  String get demoAddObservation => 'चरण अवलोकन जोड़ें';
+
+  @override
+  String get demoObservationNote => 'अवलोकन';
+
+  @override
+  String get demoSide => 'पक्ष';
+
+  @override
+  String get demoSideDemo => 'डेमो';
+
+  @override
+  String get demoSideBoth => 'दोनों';
+
+  @override
+  String get demoTakePhoto => 'चरण की फ़ोटो जोड़ें';
+
+  @override
+  String get demoEnterYield => 'उपज दर्ज करें';
+
+  @override
+  String get demoYieldDemo => 'डेमो उपज (किग्रा/एकड़)';
+
+  @override
+  String get demoYieldPractice => 'किसान पद्धति उपज (किग्रा/एकड़)';
+
+  @override
+  String demoYieldGain(String pct) {
+    return 'किसान पद्धति से $pct% अधिक';
+  }
+
+  @override
+  String get demoStart => 'डेमो शुरू करें';
+
+  @override
+  String get demoReport => 'रिपोर्ट किया चिह्नित करें';
+
+  @override
+  String get demoComparison => 'डेमो बनाम किसान पद्धति';
 }

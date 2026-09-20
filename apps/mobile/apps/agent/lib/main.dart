@@ -1,14 +1,18 @@
 import 'dart:async';
 
 import 'package:farmerapp_core/farmerapp_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:workmanager/workmanager.dart';
 
 import 'app.dart';
+import 'push.dart';
+import 'router.dart';
 import 'screens/store/store_platform.dart';
 import 'security.dart';
+import 'speech.dart';
 import 'widgets/share_plus_invoice_sharer.dart';
 
 /// App version sent with duty sessions and policy acceptances (pubspec).
@@ -63,14 +67,20 @@ void callbackDispatcher() {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Workmanager().initialize(callbackDispatcher);
-  await startMitra();
+  // FA-007: without google-services.json this returns a NoopPushService and
+  // the app runs with push off (see push.dart).
+  final push = await FirebasePushService.create();
+  if (push is FirebasePushService) {
+    FirebaseMessaging.onBackgroundMessage(mitraBackgroundMessageHandler);
+  }
+  await startMitra(push: push);
 }
 
 /// Builds the provider container and runs the app. A remote wipe (SEC-025)
 /// tears this run down, wipes, and calls [startMitra] again: the fresh
 /// database carries the A08 notice, so the router opens "Signed out by
 /// your administrator".
-Future<void> startMitra() async {
+Future<void> startMitra({PushService push = const NoopPushService()}) async {
   // Real API (FA-001): base URL from --dart-define=API_BASE_URL, default
   // http://10.0.2.2:8000 (host machine from the Android emulator). Every
   // call goes through one client: certificate pinning (API_CERT_PINS), Play
@@ -202,6 +212,13 @@ Future<void> startMitra() async {
       guidedCameraFactoryProvider.overrideWithValue(PluginGuidedCamera.new),
       onDeviceQualityModelProvider.overrideWithValue(qualityModel),
       diagnosisApiProvider.overrideWithValue(HttpDiagnosisApi(rest)),
+      // FA-007 / FA-018 / FA-023 / FA-024 / FA-026 / FA-027 / VV-008 /
+      // VA-005: the M7 officer endpoints (A11, A12, A13, A35, A36, A60,
+      // A61, A62). Reads are cached; writes go through the outbox.
+      fieldApiProvider.overrideWithValue(HttpFieldApi(rest)),
+      pushServiceProvider.overrideWithValue(push),
+      // FA-005 voice input on every free-text field.
+      speechServiceProvider.overrideWithValue(PluginSpeechService()),
       // FA-016: confirmation request / officer-side OTP (online only).
       visitConfirmApiProvider.overrideWithValue(
         HttpVisitConfirmApi(
@@ -238,7 +255,7 @@ Future<void> startMitra() async {
       container.dispose();
       client.close();
     },
-    restart: startMitra,
+    restart: () => startMitra(push: push),
   ).arm();
 
   // Periodic background sync + immediate sync on reconnect (NF-002/NF-003).
@@ -247,6 +264,11 @@ Future<void> startMitra() async {
   // (FA-010); the policy version is refreshed when online (FA-011).
   await container.read(dutyControllerProvider.notifier).restore();
   unawaited(container.read(locationPolicyProvider.notifier).refresh());
+  // FA-007: register the FCM token for this session, listen for data
+  // messages and follow a tapped push to its screen. All of it is inert
+  // when push is a NoopPushService.
+  final registrar = container.read(pushRegistrarProvider);
+  unawaited(registrar.registerAfterLogin());
   if (!wipedBefore) {
     // SEC-025: ask the server whether this phone must be wiped (in the
     // background: the cold start does not wait for the network, NF-005).
@@ -269,5 +291,15 @@ Future<void> startMitra() async {
   }
   runApp(
     UncontrolledProviderScope(container: container, child: const MitraApp()),
+  );
+  final router = container.read(routerProvider);
+  unawaited(
+    PushRegistrar(
+      push: push,
+      api: container.read(fieldApiProvider),
+      appVersion: agentAppVersion,
+      onMessage: (_) => container.read(fieldRepositoryProvider).refreshInbox(),
+      onRoute: (route) => router.go(deepLinkFor(route)),
+    ).listen(),
   );
 }

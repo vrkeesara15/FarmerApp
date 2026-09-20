@@ -48,6 +48,8 @@ class HomeScreen extends ConsumerWidget {
             .value
             ?.collectedPaise ??
         0;
+    final unread = ref.watch(unreadCountProvider);
+    final beat = ref.watch(beatPlanProvider(ref.watch(todayIstProvider))).value;
     final blocked = policy.loaded && !policy.accepted;
     final autoEnd = controller.autoEndAt;
 
@@ -56,7 +58,18 @@ class HomeScreen extends ConsumerWidget {
         title: Text(l10n.homeTitle),
         actions: <Widget>[
           SyncStatusPillLive(onTap: () => context.push(AppRoutes.syncDetails)),
-          const SizedBox(width: Tokens.space3),
+          IconButton(
+            key: const Key('home-inbox'),
+            icon: Badge(
+              key: const Key('home-inbox-badge'),
+              isLabelVisible: unread > 0,
+              label: Text('$unread'),
+              child: const Icon(Icons.notifications_none_outlined),
+            ),
+            tooltip: l10n.inboxTitle,
+            onPressed: () => context.push(AppRoutes.inbox),
+          ),
+          const SizedBox(width: Tokens.space1),
         ],
       ),
       body: SafeArea(
@@ -171,11 +184,34 @@ class HomeScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(Tokens.radiusCard),
                       side: app.borderSide,
                     ),
-                    child: EmptyState(
-                      icon: Icons.map_outlined,
-                      title: l10n.homeNextUpEmpty,
-                      help: l10n.homeNextUpEmptyHelp,
-                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: beat == null || beat.isEmpty
+                        ? EmptyState(
+                            icon: Icons.map_outlined,
+                            title: l10n.homeNextUpEmpty,
+                            help: l10n.homeNextUpEmptyHelp,
+                            actionLabel: l10n.beatTitle,
+                            onAction: () => context.push(AppRoutes.beat),
+                          )
+                        : ListTile(
+                            key: const Key('home-next-up'),
+                            leading: Icon(
+                              Icons.person_pin_circle_outlined,
+                              color: p.primary,
+                            ),
+                            title: Text(
+                              beat.items.first.title,
+                              style: app.text.label,
+                            ),
+                            subtitle: Text(
+                              l10n.beatTarget(beat.items.length, beat.target),
+                              style: app.text.caption.copyWith(
+                                color: p.textSecondary,
+                              ),
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push(AppRoutes.beat),
+                          ),
                   ),
                   const SizedBox(height: Tokens.space4),
                   Text(l10n.homeQuickActions, style: app.text.heading),
@@ -266,7 +302,12 @@ class HomeScreen extends ConsumerWidget {
             label: l10n.navOrders,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.person_outline),
+            icon: Badge(
+              key: const Key('nav-me-badge'),
+              isLabelVisible: unread > 0,
+              label: Text('$unread'),
+              child: const Icon(Icons.person_outline),
+            ),
             label: l10n.navMe,
           ),
         ],

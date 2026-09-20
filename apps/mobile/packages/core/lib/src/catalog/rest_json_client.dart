@@ -106,6 +106,26 @@ class RestJsonClient {
         .timeout(timeout),
   );
 
+  /// `PUT path?query` with a JSON body (M7 `PUT /v1/me/beat?date=`).
+  Future<RestResponse> put(
+    String path,
+    Map<String, Object?> body, {
+    Map<String, Object?> query = const <String, Object?>{},
+  }) => _call((token) {
+    final uri = config.resolve(path);
+    final params = <String, dynamic>{
+      for (final e in query.entries)
+        if (e.value != null) e.key: '${e.value}',
+    };
+    return _client
+        .put(
+          params.isEmpty ? uri : uri.replace(queryParameters: params),
+          headers: <String, String>{..._headers, 'Authorization': token},
+          body: jsonEncode(body),
+        )
+        .timeout(timeout);
+  });
+
   /// `PATCH path` with a JSON body.
   Future<RestResponse> patch(String path, Map<String, Object?> body) => _call(
     (token) => _client

@@ -305,31 +305,14 @@ class _VisitScreenState extends ConsumerState<VisitScreen> {
             onPressed: _cameraBusy || !d.open ? null : _takePhoto,
           ),
         SectionTitle(l10n.visitNotesLabel),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Expanded(
-              child: AppTextField(
-                key: const Key('visit-notes'),
-                label: l10n.visitNotesLabel,
-                hintText: l10n.visitNotesHint,
-                controller: _notes,
-                enabled: d.open,
-              ),
-            ),
-            const SizedBox(width: Tokens.space2),
-            Padding(
-              padding: const EdgeInsets.only(top: Tokens.space6),
-              child: Tooltip(
-                key: const Key('visit-voice'),
-                message: l10n.visitVoiceInputSoon,
-                child: const IconButton(
-                  icon: Icon(Icons.mic_none_outlined),
-                  onPressed: null,
-                ),
-              ),
-            ),
-          ],
+        VoiceTextField(
+          label: l10n.visitNotesLabel,
+          hintText: l10n.visitNotesHint,
+          controller: _notes,
+          enabled: d.open,
+          maxLines: 3,
+          fieldKey: const Key('visit-notes'),
+          micKey: const Key('visit-voice'),
         ),
         const SizedBox(height: Tokens.space3),
         ChoiceChips(

@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../duty/duty_test_support.dart';
 import '../farmers/agent_harness.dart';
+import '../field/field_test_support.dart';
 
 void main() {
   for (final mode in AppThemeMode.values) {
@@ -96,6 +97,16 @@ void main() {
           before: () async {
             await acceptPolicy(deps);
             await seedOnDuty(deps, points: 7);
+            // VV-008: the server day brings the processed km and the gap
+            // waiting for a reason.
+            await seedFieldCaches(
+              deps,
+              beat: false,
+              performance: false,
+              travel: false,
+              flags: false,
+              inbox: false,
+            );
           },
         );
       });

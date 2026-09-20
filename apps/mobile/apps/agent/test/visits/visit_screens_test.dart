@@ -147,15 +147,10 @@ void main() {
       find.textContaining(RegExp('gallery|upload', caseSensitive: false)),
       findsNothing,
     );
-    final voice = tester.widget<Tooltip>(find.byKey(const Key('visit-voice')));
-    expect(voice.message, 'Voice input arrives in a later update');
-    final mic = tester.widget<IconButton>(
-      find.descendant(
-        of: find.byKey(const Key('visit-voice')),
-        matching: find.byType(IconButton),
-      ),
-    );
-    expect(mic.onPressed, isNull);
+    // FA-005: the notes field has a working microphone; typing still works.
+    final mic = tester.widget<IconButton>(find.byKey(const Key('visit-voice')));
+    expect(mic.onPressed, isNotNull);
+    expect(mic.tooltip, 'Speak');
     expect(find.text('0:00'), findsOneWidget);
     // Inside, integrity fine, nothing else yet: 30 + 10.
     expect(

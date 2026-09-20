@@ -30,8 +30,7 @@ class StoreDeps {
   /// Creates the dependencies.
   StoreDeps({bool online = true})
     : agent = AgentDeps(online: online),
-      api = FakeStoreApi(),
-      scanner = FakeBarcodeScanner();
+      api = FakeStoreApi();
 
   /// Agent fakes (db, connectivity, camera, clock 2026-09-20 06:00 IST).
   final AgentDeps agent;
@@ -39,8 +38,8 @@ class StoreDeps {
   /// Store server.
   final FakeStoreApi api;
 
-  /// Barcode camera.
-  final FakeBarcodeScanner scanner;
+  /// Barcode camera (shared with A35 attendance scanning).
+  FakeBarcodeScanner get scanner => agent.scanner;
 
   /// PDF viewer (the agent harness's URL opener).
   RecordingUrlOpener get opener => agent.urls;
@@ -64,7 +63,6 @@ class StoreDeps {
       locale: locale,
     ),
     storeApiProvider.overrideWithValue(api),
-    barcodeScannerProvider.overrideWithValue(scanner),
     storePhotoProcessorProvider.overrideWithValue((raw) async => raw),
   ];
 

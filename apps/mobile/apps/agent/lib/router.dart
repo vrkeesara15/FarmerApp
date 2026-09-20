@@ -6,6 +6,13 @@ import 'screens/farmers/add_farmer_wizard_screen.dart';
 import 'screens/farmers/farm_edit_screen.dart';
 import 'screens/farmers/farmer_list_screen.dart';
 import 'screens/farmers/farmer_profile_screen.dart';
+import 'screens/field/beat_plan_screen.dart';
+import 'screens/field/demo_plots_screen.dart';
+import 'screens/field/inbox_screen.dart';
+import 'screens/field/meetings_screen.dart';
+import 'screens/field/my_flags_screen.dart';
+import 'screens/field/performance_screen.dart';
+import 'screens/field/travel_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/home/my_day_screen.dart';
 import 'screens/khata/khata_screen.dart';
@@ -68,6 +75,33 @@ abstract final class AppRoutes {
   /// A12 My day timeline.
   static const String myDay = '/home/day';
 
+  /// A11 Beat plan (FA-018).
+  static const String beat = '/beat';
+
+  /// A13 Notifications inbox (FA-007).
+  static const String inbox = '/inbox';
+
+  /// A35 Farmer meetings (FA-027).
+  static const String meetings = '/meetings';
+
+  /// A35 one meeting.
+  static String meetingPath(String id) => '/meetings/$id';
+
+  /// A36 Demo plots (FA-026).
+  static const String demoPlots = '/demo-plots';
+
+  /// A36 one demo plot.
+  static String demoPlotPath(String id) => '/demo-plots/$id';
+
+  /// A60 My performance (FA-024).
+  static const String performance = '/me/performance';
+
+  /// A61 Travel allowance (FA-023).
+  static const String travel = '/me/travel';
+
+  /// A62 My flags (VA-005).
+  static const String myFlags = '/me/flags';
+
   /// A05 again, from Home "Review policy" (FA-011 newer version).
   static const String policy = '/home/policy';
 
@@ -98,6 +132,34 @@ abstract final class AppRoutes {
 
   /// S01 Store mode home (store manager, accountant, cluster head).
   static const String store = StoreRoutes.home;
+}
+
+/// Maps a server deep link (the `route` of a notification row or of an FCM
+/// data message, docs/prs/M7-field-p1-api.md) to a route in this app.
+///
+/// Anything the officer app has no screen for lands on the inbox rather
+/// than nowhere, so a new server kind never dead-ends.
+String deepLinkFor(String route) {
+  final parts = route
+      .split('?')
+      .first
+      .split('/')
+      .where((s) => s.isNotEmpty)
+      .toList();
+  if (parts.isEmpty) return AppRoutes.inbox;
+  return switch (parts.first) {
+    // `/visits/{id}` and `/visits/{id}/confirm` are this app's own paths.
+    'visits' => route,
+    'orders' => route,
+    'diagnoses' => parts.length > 1 ? '/scouting/${parts[1]}' : AppRoutes.inbox,
+    // The officer sees a credit decision on the order it belongs to.
+    'credit-approvals' => CommerceRoutes.orders,
+    'flags' => AppRoutes.myFlags,
+    'travel' => AppRoutes.travel,
+    'beat' => AppRoutes.beat,
+    'duty' => AppRoutes.myDay,
+    _ => AppRoutes.inbox,
+  };
 }
 
 /// The app router; after a remote wipe it opens on A08.
@@ -338,6 +400,48 @@ GoRouter buildRouter({String initialLocation = AppRoutes.splash}) {
       GoRoute(
         path: CommerceRoutes.collections,
         builder: (context, state) => const CollectionsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.beat,
+        builder: (context, state) => const BeatPlanScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.inbox,
+        builder: (context, state) => const InboxScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.meetings,
+        builder: (context, state) => const MeetingsScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: ':meetingId',
+            builder: (context, state) =>
+                MeetingScreen(meetingId: state.pathParameters['meetingId']!),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: AppRoutes.demoPlots,
+        builder: (context, state) => const DemoPlotsScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: ':demoPlotId',
+            builder: (context, state) =>
+                DemoPlotScreen(demoPlotId: state.pathParameters['demoPlotId']!),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: AppRoutes.performance,
+        builder: (context, state) => const PerformanceScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.travel,
+        builder: (context, state) => const TravelScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.myFlags,
+        builder: (context, state) => const MyFlagsScreen(),
       ),
       GoRoute(
         path: AppRoutes.settings,

@@ -3044,12 +3044,6 @@ abstract class CoreLocalizations {
   /// **'What did you observe or advise?'**
   String get visitNotesHint;
 
-  /// No description provided for @visitVoiceInputSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Voice input arrives in a later update'**
-  String get visitVoiceInputSoon;
-
   /// No description provided for @visitCropStageLabel.
   ///
   /// In en, this message translates to:
@@ -7465,6 +7459,1044 @@ abstract class CoreLocalizations {
   /// In en, this message translates to:
   /// **'This crop check is not on this phone'**
   String get cropDoctorNotOnPhone;
+
+  /// FA-005 microphone button next to a free-text field
+  ///
+  /// In en, this message translates to:
+  /// **'Speak'**
+  String get voiceStart;
+
+  /// No description provided for @voiceStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get voiceStop;
+
+  /// No description provided for @voiceListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening…'**
+  String get voiceListening;
+
+  /// FA-005: dictation is never required
+  ///
+  /// In en, this message translates to:
+  /// **'This phone has no voice typing. You can type instead.'**
+  String get voiceUnavailable;
+
+  /// Freshness of a cached officer view
+  ///
+  /// In en, this message translates to:
+  /// **'As of {time}'**
+  String fieldAsOf(String time);
+
+  /// No description provided for @fieldOfflineCached.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the last synced copy.'**
+  String get fieldOfflineCached;
+
+  /// No description provided for @fieldPendingSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Will sync'**
+  String get fieldPendingSync;
+
+  /// No description provided for @meSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My work'**
+  String get meSectionTitle;
+
+  /// No description provided for @settingsLogOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get settingsLogOut;
+
+  /// No description provided for @settingsLogOutHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'You will need your phone and an OTP to sign in again.'**
+  String get settingsLogOutHelp;
+
+  /// No description provided for @inboxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get inboxTitle;
+
+  /// No description provided for @inboxEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications'**
+  String get inboxEmpty;
+
+  /// No description provided for @inboxEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit confirmations, orders and approvals show up here.'**
+  String get inboxEmptyHelp;
+
+  /// No description provided for @inboxMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get inboxMarkAllRead;
+
+  /// No description provided for @inboxUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unread'**
+  String inboxUnread(int count);
+
+  /// No description provided for @navInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox'**
+  String get navInbox;
+
+  /// FA-007 notification.beat_plan_ready.title
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'\'s beat plan is ready'**
+  String get notifBeatPlanReadyTitle;
+
+  /// No description provided for @notifBeatPlanReadyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Open it to see today\'\'s farmers.'**
+  String get notifBeatPlanReadyBody;
+
+  /// No description provided for @notifOrderStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Order update'**
+  String get notifOrderStatusTitle;
+
+  /// No description provided for @notifOrderStatusBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The store changed the status of an order.'**
+  String get notifOrderStatusBody;
+
+  /// No description provided for @notifCreditApprovalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit decision'**
+  String get notifCreditApprovalTitle;
+
+  /// No description provided for @notifCreditApprovalApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'The credit sale was approved.'**
+  String get notifCreditApprovalApproved;
+
+  /// No description provided for @notifCreditApprovalRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The credit sale was not approved.'**
+  String get notifCreditApprovalRejected;
+
+  /// No description provided for @notifTravelClaimSubmittedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New expense claim'**
+  String get notifTravelClaimSubmittedTitle;
+
+  /// No description provided for @notifTravelClaimSubmittedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'An officer submitted an expense claim.'**
+  String get notifTravelClaimSubmittedBody;
+
+  /// No description provided for @notifTravelClaimDecidedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense claim decision'**
+  String get notifTravelClaimDecidedTitle;
+
+  /// No description provided for @notifTravelClaimApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your claim was approved.'**
+  String get notifTravelClaimApproved;
+
+  /// No description provided for @notifTravelClaimRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Your claim was not approved.'**
+  String get notifTravelClaimRejected;
+
+  /// No description provided for @notifFlagTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A flag about your work'**
+  String get notifFlagTitle;
+
+  /// No description provided for @notifFlagBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Open My flags to add your explanation.'**
+  String get notifFlagBody;
+
+  /// No description provided for @notifDutyAutoEndedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your duty was ended automatically.'**
+  String get notifDutyAutoEndedBody;
+
+  /// No description provided for @notifDiagnosisTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop check update'**
+  String get notifDiagnosisTitle;
+
+  /// No description provided for @notifDiagnosisBody.
+  ///
+  /// In en, this message translates to:
+  /// **'An agronomist reviewed a crop check.'**
+  String get notifDiagnosisBody;
+
+  /// No description provided for @notifVisitConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit confirmation'**
+  String get notifVisitConfirmTitle;
+
+  /// No description provided for @notifVisitConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A farmer confirmation is waiting.'**
+  String get notifVisitConfirmBody;
+
+  /// No description provided for @notifGenericTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get notifGenericTitle;
+
+  /// No description provided for @notifGenericBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Open to see the details.'**
+  String get notifGenericBody;
+
+  /// No description provided for @beatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'\'s beat'**
+  String get beatTitle;
+
+  /// No description provided for @beatEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No beat plan yet'**
+  String get beatEmpty;
+
+  /// No description provided for @beatEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The plan arrives at 6:00 each morning. You can add farmers yourself.'**
+  String get beatEmptyHelp;
+
+  /// No description provided for @beatTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {target} visited'**
+  String beatTarget(int done, int target);
+
+  /// No description provided for @beatReasonFollowUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow-up due'**
+  String get beatReasonFollowUp;
+
+  /// No description provided for @beatReasonPestAlert.
+  ///
+  /// In en, this message translates to:
+  /// **'Pest alert'**
+  String get beatReasonPestAlert;
+
+  /// No description provided for @beatReasonCreditDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit due'**
+  String get beatReasonCreditDue;
+
+  /// No description provided for @beatReasonDemoStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo stage due'**
+  String get beatReasonDemoStage;
+
+  /// No description provided for @beatShowMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Map'**
+  String get beatShowMap;
+
+  /// No description provided for @beatShowList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get beatShowList;
+
+  /// No description provided for @beatAddVillage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add village'**
+  String get beatAddVillage;
+
+  /// No description provided for @beatRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from beat'**
+  String get beatRemove;
+
+  /// No description provided for @beatReorderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Press and hold a card to reorder'**
+  String get beatReorderHint;
+
+  /// No description provided for @beatVillageKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Village'**
+  String get beatVillageKind;
+
+  /// No description provided for @myDayGapAddReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Add reason'**
+  String get myDayGapAddReason;
+
+  /// No description provided for @myDayGapSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why is there a gap?'**
+  String get myDayGapSheetTitle;
+
+  /// No description provided for @myDayGapReasonNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'No network or GPS'**
+  String get myDayGapReasonNetwork;
+
+  /// No description provided for @myDayGapReasonBreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal break'**
+  String get myDayGapReasonBreak;
+
+  /// No description provided for @myDayGapReasonVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle trouble'**
+  String get myDayGapReasonVehicle;
+
+  /// No description provided for @myDayGapReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get myDayGapReasonOther;
+
+  /// No description provided for @myDayGapNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get myDayGapNoteLabel;
+
+  /// No description provided for @myDayGapNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Say what happened'**
+  String get myDayGapNoteHint;
+
+  /// No description provided for @myDayGapRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} – {end} · {minutes} min'**
+  String myDayGapRange(String start, String end, int minutes);
+
+  /// No description provided for @myDayGapReasonSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason saved. It will sync.'**
+  String get myDayGapReasonSaved;
+
+  /// No description provided for @myDayManagerSeesReasons.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cluster head sees these reasons.'**
+  String get myDayManagerSeesReasons;
+
+  /// No description provided for @myDayNoGaps.
+  ///
+  /// In en, this message translates to:
+  /// **'No gaps today'**
+  String get myDayNoGaps;
+
+  /// No description provided for @myDayStops.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} stops'**
+  String myDayStops(int count);
+
+  /// No description provided for @myDayVisitPins.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} visits'**
+  String myDayVisitPins(int count);
+
+  /// No description provided for @myDayKmEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated on this phone'**
+  String get myDayKmEstimated;
+
+  /// No description provided for @myDayKmProcessed.
+  ///
+  /// In en, this message translates to:
+  /// **'Processed by the server'**
+  String get myDayKmProcessed;
+
+  /// No description provided for @performanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My performance'**
+  String get performanceTitle;
+
+  /// No description provided for @perfTargetsVsActual.
+  ///
+  /// In en, this message translates to:
+  /// **'Targets vs actual'**
+  String get perfTargetsVsActual;
+
+  /// No description provided for @perfNewFarmers.
+  ///
+  /// In en, this message translates to:
+  /// **'New farmers'**
+  String get perfNewFarmers;
+
+  /// No description provided for @perfSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales'**
+  String get perfSales;
+
+  /// No description provided for @perfIncentive.
+  ///
+  /// In en, this message translates to:
+  /// **'Incentive earned'**
+  String get perfIncentive;
+
+  /// No description provided for @perfIncentivePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown once your company activates the incentive rules.'**
+  String get perfIncentivePending;
+
+  /// No description provided for @perfTrendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified visits, last 14 days'**
+  String get perfTrendTitle;
+
+  /// No description provided for @perfOfTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'{actual} of {target}'**
+  String perfOfTarget(String actual, String target);
+
+  /// No description provided for @perfNoTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'No target set'**
+  String get perfNoTarget;
+
+  /// No description provided for @perfRank.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank {rank} in your cluster'**
+  String perfRank(int rank);
+
+  /// No description provided for @perfConfirmationRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer confirmations'**
+  String get perfConfirmationRate;
+
+  /// No description provided for @perfEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing this month yet'**
+  String get perfEmpty;
+
+  /// No description provided for @perfEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Numbers appear once your visits and orders sync.'**
+  String get perfEmptyHelp;
+
+  /// No description provided for @travelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel allowance'**
+  String get travelTitle;
+
+  /// No description provided for @travelKmByDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Km by day'**
+  String get travelKmByDay;
+
+  /// No description provided for @travelTaTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowance from km'**
+  String get travelTaTotal;
+
+  /// No description provided for @travelPayable.
+  ///
+  /// In en, this message translates to:
+  /// **'Payable so far'**
+  String get travelPayable;
+
+  /// No description provided for @travelCapped.
+  ///
+  /// In en, this message translates to:
+  /// **'Capped at {cap} km'**
+  String travelCapped(int cap);
+
+  /// No description provided for @travelDayKm.
+  ///
+  /// In en, this message translates to:
+  /// **'{km} km'**
+  String travelDayKm(String km);
+
+  /// No description provided for @travelClaimsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense claims'**
+  String get travelClaimsTitle;
+
+  /// No description provided for @travelAddClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Add expense'**
+  String get travelAddClaim;
+
+  /// No description provided for @travelClaimType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get travelClaimType;
+
+  /// No description provided for @travelClaimTypeFuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel'**
+  String get travelClaimTypeFuel;
+
+  /// No description provided for @travelClaimTypeBus.
+  ///
+  /// In en, this message translates to:
+  /// **'Bus fare'**
+  String get travelClaimTypeBus;
+
+  /// No description provided for @travelClaimTypeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get travelClaimTypeOther;
+
+  /// No description provided for @travelClaimAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get travelClaimAmount;
+
+  /// No description provided for @travelClaimDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of expense'**
+  String get travelClaimDate;
+
+  /// No description provided for @travelClaimNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get travelClaimNote;
+
+  /// No description provided for @travelClaimReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt photo'**
+  String get travelClaimReceipt;
+
+  /// No description provided for @travelClaimTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take receipt photo'**
+  String get travelClaimTakePhoto;
+
+  /// No description provided for @travelClaimReceiptRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'A receipt photo is required.'**
+  String get travelClaimReceiptRequired;
+
+  /// No description provided for @travelClaimAmountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount.'**
+  String get travelClaimAmountRequired;
+
+  /// No description provided for @travelClaimQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim saved. It will sync.'**
+  String get travelClaimQueued;
+
+  /// No description provided for @travelClaimStatusQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to sync'**
+  String get travelClaimStatusQueued;
+
+  /// No description provided for @travelClaimStatusSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'With your cluster head'**
+  String get travelClaimStatusSubmitted;
+
+  /// No description provided for @travelClaimStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get travelClaimStatusApproved;
+
+  /// No description provided for @travelClaimStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not approved'**
+  String get travelClaimStatusRejected;
+
+  /// No description provided for @travelEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No travel this month yet'**
+  String get travelEmpty;
+
+  /// No description provided for @travelEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Go on duty; km and allowance appear here.'**
+  String get travelEmptyHelp;
+
+  /// No description provided for @flagsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My flags'**
+  String get flagsTitle;
+
+  /// No description provided for @flagsOpenSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get flagsOpenSection;
+
+  /// No description provided for @flagsResolvedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved'**
+  String get flagsResolvedSection;
+
+  /// No description provided for @flagsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No flags about your work'**
+  String get flagsEmpty;
+
+  /// No description provided for @flagsEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'You only ever see flags about yourself.'**
+  String get flagsEmptyHelp;
+
+  /// No description provided for @flagAddExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an explanation'**
+  String get flagAddExplanation;
+
+  /// No description provided for @flagExplanationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your explanation'**
+  String get flagExplanationLabel;
+
+  /// No description provided for @flagExplanationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Say what happened that day'**
+  String get flagExplanationHint;
+
+  /// No description provided for @flagExplanationSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to your cluster head.'**
+  String get flagExplanationSent;
+
+  /// No description provided for @flagExplanationNeedsNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'You need a network connection to send an explanation.'**
+  String get flagExplanationNeedsNetwork;
+
+  /// No description provided for @flagOutcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Outcome'**
+  String get flagOutcomeTitle;
+
+  /// No description provided for @flagOutcomeHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'The outcome appears once this flag is resolved.'**
+  String get flagOutcomeHidden;
+
+  /// No description provided for @flagStateOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get flagStateOpen;
+
+  /// No description provided for @flagStateInReview.
+  ///
+  /// In en, this message translates to:
+  /// **'In review'**
+  String get flagStateInReview;
+
+  /// No description provided for @flagStateResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolved'**
+  String get flagStateResolved;
+
+  /// No description provided for @flagSeverityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get flagSeverityLow;
+
+  /// No description provided for @flagSeverityMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get flagSeverityMedium;
+
+  /// No description provided for @flagSeverityHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get flagSeverityHigh;
+
+  /// No description provided for @meetingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer meetings'**
+  String get meetingsTitle;
+
+  /// No description provided for @meetingsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No meetings yet'**
+  String get meetingsEmpty;
+
+  /// No description provided for @meetingsEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Start one at the village meeting point.'**
+  String get meetingsEmptyHelp;
+
+  /// No description provided for @meetingNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New meeting'**
+  String get meetingNew;
+
+  /// No description provided for @meetingTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic'**
+  String get meetingTopic;
+
+  /// No description provided for @meetingTopicHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What the meeting is about'**
+  String get meetingTopicHint;
+
+  /// No description provided for @meetingNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting notes'**
+  String get meetingNotes;
+
+  /// No description provided for @meetingStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start meeting'**
+  String get meetingStart;
+
+  /// No description provided for @meetingAttendance.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendance'**
+  String get meetingAttendance;
+
+  /// No description provided for @meetingAttendees.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} present'**
+  String meetingAttendees(int count);
+
+  /// No description provided for @meetingAddByOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Add by OTP'**
+  String get meetingAddByOtp;
+
+  /// No description provided for @meetingAddByQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan farmer QR'**
+  String get meetingAddByQr;
+
+  /// No description provided for @meetingOtpSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Code sent to {phone}'**
+  String meetingOtpSent(String phone);
+
+  /// No description provided for @meetingOtpNeedsNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP needs a network connection. Use the QR instead.'**
+  String get meetingOtpNeedsNetwork;
+
+  /// No description provided for @meetingFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish meeting'**
+  String get meetingFinish;
+
+  /// No description provided for @meetingClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get meetingClosed;
+
+  /// No description provided for @meetingQrInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That QR is not a farmer attendance code.'**
+  String get meetingQrInvalid;
+
+  /// No description provided for @meetingAlreadyPresent.
+  ///
+  /// In en, this message translates to:
+  /// **'That farmer is already on the list.'**
+  String get meetingAlreadyPresent;
+
+  /// No description provided for @demoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo plots'**
+  String get demoTitle;
+
+  /// No description provided for @demoEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No demo plots yet'**
+  String get demoEmpty;
+
+  /// No description provided for @demoEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Register one on a farmer\'\'s crop plot.'**
+  String get demoEmptyHelp;
+
+  /// No description provided for @demoNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New demo plot'**
+  String get demoNew;
+
+  /// No description provided for @demoTreatment.
+  ///
+  /// In en, this message translates to:
+  /// **'Product or treatment'**
+  String get demoTreatment;
+
+  /// No description provided for @demoBaseline.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare with'**
+  String get demoBaseline;
+
+  /// No description provided for @demoBaselinePractice.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer practice'**
+  String get demoBaselinePractice;
+
+  /// No description provided for @demoBaselineComparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison plot'**
+  String get demoBaselineComparison;
+
+  /// No description provided for @demoStatusCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered'**
+  String get demoStatusCreated;
+
+  /// No description provided for @demoStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get demoStatusActive;
+
+  /// No description provided for @demoStatusHarvested.
+  ///
+  /// In en, this message translates to:
+  /// **'Harvested'**
+  String get demoStatusHarvested;
+
+  /// No description provided for @demoStatusReported.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported'**
+  String get demoStatusReported;
+
+  /// No description provided for @demoStageSown.
+  ///
+  /// In en, this message translates to:
+  /// **'Sowing'**
+  String get demoStageSown;
+
+  /// No description provided for @demoStageVegetative.
+  ///
+  /// In en, this message translates to:
+  /// **'Vegetative'**
+  String get demoStageVegetative;
+
+  /// No description provided for @demoStageFlowering.
+  ///
+  /// In en, this message translates to:
+  /// **'Flowering'**
+  String get demoStageFlowering;
+
+  /// No description provided for @demoStageFruiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Fruiting'**
+  String get demoStageFruiting;
+
+  /// No description provided for @demoStageMaturity.
+  ///
+  /// In en, this message translates to:
+  /// **'Maturity'**
+  String get demoStageMaturity;
+
+  /// No description provided for @demoStageHarvest.
+  ///
+  /// In en, this message translates to:
+  /// **'Harvest'**
+  String get demoStageHarvest;
+
+  /// No description provided for @demoAddObservation.
+  ///
+  /// In en, this message translates to:
+  /// **'Add stage observation'**
+  String get demoAddObservation;
+
+  /// No description provided for @demoObservationNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Observation'**
+  String get demoObservationNote;
+
+  /// No description provided for @demoSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Side'**
+  String get demoSide;
+
+  /// No description provided for @demoSideDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo'**
+  String get demoSideDemo;
+
+  /// No description provided for @demoSideBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get demoSideBoth;
+
+  /// No description provided for @demoTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add stage photo'**
+  String get demoTakePhoto;
+
+  /// No description provided for @demoEnterYield.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter yield'**
+  String get demoEnterYield;
+
+  /// No description provided for @demoYieldDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo yield (kg/acre)'**
+  String get demoYieldDemo;
+
+  /// No description provided for @demoYieldPractice.
+  ///
+  /// In en, this message translates to:
+  /// **'Farmer practice yield (kg/acre)'**
+  String get demoYieldPractice;
+
+  /// No description provided for @demoYieldGain.
+  ///
+  /// In en, this message translates to:
+  /// **'{pct}% more than farmer practice'**
+  String demoYieldGain(String pct);
+
+  /// No description provided for @demoStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start demo'**
+  String get demoStart;
+
+  /// No description provided for @demoReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark reported'**
+  String get demoReport;
+
+  /// No description provided for @demoComparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo vs farmer practice'**
+  String get demoComparison;
 }
 
 class _CoreLocalizationsDelegate

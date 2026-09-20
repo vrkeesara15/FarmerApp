@@ -4,11 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../router.dart';
+import '../session.dart';
 
 /// A63 Profile and settings: language, theme (Light/Sunlight) and the sync
 /// row (status pill, "Sync now", opens A64 Sync details).
 ///
-/// The "Log out" row arrives with the session work.
+/// It is also the "Me" hub: A13 inbox, A60 performance, A61 travel
+/// allowance and A62 my flags hang off it, plus A35 meetings and A36 demo
+/// plots.
 class SettingsScreen extends ConsumerWidget {
   /// Creates the screen.
   const SettingsScreen({super.key});
@@ -115,7 +118,115 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
             ],
+            const SizedBox(height: Tokens.space4),
+            Text(l10n.meSectionTitle, style: app.text.heading),
+            const SizedBox(height: Tokens.space2),
+            _MeTile(
+              itemKey: const Key('me-inbox'),
+              icon: Icons.notifications_none_outlined,
+              title: l10n.inboxTitle,
+              badge: ref.watch(unreadCountProvider),
+              route: AppRoutes.inbox,
+            ),
+            _MeTile(
+              itemKey: const Key('me-beat'),
+              icon: Icons.map_outlined,
+              title: l10n.beatTitle,
+              route: AppRoutes.beat,
+            ),
+            _MeTile(
+              itemKey: const Key('me-performance'),
+              icon: Icons.insights_outlined,
+              title: l10n.performanceTitle,
+              route: AppRoutes.performance,
+            ),
+            _MeTile(
+              itemKey: const Key('me-travel'),
+              icon: Icons.directions_bike_outlined,
+              title: l10n.travelTitle,
+              route: AppRoutes.travel,
+            ),
+            _MeTile(
+              itemKey: const Key('me-flags'),
+              icon: Icons.flag_outlined,
+              title: l10n.flagsTitle,
+              route: AppRoutes.myFlags,
+            ),
+            _MeTile(
+              itemKey: const Key('me-meetings'),
+              icon: Icons.groups_outlined,
+              title: l10n.meetingsTitle,
+              route: AppRoutes.meetings,
+            ),
+            _MeTile(
+              itemKey: const Key('me-demo-plots'),
+              icon: Icons.science_outlined,
+              title: l10n.demoTitle,
+              route: AppRoutes.demoPlots,
+            ),
+            const SizedBox(height: Tokens.space3),
+            Material(
+              color: app.palette.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(Tokens.radiusCard),
+                side: app.borderSide,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
+                key: const Key('logout-setting'),
+                leading: Icon(Icons.logout, color: app.palette.statusDanger),
+                title: Text(l10n.settingsLogOut, style: app.text.label),
+                subtitle: Text(l10n.settingsLogOutHelp, style: app.text.body),
+                onTap: () async {
+                  await signOutMitra(ref);
+                  if (context.mounted) context.go(AppRoutes.phone);
+                },
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MeTile extends ConsumerWidget {
+  const _MeTile({
+    required this.itemKey,
+    required this.icon,
+    required this.title,
+    required this.route,
+    this.badge = 0,
+  });
+
+  final Key itemKey;
+  final IconData icon;
+  final String title;
+  final String route;
+  final int badge;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final app = context.app;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Tokens.space2),
+      child: Material(
+        color: app.palette.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Tokens.radiusCard),
+          side: app.borderSide,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          key: itemKey,
+          leading: Badge(
+            isLabelVisible: badge > 0,
+            label: Text('$badge'),
+            child: Icon(icon, color: app.palette.primary),
+          ),
+          title: Text(title, style: app.text.label),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push(route),
         ),
       ),
     );

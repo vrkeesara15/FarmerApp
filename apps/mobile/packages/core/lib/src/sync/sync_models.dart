@@ -69,6 +69,9 @@ abstract final class SyncEntities {
   };
 
   /// Entities with a local table and outbox support.
+  ///
+  /// The M7 officer entities (FieldEntities) have no typed table: they land
+  /// in `sync_docs` through the default branch of [LocalEntities].
   static const Set<String> writable = <String>{
     farmer,
     farm,
@@ -83,6 +86,15 @@ abstract final class SyncEntities {
     order,
     payment,
     diagnosis,
+    // M7 field P1 (docs/prs/M7-field-p1-api.md "Sync").
+    'notification',
+    'track_gap',
+    'beat_plan',
+    'travel_claim',
+    'demo_plot',
+    'demo_observation',
+    'farmer_meeting',
+    'meeting_attendance',
   };
 }
 

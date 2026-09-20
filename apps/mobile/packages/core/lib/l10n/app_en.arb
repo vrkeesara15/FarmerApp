@@ -985,7 +985,6 @@
   "visitPhotosHelp": "In-app camera only. Take at least one photo at the farm.",
   "visitNotesLabel": "Notes",
   "visitNotesHint": "What did you observe or advise?",
-  "visitVoiceInputSoon": "Voice input arrives in a later update",
   "visitCropStageLabel": "Crop stage",
   "cropStageSown": "Sown",
   "cropStageMaturity": "Maturity",
@@ -2929,5 +2928,291 @@
   "@kisanDeleteStatusRejected": {
     "description": "FM-015 deletion ticket status rejected"
   },
-  "cropDoctorNotOnPhone": "This crop check is not on this phone"
+  "cropDoctorNotOnPhone": "This crop check is not on this phone",
+  "voiceStart": "Speak",
+  "@voiceStart": {
+    "description": "FA-005 microphone button next to a free-text field"
+  },
+  "voiceStop": "Stop",
+  "voiceListening": "Listening…",
+  "voiceUnavailable": "This phone has no voice typing. You can type instead.",
+  "@voiceUnavailable": {
+    "description": "FA-005: dictation is never required"
+  },
+  "fieldAsOf": "As of {time}",
+  "@fieldAsOf": {
+    "description": "Freshness of a cached officer view",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "fieldOfflineCached": "Showing the last synced copy.",
+  "fieldPendingSync": "Will sync",
+  "meSectionTitle": "My work",
+  "settingsLogOut": "Log out",
+  "settingsLogOutHelp": "You will need your phone and an OTP to sign in again.",
+  "inboxTitle": "Notifications",
+  "inboxEmpty": "No notifications",
+  "inboxEmptyHelp": "Visit confirmations, orders and approvals show up here.",
+  "inboxMarkAllRead": "Mark all read",
+  "inboxUnread": "{count} unread",
+  "@inboxUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "navInbox": "Inbox",
+  "notifBeatPlanReadyTitle": "Today''s beat plan is ready",
+  "@notifBeatPlanReadyTitle": {
+    "description": "FA-007 notification.beat_plan_ready.title"
+  },
+  "notifBeatPlanReadyBody": "Open it to see today''s farmers.",
+  "notifOrderStatusTitle": "Order update",
+  "notifOrderStatusBody": "The store changed the status of an order.",
+  "notifCreditApprovalTitle": "Credit decision",
+  "notifCreditApprovalApproved": "The credit sale was approved.",
+  "notifCreditApprovalRejected": "The credit sale was not approved.",
+  "notifTravelClaimSubmittedTitle": "New expense claim",
+  "notifTravelClaimSubmittedBody": "An officer submitted an expense claim.",
+  "notifTravelClaimDecidedTitle": "Expense claim decision",
+  "notifTravelClaimApproved": "Your claim was approved.",
+  "notifTravelClaimRejected": "Your claim was not approved.",
+  "notifFlagTitle": "A flag about your work",
+  "notifFlagBody": "Open My flags to add your explanation.",
+  "notifDutyAutoEndedBody": "Your duty was ended automatically.",
+  "notifDiagnosisTitle": "Crop check update",
+  "notifDiagnosisBody": "An agronomist reviewed a crop check.",
+  "notifVisitConfirmTitle": "Visit confirmation",
+  "notifVisitConfirmBody": "A farmer confirmation is waiting.",
+  "notifGenericTitle": "Update",
+  "notifGenericBody": "Open to see the details.",
+  "beatTitle": "Today''s beat",
+  "beatEmpty": "No beat plan yet",
+  "beatEmptyHelp": "The plan arrives at 6:00 each morning. You can add farmers yourself.",
+  "beatTarget": "{done} of {target} visited",
+  "@beatTarget": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "beatReasonFollowUp": "Follow-up due",
+  "beatReasonPestAlert": "Pest alert",
+  "beatReasonCreditDue": "Credit due",
+  "beatReasonDemoStage": "Demo stage due",
+  "beatShowMap": "Map",
+  "beatShowList": "List",
+  "beatAddVillage": "Add village",
+  "beatRemove": "Remove from beat",
+  "beatReorderHint": "Press and hold a card to reorder",
+  "beatVillageKind": "Village",
+  "myDayGapAddReason": "Add reason",
+  "myDayGapSheetTitle": "Why is there a gap?",
+  "myDayGapReasonNetwork": "No network or GPS",
+  "myDayGapReasonBreak": "Personal break",
+  "myDayGapReasonVehicle": "Vehicle trouble",
+  "myDayGapReasonOther": "Other",
+  "myDayGapNoteLabel": "Note",
+  "myDayGapNoteHint": "Say what happened",
+  "myDayGapRange": "{start} – {end} · {minutes} min",
+  "@myDayGapRange": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "myDayGapReasonSaved": "Reason saved. It will sync.",
+  "myDayManagerSeesReasons": "Your cluster head sees these reasons.",
+  "myDayNoGaps": "No gaps today",
+  "myDayStops": "{count} stops",
+  "@myDayStops": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "myDayVisitPins": "{count} visits",
+  "@myDayVisitPins": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "myDayKmEstimated": "Estimated on this phone",
+  "myDayKmProcessed": "Processed by the server",
+  "performanceTitle": "My performance",
+  "perfTargetsVsActual": "Targets vs actual",
+  "perfNewFarmers": "New farmers",
+  "perfSales": "Sales",
+  "perfIncentive": "Incentive earned",
+  "perfIncentivePending": "Shown once your company activates the incentive rules.",
+  "perfTrendTitle": "Verified visits, last 14 days",
+  "perfOfTarget": "{actual} of {target}",
+  "@perfOfTarget": {
+    "placeholders": {
+      "actual": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "perfNoTarget": "No target set",
+  "perfRank": "Rank {rank} in your cluster",
+  "@perfRank": {
+    "placeholders": {
+      "rank": {
+        "type": "int"
+      }
+    }
+  },
+  "perfConfirmationRate": "Farmer confirmations",
+  "perfEmpty": "Nothing this month yet",
+  "perfEmptyHelp": "Numbers appear once your visits and orders sync.",
+  "travelTitle": "Travel allowance",
+  "travelKmByDay": "Km by day",
+  "travelTaTotal": "Allowance from km",
+  "travelPayable": "Payable so far",
+  "travelCapped": "Capped at {cap} km",
+  "@travelCapped": {
+    "placeholders": {
+      "cap": {
+        "type": "int"
+      }
+    }
+  },
+  "travelDayKm": "{km} km",
+  "@travelDayKm": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "travelClaimsTitle": "Expense claims",
+  "travelAddClaim": "Add expense",
+  "travelClaimType": "Type",
+  "travelClaimTypeFuel": "Fuel",
+  "travelClaimTypeBus": "Bus fare",
+  "travelClaimTypeOther": "Other",
+  "travelClaimAmount": "Amount",
+  "travelClaimDate": "Date of expense",
+  "travelClaimNote": "Note",
+  "travelClaimReceipt": "Receipt photo",
+  "travelClaimTakePhoto": "Take receipt photo",
+  "travelClaimReceiptRequired": "A receipt photo is required.",
+  "travelClaimAmountRequired": "Enter an amount.",
+  "travelClaimQueued": "Claim saved. It will sync.",
+  "travelClaimStatusQueued": "Waiting to sync",
+  "travelClaimStatusSubmitted": "With your cluster head",
+  "travelClaimStatusApproved": "Approved",
+  "travelClaimStatusRejected": "Not approved",
+  "travelEmpty": "No travel this month yet",
+  "travelEmptyHelp": "Go on duty; km and allowance appear here.",
+  "flagsTitle": "My flags",
+  "flagsOpenSection": "Open",
+  "flagsResolvedSection": "Resolved",
+  "flagsEmpty": "No flags about your work",
+  "flagsEmptyHelp": "You only ever see flags about yourself.",
+  "flagAddExplanation": "Add an explanation",
+  "flagExplanationLabel": "Your explanation",
+  "flagExplanationHint": "Say what happened that day",
+  "flagExplanationSent": "Sent to your cluster head.",
+  "flagExplanationNeedsNetwork": "You need a network connection to send an explanation.",
+  "flagOutcomeTitle": "Outcome",
+  "flagOutcomeHidden": "The outcome appears once this flag is resolved.",
+  "flagStateOpen": "Open",
+  "flagStateInReview": "In review",
+  "flagStateResolved": "Resolved",
+  "flagSeverityLow": "Low",
+  "flagSeverityMedium": "Medium",
+  "flagSeverityHigh": "High",
+  "meetingsTitle": "Farmer meetings",
+  "meetingsEmpty": "No meetings yet",
+  "meetingsEmptyHelp": "Start one at the village meeting point.",
+  "meetingNew": "New meeting",
+  "meetingTopic": "Topic",
+  "meetingTopicHint": "What the meeting is about",
+  "meetingNotes": "Meeting notes",
+  "meetingStart": "Start meeting",
+  "meetingAttendance": "Attendance",
+  "meetingAttendees": "{count} present",
+  "@meetingAttendees": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "meetingAddByOtp": "Add by OTP",
+  "meetingAddByQr": "Scan farmer QR",
+  "meetingOtpSent": "Code sent to {phone}",
+  "@meetingOtpSent": {
+    "placeholders": {
+      "phone": {
+        "type": "String"
+      }
+    }
+  },
+  "meetingOtpNeedsNetwork": "OTP needs a network connection. Use the QR instead.",
+  "meetingFinish": "Finish meeting",
+  "meetingClosed": "Closed",
+  "meetingQrInvalid": "That QR is not a farmer attendance code.",
+  "meetingAlreadyPresent": "That farmer is already on the list.",
+  "demoTitle": "Demo plots",
+  "demoEmpty": "No demo plots yet",
+  "demoEmptyHelp": "Register one on a farmer''s crop plot.",
+  "demoNew": "New demo plot",
+  "demoTreatment": "Product or treatment",
+  "demoBaseline": "Compare with",
+  "demoBaselinePractice": "Farmer practice",
+  "demoBaselineComparison": "Comparison plot",
+  "demoStatusCreated": "Registered",
+  "demoStatusActive": "Running",
+  "demoStatusHarvested": "Harvested",
+  "demoStatusReported": "Reported",
+  "demoStageSown": "Sowing",
+  "demoStageVegetative": "Vegetative",
+  "demoStageFlowering": "Flowering",
+  "demoStageFruiting": "Fruiting",
+  "demoStageMaturity": "Maturity",
+  "demoStageHarvest": "Harvest",
+  "demoAddObservation": "Add stage observation",
+  "demoObservationNote": "Observation",
+  "demoSide": "Side",
+  "demoSideDemo": "Demo",
+  "demoSideBoth": "Both",
+  "demoTakePhoto": "Add stage photo",
+  "demoEnterYield": "Enter yield",
+  "demoYieldDemo": "Demo yield (kg/acre)",
+  "demoYieldPractice": "Farmer practice yield (kg/acre)",
+  "demoYieldGain": "{pct}% more than farmer practice",
+  "@demoYieldGain": {
+    "placeholders": {
+      "pct": {
+        "type": "String"
+      }
+    }
+  },
+  "demoStart": "Start demo",
+  "demoReport": "Mark reported",
+  "demoComparison": "Demo vs farmer practice"
 }

@@ -24,6 +24,7 @@ class AppTextField extends StatelessWidget {
     this.keyboardType,
     this.textInputAction,
     this.maxLength,
+    this.maxLines = 1,
     this.onChanged,
     this.onSubmitted,
     this.prefixIcon,
@@ -63,6 +64,9 @@ class AppTextField extends StatelessWidget {
   /// Maximum length (10 when [indiaPhone]).
   final int? maxLength;
 
+  /// Lines the input grows to (notes fields pass 3).
+  final int maxLines;
+
   /// Change callback.
   final ValueChanged<String>? onChanged;
 
@@ -97,6 +101,7 @@ class AppTextField extends StatelessWidget {
           keyboardType: indiaPhone ? TextInputType.phone : keyboardType,
           textInputAction: textInputAction,
           maxLength: effectiveMax,
+          maxLines: indiaPhone ? 1 : maxLines,
           inputFormatters: indiaPhone
               ? <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly]
               : null,

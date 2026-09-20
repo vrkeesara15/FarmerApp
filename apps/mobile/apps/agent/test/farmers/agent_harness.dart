@@ -49,6 +49,18 @@ class AgentDeps {
     );
   }
 
+  /// M7 officer endpoints (A11, A12, A13, A35, A36, A60, A61, A62).
+  final FakeFieldApi field = FakeFieldApi();
+
+  /// A35 QR scans (queue codes on it).
+  final FakeBarcodeScanner scanner = FakeBarcodeScanner();
+
+  /// FA-007 push (foreground messages, taps, token).
+  final FakePushService push = FakePushService();
+
+  /// FA-005 dictation.
+  final FakeSpeechService speech = FakeSpeechService();
+
   /// FA-019 scouting: the live camera (queue shots on it).
   final FakeGuidedCamera guidedCamera = FakeGuidedCamera();
 
@@ -171,6 +183,10 @@ class AgentDeps {
     dutyTickerProvider.overrideWithValue(const Stream<void>.empty()),
     visitTickerProvider.overrideWithValue(const Stream<void>.empty()),
     visitConfirmApiProvider.overrideWithValue(confirmApi),
+    fieldApiProvider.overrideWithValue(field),
+    pushServiceProvider.overrideWithValue(push),
+    speechServiceProvider.overrideWithValue(speech),
+    barcodeScannerProvider.overrideWithValue(scanner),
     catalogApiProvider.overrideWithValue(catalogApi),
     paymentsApiProvider.overrideWithValue(payApi),
     khataApiProvider.overrideWithValue(khataApi),
@@ -226,6 +242,7 @@ class AgentDeps {
 
   /// Closes everything.
   Future<void> dispose() async {
+    await push.dispose();
     await location.dispose();
     await sampler.dispose();
     await conditions.dispose();

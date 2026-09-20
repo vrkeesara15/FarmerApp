@@ -1639,9 +1639,6 @@ class CoreLocalizationsEn extends CoreLocalizations {
   String get visitNotesHint => 'What did you observe or advise?';
 
   @override
-  String get visitVoiceInputSoon => 'Voice input arrives in a later update';
-
-  @override
   String get visitCropStageLabel => 'Crop stage';
 
   @override
@@ -4117,4 +4114,560 @@ class CoreLocalizationsEn extends CoreLocalizations {
 
   @override
   String get cropDoctorNotOnPhone => 'This crop check is not on this phone';
+
+  @override
+  String get voiceStart => 'Speak';
+
+  @override
+  String get voiceStop => 'Stop';
+
+  @override
+  String get voiceListening => 'Listening…';
+
+  @override
+  String get voiceUnavailable =>
+      'This phone has no voice typing. You can type instead.';
+
+  @override
+  String fieldAsOf(String time) {
+    return 'As of $time';
+  }
+
+  @override
+  String get fieldOfflineCached => 'Showing the last synced copy.';
+
+  @override
+  String get fieldPendingSync => 'Will sync';
+
+  @override
+  String get meSectionTitle => 'My work';
+
+  @override
+  String get settingsLogOut => 'Log out';
+
+  @override
+  String get settingsLogOutHelp =>
+      'You will need your phone and an OTP to sign in again.';
+
+  @override
+  String get inboxTitle => 'Notifications';
+
+  @override
+  String get inboxEmpty => 'No notifications';
+
+  @override
+  String get inboxEmptyHelp =>
+      'Visit confirmations, orders and approvals show up here.';
+
+  @override
+  String get inboxMarkAllRead => 'Mark all read';
+
+  @override
+  String inboxUnread(int count) {
+    return '$count unread';
+  }
+
+  @override
+  String get navInbox => 'Inbox';
+
+  @override
+  String get notifBeatPlanReadyTitle => 'Today\'s beat plan is ready';
+
+  @override
+  String get notifBeatPlanReadyBody => 'Open it to see today\'s farmers.';
+
+  @override
+  String get notifOrderStatusTitle => 'Order update';
+
+  @override
+  String get notifOrderStatusBody =>
+      'The store changed the status of an order.';
+
+  @override
+  String get notifCreditApprovalTitle => 'Credit decision';
+
+  @override
+  String get notifCreditApprovalApproved => 'The credit sale was approved.';
+
+  @override
+  String get notifCreditApprovalRejected => 'The credit sale was not approved.';
+
+  @override
+  String get notifTravelClaimSubmittedTitle => 'New expense claim';
+
+  @override
+  String get notifTravelClaimSubmittedBody =>
+      'An officer submitted an expense claim.';
+
+  @override
+  String get notifTravelClaimDecidedTitle => 'Expense claim decision';
+
+  @override
+  String get notifTravelClaimApproved => 'Your claim was approved.';
+
+  @override
+  String get notifTravelClaimRejected => 'Your claim was not approved.';
+
+  @override
+  String get notifFlagTitle => 'A flag about your work';
+
+  @override
+  String get notifFlagBody => 'Open My flags to add your explanation.';
+
+  @override
+  String get notifDutyAutoEndedBody => 'Your duty was ended automatically.';
+
+  @override
+  String get notifDiagnosisTitle => 'Crop check update';
+
+  @override
+  String get notifDiagnosisBody => 'An agronomist reviewed a crop check.';
+
+  @override
+  String get notifVisitConfirmTitle => 'Visit confirmation';
+
+  @override
+  String get notifVisitConfirmBody => 'A farmer confirmation is waiting.';
+
+  @override
+  String get notifGenericTitle => 'Update';
+
+  @override
+  String get notifGenericBody => 'Open to see the details.';
+
+  @override
+  String get beatTitle => 'Today\'s beat';
+
+  @override
+  String get beatEmpty => 'No beat plan yet';
+
+  @override
+  String get beatEmptyHelp =>
+      'The plan arrives at 6:00 each morning. You can add farmers yourself.';
+
+  @override
+  String beatTarget(int done, int target) {
+    return '$done of $target visited';
+  }
+
+  @override
+  String get beatReasonFollowUp => 'Follow-up due';
+
+  @override
+  String get beatReasonPestAlert => 'Pest alert';
+
+  @override
+  String get beatReasonCreditDue => 'Credit due';
+
+  @override
+  String get beatReasonDemoStage => 'Demo stage due';
+
+  @override
+  String get beatShowMap => 'Map';
+
+  @override
+  String get beatShowList => 'List';
+
+  @override
+  String get beatAddVillage => 'Add village';
+
+  @override
+  String get beatRemove => 'Remove from beat';
+
+  @override
+  String get beatReorderHint => 'Press and hold a card to reorder';
+
+  @override
+  String get beatVillageKind => 'Village';
+
+  @override
+  String get myDayGapAddReason => 'Add reason';
+
+  @override
+  String get myDayGapSheetTitle => 'Why is there a gap?';
+
+  @override
+  String get myDayGapReasonNetwork => 'No network or GPS';
+
+  @override
+  String get myDayGapReasonBreak => 'Personal break';
+
+  @override
+  String get myDayGapReasonVehicle => 'Vehicle trouble';
+
+  @override
+  String get myDayGapReasonOther => 'Other';
+
+  @override
+  String get myDayGapNoteLabel => 'Note';
+
+  @override
+  String get myDayGapNoteHint => 'Say what happened';
+
+  @override
+  String myDayGapRange(String start, String end, int minutes) {
+    return '$start – $end · $minutes min';
+  }
+
+  @override
+  String get myDayGapReasonSaved => 'Reason saved. It will sync.';
+
+  @override
+  String get myDayManagerSeesReasons => 'Your cluster head sees these reasons.';
+
+  @override
+  String get myDayNoGaps => 'No gaps today';
+
+  @override
+  String myDayStops(int count) {
+    return '$count stops';
+  }
+
+  @override
+  String myDayVisitPins(int count) {
+    return '$count visits';
+  }
+
+  @override
+  String get myDayKmEstimated => 'Estimated on this phone';
+
+  @override
+  String get myDayKmProcessed => 'Processed by the server';
+
+  @override
+  String get performanceTitle => 'My performance';
+
+  @override
+  String get perfTargetsVsActual => 'Targets vs actual';
+
+  @override
+  String get perfNewFarmers => 'New farmers';
+
+  @override
+  String get perfSales => 'Sales';
+
+  @override
+  String get perfIncentive => 'Incentive earned';
+
+  @override
+  String get perfIncentivePending =>
+      'Shown once your company activates the incentive rules.';
+
+  @override
+  String get perfTrendTitle => 'Verified visits, last 14 days';
+
+  @override
+  String perfOfTarget(String actual, String target) {
+    return '$actual of $target';
+  }
+
+  @override
+  String get perfNoTarget => 'No target set';
+
+  @override
+  String perfRank(int rank) {
+    return 'Rank $rank in your cluster';
+  }
+
+  @override
+  String get perfConfirmationRate => 'Farmer confirmations';
+
+  @override
+  String get perfEmpty => 'Nothing this month yet';
+
+  @override
+  String get perfEmptyHelp =>
+      'Numbers appear once your visits and orders sync.';
+
+  @override
+  String get travelTitle => 'Travel allowance';
+
+  @override
+  String get travelKmByDay => 'Km by day';
+
+  @override
+  String get travelTaTotal => 'Allowance from km';
+
+  @override
+  String get travelPayable => 'Payable so far';
+
+  @override
+  String travelCapped(int cap) {
+    return 'Capped at $cap km';
+  }
+
+  @override
+  String travelDayKm(String km) {
+    return '$km km';
+  }
+
+  @override
+  String get travelClaimsTitle => 'Expense claims';
+
+  @override
+  String get travelAddClaim => 'Add expense';
+
+  @override
+  String get travelClaimType => 'Type';
+
+  @override
+  String get travelClaimTypeFuel => 'Fuel';
+
+  @override
+  String get travelClaimTypeBus => 'Bus fare';
+
+  @override
+  String get travelClaimTypeOther => 'Other';
+
+  @override
+  String get travelClaimAmount => 'Amount';
+
+  @override
+  String get travelClaimDate => 'Date of expense';
+
+  @override
+  String get travelClaimNote => 'Note';
+
+  @override
+  String get travelClaimReceipt => 'Receipt photo';
+
+  @override
+  String get travelClaimTakePhoto => 'Take receipt photo';
+
+  @override
+  String get travelClaimReceiptRequired => 'A receipt photo is required.';
+
+  @override
+  String get travelClaimAmountRequired => 'Enter an amount.';
+
+  @override
+  String get travelClaimQueued => 'Claim saved. It will sync.';
+
+  @override
+  String get travelClaimStatusQueued => 'Waiting to sync';
+
+  @override
+  String get travelClaimStatusSubmitted => 'With your cluster head';
+
+  @override
+  String get travelClaimStatusApproved => 'Approved';
+
+  @override
+  String get travelClaimStatusRejected => 'Not approved';
+
+  @override
+  String get travelEmpty => 'No travel this month yet';
+
+  @override
+  String get travelEmptyHelp => 'Go on duty; km and allowance appear here.';
+
+  @override
+  String get flagsTitle => 'My flags';
+
+  @override
+  String get flagsOpenSection => 'Open';
+
+  @override
+  String get flagsResolvedSection => 'Resolved';
+
+  @override
+  String get flagsEmpty => 'No flags about your work';
+
+  @override
+  String get flagsEmptyHelp => 'You only ever see flags about yourself.';
+
+  @override
+  String get flagAddExplanation => 'Add an explanation';
+
+  @override
+  String get flagExplanationLabel => 'Your explanation';
+
+  @override
+  String get flagExplanationHint => 'Say what happened that day';
+
+  @override
+  String get flagExplanationSent => 'Sent to your cluster head.';
+
+  @override
+  String get flagExplanationNeedsNetwork =>
+      'You need a network connection to send an explanation.';
+
+  @override
+  String get flagOutcomeTitle => 'Outcome';
+
+  @override
+  String get flagOutcomeHidden =>
+      'The outcome appears once this flag is resolved.';
+
+  @override
+  String get flagStateOpen => 'Open';
+
+  @override
+  String get flagStateInReview => 'In review';
+
+  @override
+  String get flagStateResolved => 'Resolved';
+
+  @override
+  String get flagSeverityLow => 'Low';
+
+  @override
+  String get flagSeverityMedium => 'Medium';
+
+  @override
+  String get flagSeverityHigh => 'High';
+
+  @override
+  String get meetingsTitle => 'Farmer meetings';
+
+  @override
+  String get meetingsEmpty => 'No meetings yet';
+
+  @override
+  String get meetingsEmptyHelp => 'Start one at the village meeting point.';
+
+  @override
+  String get meetingNew => 'New meeting';
+
+  @override
+  String get meetingTopic => 'Topic';
+
+  @override
+  String get meetingTopicHint => 'What the meeting is about';
+
+  @override
+  String get meetingNotes => 'Meeting notes';
+
+  @override
+  String get meetingStart => 'Start meeting';
+
+  @override
+  String get meetingAttendance => 'Attendance';
+
+  @override
+  String meetingAttendees(int count) {
+    return '$count present';
+  }
+
+  @override
+  String get meetingAddByOtp => 'Add by OTP';
+
+  @override
+  String get meetingAddByQr => 'Scan farmer QR';
+
+  @override
+  String meetingOtpSent(String phone) {
+    return 'Code sent to $phone';
+  }
+
+  @override
+  String get meetingOtpNeedsNetwork =>
+      'OTP needs a network connection. Use the QR instead.';
+
+  @override
+  String get meetingFinish => 'Finish meeting';
+
+  @override
+  String get meetingClosed => 'Closed';
+
+  @override
+  String get meetingQrInvalid => 'That QR is not a farmer attendance code.';
+
+  @override
+  String get meetingAlreadyPresent => 'That farmer is already on the list.';
+
+  @override
+  String get demoTitle => 'Demo plots';
+
+  @override
+  String get demoEmpty => 'No demo plots yet';
+
+  @override
+  String get demoEmptyHelp => 'Register one on a farmer\'s crop plot.';
+
+  @override
+  String get demoNew => 'New demo plot';
+
+  @override
+  String get demoTreatment => 'Product or treatment';
+
+  @override
+  String get demoBaseline => 'Compare with';
+
+  @override
+  String get demoBaselinePractice => 'Farmer practice';
+
+  @override
+  String get demoBaselineComparison => 'Comparison plot';
+
+  @override
+  String get demoStatusCreated => 'Registered';
+
+  @override
+  String get demoStatusActive => 'Running';
+
+  @override
+  String get demoStatusHarvested => 'Harvested';
+
+  @override
+  String get demoStatusReported => 'Reported';
+
+  @override
+  String get demoStageSown => 'Sowing';
+
+  @override
+  String get demoStageVegetative => 'Vegetative';
+
+  @override
+  String get demoStageFlowering => 'Flowering';
+
+  @override
+  String get demoStageFruiting => 'Fruiting';
+
+  @override
+  String get demoStageMaturity => 'Maturity';
+
+  @override
+  String get demoStageHarvest => 'Harvest';
+
+  @override
+  String get demoAddObservation => 'Add stage observation';
+
+  @override
+  String get demoObservationNote => 'Observation';
+
+  @override
+  String get demoSide => 'Side';
+
+  @override
+  String get demoSideDemo => 'Demo';
+
+  @override
+  String get demoSideBoth => 'Both';
+
+  @override
+  String get demoTakePhoto => 'Add stage photo';
+
+  @override
+  String get demoEnterYield => 'Enter yield';
+
+  @override
+  String get demoYieldDemo => 'Demo yield (kg/acre)';
+
+  @override
+  String get demoYieldPractice => 'Farmer practice yield (kg/acre)';
+
+  @override
+  String demoYieldGain(String pct) {
+    return '$pct% more than farmer practice';
+  }
+
+  @override
+  String get demoStart => 'Start demo';
+
+  @override
+  String get demoReport => 'Mark reported';
+
+  @override
+  String get demoComparison => 'Demo vs farmer practice';
 }
