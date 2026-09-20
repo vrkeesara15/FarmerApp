@@ -123,15 +123,16 @@ void main() {
       addTearDown(deps.dispose);
       final c = deps.container();
       addTearDown(c.dispose);
-      final registrar = c.read(pushRegistrarProvider);
+      final push = c.read(pushControllerProvider);
 
-      expect(await registrar.registerAfterLogin(), 'fcm-token-1');
+      expect(await push.signedIn(), PushRegistration.done);
+      expect(push.registeredToken, 'fcm-token-1');
       expect(deps.field.registeredTokens, <String>['fcm-token-1']);
 
-      await registrar.clear();
+      await push.signedOut();
       expect(deps.field.removedTokens, <String>['fcm-token-1']);
       expect(deps.push.deletes, 1);
-      expect(registrar.registeredToken, isNull);
+      expect(push.registeredToken, isNull);
     });
 
     test(
@@ -144,8 +145,8 @@ void main() {
         addTearDown(c.dispose);
 
         expect(
-          await c.read(pushRegistrarProvider).registerAfterLogin(),
-          isNull,
+          await c.read(pushControllerProvider).signedIn(),
+          PushRegistration.refused,
         );
         expect(deps.field.registeredTokens, isEmpty);
       },
@@ -158,9 +159,13 @@ void main() {
       final c = deps.container();
       addTearDown(c.dispose);
 
-      expect(await c.read(pushRegistrarProvider).registerAfterLogin(), isNull);
+      expect(
+        await c.read(pushControllerProvider).signedIn(),
+        PushRegistration.offline,
+      );
+      expect(deps.field.registeredTokens, isEmpty);
       // Clearing is best effort too: the server disables a dead token itself.
-      await c.read(pushRegistrarProvider).clear();
+      await c.read(pushControllerProvider).signedOut();
       expect(deps.push.deletes, 1);
     });
 
@@ -170,10 +175,10 @@ void main() {
       deps.field.inbox = inboxFixture();
       final c = deps.container();
       addTearDown(c.dispose);
-      final registrar = c.read(pushRegistrarProvider);
-      await registrar.listen();
+      final push = c.read(pushControllerProvider);
+      await push.listen();
 
-      deps.push.deliver(<String, String>{
+      deps.push.deliverData(<String, String>{
         'notification_id': 'notif-1',
         'kind': 'beat_plan_ready',
         'route': '/beat/$testDate',
@@ -188,19 +193,19 @@ void main() {
       final deps = AgentDeps();
       addTearDown(deps.dispose);
       final routes = <String>[];
-      final registrar = PushRegistrar(
-        push: deps.push,
-        api: deps.field,
+      final push = PushController(
+        service: deps.push,
+        registry: FieldPushRegistry(deps.field),
         onRoute: routes.add,
       );
-      addTearDown(registrar.dispose);
-      deps.push.initial = const PushMessage(<String, String>{
+      addTearDown(push.dispose);
+      deps.push.initial = PushMessage.fromData(const <String, String>{
         'route': '/visits/v1/confirm',
       });
-      await registrar.listen();
+      await push.listen();
       expect(routes, <String>['/visits/v1/confirm']);
 
-      deps.push.open(<String, String>{
+      deps.push.openData(<String, String>{
         'kind': 'flag_assigned',
         'route': '/flags/f1',
       });
@@ -210,7 +215,7 @@ void main() {
 
     test('a data message with no route falls back to the inbox', () {
       expect(
-        const PushMessage(<String, String>{'kind': 'unknown'}).route,
+        PushMessage.fromData(const <String, String>{'kind': 'unknown'}).route,
         PushMessage.inboxRoute,
       );
     });
@@ -227,7 +232,7 @@ void main() {
       await tester.pumpAndSettle();
       final c = deps.container();
       addTearDown(c.dispose);
-      await c.read(pushRegistrarProvider).registerAfterLogin();
+      await c.read(pushControllerProvider).signedIn();
 
       await tester.scrollUntilVisible(
         find.byKey(const Key('logout-setting')),

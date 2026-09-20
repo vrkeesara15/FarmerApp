@@ -8497,6 +8497,708 @@ abstract class CoreLocalizations {
   /// In en, this message translates to:
   /// **'Demo vs farmer practice'**
   String get demoComparison;
+
+  /// No description provided for @visitVoiceInputSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input arrives in a later update'**
+  String get visitVoiceInputSoon;
+
+  /// Farmer app F40 my crops (FM-003 / FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Add a crop'**
+  String get kisanAddCrop;
+
+  /// Farmer app F40 my crops (FM-003 / FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Crop calendar'**
+  String get kisanCropCalendar;
+
+  /// Farmer app F40 my crops (FM-003 / FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Weather'**
+  String get kisanWeather;
+
+  /// Farmer app F40 my crops (FM-003 / FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Pest alerts'**
+  String get kisanAlerts;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get kisanMessages;
+
+  /// Farmer app F41 add crop (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Add a crop'**
+  String get addCropTitle;
+
+  /// Farmer app F41 add crop (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the pictures. You do not need to type.'**
+  String get addCropHelp;
+
+  /// Farmer app F41 add crop (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Which crop did you sow?'**
+  String get addCropWhichCrop;
+
+  /// Farmer app F41 add crop (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Which farm?'**
+  String get addCropWhichFarm;
+
+  /// Farmer app F41 add crop (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'When did you sow it?'**
+  String get addCropWhenSown;
+
+  /// Farmer app F41 add crop (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'How do you water it?'**
+  String get addCropWater;
+
+  /// Farmer app F41 add crop (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'What soil is it?'**
+  String get addCropSoil;
+
+  /// Farmer app F41 add crop (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Save crop'**
+  String get addCropSave;
+
+  /// Farmer app F41 add crop (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Crop added. Your calendar is ready.'**
+  String get addCropSaved;
+
+  /// Farmer app F41 add crop (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Sown on {date}'**
+  String addCropSownOn(String date);
+
+  /// Farmer app F41 add crop (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Add your farm first'**
+  String get addCropNoFarm;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Crop calendar'**
+  String get calendarTitle;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Your tasks week by week. Tap the speaker to listen.'**
+  String get calendarHelp;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Week {week}'**
+  String calendarWeek(int week);
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Sown on {date}'**
+  String calendarSownOn(String date);
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Do it on {date}'**
+  String calendarDueOn(String date);
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Do it between {from} and {to}'**
+  String calendarDueBetween(String from, String to);
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Late'**
+  String get calendarLate;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Mark done'**
+  String get calendarMarkDone;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get calendarDone;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me'**
+  String get calendarRemindMe;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'No reminder'**
+  String get calendarReminderOff;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks yet'**
+  String get calendarNoTasks;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Add the sowing date and your tasks will come.'**
+  String get calendarNoTasksHelp;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Your calendar changed'**
+  String get calendarChangedTitle;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Sowing moved {days} days later, so {count} tasks moved too.'**
+  String calendarChangedLater(int days, int count);
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Sowing moved {days} days earlier, so {count} tasks moved too.'**
+  String calendarChangedEarlier(int days, int count);
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tasks changed.'**
+  String calendarChangedTasks(int count);
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'The work you already finished stays finished.'**
+  String get calendarChangedDoneKept;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get calendarGotIt;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {task}'**
+  String calendarNextTask(String task);
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'All tasks done'**
+  String get calendarAllDone;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this phone. It will be sent when you are online.'**
+  String get calendarSavedOffline;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Sow'**
+  String get taskTypeSow;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Water'**
+  String get taskTypeIrrigate;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Fertiliser'**
+  String get taskTypeFertilise;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Spray'**
+  String get taskTypeSpray;
+
+  /// Farmer app F42 crop calendar (FM-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Harvest'**
+  String get taskTypeHarvest;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Weather'**
+  String get weatherTitle;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Next 7 days'**
+  String get weatherSevenDays;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Rain {percent}%'**
+  String weatherRainChance(int percent);
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'{min}° to {max}°'**
+  String weatherTempRange(String min, String max);
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Wind {speed} km/h'**
+  String weatherWind(String speed);
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'When to spray'**
+  String get weatherSprayTitle;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Next 3 days'**
+  String get weatherSprayNextDays;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Good time to spray'**
+  String get weatherSprayGood;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Do not spray'**
+  String get weatherSprayAvoid;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'No good spray time in the next 3 days'**
+  String get weatherSprayNone;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'{from} to {to}'**
+  String weatherWindowTime(String from, String to);
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Rain is likely'**
+  String get weatherReasonRainLikely;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'It will rain'**
+  String get weatherReasonRain;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Wind is too strong'**
+  String get weatherReasonWindHigh;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Very hot'**
+  String get weatherCautionHeat;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Very humid'**
+  String get weatherCautionHumidityHigh;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Air is very dry'**
+  String get weatherCautionHumidityLow;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'This is advice only. Look at your field before you spray.'**
+  String get weatherAdviceOnly;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'No weather for your farm yet'**
+  String get weatherNone;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Your field officer can put your farm on the map.'**
+  String get weatherNoneHelp;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get weatherSkyClear;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Cloudy'**
+  String get weatherSkyCloudy;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Fog'**
+  String get weatherSkyFog;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Light rain'**
+  String get weatherSkyDrizzle;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Rain'**
+  String get weatherSkyRain;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy showers'**
+  String get weatherSkyShowers;
+
+  /// Farmer app F43 weather (FM-008)
+  ///
+  /// In en, this message translates to:
+  /// **'Thunderstorm'**
+  String get weatherSkyThunder;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Pest alerts'**
+  String get alertsTitle;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'No pest alerts in your district'**
+  String get alertsNone;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'We will tell you if a problem spreads near you.'**
+  String get alertsNoneHelp;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get alertSeverityHigh;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get alertSeverityMedium;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get alertSeverityLow;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'You grow this crop'**
+  String get alertGrowsCrop;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'{count} farmers affected'**
+  String alertFarmersAffected(int count);
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Week of {date}'**
+  String alertWeekOf(String date);
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'What to look for'**
+  String get alertLookForTitle;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'What to do'**
+  String get alertDoTitle;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo of my crop'**
+  String get alertCheckCrop;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'See products at the store'**
+  String get alertSeeProducts;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Hide this alert'**
+  String get alertDismiss;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Alert hidden'**
+  String get alertHidden;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Look under the leaves for insects or eggs'**
+  String get alertSignPestUnderLeaf;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Look for holes or chewed leaf edges'**
+  String get alertSignPestHoles;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Look for drooping or dying shoots'**
+  String get alertSignPestWilting;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Look for spots on the leaves'**
+  String get alertSignDiseaseSpots;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Look for white or grey powder on the leaves'**
+  String get alertSignDiseasePowder;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Look for rotting stems or fruit'**
+  String get alertSignDiseaseRot;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Look for yellow or pale leaves'**
+  String get alertSignDeficiencyColour;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Look for slow growth or small leaves'**
+  String get alertSignDeficiencyGrowth;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Look for weed patches between the plants'**
+  String get alertSignWeedPatches;
+
+  /// Farmer app F44 pest alerts (FM-009)
+  ///
+  /// In en, this message translates to:
+  /// **'Walk your field and look at 10 plants'**
+  String get alertSignWalkField;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get farmerInboxTitle;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get farmerInboxEmpty;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Crop check results, orders and alerts come here.'**
+  String get farmerInboxEmptyHelp;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get farmerInboxMarkAllRead;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'{count} new'**
+  String farmerInboxUnread(int count);
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Your crop check is ready'**
+  String get notifDiagnosisReadyTitle;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to see the problem and what to do.'**
+  String get notifDiagnosisReadyBody;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Our expert checked your photo'**
+  String get notifDiagnosisReviewedTitle;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'The answer was updated. Tap to read it.'**
+  String get notifDiagnosisReviewedBody;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'An expert is looking at your photo'**
+  String get notifDiagnosisExpertTitle;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'We will tell you within 24 hours.'**
+  String get notifDiagnosisExpertBody;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Your order moved on'**
+  String get farmerNotifOrderStatusTitle;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to see your order.'**
+  String get farmerNotifOrderStatusBody;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Pest alert in your district'**
+  String get notifOutbreakAlertTitle;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Check your field today.'**
+  String get notifOutbreakAlertBody;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'A farm task is due today'**
+  String get notifCropTaskReminderTitle;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to open your crop calendar.'**
+  String get notifCropTaskReminderBody;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Did your officer visit?'**
+  String get farmerNotifVisitConfirmTitle;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to answer yes or no.'**
+  String get farmerNotifVisitConfirmBody;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get farmerNotifGenericTitle;
+
+  /// Farmer app inbox (FA-007)
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to see it.'**
+  String get farmerNotifGenericBody;
 }
 
 class _CoreLocalizationsDelegate

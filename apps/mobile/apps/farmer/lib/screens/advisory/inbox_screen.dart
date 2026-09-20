@@ -21,11 +21,12 @@ class InboxScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final app = context.app;
     final l10n = CoreLocalizations.of(context);
-    final rows = ref.watch(inboxProvider).value ?? const <AppNotification>[];
+    final rows =
+        ref.watch(advisoryInboxProvider).value ?? const <AppNotification>[];
     final unread = rows.where((n) => n.unread).length;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.inboxTitle),
+        title: Text(l10n.farmerInboxTitle),
         actions: <Widget>[
           if (unread > 0)
             TextButton.icon(
@@ -33,7 +34,7 @@ class InboxScreen extends ConsumerWidget {
               onPressed: () =>
                   ref.read(advisoryRepositoryProvider).markAllRead(),
               icon: const Icon(Icons.done_all),
-              label: Text(l10n.inboxMarkAllRead),
+              label: Text(l10n.farmerInboxMarkAllRead),
             ),
         ],
       ),
@@ -48,8 +49,8 @@ class InboxScreen extends ConsumerWidget {
                 child: rows.isEmpty
                     ? EmptyState(
                         icon: Icons.mark_email_unread_outlined,
-                        title: l10n.inboxEmpty,
-                        help: l10n.inboxEmptyHelp,
+                        title: l10n.farmerInboxEmpty,
+                        help: l10n.farmerInboxEmptyHelp,
                       )
                     : RefreshIndicator(
                         onRefresh: () =>
@@ -65,7 +66,7 @@ class InboxScreen extends ConsumerWidget {
                                   bottom: Tokens.space2,
                                 ),
                                 child: Text(
-                                  l10n.inboxUnread(unread),
+                                  l10n.farmerInboxUnread(unread),
                                   key: const Key('inbox-unread'),
                                   style: app.text.label,
                                 ),

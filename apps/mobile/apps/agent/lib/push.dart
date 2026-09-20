@@ -9,7 +9,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 /// **Builds without Firebase.** `firebase_core` compiles on Android with no
 /// `google-services.json`; what fails is `Firebase.initializeApp()` at
 /// runtime. [FirebasePushService.create] catches that and returns
-/// [NoopPushService] instead, so a developer build, CI and the reference
+/// [NoPushService] instead, so a developer build, CI and the reference
 /// device all run with push simply switched off — the in-app inbox (A13)
 /// and the sync feed still deliver every notification.
 ///
@@ -20,7 +20,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 class FirebasePushService implements PushService {
   FirebasePushService._(this._messaging);
 
-  /// Initialises Firebase and returns the adapter, or [NoopPushService]
+  /// Initialises Firebase and returns the adapter, or [NoPushService]
   /// when this build has no Firebase configuration.
   static Future<PushService> create() async {
     try {
@@ -28,7 +28,7 @@ class FirebasePushService implements PushService {
       return FirebasePushService._(FirebaseMessaging.instance);
     } on Object {
       // No google-services.json, or the plugin is missing on this platform.
-      return const NoopPushService();
+      return const NoPushService();
     }
   }
 
@@ -38,17 +38,27 @@ class FirebasePushService implements PushService {
   Future<bool> isAvailable() async => Firebase.apps.isNotEmpty;
 
   @override
-  Future<String?> token() async {
+  Future<PushPermission> requestPermission() async {
     final settings = await _messaging.requestPermission();
-    if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      return null;
-    }
+    return switch (settings.authorizationStatus) {
+      AuthorizationStatus.authorized ||
+      AuthorizationStatus.provisional => PushPermission.granted,
+      AuthorizationStatus.denied => PushPermission.denied,
+      _ => PushPermission.notDetermined,
+    };
+  }
+
+  @override
+  Future<String?> token() async {
     try {
       return await _messaging.getToken();
     } on Object {
       return null;
     }
   }
+
+  @override
+  Stream<String> get tokenRefreshes => _messaging.onTokenRefresh;
 
   @override
   Stream<PushMessage> get messages =>
@@ -66,7 +76,7 @@ class FirebasePushService implements PushService {
   }
 
   @override
-  Future<void> delete() async {
+  Future<void> deleteToken() async {
     try {
       await _messaging.deleteToken();
     } on Object {

@@ -40,7 +40,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     final app = context.app;
     final p = app.palette;
     final l10n = CoreLocalizations.of(context);
-    final inbox = ref.watch(inboxProvider);
+    final inbox = ref.watch(fieldInboxProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.inboxTitle),
@@ -61,8 +61,9 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
             Expanded(
               child: inbox.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) =>
-                    ErrorState(onRetry: () => ref.invalidate(inboxProvider)),
+                error: (e, _) => ErrorState(
+                  onRetry: () => ref.invalidate(fieldInboxProvider),
+                ),
                 data: (data) => data.isEmpty
                     ? EmptyState(
                         key: const Key('inbox-empty'),

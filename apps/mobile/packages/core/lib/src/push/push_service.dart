@@ -1,41 +1,39 @@
-/// FA-007 push seam.
+/// FA-007 push seam, shared by both apps.
 ///
 /// The transport (FCM) lives in the app, behind this interface: the core
-/// never depends on Firebase, so tests and the workspace build stay free
-/// of it. The farmer app's adapter is
-/// `apps/farmer/lib/push.dart` (`FirebasePushService`).
+/// never depends on Firebase, so the workspace, the tests and a build
+/// without `google-services.json` stay free of it. The adapters are
+/// `apps/agent/lib/push.dart` and `apps/farmer/lib/push.dart`; each app
+/// keeps its own deep-link map and nothing else.
 ///
-/// NOTE for the parent loop: the officer app (M7 field half) needs the
-/// same seam. If it landed one under `packages/core/lib/src/field/`, the
-/// two should be reconciled into a single `PushService` — this file was
-/// written in a separate worktree that could not see it
-/// (docs/prs/M7-farmer-mobile.md "Duplication to reconcile").
+/// The server sends **data** messages only: every value is a string, the
+/// text comes from the app's own i18n keys (`title_key` / `body_key`) and
+/// `route` carries the deep link (docs/prs/M7-field-p1-api.md).
 library;
 
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' show immutable;
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// One FCM data message (every value is a string on the wire).
 @immutable
 class PushMessage {
   /// Creates the message.
   const PushMessage({
-    required this.kind,
+    this.kind = '',
     this.notificationId,
     this.titleKey,
     this.bodyKey,
-    this.route,
+    String? route,
     this.data = const <String, String>{},
-  });
+  }) : route = (route == null || route == '') ? inboxRoute : route;
 
   /// Parses an FCM data payload (`kind`, `route`, `notification_id`,
   /// `title_key`, `body_key` plus the row's ids).
-  factory PushMessage.fromData(Map<String, Object?> data) {
+  factory PushMessage.fromData(Map<Object?, Object?> data) {
     final flat = <String, String>{
       for (final e in data.entries)
-        if (e.value != null) e.key: '${e.value}',
+        if (e.key != null && e.value != null) '${e.key}': '${e.value}',
     };
     return PushMessage(
       kind: flat['kind'] ?? '',
@@ -47,7 +45,7 @@ class PushMessage {
     );
   }
 
-  /// Notification kind (see `NotificationKinds`).
+  /// Notification kind (`visit_confirm_request`, `beat_plan_ready`, ...).
   final String kind;
 
   /// The `notification` row behind the push, when there is one.
@@ -59,11 +57,18 @@ class PushMessage {
   /// i18n key of the body.
   final String? bodyKey;
 
-  /// Route the server suggests (FA-007 deep link).
-  final String? route;
+  /// In-app deep link; [inboxRoute] for anything the server did not route,
+  /// so a kind this app version does not know still lands somewhere.
+  final String route;
 
   /// The whole payload.
   final Map<String, String> data;
+
+  /// Where an unrouted push lands.
+  static const String inboxRoute = '/inbox';
+
+  /// The route exactly as the server sent it (null when it sent none).
+  String? get sentRoute => data['route'];
 
   /// A payload value.
   String? operator [](String key) => data[key];
@@ -79,7 +84,7 @@ class PushMessage {
   int get hashCode => Object.hash(kind, notificationId, route);
 }
 
-/// Whether the farmer allowed notifications on this device.
+/// Whether the user allowed notifications on this device.
 enum PushPermission {
   /// Allowed.
   granted,
@@ -91,10 +96,19 @@ enum PushPermission {
   notDetermined,
 }
 
-/// The device's push transport.
+/// The device's push transport (FA-007).
+///
+/// The interface exists so that both apps build and run **without** a
+/// Firebase project: when `google-services.json` is absent, or
+/// `Firebase.initializeApp()` fails, the app installs [NoPushService] and
+/// everything else (the in-app inbox, the sync feed) keeps working — push
+/// is an accelerator, never the only delivery path.
 abstract interface class PushService {
-  /// Asks the farmer for permission (Android 13+ / iOS) and answers the
-  /// resulting state.
+  /// Whether this build can actually talk to FCM.
+  Future<bool> isAvailable();
+
+  /// Asks for the notification permission (Android 13+ / iOS) and answers
+  /// the resulting state.
   Future<PushPermission> requestPermission();
 
   /// This device's token, or null when there is none (no Play services,
@@ -104,14 +118,16 @@ abstract interface class PushService {
   /// Tokens after a refresh (FCM rotates them).
   Stream<String> get tokenRefreshes;
 
-  /// Data messages while the app is running (foreground and background
-  /// taps alike).
+  /// Data messages that arrive while the app is running.
   Stream<PushMessage> get messages;
 
-  /// The message the app was opened from, if any (cold start).
+  /// Pushes the user tapped (app in the background, or resumed).
+  Stream<PushMessage> get opened;
+
+  /// The push that cold-started the app, if any.
   Future<PushMessage?> initialMessage();
 
-  /// Forgets this device's token (logout, remote wipe).
+  /// Forgets this device's token (logout, SEC-025 wipe).
   Future<void> deleteToken();
 }
 
@@ -122,6 +138,9 @@ abstract interface class PushService {
 class NoPushService implements PushService {
   /// Creates the service.
   const NoPushService();
+
+  @override
+  Future<bool> isAvailable() async => false;
 
   @override
   Future<PushPermission> requestPermission() async => PushPermission.denied;
@@ -136,31 +155,33 @@ class NoPushService implements PushService {
   Stream<PushMessage> get messages => const Stream<PushMessage>.empty();
 
   @override
+  Stream<PushMessage> get opened => const Stream<PushMessage>.empty();
+
+  @override
   Future<PushMessage?> initialMessage() async => null;
 
   @override
   Future<void> deleteToken() async {}
 }
 
-/// Scriptable transport for tests and previews.
+/// Scriptable [PushService] for tests, goldens and previews.
 class FakePushService implements PushService {
   /// Creates the fake.
   FakePushService({
-    String? token = 'fcm-token-1',
+    this.available = true,
+    this.deviceToken = 'fcm-token-1',
     this.permission = PushPermission.granted,
-    PushMessage? initial,
-  }) {
-    _token = token;
-    _initial = initial;
-  }
+    this.initial,
+  });
 
-  String? _token;
-  PushMessage? _initial;
-  final _tokens = StreamController<String>.broadcast();
-  final _messages = StreamController<PushMessage>.broadcast();
+  /// What [isAvailable] answers.
+  bool available;
 
   /// What [requestPermission] answers.
   PushPermission permission;
+
+  /// The push that cold-started the app.
+  PushMessage? initial;
 
   /// Permission prompts shown.
   int permissionAsks = 0;
@@ -168,30 +189,50 @@ class FakePushService implements PushService {
   /// [deleteToken] calls.
   int deletes = 0;
 
-  /// Sets the token the service hands out (null = none).
-  set currentToken(String? value) => _token = value;
+  /// The token the service hands out (null mimics a declined permission).
+  String? deviceToken;
+
+  final StreamController<String> _tokens = StreamController<String>.broadcast();
+  final StreamController<PushMessage> _messages =
+      StreamController<PushMessage>.broadcast();
+  final StreamController<PushMessage> _opened =
+      StreamController<PushMessage>.broadcast();
 
   /// Pushes a new token to listeners (FCM rotation).
   void rotate(String token) {
-    _token = token;
+    deviceToken = token;
     _tokens.add(token);
   }
 
   /// Delivers [message] as if it arrived from FCM.
   void deliver(PushMessage message) => _messages.add(message);
 
+  /// Delivers a foreground data message.
+  void deliverData(Map<String, String> data) =>
+      _messages.add(PushMessage.fromData(data));
+
+  /// Delivers a tap on a background notification.
+  void open(PushMessage message) => _opened.add(message);
+
+  /// Delivers a tap on a background notification from its data payload.
+  void openData(Map<String, String> data) =>
+      _opened.add(PushMessage.fromData(data));
+
   /// Sets the message the app is opened from (cold start).
-  void openedFrom(PushMessage? message) => _initial = message;
+  void openedFrom(PushMessage? message) => initial = message;
+
+  @override
+  Future<bool> isAvailable() async => available;
 
   @override
   Future<PushPermission> requestPermission() async {
     permissionAsks += 1;
-    return permission;
+    return available ? permission : PushPermission.denied;
   }
 
   @override
   Future<String?> token() async =>
-      permission == PushPermission.granted ? _token : null;
+      available && permission == PushPermission.granted ? deviceToken : null;
 
   @override
   Stream<String> get tokenRefreshes => _tokens.stream;
@@ -200,22 +241,21 @@ class FakePushService implements PushService {
   Stream<PushMessage> get messages => _messages.stream;
 
   @override
-  Future<PushMessage?> initialMessage() async => _initial;
+  Stream<PushMessage> get opened => _opened.stream;
+
+  @override
+  Future<PushMessage?> initialMessage() async => initial;
 
   @override
   Future<void> deleteToken() async {
     deletes += 1;
-    _token = null;
+    deviceToken = null;
   }
 
-  /// Closes the streams.
+  /// Closes the controllers.
   Future<void> dispose() async {
     await _tokens.close();
     await _messages.close();
+    await _opened.close();
   }
 }
-
-/// The device's push transport; the apps override it.
-final Provider<PushService> pushServiceProvider = Provider<PushService>(
-  (ref) => const NoPushService(),
-);

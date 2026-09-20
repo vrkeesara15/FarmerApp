@@ -379,7 +379,7 @@ class _InboxAction extends ConsumerWidget {
     return IconButton(
       key: const Key('home-inbox'),
       onPressed: () => context.push(AppRoutes.inbox),
-      tooltip: l10n.inboxTitle,
+      tooltip: l10n.farmerInboxTitle,
       icon: Badge.count(
         key: const Key('home-inbox-badge'),
         count: unread,

@@ -5,18 +5,23 @@ import 'package:drift/drift.dart' show Table, TableInfo;
 import '../db/app_database.dart';
 import '../kisan/kisan_cache.dart';
 import '../kisan/kisan_models.dart' show Cached, KisanWrite;
+import '../push/push_controller.dart';
+import '../push/push_service.dart';
 import '../sync/outbox.dart';
 import '../sync/sync_models.dart';
 import 'advisory_api.dart';
 import 'advisory_models.dart';
-import 'push_service.dart';
 
 /// The farmer app's advisory data (FM-007, FM-008, FM-009) and the FA-007
 /// inbox: online first, cached in the encrypted database with the time it
 /// was fetched so every screen can say "as of" and keep working offline
 /// (NF-002). Task changes go out over `PATCH /v1/calendar/tasks/{id}` and
 /// fall back to a queued `crop_plot_task` update op.
-class AdvisoryRepository {
+///
+/// It is also the farmer app's [PushTokenRegistry]: the shared FA-007
+/// controller (`src/push/`) registers and withdraws this device's token
+/// through it.
+class AdvisoryRepository implements PushTokenRegistry {
   /// Creates the repository.
   AdvisoryRepository({
     required this.db,
@@ -379,7 +384,7 @@ class AdvisoryRepository {
       titleKey: message.titleKey ?? '',
       bodyKey: message.bodyKey ?? '',
       data: message.data,
-      route: message.route ?? '/inbox',
+      route: message.route,
       createdAt: _now(),
     );
     final rows = await _inbox();
@@ -396,7 +401,8 @@ class AdvisoryRepository {
   /// Registers [token] with `POST /v1/devices/me/push-token` (after login
   /// and on every FCM rotation). The token is remembered so logout and a
   /// remote wipe can withdraw it.
-  Future<KisanWrite> registerPushToken(
+  @override
+  Future<PushRegistration> registerPushToken(
     String token, {
     String platform = 'android',
     String? deviceId,
@@ -409,21 +415,27 @@ class AdvisoryRepository {
       appVersion: appVersion,
     );
     if (!r.ok) {
-      return r.isNetworkFailure ? KisanWrite.offline : KisanWrite.refused;
+      return r.isNetworkFailure
+          ? PushRegistration.offline
+          : PushRegistration.refused;
     }
     await db.setValue(pushTokenKey, token);
-    return KisanWrite.done;
+    return PushRegistration.done;
   }
 
-  /// Withdraws the registered token (logout, remote wipe). The local note
-  /// is dropped whatever the server answers, so the token is never reused
-  /// by the next session on this phone.
-  Future<KisanWrite> clearPushToken() async {
-    final token = await registeredPushToken();
+  /// Withdraws the registered token (logout, remote wipe). The token this
+  /// phone last registered is used when the controller has none. The local
+  /// note is dropped whatever the server answers, so the token is never
+  /// reused by the next session on this phone.
+  @override
+  Future<PushRegistration> clearPushToken([String? token]) async {
+    final registered = await registeredPushToken() ?? token;
     await db.removeValue(pushTokenKey);
-    if (token == null) return KisanWrite.done;
-    final r = await api.removePushToken(token);
-    if (r.ok) return KisanWrite.done;
-    return r.isNetworkFailure ? KisanWrite.offline : KisanWrite.refused;
+    if (registered == null) return PushRegistration.done;
+    final r = await api.removePushToken(registered);
+    if (r.ok) return PushRegistration.done;
+    return r.isNetworkFailure
+        ? PushRegistration.offline
+        : PushRegistration.refused;
   }
 }

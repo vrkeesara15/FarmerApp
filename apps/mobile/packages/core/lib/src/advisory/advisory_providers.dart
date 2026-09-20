@@ -1,17 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/misc.dart' show StreamProviderFamily;
+import 'package:flutter_riverpod/misc.dart' show StreamProviderFamily, Override;
 
 import '../db/open_database.dart';
 import '../kisan/kisan_models.dart' show Cached;
 import '../kisan/kisan_providers.dart' show kisanFlushProvider;
+import '../push/push_providers.dart';
 import '../sync/sync_providers.dart';
 import 'advisory_api.dart';
 import 'advisory_models.dart';
 import 'advisory_repository.dart';
-import 'push_controller.dart';
-import 'push_service.dart';
 
 /// The advisory REST calls; the app overrides it with [HttpAdvisoryApi].
 final Provider<AdvisoryApi> advisoryApiProvider = Provider<AdvisoryApi>(
@@ -59,7 +58,7 @@ final StreamProvider<Cached<List<OutbreakAlert>>?> outbreakAlertsProvider =
     );
 
 /// FA-007 notification inbox, newest first, live.
-final StreamProvider<List<AppNotification>> inboxProvider =
+final StreamProvider<List<AppNotification>> advisoryInboxProvider =
     StreamProvider<List<AppNotification>>(
       (ref) => ref.watch(advisoryRepositoryProvider).watchInbox(),
     );
@@ -67,14 +66,6 @@ final StreamProvider<List<AppNotification>> inboxProvider =
 /// FA-007 unread badge count, live.
 final StreamProvider<int> inboxUnreadProvider = StreamProvider<int>(
   (ref) => ref.watch(advisoryRepositoryProvider).watchUnreadCount(),
-);
-
-/// The device id reported with the push token (the app overrides it).
-final Provider<String?> pushDeviceIdProvider = Provider<String?>((ref) => null);
-
-/// The app version reported with the push token (the app overrides it).
-final Provider<String?> pushAppVersionProvider = Provider<String?>(
-  (ref) => null,
 );
 
 /// Opened when a push arrives or is tapped: the app listens and navigates
@@ -86,19 +77,23 @@ final Provider<StreamController<AppNotification>> pushOpenControllerProvider =
       return controller;
     });
 
-/// FA-007 controller: token registration, message handling, logout.
-final Provider<PushController> pushControllerProvider =
-    Provider<PushController>((ref) {
-      final opens = ref.watch(pushOpenControllerProvider);
-      final controller = PushController(
-        service: ref.watch(pushServiceProvider),
-        repository: ref.watch(advisoryRepositoryProvider),
-        deviceId: ref.watch(pushDeviceIdProvider),
-        appVersion: ref.watch(pushAppVersionProvider),
-        onMessage: (notification) {
-          if (!opens.isClosed) opens.add(notification);
-        },
-      );
-      ref.onDispose(() => unawaited(controller.dispose()));
-      return controller;
-    });
+/// Wires the farmer app onto the shared FA-007 push seam (`src/push/`):
+/// the token is registered through [AdvisoryRepository] (which is the
+/// [PushTokenRegistry]) and an arriving data message is filed in the inbox
+/// and offered to the app on [pushOpenControllerProvider], which navigates
+/// to its deep link. `apps/farmer/lib/main.dart` and the test harness
+/// spread these into their container.
+final List<Override> advisoryPushOverrides = <Override>[
+  pushTokenRegistryProvider.overrideWith(
+    (ref) => ref.watch(advisoryRepositoryProvider),
+  ),
+  pushMessageHandlerProvider.overrideWith((ref) {
+    final opens = ref.watch(pushOpenControllerProvider);
+    return (message) async {
+      final row = await ref
+          .read(advisoryRepositoryProvider)
+          .receivePush(message);
+      if (!opens.isClosed) opens.add(row);
+    };
+  }),
+];

@@ -1,15 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart'
-    show StreamProviderFamily, FutureProviderFamily;
+    show StreamProviderFamily, FutureProviderFamily, Override;
 
 import '../db/open_database.dart';
 import '../duty/duty_providers.dart' show appVersionProvider, istDayBounds;
+import '../push/push_providers.dart';
 import '../sync/sync_providers.dart';
 import '../utils/format.dart';
 import 'field_api.dart';
 import 'field_models.dart';
+import 'field_push.dart';
 import 'field_repository.dart';
-import 'push_service.dart';
 import 'speech_service.dart';
 
 /// `YYYY-MM-DD` of the IST day containing [nowUtc].
@@ -35,12 +36,6 @@ final Provider<FieldApi> fieldApiProvider = Provider<FieldApi>(
   (ref) => FakeFieldApi(),
 );
 
-/// FCM adapter; the agent app overrides it with its Firebase service, and
-/// leaves [NoopPushService] in place when Firebase is not configured.
-final Provider<PushService> pushServiceProvider = Provider<PushService>(
-  (ref) => const NoopPushService(),
-);
-
 /// Android speech-to-text (FA-005); the agent app overrides it with the
 /// `speech_to_text` adapter. The default refuses politely.
 final Provider<SpeechService> speechServiceProvider = Provider<SpeechService>(
@@ -59,30 +54,32 @@ final Provider<FieldRepository> fieldRepositoryProvider =
       ),
     );
 
-/// Registers the push token after login and clears it on logout / wipe.
-final Provider<PushRegistrar> pushRegistrarProvider = Provider<PushRegistrar>((
-  ref,
-) {
-  final registrar = PushRegistrar(
-    push: ref.watch(pushServiceProvider),
-    api: ref.watch(fieldApiProvider),
-    appVersion: ref.watch(appVersionProvider),
-    onMessage: (_) => ref.read(fieldRepositoryProvider).refreshInbox(),
-  );
-  ref.onDispose(registrar.dispose);
-  return registrar;
-});
+/// Wires the officer app onto the shared FA-007 push seam
+/// (`src/push/`): the token is registered through [FieldApi], every
+/// foreground data message refreshes the A13 inbox, and the app version
+/// travels with the registration. `apps/agent/lib/main.dart` spreads
+/// these into its container (and adds the router's deep-link handler).
+final List<Override> fieldPushOverrides = <Override>[
+  pushTokenRegistryProvider.overrideWith(
+    (ref) => FieldPushRegistry(ref.watch(fieldApiProvider)),
+  ),
+  pushMessageHandlerProvider.overrideWith(
+    (ref) =>
+        (_) => ref.read(fieldRepositoryProvider).refreshInbox(),
+  ),
+  pushAppVersionProvider.overrideWith((ref) => ref.watch(appVersionProvider)),
+];
 
 // --- A13 inbox --------------------------------------------------------------
 
 /// The inbox, live.
-final StreamProvider<Inbox> inboxProvider = StreamProvider<Inbox>(
+final StreamProvider<Inbox> fieldInboxProvider = StreamProvider<Inbox>(
   (ref) => ref.watch(fieldRepositoryProvider).watchInbox(),
 );
 
 /// Unread count for the bottom-nav badge.
 final Provider<int> unreadCountProvider = Provider<int>(
-  (ref) => ref.watch(inboxProvider).value?.unread ?? 0,
+  (ref) => ref.watch(fieldInboxProvider).value?.unread ?? 0,
 );
 
 // --- A11 beat plan ----------------------------------------------------------

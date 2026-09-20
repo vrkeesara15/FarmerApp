@@ -95,7 +95,10 @@ Future<void> startKisan() async {
       diagnosisApiProvider.overrideWithValue(HttpDiagnosisApi(rest)),
       // M7 advisory (FM-007, FM-008, FM-009) and the FA-007 inbox / push.
       advisoryApiProvider.overrideWithValue(HttpAdvisoryApi(rest)),
+      // FA-007 push: the shared seam (packages/core/src/push/) with this
+      // app's FCM adapter and its own token registry / inbox handler.
       pushServiceProvider.overrideWithValue(push),
+      ...advisoryPushOverrides,
       pushAppVersionProvider.overrideWithValue(farmerAppVersion),
       pushDeviceIdProvider.overrideWithValue(await store.deviceId()),
     ],

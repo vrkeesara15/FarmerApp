@@ -67,7 +67,7 @@ void callbackDispatcher() {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Workmanager().initialize(callbackDispatcher);
-  // FA-007: without google-services.json this returns a NoopPushService and
+  // FA-007: without google-services.json this returns a NoPushService and
   // the app runs with push off (see push.dart).
   final push = await FirebasePushService.create();
   if (push is FirebasePushService) {
@@ -80,7 +80,7 @@ Future<void> main() async {
 /// tears this run down, wipes, and calls [startMitra] again: the fresh
 /// database carries the A08 notice, so the router opens "Signed out by
 /// your administrator".
-Future<void> startMitra({PushService push = const NoopPushService()}) async {
+Future<void> startMitra({PushService push = const NoPushService()}) async {
   // Real API (FA-001): base URL from --dart-define=API_BASE_URL, default
   // http://10.0.2.2:8000 (host machine from the Android emulator). Every
   // call goes through one client: certificate pinning (API_CERT_PINS), Play
@@ -216,7 +216,14 @@ Future<void> startMitra({PushService push = const NoopPushService()}) async {
       // VA-005: the M7 officer endpoints (A11, A12, A13, A35, A36, A60,
       // A61, A62). Reads are cached; writes go through the outbox.
       fieldApiProvider.overrideWithValue(HttpFieldApi(rest)),
+      // FA-007 push: the shared seam (packages/core/src/push/) with this
+      // app's FCM adapter, its token registry and its router's deep links.
       pushServiceProvider.overrideWithValue(push),
+      ...fieldPushOverrides,
+      pushRouteHandlerProvider.overrideWith(
+        (ref) =>
+            (route) => ref.read(routerProvider).go(deepLinkFor(route)),
+      ),
       // FA-005 voice input on every free-text field.
       speechServiceProvider.overrideWithValue(PluginSpeechService()),
       // FA-016: confirmation request / officer-side OTP (online only).
@@ -264,11 +271,6 @@ Future<void> startMitra({PushService push = const NoopPushService()}) async {
   // (FA-010); the policy version is refreshed when online (FA-011).
   await container.read(dutyControllerProvider.notifier).restore();
   unawaited(container.read(locationPolicyProvider.notifier).refresh());
-  // FA-007: register the FCM token for this session, listen for data
-  // messages and follow a tapped push to its screen. All of it is inert
-  // when push is a NoopPushService.
-  final registrar = container.read(pushRegistrarProvider);
-  unawaited(registrar.registerAfterLogin());
   if (!wipedBefore) {
     // SEC-025: ask the server whether this phone must be wiped (in the
     // background: the cold start does not wait for the network, NF-005).
@@ -292,14 +294,8 @@ Future<void> startMitra({PushService push = const NoopPushService()}) async {
   runApp(
     UncontrolledProviderScope(container: container, child: const MitraApp()),
   );
-  final router = container.read(routerProvider);
-  unawaited(
-    PushRegistrar(
-      push: push,
-      api: container.read(fieldApiProvider),
-      appVersion: agentAppVersion,
-      onMessage: (_) => container.read(fieldRepositoryProvider).refreshInbox(),
-      onRoute: (route) => router.go(deepLinkFor(route)),
-    ).listen(),
-  );
+  // FA-007: register the FCM token for this session, listen for data
+  // messages and follow a tapped push to its screen (the router exists by
+  // now). All of it is inert when push is a NoPushService.
+  unawaited(container.read(pushControllerProvider).signedIn());
 }

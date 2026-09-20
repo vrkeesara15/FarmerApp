@@ -121,8 +121,8 @@ List<String> alertSymptoms(CoreLocalizations l10n, String problemType) =>
     l10n.notifDiagnosisExpertBody,
   ),
   NotificationKinds.orderStatus => (
-    l10n.notifOrderStatusTitle,
-    l10n.notifOrderStatusBody,
+    l10n.farmerNotifOrderStatusTitle,
+    l10n.farmerNotifOrderStatusBody,
   ),
   NotificationKinds.outbreakAlert => (
     l10n.notifOutbreakAlertTitle,
@@ -133,10 +133,10 @@ List<String> alertSymptoms(CoreLocalizations l10n, String problemType) =>
     l10n.notifCropTaskReminderBody,
   ),
   NotificationKinds.visitConfirmRequest => (
-    l10n.notifVisitConfirmTitle,
-    l10n.notifVisitConfirmBody,
+    l10n.farmerNotifVisitConfirmTitle,
+    l10n.farmerNotifVisitConfirmBody,
   ),
-  _ => (l10n.notifGenericTitle, l10n.notifGenericBody),
+  _ => (l10n.farmerNotifGenericTitle, l10n.farmerNotifGenericBody),
 };
 
 /// Pictogram of an inbox row.

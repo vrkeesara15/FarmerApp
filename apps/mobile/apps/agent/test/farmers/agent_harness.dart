@@ -185,6 +185,7 @@ class AgentDeps {
     visitConfirmApiProvider.overrideWithValue(confirmApi),
     fieldApiProvider.overrideWithValue(field),
     pushServiceProvider.overrideWithValue(push),
+    ...fieldPushOverrides,
     speechServiceProvider.overrideWithValue(speech),
     barcodeScannerProvider.overrideWithValue(scanner),
     catalogApiProvider.overrideWithValue(catalogApi),

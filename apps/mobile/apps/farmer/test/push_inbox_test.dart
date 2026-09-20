@@ -26,7 +26,7 @@ void main() {
       addTearDown(c.dispose);
       final push = c.read(pushControllerProvider);
 
-      expect(await push.signedIn(), KisanWrite.done);
+      expect(await push.signedIn(), PushRegistration.done);
       expect(deps.push.permissionAsks, 1);
       expect(deps.advisory.pushTokens, hasLength(1));
       expect(deps.advisory.pushTokens.single['token'], 'fcm-token-1');
@@ -37,7 +37,7 @@ void main() {
         'fcm-token-1',
       );
 
-      expect(await push.signedOut(), KisanWrite.done);
+      expect(await push.signedOut(), PushRegistration.done);
       expect(deps.advisory.removedPushTokens, <String>['fcm-token-1']);
       expect(deps.advisory.pushTokens, isEmpty);
       expect(deps.push.deletes, 1);
@@ -67,7 +67,7 @@ void main() {
       addTearDown(c.dispose);
       expect(
         await c.read(pushControllerProvider).signedIn(),
-        KisanWrite.refused,
+        PushRegistration.refused,
       );
       expect(deps.advisory.pushTokens, isEmpty);
     });

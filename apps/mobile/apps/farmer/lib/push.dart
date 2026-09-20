@@ -16,7 +16,7 @@ class FirebasePushService implements PushService {
   FirebasePushService(this._messaging) {
     _subs
       ..add(FirebaseMessaging.onMessage.listen(_forward))
-      ..add(FirebaseMessaging.onMessageOpenedApp.listen(_forward));
+      ..add(FirebaseMessaging.onMessageOpenedApp.listen(_forwardOpened));
   }
 
   /// Initialises Firebase and returns the service, or [NoPushService]
@@ -39,9 +39,25 @@ class FirebasePushService implements PushService {
       <StreamSubscription<RemoteMessage>>[];
   final StreamController<PushMessage> _messages =
       StreamController<PushMessage>.broadcast();
+  final StreamController<PushMessage> _opened =
+      StreamController<PushMessage>.broadcast();
 
   void _forward(RemoteMessage message) =>
       _messages.add(PushMessage.fromData(message.data));
+
+  void _forwardOpened(RemoteMessage message) {
+    final push = PushMessage.fromData(message.data);
+    // The farmer app files and follows a tap through [messages]; [opened]
+    // is there for the shared seam and stays in sync.
+    _messages.add(push);
+    _opened.add(push);
+  }
+
+  @override
+  Future<bool> isAvailable() async => Firebase.apps.isNotEmpty;
+
+  @override
+  Stream<PushMessage> get opened => _opened.stream;
 
   @override
   Future<PushPermission> requestPermission() async {
@@ -79,5 +95,6 @@ class FirebasePushService implements PushService {
     }
     _subs.clear();
     await _messages.close();
+    await _opened.close();
   }
 }

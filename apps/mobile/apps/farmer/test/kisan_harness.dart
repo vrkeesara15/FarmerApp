@@ -626,6 +626,7 @@ class KisanDeps {
     kisanApiProvider.overrideWithValue(kisan),
     advisoryApiProvider.overrideWithValue(advisory),
     pushServiceProvider.overrideWithValue(push),
+    ...advisoryPushOverrides,
     pushAppVersionProvider.overrideWithValue('0.1.0+1'),
     pushDeviceIdProvider.overrideWithValue('dev-1'),
     authApiProvider.overrideWithValue(auth),

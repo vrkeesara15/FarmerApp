@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// session itself is cleared. A network failure never blocks the logout —
 /// the server also disables a token once FCM rejects it.
 Future<void> signOutMitra(WidgetRef ref) async {
-  await ref.read(pushRegistrarProvider).clear();
+  await ref.read(pushControllerProvider).signedOut();
   await ref.read(fieldRepositoryProvider).clearCaches();
   await ref.read(tokenStoreProvider).clear();
 }
