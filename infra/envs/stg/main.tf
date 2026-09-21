@@ -26,6 +26,14 @@ locals {
     "cloudkms.googleapis.com", # SEC-026 PII key-encryption key
   ]
 
+  # OPS-012: every Cloud Run service and job carries these so the Cloud Billing export can be
+  # grouped by environment. `component` and `tenancy` are set by the modules themselves.
+  cost_labels = { env = var.env }
+
+  # OPS-014: named once, used by modules/secrets (which creates it and points every secret
+  # at it) and by modules/monitoring (which alerts on anything published to it).
+  secret_rotation_topic = "secret.rotation"
+
   topics = [
     "visit.created",
     "farmer.registered",
@@ -460,6 +468,11 @@ module "secrets" {
   region     = var.region
   secrets    = local.secrets
 
+  # SEC-013 / OPS-014: 90-day rotation reminders to this topic, which the module owns and
+  # modules/monitoring alerts on (a message means "a secret is 90 days old").
+  rotation_days  = 90
+  rotation_topic = local.secret_rotation_topic
+
   depends_on = [google_project_service.apis]
 }
 
@@ -524,6 +537,7 @@ module "api" {
   project_id            = var.project_id
   name                  = "api"
   region                = var.region
+  labels                = local.cost_labels
   image                 = var.bootstrap_image
   service_account_email = module.iam.emails.api
   vpc_name              = module.network.vpc_name
@@ -551,6 +565,7 @@ module "console" {
   project_id            = var.project_id
   name                  = "console"
   region                = var.region
+  labels                = local.cost_labels
   image                 = var.bootstrap_image
   service_account_email = module.iam.emails.console
   vpc_name              = module.network.vpc_name
@@ -584,6 +599,7 @@ module "worker" {
   project_id            = var.project_id
   name                  = "worker"
   region                = var.region
+  labels                = local.cost_labels
   image                 = var.bootstrap_image
   service_account_email = module.iam.emails.worker
   vpc_name              = module.network.vpc_name
@@ -610,6 +626,7 @@ module "embed" {
   project_id            = var.project_id
   name                  = "embed"
   region                = var.region
+  labels                = local.cost_labels
   image                 = var.bootstrap_image
   service_account_email = module.iam.emails.embed
   vpc_name              = module.network.vpc_name
@@ -646,6 +663,7 @@ module "migrate" {
   project_id            = var.project_id
   name                  = "migrate"
   region                = var.region
+  labels                = local.cost_labels
   image                 = var.bootstrap_image
   args                  = ["alembic", "upgrade", "head"] # api image (alembic/ + alembic.ini)
   service_account_email = module.iam.emails.migrate      # SEC-011: DDL identity, nothing else
@@ -667,6 +685,7 @@ module "job" {
   project_id            = var.project_id
   name                  = each.key
   region                = var.region
+  labels                = local.cost_labels
   image                 = var.bootstrap_image
   command               = ["python", "-m", "farmerapp.jobs"] # same in the api and jobs images
   args                  = each.value.args
@@ -766,6 +785,35 @@ module "analytics" {
   depends_on = [google_project_service.apis]
 }
 
+# --- Cost (OPS-012, NF-015) -------------------------------------------------------------
+# The landing dataset, the cost views and the daily anomaly watch. The Cloud Billing export
+# and the budget's billing-account binding are human gates (billing admin, outside every
+# project): once a human has run docs/runbooks/cost-and-budget.md, set billing_export_table
+# and billing_account in this env's tfvars and the views, the watch and the budget appear.
+
+module "cost" {
+  source = "../../modules/cost"
+
+  project_id           = var.project_id
+  env                  = var.env
+  region               = var.region
+  billing_export_table = var.billing_export_table
+  billing_account      = var.billing_account
+  marts_dataset        = var.billing_export_table != "" ? module.analytics.marts_dataset : ""
+  monthly_budget_inr   = var.monthly_budget_inr
+  daily_spend_ratio    = 1.3
+
+  # OPS-012 per-tenant thresholds; NF-015 excludes SMS and LLM from the infra budget, so
+  # they are watched on their own rate card (docs/cost-model.md).
+  llm_daily_inr_per_tenant = var.llm_daily_inr_per_tenant
+  sms_daily_inr_per_tenant = var.sms_daily_inr_per_tenant
+
+  runbook_base_url      = var.runbook_base_url
+  notification_channels = module.monitoring.notification_channels
+
+  depends_on = [google_project_service.apis]
+}
+
 # --- Monitoring ------------------------------------------------------------------
 
 module "monitoring" {
@@ -805,6 +853,30 @@ module "monitoring" {
   diagnosis_alerts_enabled   = var.diagnosis_alerts_enabled
   diagnosis_queue_age_hours  = 18
   diagnosis_llm_rate_percent = 40
+
+  # OPS-011 Datastream lag and dbt run / test failure. The stream id is the last segment of
+  # the stream name; there is none until datastream_stream_enabled, and then the alert is
+  # created with it.
+  datastream_stream_ids = compact([
+    module.analytics.stream_name == null ? "" : element(split("/", module.analytics.stream_name), length(split("/", module.analytics.stream_name)) - 1),
+  ])
+  datastream_lag_minutes = 30
+
+  # OPS-013 security spikes. The SCC notification config itself is an org-level human gate;
+  # scc_organization_id only grants publish on the topic Terraform creates here.
+  scc_organization_id = var.scc_organization_id
+  armor_denied_per_5m = var.armor_denied_per_5m
+  otp_sends_per_5m    = var.otp_sends_per_5m
+
+  # OPS-014 certificate expiry and secret age. The secret-age reminder is published by
+  # Secret Manager itself (modules/secrets rotation), so both sides name the same topic.
+  cert_expiry_days      = 21
+  secret_rotation_topic = local.secret_rotation_topic
+  secret_max_age_days   = 90
+
+  # NF-015 / OPS-012: the cost dashboard links to the BigQuery views and quotes the budget.
+  cost_dataset       = module.cost.dataset_id
+  monthly_budget_inr = var.monthly_budget_inr
 
   # SLOs (12.1) and SEC-017
   availability_goal = var.availability_goal

@@ -6,8 +6,13 @@
 #   log_metrics.tf  log-based metrics from the API's structured JSON logs (SLIs, business ops)
 #   slo.tf          12.1 SLOs on the api service + burn-rate / latency alerts
 #   dashboards.tf   12.4 platform, business ops and cost dashboards
+#   data.tf         OPS-011 Datastream lag, dbt run / test failure, dbt source freshness
+#   security.tf     OPS-013 SCC high findings, Cloud Armor spikes, OTP send spikes
+#   certs.tf        OPS-014 certificate expiry and secret age
 #   audit.tf        SEC-017 Data Access audit logs -> locked 400-day log bucket
 #   diagnosis.tf    OPS-009 diagnosis review queue age and LLM fallback rate (log-based)
+#
+# OPS-012 (cost) lives in modules/cost instead, next to the BigQuery views its alerts read.
 #
 # Every alert policy carries (SPEC 12: "every alert has an owner, a severity and a runbook
 # link"): user_labels {ops, owner, sev}, the Cloud Monitoring severity, and a documentation
@@ -47,6 +52,9 @@ locals {
     breach   = "${var.runbook_base_url}/suspected-data-breach.md"
     # OPS-009 steps live in the observability runbook (section anchor).
     diagnosis = "${var.runbook_base_url}/observability.md#ops-009-diagnosis-review-queue-and-llm-fallback"
+    # OPS-011 Datastream lag / dbt failure, OPS-012 cost.
+    data = "${var.runbook_base_url}/datastream-cdc-setup.md"
+    cost = "${var.runbook_base_url}/cost-and-budget.md"
   }
 }
 

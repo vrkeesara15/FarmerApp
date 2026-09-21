@@ -17,6 +17,7 @@ commands, verification, communication, follow-up. Rehearse each one in stg befor
 | [Corpus rollback to previous version](corpus-rollback.md) | Agronomy lead / ML | Sev 2 | M6 evaluation job, agronomist reports (placeholder) |
 | [Mass location anomaly](mass-location-anomaly.md) | Mobile lead | Sev 2 | OPS-006 sync-silence spike, officers-on-duty drop |
 | [Data subject erasure request](data-subject-erasure.md) | Data protection owner | Sev 3 (SLA-bound) | Request received (support / grievance officer) |
+| [Cost anomaly and budget](cost-and-budget.md) | Product owner + platform lead | Sev 2 | OPS-012 daily spend > 130% of the 7-day average, LLM / SMS spend per tenant, NF-015 budget thresholds |
 | [Suspected data breach (DPDP notification)](suspected-data-breach.md) | Security owner | Sev 1 | SCC HIGH/CRITICAL (SEC-019), Cloud Armor spike, audit-log anomaly, report |
 | [PII field encryption: setup, backfill, contract, rotation (SEC-026)](pii-encryption.md) | Platform lead | Sev 2 | `pii_data_key_unavailable`, `pii_backfill_conflict`, 500s on encrypted reads |
 | [Datastream CDC setup, operation and teardown (M7, AN-010 / AN-014)](datastream-cdc-setup.md) | Platform lead + data owner | Sev 2, Sev 1 if the slot fills the disk | `dbt source freshness` error (> 30 min), stream not `RUNNING`, SQL disk growth (OPS-003) |

@@ -48,6 +48,14 @@ class _PhoneScreenState extends ConsumerState<PhoneScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Text(l10n.phoneLoginTitle, style: app.text.title),
+              // NF-009: the two screens a farmer has to type on are the two
+              // that most need reading aloud. The spoken version carries the
+              // helper too, because that is the part that says *what* to type;
+              // on screen the helper stays where it belongs, under the field.
+              AudioButton(
+                promptId: 'f02_phone',
+                text: '${l10n.phoneLoginTitle}. ${l10n.phoneHelper}',
+              ),
               const SizedBox(height: Tokens.space6),
               AppTextField(
                 label: l10n.phoneLabel,

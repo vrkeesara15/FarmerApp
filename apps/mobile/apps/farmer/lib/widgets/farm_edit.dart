@@ -247,8 +247,7 @@ class FarmSummaryCard extends ConsumerWidget {
     );
   }
 
-  static String _acres(double a) =>
-      a == a.roundToDouble() ? a.toStringAsFixed(0) : a.toStringAsFixed(1);
+  static String _acres(double a) => formatAcres(a);
 }
 
 /// FM-007: the plot's next task with a link to F42, or nothing when the

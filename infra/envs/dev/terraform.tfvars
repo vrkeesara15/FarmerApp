@@ -28,3 +28,13 @@ db_pool = {
 
 # M7 VA-004 review agent (docs/prs/M7-rules.md): off in dev by default.
 flag_summary_llm = "off"
+
+# NF-015 / OPS-012 (docs/cost-model.md). dev is not in the pilot budget; it gets a small one
+# of its own so a runaway here is caught too. billing_export_table and billing_account stay
+# empty until a billing admin has run docs/runbooks/cost-and-budget.md (human gate).
+monthly_budget_inr   = 5000
+billing_export_table = ""
+billing_account      = ""
+# OPS-013: dev runs load tests and seeds, so the paging thresholds are loose.
+armor_denied_per_5m = 2000
+otp_sends_per_5m    = 1000

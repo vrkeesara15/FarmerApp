@@ -79,6 +79,59 @@ String formatTimeIst(DateTime utc) {
   return '$hh:$mm';
 }
 
+/// Formats a decimal the Indian way: `125000.5` -> `1,25,000.5`.
+///
+/// Trailing zeros are dropped ( `2.00` -> `2` ) because a farmer reads "2
+/// acres", not "2.00 acres"; [maxDecimals] caps the fraction. This is the
+/// helper every non-money number goes through, so grouping never depends on
+/// the platform's ICU build (NF-008: numbers in Indian format).
+String formatIndianDecimal(double value, {int maxDecimals = 2}) {
+  assert(maxDecimals >= 0 && maxDecimals <= 6, 'maxDecimals out of range');
+  if (value.isNaN || value.isInfinite) return '-';
+  final negative = value < 0;
+  final abs = value.abs();
+  final fixed = abs.toStringAsFixed(maxDecimals);
+  final dot = fixed.indexOf('.');
+  final whole = dot == -1 ? fixed : fixed.substring(0, dot);
+  var fraction = dot == -1 ? '' : fixed.substring(dot + 1);
+  while (fraction.isNotEmpty && fraction.endsWith('0')) {
+    fraction = fraction.substring(0, fraction.length - 1);
+  }
+  final grouped = formatIndianDigits(int.parse(whole));
+  final body = fraction.isEmpty ? grouped : '$grouped.$fraction';
+  // "-0" is never what anyone means.
+  return negative && body != '0' ? '-$body' : body;
+}
+
+/// Formats an area in acres for an ARB placeholder (NF-008: unit acre).
+///
+/// Land is measured in acres across the app (`farm.area_acres`,
+/// `crop_plot.area_acres`); the *word* "acre" comes from the ARB string in
+/// the farmer's language, so this formats only the number.
+String formatAcres(double acres) => formatIndianDecimal(acres);
+
+/// Formats a volume held in millilitres (NF-008: unit litre).
+///
+/// Under a litre it reads in ml (`250 ml`), from a litre up it reads in
+/// litres (`1.5 L`, `15 L`) -- the way a dose on a pesticide label and a
+/// spray tank are actually written. The unit is part of the output here
+/// because `ml` and `L` are the same glyphs in every launch language;
+/// anything a farmer reads as a sentence uses an ARB string instead.
+String formatVolume(int millilitres) {
+  final negative = millilitres < 0;
+  final abs = millilitres.abs();
+  final body = abs < 1000
+      ? '$abs $millilitreUnit'
+      : '${formatIndianDecimal(abs / 1000)} $litreUnit';
+  return negative ? '-$body' : body;
+}
+
+/// Symbol for millilitres.
+const String millilitreUnit = 'ml';
+
+/// Symbol for litres.
+const String litreUnit = 'L';
+
 /// Formats a [Duration] as `H:MM` for elapsed-time displays (DutyToggle).
 String formatElapsed(Duration d) {
   final h = d.inHours;

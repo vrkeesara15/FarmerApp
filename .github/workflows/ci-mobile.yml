@@ -1,5 +1,11 @@
 # SPEC 10.3 ci-mobile: flutter analyze, dart format, unit + widget + golden tests
 # (via apps/mobile/tool/check.sh), debug APKs for both apps, farmer APK < 25 MB.
+#
+# NF-001: the size gate is per ABI, not on a fat APK. Play delivers one ABI to
+# each device, so the budget that matters is the largest single-ABI APK -- and
+# armeabi-v7a, the one this skipped when it built arm64 only, is exactly the
+# older, cheaper phone NF-001 is written for. `APK_SIZE_CHECK=1 ./tool/check.sh`
+# builds both (obfuscated, R8, like a release) and fails on the larger one.
 name: ci-mobile
 
 on:
@@ -39,8 +45,11 @@ jobs:
           channel: stable
           cache: true
 
-      - name: analyze, format, tests, goldens
+      - name: analyze, format, tests, goldens, APK size per ABI
         working-directory: apps/mobile
+        env:
+          APK_SIZE_CHECK: "1"
+          APK_MAX_MB: ${{ env.FARMER_APK_LIMIT_MB }}
         run: ./tool/check.sh
 
       - name: Build debug APKs
@@ -50,18 +59,9 @@ jobs:
             (cd "apps/$app" && flutter build apk --debug)
           done
 
-      # Debug APKs carry the JIT runtime, so the size gate uses a release build
-      # of the farmer app (debug-signed, not shipped).
-      - name: Farmer release APK size < 25 MB (FM-014)
-        working-directory: apps/mobile/apps/farmer
-        run: |
-          flutter build apk --release --target-platform android-arm64
-          apk=build/app/outputs/flutter-apk/app-release.apk
-          size_mb=$(( $(stat -c %s "$apk") / 1024 / 1024 ))
-          echo "farmer release APK: ${size_mb} MB (limit ${FARMER_APK_LIMIT_MB} MB)"
-          if [ "$size_mb" -ge "$FARMER_APK_LIMIT_MB" ]; then
-            echo "::error::farmer APK ${size_mb} MB exceeds ${FARMER_APK_LIMIT_MB} MB"; exit 1
-          fi
+      # The per-ABI release build and its 25 MB gate run inside check.sh above
+      # (tool/apk_size_check.sh), so the same command a developer runs locally
+      # is the one CI runs.
 
       - uses: actions/upload-artifact@v4
         with:

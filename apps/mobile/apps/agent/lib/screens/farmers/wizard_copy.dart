@@ -53,7 +53,7 @@ String formatDateDdMmYyyy(DateTime d) =>
     '${d.month.toString().padLeft(2, '0')}-${d.year}';
 
 /// Two-decimal acres.
-String acresText(double acres) => acres.toStringAsFixed(2);
+String acresText(double acres) => formatAcres(acres);
 
 /// Section heading used across the wizard and the profile.
 class SectionTitle extends StatelessWidget {

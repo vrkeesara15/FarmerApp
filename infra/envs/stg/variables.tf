@@ -255,6 +255,59 @@ variable "diagnosis_alerts_enabled" {
   default     = true
 }
 
+# --- Cost and security thresholds (OPS-012, OPS-013, NF-015) ---
+# The billing export and the budget live on the *billing account*, not the project, so both
+# of these stay empty until a billing admin has run docs/runbooks/cost-and-budget.md. Until
+# then the cost dataset exists and nothing else does; the alerts that do not need BigQuery
+# (LLM and SMS per tenant) work from day one.
+variable "billing_export_table" {
+  description = "OPS-012: table id of the Cloud Billing detailed usage-cost export inside the cost dataset (human gate). Empty = no cost views, no daily anomaly watch."
+  type        = string
+  default     = ""
+}
+
+variable "billing_account" {
+  description = "NF-015: billing account id (XXXXXX-XXXXXX-XXXXXX) for the monthly budget (human gate). Empty = no budget."
+  type        = string
+  default     = ""
+}
+
+variable "monthly_budget_inr" {
+  description = "NF-015: monthly infrastructure budget in rupees for this environment (pilot 25,000; 50 stores 1,00,000; dev is a fraction of either)."
+  type        = number
+  default     = 0
+}
+
+variable "llm_daily_inr_per_tenant" {
+  description = "OPS-012: LLM fallback spend for one tenant in a day that notifies the owner and platform lead."
+  type        = number
+  default     = 500
+}
+
+variable "sms_daily_inr_per_tenant" {
+  description = "OPS-012: SMS spend for one tenant in a day that notifies the owner and platform lead."
+  type        = number
+  default     = 500
+}
+
+variable "scc_organization_id" {
+  description = "OPS-013: organisation id, used only to let the SCC notification service agent publish findings to this project's topic. Pointing SCC at the topic is a separate org-level human gate."
+  type        = string
+  default     = ""
+}
+
+variable "armor_denied_per_5m" {
+  description = "OPS-013: Cloud Armor DENY responses in 5 minutes that page on-call. Raise it for an environment that runs load tests."
+  type        = number
+  default     = 500
+}
+
+variable "otp_sends_per_5m" {
+  description = "OPS-013: SMS OTPs for one tenant in 5 minutes that page on-call (SMS pumping)."
+  type        = number
+  default     = 300
+}
+
 # --- App settings (docs/deploy/configuration.md) ---
 variable "log_level" {
   description = "LOG_LEVEL of api / worker / jobs / migrate."

@@ -1,5 +1,11 @@
 # SPEC 10.3 ci-dbt: dbt build + tests on every PR touching dbt.
 #
+#   Every dbt invocation goes through scripts/dbt_run.py (OPS-011): it runs dbt and then
+#   emits the structured JSON lines the Cloud Monitoring log metrics alert on. On the
+#   bigquery-dev job DBT_CLOUD_LOG_PROJECT also writes them to Cloud Logging with the run's
+#   WIF credentials, so a failed dbt run raises the OPS-011 ticket even though the scheduled
+#   dbt Cloud Run job does not exist yet.
+#
 #   fixtures      always: replication allowlist check (AN-014) and `dbt build --target ci` on
 #                 DuckDB over the fixture seeds -- every model, every generic test (AN-012),
 #                 the KPI reconciliations, row scopes (AN-013), PII (AN-014) and the freshness
@@ -52,8 +58,11 @@ jobs:
       - name: Replication allowlist = dbt sources = fixtures (AN-014)
         run: uv run python scripts/check_replication.py
 
+      - name: OPS-011 result wrapper self-test
+        run: uv run python scripts/dbt_run.py --self-test
+
       - name: dbt build --target ci
-        run: uv run dbt build --target ci --fail-fast
+        run: uv run python scripts/dbt_run.py build --target ci --fail-fast
 
       - name: Upload dbt artifacts
         if: failure()
@@ -98,10 +107,14 @@ jobs:
       - name: dbt build --target dev
         env:
           DBT_PROJECT_ID: farmerapp-dev
-        run: uv run dbt build --target dev --fail-fast
+          DBT_CLOUD_LOG_PROJECT: farmerapp-dev
+        run: uv run python scripts/dbt_run.py build --target dev --fail-fast
 
+      # Informational in dev (no steady traffic, so sources are legitimately quiet), but the
+      # lines still reach Cloud Logging: they are what OPS-011 alerts on in stg / prd.
       - name: dbt source freshness (AN-010, informational in dev)
         continue-on-error: true
         env:
           DBT_PROJECT_ID: farmerapp-dev
-        run: uv run dbt source freshness --target dev
+          DBT_CLOUD_LOG_PROJECT: farmerapp-dev
+        run: uv run python scripts/dbt_run.py source freshness --target dev

@@ -12,7 +12,14 @@ dependencies:
   farmerapp_core:
     path: ../../packages/core
   firebase_core: ^4.3.0
+  # NF-014 / SPEC 8.4: crash-free sessions per version (OPS-002), cold-start and
+  # network traces (NF-005), and the remote kill switches. All three are optional:
+  # without google-services.json the adapters in lib/observability.dart fall back to
+  # the core's no-op seams and the app runs unchanged.
+  firebase_crashlytics: ^5.4.0
   firebase_messaging: ^16.0.4
+  firebase_performance: ^0.11.6
+  firebase_remote_config: ^6.7.0
   flutter:
     sdk: flutter
   flutter_localizations:

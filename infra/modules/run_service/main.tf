@@ -9,13 +9,13 @@ resource "google_cloud_run_v2_service" "svc" {
   # SEC-015 / SEC-018: LB-fronted services skip the invoker IAM check instead of granting
   # allUsers (blocked by domain-restricted sharing); ingress = internal LB is the gate.
   invoker_iam_disabled = var.invoker_iam_disabled
-  labels               = merge({ app = "farmerapp", service = var.name }, var.labels)
+  labels               = merge({ app = "farmerapp", service = var.name, component = var.name, tenancy = var.tenancy }, var.labels)
 
   template {
     service_account                  = var.service_account_email
     max_instance_request_concurrency = var.concurrency
     timeout                          = "${var.timeout_seconds}s"
-    labels                           = merge({ app = "farmerapp", service = var.name }, var.labels)
+    labels                           = merge({ app = "farmerapp", service = var.name, component = var.name, tenancy = var.tenancy }, var.labels)
 
     scaling {
       min_instance_count = var.min_instances

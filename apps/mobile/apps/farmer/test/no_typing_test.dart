@@ -7,7 +7,13 @@ import 'kisan_harness.dart';
 
 /// NF-010: no farmer flow needs typing beyond the phone number and the OTP.
 /// Walks every route of the farmer app and asserts there is no text input
-/// outside F02 (phone) and F03 (OTP).
+/// outside F02 (phone) and F03 (OTP), that those two are the *only* screens
+/// allowed to ask, and that both of them open a number pad rather than a
+/// letter keyboard.
+///
+/// The walk is shared with `a11y_test.dart` (NF-009) through [allPaths], so a
+/// screen added to the router is covered by both the literacy gate and the
+/// accessibility gate the moment it exists.
 
 /// Every concrete path of [routes] (path parameters filled in).
 List<String> allPaths(List<RouteBase> routes, [String parent = '']) {
@@ -36,6 +42,37 @@ List<String> allPaths(List<RouteBase> routes, [String parent = '']) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final paths = allPaths(buildRouter().configuration.routes);
+
+  test('typing is allowed on exactly two screens, and they are the two '
+      'NF-010 names', () {
+    // The requirement is a *closed* set, so the assertion is equality, not
+    // containment: a third screen added to `typingAllowed` is the failure
+    // this test exists to catch.
+    expect(AppRoutes.typingAllowed, <String>{AppRoutes.phone, AppRoutes.otp});
+  });
+
+  testWidgets('the two typing screens ask for digits only, on a number pad', (
+    tester,
+  ) async {
+    // "No flow requires typing beyond phone number and OTP" is only true if
+    // those two are themselves reachable by a farmer who cannot read a
+    // QWERTY keyboard: both must open the number pad.
+    for (final path in AppRoutes.typingAllowed) {
+      usePhoneSurface(tester);
+      final deps = KisanDeps()..seedWorld();
+      addTearDown(deps.dispose);
+      await pumpApp(tester, deps.app(initialLocation: path));
+      final fields = find.byType(EditableText, skipOffstage: false);
+      expect(fields, findsWidgets, reason: '$path should ask for digits');
+      for (final field in tester.widgetList<EditableText>(fields)) {
+        expect(
+          field.keyboardType,
+          anyOf(TextInputType.phone, TextInputType.number),
+          reason: '$path must open the number pad, not a letter keyboard',
+        );
+      }
+    }
+  });
 
   test('the walk covers every farmer screen', () {
     expect(paths, hasLength(greaterThanOrEqualTo(26)));

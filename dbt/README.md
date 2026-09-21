@@ -24,6 +24,7 @@ flowchart LR
 | `make check-dbt` | Part of `make check`: replication allowlist check + `make dbt` (skips when `uv` is missing). |
 | `make dbt-dev` | `dbt build --target dev` on BigQuery `farmerapp-dev` (ADC; `DBT_IMPERSONATE_SA=farmerapp-dbt@farmerapp-dev.iam.gserviceaccount.com` to run as the dbt SA). Needs the dev stream running. |
 | `make dbt-freshness` | AN-010 `dbt source freshness --target dev`. |
+| `uv run python scripts/dbt_run.py <dbt args>` | OPS-011: runs dbt, then turns `target/run_results.json` / `target/sources.json` into the structured JSON lines Cloud Monitoring alerts on, and exits with dbt's own code. Every target above goes through it; `--self-test` checks the parser with no dbt and no cloud. |
 
 By hand: `cd dbt && uv sync && DBT_PROFILES_DIR=. uv run dbt build --target ci`. Versions are
 pinned in `pyproject.toml` / `uv.lock` (dbt-core 1.11, dbt-duckdb, dbt-bigquery). No dbt packages:

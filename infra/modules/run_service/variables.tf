@@ -130,9 +130,25 @@ variable "startup_probe_path" {
 }
 
 variable "labels" {
-  description = "Extra labels."
+  description = "Extra labels merged into the service's labels (OPS-012 cost attribution: env, tenant_id on a dedicated service)."
   type        = map(string)
   default     = {}
+}
+
+# OPS-012: the Cloud Billing export groups spend by resource label, so every service says
+# what it is (`component`) and whose it is (`tenancy`). Every service is `shared` today --
+# one multi-tenant deployment -- so modules/cost apportions their cost across tenants;
+# `dedicated` plus a `tenant_id` label is what a single-tenant service would set, and the
+# cost views bill that directly instead.
+variable "tenancy" {
+  description = "OPS-012: `shared` (every tenant, cost apportioned) or `dedicated` (one tenant, cost billed to the `tenant_id` label)."
+  type        = string
+  default     = "shared"
+
+  validation {
+    condition     = contains(["shared", "dedicated"], var.tenancy)
+    error_message = "tenancy must be shared or dedicated."
+  }
 }
 
 variable "invoker_iam_disabled" {

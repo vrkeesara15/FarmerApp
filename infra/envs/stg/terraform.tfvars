@@ -29,3 +29,12 @@ db_pool = {
 
 # M7 VA-004 review agent (docs/prs/M7-rules.md): on.
 flag_summary_llm = "claude"
+
+# NF-015 / OPS-012 (docs/cost-model.md). stg mirrors prd's shape at a fraction of its load.
+# HUMAN GATE: billing export + budget, docs/runbooks/cost-and-budget.md.
+monthly_budget_inr   = 8000
+billing_export_table = ""
+billing_account      = ""
+# OPS-013: Cloud Armor is log-only in stg (SPEC 9.2), so DENY counts stay low.
+armor_denied_per_5m = 500
+otp_sends_per_5m    = 300

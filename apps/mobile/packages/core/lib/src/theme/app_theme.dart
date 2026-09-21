@@ -131,9 +131,20 @@ class AppThemeData extends ThemeExtension<AppThemeData> {
   /// True for the high-contrast theme.
   bool get isSunlight => mode == AppThemeMode.sunlight;
 
-  /// Standard 1-px (or 2-px in Sunlight) border side.
+  /// Standard 1-px (or 2-px in Sunlight) border side: the decorative hairline
+  /// between rows and around cards.
   BorderSide get borderSide =>
       BorderSide(color: palette.border, width: borderWidth);
+
+  /// The boundary of an interactive control (text field, outlined button).
+  ///
+  /// NF-009 / WCAG 1.4.11 asks for 3:1 against the background for anything
+  /// that identifies a control. The decorative [borderSide] is 1.35:1 in the
+  /// Light theme by design -- a hairline that reads as a divider, not as an
+  /// edge -- so a field that used it was invisible to a farmer in sunlight or
+  /// with low vision. `borderStrong` is the same shape at 5.5:1.
+  BorderSide get controlBorderSide =>
+      BorderSide(color: palette.borderStrong, width: borderWidth);
 
   /// Tinted container colour, or plain surface in Sunlight (no tints there).
   Color tint(Color container) => isSunlight ? palette.surface : container;
@@ -199,14 +210,18 @@ abstract final class AppTheme {
       surface: palette.surface,
       onSurface: palette.text,
       onSurfaceVariant: palette.textSecondary,
-      outline: palette.border,
+      // Material paints control outlines from `outline` and dividers from
+      // `outlineVariant` (NF-009: 3:1 for the first, decorative for the second).
+      outline: palette.borderStrong,
       outlineVariant: palette.border,
       surfaceContainerHighest: palette.background,
     );
 
+    // NF-009 / WCAG 1.4.11: a text field's outline identifies a control, so it
+    // needs 3:1 -- unlike the dividers and card edges, which keep `border`.
     final inputBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(Tokens.radiusInput),
-      borderSide: BorderSide(color: palette.border, width: borderWidth),
+      borderSide: BorderSide(color: palette.borderStrong, width: borderWidth),
     );
 
     return ThemeData(

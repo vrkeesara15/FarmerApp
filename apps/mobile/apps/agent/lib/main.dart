@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:workmanager/workmanager.dart';
 
 import 'app.dart';
+import 'observability.dart';
 import 'push.dart';
 import 'router.dart';
 import 'screens/store/store_platform.dart';
@@ -65,6 +66,10 @@ void callbackDispatcher() {
 }
 
 Future<void> main() async {
+  // NF-005 / NF-001: the clock starts on the first line of main(), before the
+  // bindings, so the measured cold start includes everything the officer
+  // waits for (docs/device-matrix.md).
+  final startTrace = AppStartTrace();
   WidgetsFlutterBinding.ensureInitialized();
   await Workmanager().initialize(callbackDispatcher);
   // FA-007: without google-services.json this returns a NoPushService and
@@ -73,23 +78,47 @@ Future<void> main() async {
   if (push is FirebasePushService) {
     FirebaseMessaging.onBackgroundMessage(mitraBackgroundMessageHandler);
   }
-  await startMitra(push: push);
+  // NF-014: Crashlytics, Performance and Remote Config, or the core's no-op
+  // seams when this build has no Firebase (observability.dart).
+  final obs = await MitraObservability.create(appVersion: agentAppVersion);
+  // Everything after this point runs inside the guarded zone, so an error on
+  // the start-up path is a reported crash rather than a blank screen.
+  await runWithCrashReporting(
+    obs.crashes,
+    () => startMitra(push: push, obs: obs, startTrace: startTrace),
+  );
 }
 
 /// Builds the provider container and runs the app. A remote wipe (SEC-025)
 /// tears this run down, wipes, and calls [startMitra] again: the fresh
 /// database carries the A08 notice, so the router opens "Signed out by
 /// your administrator".
-Future<void> startMitra({PushService push = const NoPushService()}) async {
+Future<void> startMitra({
+  PushService push = const NoPushService(),
+  MitraObservability obs = MitraObservability.disabled,
+  AppStartTrace? startTrace,
+}) async {
   // Real API (FA-001): base URL from --dart-define=API_BASE_URL, default
   // http://10.0.2.2:8000 (host machine from the Android emulator). Every
   // call goes through one client: certificate pinning (API_CERT_PINS), Play
   // Integrity on login and sensitive actions, wipe detection (SEC-024/025).
   final store = SecureTokenStore();
   final wipe = WipeSignal();
+  // SPEC 8.4: remote flags first -- a kill switch that only takes effect on
+  // the *second* start is not a kill switch. A failed fetch keeps the local
+  // defaults (remote_flags.dart), which matters here: an officer can be
+  // offline for a whole working day (NF-002).
+  final flagOverrides = await remoteFlagOverrides(obs.flags);
+  final flags = obs.flags.flags;
   final client = buildApiHttpClient(
     wipeSignal: wipe,
     attestation: const PlayIntegrityAttestation(),
+    // NF-014: every request carries a W3C traceparent, and the trace id goes
+    // on the crash report, so a Crashlytics issue names the API trace that
+    // was in flight when the app died.
+    sampler: TraceSampler(ratio: flags.traceSampleRatio),
+    onTrace: (trace) =>
+        unawaited(obs.crashes.setCustomKey(CrashKeys.traceId, trace.traceId)),
   );
   final auth = HttpAuthApi(
     store: store,
@@ -128,6 +157,11 @@ Future<void> startMitra({PushService push = const NoPushService()}) async {
   final container = ProviderContainer(
     overrides: [
       ...settings,
+      ...flagOverrides,
+      // NF-014: the seams the app reports through. Inert when this build has
+      // no Firebase.
+      crashReporterProvider.overrideWithValue(obs.crashes),
+      performanceMonitorProvider.overrideWithValue(obs.performance),
       appDatabaseProvider.overrideWithValue(db),
       tokenStoreProvider.overrideWithValue(store),
       authApiProvider.overrideWithValue(auth),
@@ -262,7 +296,7 @@ Future<void> startMitra({PushService push = const NoPushService()}) async {
       container.dispose();
       client.close();
     },
-    restart: () => startMitra(push: push),
+    restart: () => startMitra(push: push, obs: obs),
   ).arm();
 
   // Periodic background sync + immediate sync on reconnect (NF-002/NF-003).
@@ -291,9 +325,14 @@ Future<void> startMitra({PushService push = const NoPushService()}) async {
       if (online) unawaited(settingsSync.pullIfStale());
     });
   }
+  // NF-005: the database, settings, session, duty state and schedulers are
+  // all up; the officer can act from the first frame on.
+  startTrace?.markInteractive();
   runApp(
     UncontrolledProviderScope(container: container, child: const MitraApp()),
   );
+  // Reports app_start once the engine has actually rasterised that frame.
+  startTrace?.reportFirstFrame(obs.performance);
   // FA-007: register the FCM token for this session, listen for data
   // messages and follow a tapped push to its screen (the router exists by
   // now). All of it is inert when push is a NoPushService.
