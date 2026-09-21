@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import dataclasses
 import uuid
+from datetime import date
 
 import pytest
 
@@ -23,9 +24,12 @@ from farmerapp.diagnosis.llm import (
     guard_request,
     loggable_prompt,
 )
+from farmerapp.nlq.llm import NlqRequest
+from farmerapp.nlq.llm import guard_request as guard_nlq_request
 from farmerapp.pii.llm_guard import (
     DIAGNOSIS_PROMPT_FIELDS,
     FLAG_BUNDLE_KEYS,
+    NLQ_PROMPT_FIELDS,
     PromptPiiError,
     assert_no_exif,
     findings,
@@ -158,6 +162,35 @@ def _request(**overrides: object) -> LlmRequest:
 def test_diagnosis_prompt_fields_are_exactly_the_reviewed_set() -> None:
     """Adding a field to LlmRequest without reviewing it in llm_guard fails here."""
     assert {f.name for f in dataclasses.fields(LlmRequest)} == set(DIAGNOSIS_PROMPT_FIELDS)
+
+
+def test_nlq_prompt_fields_are_exactly_the_reviewed_set() -> None:
+    """AN-016: adding a field to NlqRequest without reviewing it here fails."""
+    assert {f.name for f in dataclasses.fields(NlqRequest)} == set(NLQ_PROMPT_FIELDS)
+
+
+def test_nlq_prompt_carries_a_schema_and_a_scope_but_never_a_person() -> None:
+    clean = NlqRequest.build(
+        question="which officers had fewer than 3 verified visits last week?",
+        role="cluster head",
+        scope="one cluster only",
+        today=date(2026, 9, 21),
+    )
+    guard_nlq_request(clean)  # does not raise
+    for bad in (
+        "what did 9876543210 buy?",
+        "e-mail the answer to ramesh@example.com",
+        "who farms at 17.3850, 78.4867?",
+    ):
+        with pytest.raises(PromptPiiError):
+            guard_nlq_request(
+                NlqRequest.build(
+                    question=bad,
+                    role="owner",
+                    scope="the whole company",
+                    today=date(2026, 9, 21),
+                )
+            )
 
 
 def test_diagnosis_prompt_passes_the_guard() -> None:

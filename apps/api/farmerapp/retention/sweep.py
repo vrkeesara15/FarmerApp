@@ -90,13 +90,27 @@ def _quote(identifier: str) -> str:
 #: go through :func:`_quote`. The cutoff is a bound parameter. Same judgement, and the same
 #: markers, as ``farmerapp/mlops/reembed.py``.
 async def _count(session: AsyncSession, table: str, column: str, cutoff: datetime) -> int:
+<<<<<<< HEAD
     stmt = text(f"SELECT count(*) FROM {_quote(table)} WHERE {_quote(column)} < :cutoff")  # nosec B608
+=======
+    stmt = text(
+        # identifiers come from the retention policy and go through _quote
+        f"SELECT count(*) FROM {_quote(table)} WHERE {_quote(column)} < :cutoff"  # nosec B608
+    )
+>>>>>>> feat/M8-market-referral-nlq
     return int((await session.scalar(stmt, {"cutoff": cutoff})) or 0)
 
 
 async def _delete(session: AsyncSession, table: str, column: str, cutoff: datetime) -> int:
     result = await session.execute(
+<<<<<<< HEAD
         text(f"DELETE FROM {_quote(table)} WHERE {_quote(column)} < :cutoff"),  # nosec B608
+=======
+        text(
+            # identifiers come from the retention policy and go through _quote
+            f"DELETE FROM {_quote(table)} WHERE {_quote(column)} < :cutoff"  # nosec B608
+        ),
+>>>>>>> feat/M8-market-referral-nlq
         {"cutoff": cutoff},
     )
     return int(getattr(result, "rowcount", 0) or 0)

@@ -1,11 +1,12 @@
 """SEC-027 / NF-011: the one guard every LLM call goes through.
 
-Two call sites send data to a model — the DX-004 diagnosis fallback
-(``farmerapp.diagnosis.llm``) and the VA-004 flag review agent
-(``farmerapp.flags.review_agent``) — and both must obey the same rule: *the prompt carries
-crop context and record ids, never a person*. Before this module each site had its own idea
-of what that meant. Now both build their prompt text, hand it to :func:`guard_prompt`, and
-the call is refused (``PromptPiiError``) when anything person-shaped survives.
+Three call sites send data to a model — the DX-004 diagnosis fallback
+(``farmerapp.diagnosis.llm``), the VA-004 flag review agent
+(``farmerapp.flags.review_agent``) and the AN-016 question writer (``farmerapp.nlq.llm``) —
+and all three must obey the same rule: *the prompt carries crop context, a schema and record
+ids, never a person*. Before this module each site had its own idea of what that meant. Now
+they build their prompt text, hand it to :func:`guard_prompt`, and the call is refused
+(``PromptPiiError``) when anything person-shaped survives.
 
 What the guard rejects in prompt text:
 
@@ -21,10 +22,10 @@ contact detail (:data:`PII_KEYS`, ``*_name``, anything containing ``phone``). ``
 removes those keys and masks phone-like runs; the guard is the assertion that the scrubbing
 actually happened, so a future prompt that adds a field is a failing test, not a leak.
 
-The allow-lists :data:`DIAGNOSIS_PROMPT_FIELDS` and :data:`FLAG_BUNDLE_KEYS` pin the shape of
-each prompt. ``tests/pii/test_llm_guard.py`` compares them against the real request
-dataclass and the real evidence bundle, so adding a field to either without reviewing it
-here fails CI.
+The allow-lists :data:`DIAGNOSIS_PROMPT_FIELDS`, :data:`FLAG_BUNDLE_KEYS` and
+:data:`NLQ_PROMPT_FIELDS` pin the shape of each prompt. ``tests/pii/test_llm_guard.py``
+compares them against the real request dataclasses and the real evidence bundle, so adding a
+field to any of them without reviewing it here fails CI.
 
 Images take the other half of SEC-027: ``farmerapp.diagnosis.images.strip_for_llm``
 re-encodes every photo from pixels, so no EXIF block (GPS position, device serial, capture
@@ -40,6 +41,7 @@ from typing import Any
 __all__ = [
     "DIAGNOSIS_PROMPT_FIELDS",
     "FLAG_BUNDLE_KEYS",
+    "NLQ_PROMPT_FIELDS",
     "PII_KEYS",
     "PromptPiiError",
     "assert_no_exif",
@@ -221,3 +223,10 @@ DIAGNOSIS_PROMPT_FIELDS = frozenset(
 FLAG_BUNDLE_KEYS = frozenset(
     {"rule", "severity", "subject", "raised_at", "records", "metrics", "map", "photos"}
 )
+
+#: AN-016: the only fields of ``farmerapp.nlq.llm.NlqRequest``. The owner's question, the
+#: **schema** of the authorised views (column names and meanings — never a row, never a
+#: value), the caller's role and scope in words (never an id), and today's date. No row the
+#: query returns ever goes back to a model. Adding a field here is the review gate
+#: (tests/pii/test_llm_guard.py compares it against the real dataclass).
+NLQ_PROMPT_FIELDS = frozenset({"question", "schema", "role", "scope", "today"})

@@ -29,6 +29,7 @@ dependencies = [
   "opentelemetry-instrumentation-sqlalchemy>=0.51b0",
   "opentelemetry-exporter-gcp-trace>=1.9",
   "anthropic>=0.80",
+  "sqlglot>=27",
   "numpy>=2.0",
   "cloud-sql-python-connector[asyncpg]>=1.18",
 ]

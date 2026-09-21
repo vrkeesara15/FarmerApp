@@ -140,6 +140,14 @@ class Farmer(Base, BaseColumns):
         UniqueConstraint("tenant_id", "phone"),
         # SEC-026: FA-012 duplicate phone, by hash
         UniqueConstraint("tenant_id", "phone_hash", name="uq_farmer_tenant_id_phone_hash"),
+        # FM-013: an invite code identifies exactly one farmer of the tenant.
+        Index(
+            "uq_farmer_referral_code",
+            "tenant_id",
+            "referral_code",
+            unique=True,
+            postgresql_where=text("referral_code IS NOT NULL"),
+        ),
         CheckConstraint(f"source IN ({_in(FarmerSource)})", name="source"),
         CheckConstraint(
             f"land_ownership IS NULL OR land_ownership IN ({_in(LandOwnership)})",
@@ -205,6 +213,9 @@ class Farmer(Base, BaseColumns):
     # VA-F06: when the device captured an offline registration (the sync op ``client_ts``,
     # capped at the server time); NULL for online registrations (``created_at`` applies).
     captured_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # FM-013: the farmer's own invite code, minted the first time they open the Refer screen
+    # (NULL until then, so no backfill). Unique per tenant; see farmerapp/referrals.
+    referral_code: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
     @staticmethod
     def last4(phone: str) -> str:

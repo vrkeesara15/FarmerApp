@@ -171,6 +171,10 @@ two URLs are used exactly as before.
 | `CORPUS_BUCKET` | TF `module.storage.bucket_names.corpus` | the `corpus` bucket: DX-011 held-out manifest, DX-012 training exports and candidate models | J (A signs approved-model URLs by `gs://` URI) | yes (jobs) |
 | `DIAGNOSIS_EVAL_MANIFEST` | default | `eval/heldout/manifest.csv` in `CORPUS_BUCKET` (or a `gs://` URI); upload is a human gate | J | no |
 | `WEATHER_PROVIDER` / `WEATHER_BASE_URL` / `WEATHER_TIMEOUT_S` / `WEATHER_CACHE_TTL_SECONDS` | default | `open_meteo` / `https://api.open-meteo.com` / 8 / 10800 (FM-008; only 0.1-degree grid-cell coordinates are sent; Terraform never sets the name, so deployments get `open_meteo`) | A | no |
+| `MANDI_PROVIDER` / `MANDI_BASE_URL` / `MANDI_TIMEOUT_S` / `MANDI_PAGE_SIZE` | default (M8) | `off` / `https://api.data.gov.in` / 10 / 500 — FM-012; `data_gov_in` is the OGD India daily mandi resource (Agmarknet figures) and needs `MANDI_API_KEY`; the prd guard refuses `fake` | A J | no |
+| `MANDI_API_KEY` | Secret Manager (to create; human gate: register the data.gov.in account and accept the GODL licence) | the data.gov.in API key; only a state, a district and a commodity name are ever sent with it | A J | no |
+| `NLQ_LLM` / `NLQ_LLM_MODEL` / `NLQ_LLM_MAX_TOKENS` | default (M8) | `off` / `claude-opus-5` / 4000 — AN-016; `claude` needs `ANTHROPIC_API_KEY`; the prd guard refuses `fake` | A | no |
+| `NLQ_ROW_LIMIT` / `NLQ_STATEMENT_TIMEOUT_MS` | default (M8) | 200 / 5000 — the hard row cap and `statement_timeout` of the read-only AN-016 query | A | no |
 | `PLAY_INTEGRITY_MODE` / `PLAY_INTEGRITY_PACKAGE_NAMES` / `PLAY_INTEGRITY_TIMEOUT_S` | default | `off` / both app ids / 2.0 (`google` is a human gate, SEC-024) | A | no |
 | `PUSH_PROVIDER` | default (M7; TF wiring pending) | `off`; `fcm` once the Firebase project is set up (human gate; prd guard refuses `fake`) — FCM HTTP v1 with the runtime SA's OAuth token (role `cloudmessaging.messages.create`), no server key | W J | no |
 | `FCM_PROJECT` / `NOTIFY_MAX_ATTEMPTS` | default | `GCP_PROJECT` / 5 | W J | no |

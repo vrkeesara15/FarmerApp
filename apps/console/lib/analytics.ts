@@ -713,4 +713,89 @@ export const analytics = {
     }),
   deleteSegment: (id: string) =>
     authedFetch<void>(`v1/analytics/segments/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  /** AN-016: a question in words; the answer, the rows and the generated read-only SQL. */
+  ask: (question: string) => authedFetch<AskOut>("v1/analytics/ask", { body: { question } }),
+  askViews: () => authedFetch<AskViewsOut>("v1/analytics/ask/views"),
+  /** FM-013: referrals per store, and the flat list. */
+  referralSummary: () => authedFetch<ReferralSummaryOut>("v1/referrals/summary"),
+  referrals: (q: { store_id?: string; status?: ReferralStatus; limit?: number } = {}) =>
+    authedFetch<ReferralListOut>(`v1/referrals${queryString(q)}`),
+  rewardReferral: (id: string) =>
+    authedFetch<ReferralRow>(`v1/referrals/${encodeURIComponent(id)}/reward`, { body: {} }),
 };
+
+// ---- AN-016 natural-language questions ----------------------------------------------------
+/** `POST /v1/analytics/ask`. `sql` is generated and read-only; it is shown, never re-sent. */
+export interface AskOut {
+  answered: boolean;
+  question: string;
+  answer: string | null;
+  reason: string | null;
+  message_key: string | null;
+  sql: string | null;
+  views: string[];
+  columns: string[];
+  rows: Record<string, unknown>[];
+  row_count: number;
+  truncated: boolean;
+  scope: string;
+  model: string | null;
+  elapsed_ms: number;
+}
+
+export interface AskViewOut {
+  name: string;
+  grain: string;
+  description: string;
+  columns: { name: string; description: string }[];
+}
+
+export interface AskViewsOut {
+  views: AskViewOut[];
+  enabled: boolean;
+}
+
+// ---- FM-013 referrals ---------------------------------------------------------------------
+export type ReferralStatus = "pending" | "attributed" | "rewarded" | "rejected";
+
+export interface ReferralRow {
+  id: string;
+  code: string;
+  status: ReferralStatus;
+  source: string;
+  referrer_farmer_id: string;
+  invited_farmer_id: string | null;
+  /** Last four digits only (AN-014 / SEC-026): the console never sees a number. */
+  invited_phone_last4: string | null;
+  store_id: string | null;
+  referrer_reward_paise: number;
+  store_reward_paise: number;
+  reward_note: string | null;
+  attributed_at: string | null;
+  rewarded_at: string | null;
+  created_at: string;
+}
+
+export interface ReferralListOut {
+  items: ReferralRow[];
+  total: number;
+}
+
+export interface StoreReferralsRow {
+  store_id: string | null;
+  store_code: string | null;
+  store_name: string | null;
+  pending: number;
+  attributed: number;
+  rewarded: number;
+  total: number;
+  referrer_reward_paise: number;
+  store_reward_paise: number;
+}
+
+export interface ReferralSummaryOut {
+  stores: StoreReferralsRow[];
+  pending: number;
+  attributed: number;
+  rewarded: number;
+}

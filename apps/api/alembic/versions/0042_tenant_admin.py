@@ -57,7 +57,7 @@ from sqlalchemy.dialects import postgresql
 from farmerapp.db.rls import disable_rls, enable_rls
 
 revision: str = "0042"
-down_revision: str | Sequence[str] | None = ("0036", "0040")
+down_revision: str | Sequence[str] | None = "0041"
 branch_labels: str | Sequence[str] | None = ("tenant_admin",)
 depends_on: str | Sequence[str] | None = None
 

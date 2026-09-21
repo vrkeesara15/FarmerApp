@@ -5095,4 +5095,93 @@ class CoreLocalizationsKn extends CoreLocalizations {
 
   @override
   String get farmerNotifGenericBody => 'ನೋಡಲು ಸ್ಪರ್ಶಿಸಿ.';
+
+  @override
+  String get mandiTitle => 'ಮಂಡಿ ಬೆಲೆಗಳು';
+
+  @override
+  String get mandiOpen => 'ಮಂಡಿ ಬೆಲೆಗಳು';
+
+  @override
+  String get mandiEmptyTitle => 'ಇನ್ನೂ ಬೆಲೆಗಳಿಲ್ಲ';
+
+  @override
+  String get mandiEmptyHelp =>
+      'ಮಾರುಕಟ್ಟೆ ಪ್ರಕಟಿಸಿದ ನಂತರ ನಿಮ್ಮ ಬೆಳೆಗಳ ಬೆಲೆಗಳು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ.';
+
+  @override
+  String get mandiIndicative =>
+      'ಈ ಬೆಲೆಗಳು ಕೇವಲ ಮಾಹಿತಿಗಾಗಿ. ಇವು ಸಾರ್ವಜನಿಕ ಮಾರುಕಟ್ಟೆ ಪಟ್ಟಿಯಿಂದ ಬಂದವು, ಅಂಗಡಿಯಿಂದ ಅಲ್ಲ.';
+
+  @override
+  String mandiSource(String source) {
+    return '$source ಇಂದ';
+  }
+
+  @override
+  String mandiPriceOn(String date) {
+    return '$date ರ ಬೆಲೆ';
+  }
+
+  @override
+  String get mandiPerQuintal => 'ಕ್ವಿಂಟಾಲ್‌ಗೆ';
+
+  @override
+  String mandiRange(String low, String high) {
+    return '$low ರಿಂದ $high';
+  }
+
+  @override
+  String get mandiNoPriceYet => 'ಈ ಬೆಳೆಗೆ ಇನ್ನೂ ಬೆಲೆ ಇಲ್ಲ';
+
+  @override
+  String get referralTitle => 'ರೈತರನ್ನು ಆಹ್ವಾನಿಸಿ';
+
+  @override
+  String get referralOpen => 'ರೈತರನ್ನು ಆಹ್ವಾನಿಸಿ';
+
+  @override
+  String get referralIntro =>
+      'ನಿಮಗೆ ಗೊತ್ತಿರುವ ರೈತರೊಂದಿಗೆ ನಿಮ್ಮ ಕೋಡ್ ಹಂಚಿಕೊಳ್ಳಿ. ಅವರು ಸೇರಿದಾಗ ನಿಮಗೂ ನಿಮ್ಮ ಹತ್ತಿರದ ಅಂಗಡಿಗೂ ಬಹುಮಾನ ಸಿಗುತ್ತದೆ.';
+
+  @override
+  String get referralYourCode => 'ನಿಮ್ಮ ಕೋಡ್';
+
+  @override
+  String get referralShareWhatsApp => 'ವಾಟ್ಸಾಪ್‌ನಲ್ಲಿ ಹಂಚಿ';
+
+  @override
+  String get referralShareSms => 'SMS ಮೂಲಕ ಕಳುಹಿಸಿ';
+
+  @override
+  String referralShareMessage(String link, String code) {
+    return 'ಬೆಳೆ ಸಲಹೆ ಮತ್ತು ಕೃಷಿ ಸಾಮಗ್ರಿಗಾಗಿ ಕಿಸಾನ್‌ನಲ್ಲಿ ನನ್ನೊಂದಿಗೆ ಸೇರಿ. $link ತೆರೆಯಿರಿ ಅಥವಾ ನನ್ನ ಕೋಡ್ $code ಬಳಸಿ.';
+  }
+
+  @override
+  String referralInvited(int count) {
+    return '$count ಆಹ್ವಾನಿಸಲಾಗಿದೆ';
+  }
+
+  @override
+  String referralJoined(int count) {
+    return '$count ಸೇರಿದ್ದಾರೆ';
+  }
+
+  @override
+  String referralRewarded(int count) {
+    return '$count ಬಹುಮಾನ ಪಡೆದಿದ್ದಾರೆ';
+  }
+
+  @override
+  String get referralRewardNone => 'ಬಹುಮಾನ ಏನೆಂದು ನಿಮ್ಮ ಅಂಗಡಿ ತಿಳಿಸುತ್ತದೆ.';
+
+  @override
+  String get referralOff => 'ಸದ್ಯಕ್ಕೆ ಆಹ್ವಾನಗಳು ಸ್ಥಗಿತಗೊಂಡಿವೆ.';
+
+  @override
+  String get referralClaimed => 'ಧನ್ಯವಾದ. ನಿಮ್ಮ ಆಹ್ವಾನ ಎಣಿಸಲಾಗಿದೆ.';
+
+  @override
+  String get referralClaimFailed => 'ಆ ಆಹ್ವಾನವನ್ನು ಬಳಸಲಾಗಲಿಲ್ಲ.';
 }

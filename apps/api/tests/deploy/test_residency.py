@@ -126,9 +126,14 @@ def test_foreign_personal_data_egress_needs_a_review_and_an_off_switch() -> None
 
 
 def test_the_live_foreign_egress_is_the_llm_and_the_weather_api() -> None:
-    """SPEC NF-011 names exactly these two; a third live one needs a spec change."""
+    """SPEC NF-011 names the LLM and the weather API; another live one needs a spec change.
+
+    ``anthropic_nlq`` is the M8 AN-016 question writer — the same provider as the two M6/M7
+    LLM paths, under the same SEC-027 guard, carrying a schema and a question instead of a
+    photo. ``data_gov_in`` (FM-012) is not here: it is served from India.
+    """
     live = {e.name for e in foreign_destinations() if not e.personal_data}
-    assert live == {"anthropic", "anthropic_flag_summary", "open_meteo"}
+    assert live == {"anthropic", "anthropic_flag_summary", "anthropic_nlq", "open_meteo"}
     for entry in foreign_destinations():
         assert entry.carries and entry.control, entry.name
 
@@ -146,8 +151,9 @@ def test_a_reviewed_foreign_destination_is_actually_switched_off() -> None:
 
 def test_the_llm_entries_point_at_the_shared_guard() -> None:
     llm = [e for e in EGRESS if e.name.startswith("anthropic")]
-    assert len(llm) == 2
-    assert all("llm_guard" in e.control for e in llm), "SEC-027 is the control for both paths"
+    # DX-004 diagnosis fallback, VA-004 flag summaries, AN-016 questions.
+    assert len(llm) == 3
+    assert all("llm_guard" in e.control for e in llm), "SEC-027 is the control for every path"
 
 
 def test_the_weather_call_sends_only_a_rounded_grid_cell() -> None:

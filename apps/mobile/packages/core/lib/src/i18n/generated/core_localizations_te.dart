@@ -5093,4 +5093,93 @@ class CoreLocalizationsTe extends CoreLocalizations {
 
   @override
   String get farmerNotifGenericBody => 'చూడటానికి తాకండి.';
+
+  @override
+  String get mandiTitle => 'మండి ధరలు';
+
+  @override
+  String get mandiOpen => 'మండి ధరలు';
+
+  @override
+  String get mandiEmptyTitle => 'ఇంకా ధరలు లేవు';
+
+  @override
+  String get mandiEmptyHelp =>
+      'మార్కెట్ ప్రకటించిన తర్వాత మీ పంటల ధరలు ఇక్కడ కనిపిస్తాయి.';
+
+  @override
+  String get mandiIndicative =>
+      'ఈ ధరలు మీ సమాచారం కోసం మాత్రమే. ఇవి ప్రభుత్వ మార్కెట్ జాబితా నుండి వచ్చినవి, దుకాణం నుండి కాదు.';
+
+  @override
+  String mandiSource(String source) {
+    return '$source నుండి';
+  }
+
+  @override
+  String mandiPriceOn(String date) {
+    return '$date నాటి ధర';
+  }
+
+  @override
+  String get mandiPerQuintal => 'క్వింటాల్‌కు';
+
+  @override
+  String mandiRange(String low, String high) {
+    return '$low నుండి $high';
+  }
+
+  @override
+  String get mandiNoPriceYet => 'ఈ పంటకు ఇంకా ధర లేదు';
+
+  @override
+  String get referralTitle => 'ఒక రైతును ఆహ్వానించండి';
+
+  @override
+  String get referralOpen => 'ఒక రైతును ఆహ్వానించండి';
+
+  @override
+  String get referralIntro =>
+      'మీకు తెలిసిన రైతుతో మీ కోడ్‌ను పంచుకోండి. వారు చేరినప్పుడు మీకు మరియు మీ దగ్గరి దుకాణానికి బహుమతి వస్తుంది.';
+
+  @override
+  String get referralYourCode => 'మీ కోడ్';
+
+  @override
+  String get referralShareWhatsApp => 'వాట్సాప్‌లో పంచుకోండి';
+
+  @override
+  String get referralShareSms => 'SMS ద్వారా పంపండి';
+
+  @override
+  String referralShareMessage(String link, String code) {
+    return 'పంట సలహా మరియు వ్యవసాయ సామగ్రి కోసం కిసాన్‌లో నాతో చేరండి. $link తెరవండి లేదా నా కోడ్ $code వాడండి.';
+  }
+
+  @override
+  String referralInvited(int count) {
+    return '$count ఆహ్వానించారు';
+  }
+
+  @override
+  String referralJoined(int count) {
+    return '$count చేరారు';
+  }
+
+  @override
+  String referralRewarded(int count) {
+    return '$count బహుమతి పొందారు';
+  }
+
+  @override
+  String get referralRewardNone => 'బహుమతి ఏమిటో మీ దుకాణం చెబుతుంది.';
+
+  @override
+  String get referralOff => 'ఇప్పుడు ఆహ్వానాలు ఆపివేయబడ్డాయి.';
+
+  @override
+  String get referralClaimed => 'ధన్యవాదాలు. మీ ఆహ్వానం లెక్కించబడింది.';
+
+  @override
+  String get referralClaimFailed => 'ఆ ఆహ్వానాన్ని వాడలేకపోయాం.';
 }

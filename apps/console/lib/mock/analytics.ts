@@ -1807,6 +1807,272 @@ export function handleClusters(
   return ok({ items });
 }
 
+// ---- AN-016 "Ask" -------------------------------------------------------------------------
+/** The authorised views the mock assistant may read (mirrors farmerapp/nlq/views.py). */
+const ASK_VIEWS = [
+  {
+    name: "v_officer_week",
+    grain: "one row per field officer per ISO week (IST)",
+    description:
+      "Field-officer activity by week: visits made, how many were verified, how many the " +
+      "farmer confirmed, and time spent on farms.",
+    columns: [
+      { name: "officer_id", description: "uuid of the field officer" },
+      { name: "officer_name", description: "the officer's name" },
+      { name: "week_start", description: "date, the Monday of the ISO week in IST" },
+      { name: "visits", description: "integer, visits checked in that week" },
+      { name: "verified_visits", description: "integer, visits with status 'verified'" },
+    ],
+  },
+  {
+    name: "v_store_day",
+    grain: "one row per store per IST day",
+    description: "Store sales by day: fulfilled orders only, money in integer paise.",
+    columns: [
+      { name: "store_code", description: "short store code, e.g. WGL" },
+      { name: "date_day", description: "date, the IST day the order was placed" },
+      { name: "net_paise", description: "bigint, gross minus discount, in paise" },
+    ],
+  },
+  {
+    name: "v_farmer_summary",
+    grain: "one row per farmer",
+    description: "Farmers with their district, acreage and activity. No farmer name or phone.",
+    columns: [
+      { name: "farmer_id", description: "uuid of the farmer" },
+      { name: "district", description: "district of the farmer's village" },
+      { name: "acres", description: "numeric, total farm area in acres" },
+    ],
+  },
+  {
+    name: "v_referral_store",
+    grain: "one row per store per ISO week (IST)",
+    description: "Referrals credited to each store, by the week the referral was created.",
+    columns: [
+      { name: "store_code", description: "short store code" },
+      { name: "attributed", description: "integer, referrals attributed to a farmer" },
+    ],
+  },
+  {
+    name: "v_mandi_price_latest",
+    grain: "one row per crop, market, variety and grade, for the latest date held",
+    description: "Mandi prices from the public source, latest published date only.",
+    columns: [
+      { name: "crop_code", description: "crop code, e.g. paddy" },
+      { name: "modal_price_paise", description: "bigint, modal price per quintal in paise" },
+      { name: "price_date", description: "date the figure was published (IST)" },
+    ],
+  },
+];
+
+const ASK_ROLES = ["owner", "director", "cluster_head"];
+
+function handleAsk(
+  method: string,
+  id: string | undefined,
+  role: string,
+  body: unknown,
+): MockResult {
+  if (!ASK_ROLES.includes(role))
+    return problem(403, "forbidden", "Your role cannot use the assistant.");
+  if (id === "views" && method === "GET") return ok({ views: ASK_VIEWS, enabled: true });
+  if (id || method !== "POST") return problem(404, "not_found", "No such ask route.");
+  const question = String((body as { question?: unknown } | undefined)?.question ?? "").trim();
+  if (question.length < 3)
+    return problem(422, "validation_error", "question must be at least 3 characters.");
+  const text = question.toLowerCase();
+  const scope = role === "cluster_head" ? "one cluster only" : "the whole company";
+  const refuse = (reason: string): MockResult =>
+    ok({
+      answered: false,
+      question,
+      answer: null,
+      reason,
+      message_key: "analytics.ask.could_not_answer",
+      sql: null,
+      views: [],
+      columns: [],
+      rows: [],
+      row_count: 0,
+      truncated: false,
+      scope,
+      model: "mock",
+      elapsed_ms: 12,
+    });
+  if (/\b\d{10}\b/.test(question) || question.includes("@"))
+    return refuse(
+      "please ask without personal details such as a phone number, an e-mail address or a location",
+    );
+  const officers = role === "cluster_head" ? MOCK_OFFICERS.slice(0, 2) : MOCK_OFFICERS.slice(0, 4);
+  if (text.includes("officer") && text.includes("visit")) {
+    const rows = officers.map((o, i) => ({
+      officer_name: o.name,
+      verified_visits: i % 3,
+      visits: 3 + i,
+    }));
+    return ok({
+      answered: true,
+      question,
+      answer: `Field officers with fewer than three verified visits last week. ${rows.length} rows.`,
+      reason: null,
+      message_key: null,
+      sql:
+        "SELECT officer_name, verified_visits, visits\nFROM v_officer_week\n" +
+        "WHERE verified_visits < 3\nORDER BY verified_visits, officer_name",
+      views: ["v_officer_week"],
+      columns: ["officer_name", "verified_visits", "visits"],
+      rows,
+      row_count: rows.length,
+      truncated: false,
+      scope,
+      model: "mock",
+      elapsed_ms: 180,
+    });
+  }
+  if (text.includes("store") || text.includes("sale") || text.includes("revenue")) {
+    const rows = MOCK_STORES.slice(0, 5).map((s, i) => ({
+      store_code: s.code,
+      net_paise: 1_250_00 * (i + 3),
+    }));
+    return ok({
+      answered: true,
+      question,
+      answer: `Net sales per store over the days held. ${rows.length} rows.`,
+      reason: null,
+      message_key: null,
+      sql:
+        "SELECT store_code, SUM(net_paise) AS net_paise\nFROM v_store_day\n" +
+        "GROUP BY store_code\nORDER BY net_paise DESC",
+      views: ["v_store_day"],
+      columns: ["store_code", "net_paise"],
+      rows,
+      row_count: rows.length,
+      truncated: false,
+      scope,
+      model: "mock",
+      elapsed_ms: 150,
+    });
+  }
+  return refuse(
+    "I can only answer from the officer, store, farmer, referral and mandi-price views.",
+  );
+}
+
+// ---- FM-013 referrals ---------------------------------------------------------------------
+type MockReferral = {
+  id: string;
+  code: string;
+  status: "pending" | "attributed" | "rewarded" | "rejected";
+  source: string;
+  referrer_farmer_id: string;
+  invited_farmer_id: string | null;
+  invited_phone_last4: string | null;
+  store_id: string | null;
+  referrer_reward_paise: number;
+  store_reward_paise: number;
+  reward_note: string | null;
+  attributed_at: string | null;
+  rewarded_at: string | null;
+  created_at: string;
+};
+
+const REFERRAL_READ_ROLES = [
+  "owner",
+  "director",
+  "tenant_admin",
+  "auditor",
+  "cluster_head",
+  "store_manager",
+];
+const REFERRAL_REWARD_ROLES = ["owner", "tenant_admin", "store_manager"];
+
+const MOCK_REFERRALS: MockReferral[] = MOCK_STORES.slice(0, 6).flatMap((store, si) =>
+  Array.from({ length: (si % 3) + 1 }, (_v, i) => {
+    const status = (["pending", "attributed", "rewarded"] as const)[(si + i) % 3]!;
+    const day = `2026-09-${String(8 + ((si + i) % 12)).padStart(2, "0")}`;
+    return {
+      id: `ref-${store.code.toLowerCase()}-${i + 1}`,
+      code: `${store.code}${1000 + si * 10 + i}`,
+      status,
+      source: i % 2 === 0 ? "farmer_app" : "officer",
+      referrer_farmer_id: `farmer-${store.code.toLowerCase()}-${i}`,
+      invited_farmer_id: status === "pending" ? null : `farmer-${store.code.toLowerCase()}-x${i}`,
+      invited_phone_last4: String(4000 + si * 7 + i).slice(-4),
+      store_id: store.id,
+      referrer_reward_paise: 0,
+      store_reward_paise: 0,
+      reward_note: null,
+      attributed_at: status === "pending" ? null : `${day}T05:30:00Z`,
+      rewarded_at: status === "rewarded" ? `${day}T09:00:00Z` : null,
+      created_at: `${day}T04:00:00Z`,
+    };
+  }),
+);
+
+export function handleReferrals(
+  method: string,
+  path: string[],
+  query: URLSearchParams,
+  actor: MockActor | null,
+): MockResult | null {
+  if (path[0] !== "referrals") return null;
+  if (!actor) return problem(401, "unauthenticated", "Bearer token required.");
+  const role = actor.role;
+  const [, id, action] = path;
+  const visible = MOCK_REFERRALS.filter(
+    (r) => role !== "store_manager" || r.store_id === MOCK_MANAGER_STORE_ID,
+  );
+  if (method === "POST" && id && action === "reward") {
+    if (!REFERRAL_REWARD_ROLES.includes(role))
+      return problem(403, "forbidden", "Your role cannot reward a referral.");
+    const row = visible.find((r) => r.id === id);
+    if (!row) return problem(404, "not_found", "Referral not found.");
+    if (row.status !== "attributed" && row.status !== "rewarded")
+      return problem(409, "referral_not_attributed", "Only an attributed referral is rewarded.");
+    row.status = "rewarded";
+    row.rewarded_at = row.rewarded_at ?? new Date().toISOString();
+    return ok(row);
+  }
+  if (method !== "GET") return problem(405, "method_not_allowed", "Read-only.");
+  if (!REFERRAL_READ_ROLES.includes(role))
+    return problem(403, "forbidden", "Your role cannot read referrals.");
+  if (id === "summary") {
+    const byStore = new Map<string | null, MockReferral[]>();
+    for (const r of visible) byStore.set(r.store_id, [...(byStore.get(r.store_id) ?? []), r]);
+    const count = (rows: MockReferral[], s: string) => rows.filter((r) => r.status === s).length;
+    const stores = [...byStore.entries()]
+      .map(([storeId, rows]) => {
+        const store = MOCK_STORES.find((s) => s.id === storeId);
+        return {
+          store_id: storeId,
+          store_code: store?.code ?? null,
+          store_name: store?.name ?? null,
+          pending: count(rows, "pending"),
+          attributed: count(rows, "attributed"),
+          rewarded: count(rows, "rewarded"),
+          total: rows.length,
+          referrer_reward_paise: 0,
+          store_reward_paise: 0,
+        };
+      })
+      .sort((a, b) => (a.store_code ?? "~").localeCompare(b.store_code ?? "~"));
+    return ok({
+      stores,
+      pending: count(visible, "pending"),
+      attributed: count(visible, "attributed"),
+      rewarded: count(visible, "rewarded"),
+    });
+  }
+  if (id) return problem(404, "not_found", "No such referral route.");
+  const status = query.get("status");
+  const storeId = query.get("store_id");
+  const items = visible
+    .filter((r) => !status || r.status === status)
+    .filter((r) => !storeId || r.store_id === storeId)
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  return ok({ items, total: items.length });
+}
+
 export function handleAnalytics(
   method: string,
   path: string[],
@@ -1819,6 +2085,7 @@ export function handleAnalytics(
   const role = actor.role;
   const [, a, id, c] = path;
   if (a === "segments") return handleSegments(method, id, c, query, role, body);
+  if (a === "ask") return handleAsk(method, id, role, body);
   if (method !== "GET") return problem(405, "method_not_allowed", "Read-only.");
   const gate = (roles: readonly string[], fn: (sc: Scope) => MockResult): MockResult => {
     if (!roles.includes(role)) return problem(403, "forbidden", "Your role cannot read this view.");

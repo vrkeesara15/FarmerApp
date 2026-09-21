@@ -9229,6 +9229,150 @@ abstract class CoreLocalizations {
   /// In en, this message translates to:
   /// **'Tap to see it.'**
   String get farmerNotifGenericBody;
+
+  /// Farmer app F45 mandi prices (FM-012)
+  ///
+  /// In en, this message translates to:
+  /// **'Mandi prices'**
+  String get mandiTitle;
+
+  /// Farmer app F45 mandi prices (FM-012)
+  ///
+  /// In en, this message translates to:
+  /// **'Mandi prices'**
+  String get mandiOpen;
+
+  /// Farmer app F45 mandi prices (FM-012)
+  ///
+  /// In en, this message translates to:
+  /// **'No prices yet'**
+  String get mandiEmptyTitle;
+
+  /// Farmer app F45 mandi prices (FM-012)
+  ///
+  /// In en, this message translates to:
+  /// **'Prices for your crops will appear here once the market publishes them.'**
+  String get mandiEmptyHelp;
+
+  /// Farmer app F45 mandi prices (FM-012)
+  ///
+  /// In en, this message translates to:
+  /// **'These prices are only for your information. They come from a public market list, not from the store.'**
+  String get mandiIndicative;
+
+  /// Farmer app F45 mandi prices (FM-012)
+  ///
+  /// In en, this message translates to:
+  /// **'From {source}'**
+  String mandiSource(String source);
+
+  /// Farmer app F45 mandi prices (FM-012)
+  ///
+  /// In en, this message translates to:
+  /// **'Price of {date}'**
+  String mandiPriceOn(String date);
+
+  /// Farmer app F45 mandi prices (FM-012)
+  ///
+  /// In en, this message translates to:
+  /// **'per quintal'**
+  String get mandiPerQuintal;
+
+  /// Farmer app F45 mandi prices (FM-012)
+  ///
+  /// In en, this message translates to:
+  /// **'{low} to {high}'**
+  String mandiRange(String low, String high);
+
+  /// Farmer app F45 mandi prices (FM-012)
+  ///
+  /// In en, this message translates to:
+  /// **'No price for this crop yet'**
+  String get mandiNoPriceYet;
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a farmer'**
+  String get referralTitle;
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a farmer'**
+  String get referralOpen;
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'Share your code with a farmer you know. When they join, you and your nearest store both get the reward.'**
+  String get referralIntro;
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'Your code'**
+  String get referralYourCode;
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'Share on WhatsApp'**
+  String get referralShareWhatsApp;
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'Send by SMS'**
+  String get referralShareSms;
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'Join me on Kisan for crop advice and farm supplies. Open {link} or use my code {code}.'**
+  String referralShareMessage(String link, String code);
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'{count} invited'**
+  String referralInvited(int count);
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'{count} joined'**
+  String referralJoined(int count);
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rewarded'**
+  String referralRewarded(int count);
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'Your store will tell you what the reward is.'**
+  String get referralRewardNone;
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'Invites are switched off right now.'**
+  String get referralOff;
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you. Your invite has been counted.'**
+  String get referralClaimed;
+
+  /// Farmer app F71 refer a friend (FM-013)
+  ///
+  /// In en, this message translates to:
+  /// **'That invite could not be used.'**
+  String get referralClaimFailed;
 }
 
 class _CoreLocalizationsDelegate

@@ -34,6 +34,9 @@ export const FARMER_ROLES = [...OWNER_HOME_ROLES, "field_officer"] as const;
 
 export const STORE_ROLES = [...OWNER_HOME_ROLES, "accountant"] as const;
 
+/** C95 referrals (FM-013): the owner-home roles; a store manager sees only their own store. */
+export const REFERRAL_NAV_ROLES = OWNER_HOME_ROLES;
+
 /**
  * C60-C62 crop doctor screens (WC-006, WC-007): agronomists work there, owners read them
  * (`/v1/diagnoses/review-queue` and `/v1/corpus/*` reads); every other role is hidden.
@@ -79,6 +82,7 @@ export const ROUTE_ROLES: Readonly<Record<string, readonly string[]>> = {
   "/field-team": FIELD_TEAM_ROLES,
   "/farmers": FARMER_ROLES,
   "/stores": STORE_ROLES,
+  "/referrals": REFERRAL_NAV_ROLES,
   "/agronomist": AGRONOMIST_ROLES,
   "/campaigns": CAMPAIGN_NAV_ROLES,
   "/incentives": INCENTIVE_NAV_ROLES,

@@ -3794,5 +3794,142 @@
   "farmerNotifGenericBody": "Tap to see it.",
   "@farmerNotifGenericBody": {
     "description": "Farmer app inbox (FA-007)"
+  },
+  "mandiTitle": "Mandi prices",
+  "@mandiTitle": {
+    "description": "Farmer app F45 mandi prices (FM-012)"
+  },
+  "mandiOpen": "Mandi prices",
+  "@mandiOpen": {
+    "description": "Farmer app F45 mandi prices (FM-012)"
+  },
+  "mandiEmptyTitle": "No prices yet",
+  "@mandiEmptyTitle": {
+    "description": "Farmer app F45 mandi prices (FM-012)"
+  },
+  "mandiEmptyHelp": "Prices for your crops will appear here once the market publishes them.",
+  "@mandiEmptyHelp": {
+    "description": "Farmer app F45 mandi prices (FM-012)"
+  },
+  "mandiIndicative": "These prices are only for your information. They come from a public market list, not from the store.",
+  "@mandiIndicative": {
+    "description": "Farmer app F45 mandi prices (FM-012)"
+  },
+  "mandiSource": "From {source}",
+  "@mandiSource": {
+    "description": "Farmer app F45 mandi prices (FM-012)",
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "mandiPriceOn": "Price of {date}",
+  "@mandiPriceOn": {
+    "description": "Farmer app F45 mandi prices (FM-012)",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "mandiPerQuintal": "per quintal",
+  "@mandiPerQuintal": {
+    "description": "Farmer app F45 mandi prices (FM-012)"
+  },
+  "mandiRange": "{low} to {high}",
+  "@mandiRange": {
+    "description": "Farmer app F45 mandi prices (FM-012)",
+    "placeholders": {
+      "low": {
+        "type": "String"
+      },
+      "high": {
+        "type": "String"
+      }
+    }
+  },
+  "mandiNoPriceYet": "No price for this crop yet",
+  "@mandiNoPriceYet": {
+    "description": "Farmer app F45 mandi prices (FM-012)"
+  },
+  "referralTitle": "Invite a farmer",
+  "@referralTitle": {
+    "description": "Farmer app F71 refer a friend (FM-013)"
+  },
+  "referralOpen": "Invite a farmer",
+  "@referralOpen": {
+    "description": "Farmer app F71 refer a friend (FM-013)"
+  },
+  "referralIntro": "Share your code with a farmer you know. When they join, you and your nearest store both get the reward.",
+  "@referralIntro": {
+    "description": "Farmer app F71 refer a friend (FM-013)"
+  },
+  "referralYourCode": "Your code",
+  "@referralYourCode": {
+    "description": "Farmer app F71 refer a friend (FM-013)"
+  },
+  "referralShareWhatsApp": "Share on WhatsApp",
+  "@referralShareWhatsApp": {
+    "description": "Farmer app F71 refer a friend (FM-013)"
+  },
+  "referralShareSms": "Send by SMS",
+  "@referralShareSms": {
+    "description": "Farmer app F71 refer a friend (FM-013)"
+  },
+  "referralShareMessage": "Join me on Kisan for crop advice and farm supplies. Open {link} or use my code {code}.",
+  "@referralShareMessage": {
+    "description": "Farmer app F71 refer a friend (FM-013)",
+    "placeholders": {
+      "link": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "referralInvited": "{count} invited",
+  "@referralInvited": {
+    "description": "Farmer app F71 refer a friend (FM-013)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "referralJoined": "{count} joined",
+  "@referralJoined": {
+    "description": "Farmer app F71 refer a friend (FM-013)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "referralRewarded": "{count} rewarded",
+  "@referralRewarded": {
+    "description": "Farmer app F71 refer a friend (FM-013)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "referralRewardNone": "Your store will tell you what the reward is.",
+  "@referralRewardNone": {
+    "description": "Farmer app F71 refer a friend (FM-013)"
+  },
+  "referralOff": "Invites are switched off right now.",
+  "@referralOff": {
+    "description": "Farmer app F71 refer a friend (FM-013)"
+  },
+  "referralClaimed": "Thank you. Your invite has been counted.",
+  "@referralClaimed": {
+    "description": "Farmer app F71 refer a friend (FM-013)"
+  },
+  "referralClaimFailed": "That invite could not be used.",
+  "@referralClaimFailed": {
+    "description": "Farmer app F71 refer a friend (FM-013)"
   }
 }

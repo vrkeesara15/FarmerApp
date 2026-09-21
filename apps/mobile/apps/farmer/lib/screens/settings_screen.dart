@@ -170,6 +170,12 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => context.push(AppRoutes.officer),
             ),
             tile(
+              key: const Key('me-referral'),
+              icon: Icons.card_giftcard_outlined,
+              title: l10n.referralOpen,
+              onTap: () => context.push(AppRoutes.referral),
+            ),
+            tile(
               key: const Key('me-help'),
               icon: Icons.support_agent,
               title: l10n.kisanHelpCallStore,

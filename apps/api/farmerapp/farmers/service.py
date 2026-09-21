@@ -521,7 +521,31 @@ async def create_farmer(
         )
     await session.flush()
     await _validate(session, tenant_id, farmer.id, registered=True)
-    return await farmer_detail(session, farmer, warnings=warnings)
+    # FM-013: an invite code the officer typed. A bad code is a warning, never a failed
+    # registration (farmerapp.referrals.service.attribute_quietly).
+    referral_id: uuid.UUID | None = None
+    if body.referral_code:
+        from farmerapp.referrals import service as referrals
+        from farmerapp.referrals.models import Referral, ReferralSource
+
+        reason = await referrals.attribute_quietly(
+            session,
+            invited=farmer,
+            code=body.referral_code,
+            source=ReferralSource.OFFICER,
+            now=created_at,
+        )
+        if reason is not None:
+            warnings.add(farmer.id, reason)
+        else:
+            referral_id = await session.scalar(
+                select(Referral.id).where(
+                    Referral.tenant_id == tenant_id, Referral.invited_farmer_id == farmer.id
+                )
+            )
+    detail = await farmer_detail(session, farmer, warnings=warnings)
+    detail.referral_id = referral_id
+    return detail
 
 
 async def update_farmer(

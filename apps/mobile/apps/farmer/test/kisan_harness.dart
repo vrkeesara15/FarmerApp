@@ -320,6 +320,79 @@ Map<String, Object?> calendarTask({
 };
 
 /// `WeatherOut` for farm-1: seven days from 2026-09-19 and four 3-hour
+/// FM-012 `MandiPricesOut`: one crop with two markets, both published on
+/// 2026-09-20, from the public source.
+Map<String, Object?> mandiPricesBody({
+  String source = 'Agmarknet (data.gov.in)',
+  String priceDate = '2026-09-20',
+}) => <String, Object?>{
+  'farmer_id': farmerId,
+  'district': 'Medak',
+  'as_of': priceDate,
+  'indicative_note_key': 'mandi.indicative',
+  'crops': <Object?>[
+    <String, Object?>{
+      'crop_id': 'crop-paddy',
+      'crop_code': 'paddy',
+      'crop_name': 'Paddy',
+      'crop_names': <String, Object?>{'en': 'Paddy', 'te': 'వరి'},
+      'price_date': priceDate,
+      'source_name': source,
+      'quotes': <Object?>[
+        <String, Object?>{
+          'id': 'mp-1',
+          'market': 'Medak Main Yard',
+          'district': 'Medak',
+          'state': 'Telangana',
+          'variety': 'Common',
+          'grade': 'FAQ',
+          'price_date': priceDate,
+          'min_price_paise': 205000,
+          'modal_price_paise': 215050,
+          'max_price_paise': 225000,
+          'source': 'agmarknet',
+          'source_name': source,
+        },
+        <String, Object?>{
+          'id': 'mp-2',
+          'market': 'Sangareddy Yard',
+          'district': 'Sangareddy',
+          'state': 'Telangana',
+          'variety': '',
+          'grade': '',
+          'price_date': priceDate,
+          'min_price_paise': 200000,
+          'modal_price_paise': 210000,
+          'max_price_paise': 220000,
+          'source': 'agmarknet',
+          'source_name': source,
+        },
+      ],
+    },
+  ],
+};
+
+/// FM-013 `MyReferralOut`: a code, a share link and the counts.
+Map<String, Object?> referralBody({
+  String code = 'KISAN123',
+  bool enabled = true,
+  int invited = 2,
+  int attributed = 1,
+  int rewarded = 0,
+}) => <String, Object?>{
+  'farmer_id': farmerId,
+  'code': code,
+  'share_link': 'https://kisan.farmerapp.in/r/$code',
+  'enabled': enabled,
+  'referrer_reward_paise': 0,
+  'store_reward_paise': 0,
+  'reward_note': null,
+  'invited': invited,
+  'attributed': attributed,
+  'rewarded': rewarded,
+  'referrals': <Object?>[],
+};
+
 /// spray windows — one good, one hidden for rain, one hidden for wind,
 /// and one the server calls good although its wind breaches the
 /// threshold (the app re-checks and must not show it as good).
@@ -490,6 +563,12 @@ class KisanDeps {
   /// M7 advisory REST calls (calendar, weather, alerts, inbox, push token).
   late final FakeAdvisoryApi advisory;
 
+  /// M8 market REST calls (FM-012 mandi prices, FM-013 referrals).
+  final FakeMarketApi market = FakeMarketApi();
+
+  /// Records what the FM-013 invite shared.
+  final FakeTextSharer sharer = FakeTextSharer();
+
   /// FA-007 push transport.
   final FakePushService push = FakePushService();
 
@@ -607,6 +686,21 @@ class KisanDeps {
     c.dispose();
   }
 
+  /// Seeds the M8 fake API (FM-012 prices, FM-013 referral).
+  void seedMarket({bool prices = true, bool referral = true}) {
+    if (prices) market.mandiPricesBody = mandiPricesBody();
+    if (referral) market.referralBody = referralBody();
+  }
+
+  /// Fills the M8 caches so the screens open with data.
+  Future<void> primeMarket() async {
+    final c = container();
+    final repo = c.read(marketRepositoryProvider);
+    await repo.refreshPrices();
+    await repo.refreshReferral();
+    c.dispose();
+  }
+
   /// Signs the farmer in (farmer id known, welcome done) for screens
   /// behind the login.
   Future<void> signIn({bool welcomeDone = true}) async {
@@ -634,6 +728,8 @@ class KisanDeps {
     idGeneratorProvider.overrideWithValue(ids.call),
     kisanApiProvider.overrideWithValue(kisan),
     advisoryApiProvider.overrideWithValue(advisory),
+    marketApiProvider.overrideWithValue(market),
+    textSharerProvider.overrideWithValue(sharer),
     pushServiceProvider.overrideWithValue(push),
     ...advisoryPushOverrides,
     pushAppVersionProvider.overrideWithValue('0.1.0+1'),
