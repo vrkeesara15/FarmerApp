@@ -2,12 +2,18 @@ import 'dart:async';
 
 import 'package:farmerapp_core/farmerapp_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../router.dart';
 
-/// A01 Splash with tenant logo placeholder; moves on after a short delay.
-class SplashScreen extends StatefulWidget {
+/// A01 Splash with the tenant's logo and app name (FA-008); moves on after
+/// a short delay.
+///
+/// The brand is read from the cache before the first frame
+/// (`brandingOverrides`), so this screen is already the tenant's on a cold
+/// start with no network.
+class SplashScreen extends ConsumerStatefulWidget {
   /// Creates the screen.
   const SplashScreen({super.key});
 
@@ -15,10 +21,10 @@ class SplashScreen extends StatefulWidget {
   static const Duration hold = Duration(milliseconds: 900);
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   Timer? _timer;
 
   @override
@@ -44,22 +50,13 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Container(
-              width: Tokens.space12 * 2,
-              height: Tokens.space12 * 2,
-              decoration: BoxDecoration(
-                color: app.tint(app.palette.primaryContainer),
-                shape: BoxShape.circle,
-                border: Border.fromBorderSide(app.borderSide),
-              ),
-              child: Icon(
-                Icons.eco_outlined,
-                size: Tokens.space12,
-                color: app.palette.primary,
-              ),
-            ),
+            const BrandLogo(key: Key('splash-logo'), size: Tokens.space12 * 2),
             const SizedBox(height: Tokens.space4),
-            Text(l10n.appNameAgent, style: app.text.display),
+            Text(
+              ref.watch(appBrandProvider).name(l10n),
+              key: const Key('splash-app-name'),
+              style: app.text.display,
+            ),
             const SizedBox(height: Tokens.space2),
             Text(
               l10n.splashTagline,

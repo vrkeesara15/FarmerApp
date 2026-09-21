@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../main_version.dart';
 import '../router.dart';
 import '../widgets/kisan_widgets.dart';
-import 'officer_screen.dart' show telUri;
 
 /// F70 notifications preference, live.
 final FutureProvider<bool> kisanNotificationsProvider = FutureProvider<bool>(
@@ -41,11 +40,8 @@ class SettingsScreen extends ConsumerWidget {
     final notifications = ref.watch(kisanNotificationsProvider).value ?? true;
     final consents = ref.watch(kisanConsentsProvider).value;
     final deletion = ref.watch(kisanDeletionProvider).value;
-    final support = ref
-        .watch(tenantSettingsProvider)
-        .value
-        ?.branding
-        .supportPhone;
+    // FA-008: one source for every "call support" action in both apps.
+    final support = ref.watch(supportPhoneProvider);
 
     Widget tile({
       required Key key,

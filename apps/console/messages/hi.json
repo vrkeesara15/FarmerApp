@@ -70,7 +70,9 @@
     "unreadCount": "{n} अपठित",
     "profile": "प्रोफ़ाइल मेनू",
     "dateRange": "तारीख़ सीमा",
-    "signOut": "साइन आउट"
+    "signOut": "साइन आउट",
+    "callSupport": "सहायता: {phone}",
+    "brandLogo": "{tenant} लोगो"
   },
   "login": {
     "title": "कंसोल में साइन इन करें",

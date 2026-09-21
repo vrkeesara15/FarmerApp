@@ -7520,6 +7520,24 @@ abstract class CoreLocalizations {
   /// **'You will need your phone and an OTP to sign in again.'**
   String get settingsLogOutHelp;
 
+  /// FA-008 A63/F70: call the tenant support phone from branding
+  ///
+  /// In en, this message translates to:
+  /// **'Call support'**
+  String get settingsCallSupport;
+
+  /// FA-008: branding.support_phone is not set
+  ///
+  /// In en, this message translates to:
+  /// **'Your organisation has not added a support number'**
+  String get settingsCallSupportNone;
+
+  /// FA-008: the dialler could not be opened
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start the call. Try again.'**
+  String get settingsCallSupportFailed;
+
   /// No description provided for @inboxTitle.
   ///
   /// In en, this message translates to:
@@ -7963,6 +7981,18 @@ abstract class CoreLocalizations {
   /// In en, this message translates to:
   /// **'Payable so far'**
   String get travelPayable;
+
+  /// VV-006 A61: km come from the server track processing
+  ///
+  /// In en, this message translates to:
+  /// **'Km processed by the server'**
+  String get travelKmProcessed;
+
+  /// VV-006 A61: the day is not processed yet (a session is still open)
+  ///
+  /// In en, this message translates to:
+  /// **'Estimate from this phone — not processed yet'**
+  String get travelKmEstimated;
 
   /// No description provided for @travelCapped.
   ///

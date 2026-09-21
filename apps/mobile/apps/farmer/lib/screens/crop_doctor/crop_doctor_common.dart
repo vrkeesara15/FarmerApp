@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../router.dart';
 import '../../widgets/kisan_widgets.dart';
-import '../officer_screen.dart' show telUri;
 import '../orders/shop_state.dart' show kisanStoreIdProvider;
 
 /// Pictogram of a crop code (F23 tiles, F20 list).

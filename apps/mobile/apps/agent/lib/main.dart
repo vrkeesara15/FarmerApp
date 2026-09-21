@@ -131,6 +131,10 @@ Future<void> startMitra({
   final opener = mitraDatabaseOpener();
   final db = openAppDatabase(opener: opener);
   final settings = await settingsOverrides(KvSettingsStore(db));
+  // FA-008: the cached tenant brand, also before the first frame, so a cold
+  // start paints the tenant's colour, name and logo rather than flashing
+  // the default ones.
+  final branding = await brandingOverrides(db);
   final wipedBefore = await hasWipeNotice(db);
   // FA-028: device clock vs server clock from every response's Date header,
   // persisted so the next duty start / point carries the last known drift.
@@ -157,7 +161,9 @@ Future<void> startMitra({
   final container = ProviderContainer(
     overrides: [
       ...settings,
+      ...branding,
       ...flagOverrides,
+      brandSurfaceProvider.overrideWithValue(BrandSurface.agent),
       // NF-014: the seams the app reports through. Inert when this build has
       // no Firebase.
       crashReporterProvider.overrideWithValue(obs.crashes),

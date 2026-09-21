@@ -154,6 +154,17 @@ export interface TenantSettings {
   branding: Branding;
 }
 
+/**
+ * FA-008: the branding subset of `GET /v1/settings/public`, which every signed-in role may
+ * read (unlike `GET /v1/settings`, which is owner / director / tenant admin only). The console
+ * shell brands itself from this, so a store manager sees the tenant's colour too.
+ */
+export interface PublicSettings {
+  branding: Branding;
+  languages_enabled: Language[];
+  default_language: Language;
+}
+
 export type SettingsPatch = Partial<
   Omit<TenantSettings, "sampling" | "branding"> & {
     sampling: Partial<Sampling>;
@@ -299,6 +310,7 @@ export const adminApi = {
       method: "POST",
       headers,
     }),
+  publicSettings: () => authedFetch<PublicSettings>("v1/settings/public"),
   settings: () => authedFetch<TenantSettings>("v1/settings"),
   updateSettings: (body: SettingsPatch, headers: Headers) =>
     authedFetch<TenantSettings>("v1/settings", { method: "PATCH", body, headers }),

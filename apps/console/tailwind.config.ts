@@ -29,7 +29,8 @@ const config: Config = {
         },
         // NF-009 split the one `border` token in two. `border-border` stays the decorative
         // hairline (rows, card edges); `border-border-strong` is the 5.51:1 boundary WCAG
-        // 1.4.11 requires of an interactive control (text field, outlined button).
+        // 1.4.11 requires of an interactive control (text field, outlined button). The
+        // generated tokens.css emits `--color-border-default` and `--color-border-strong`.
         border: {
           DEFAULT: "var(--color-border-default)",
           strong: "var(--color-border-strong)",

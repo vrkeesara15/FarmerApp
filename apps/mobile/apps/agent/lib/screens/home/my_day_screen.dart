@@ -10,10 +10,17 @@ import '../field/field_widgets.dart';
 ///
 /// The map, the sessions and the km estimate come from this phone's own
 /// duty rows, so the screen works with no network at all. When
-/// `GET /v1/me/day` has been pulled, the server's processed track, stops,
-/// visit pins, km and gaps replace the estimate — and every gap without a
-/// reason gets an "add reason" sheet whose answer is queued through the
-/// outbox (`track_gap`).
+/// `GET /v1/me/day` has been pulled *and every duty session of the day has
+/// been through the server's track processing* (VV-006:
+/// `DayTimeline.processed`), the server's km, stops, gaps and visit pins
+/// replace the estimate, and the caption under the tiles says which of the
+/// two the officer is looking at. Until then the phone's own figure stands
+/// — the server's own haversine fallback for an unprocessed session is not
+/// better than this phone's, and calling it "processed" would be a lie the
+/// officer's travel allowance is later measured against.
+///
+/// Every gap without a reason gets an "add reason" sheet whose answer is
+/// queued through the outbox (`track_gap`).
 class MyDayScreen extends ConsumerStatefulWidget {
   /// Creates the screen.
   const MyDayScreen({super.key});
@@ -75,6 +82,9 @@ class _MyDayScreenState extends ConsumerState<MyDayScreen> {
     final date = ref.watch(todayIstProvider);
     final server = ref.watch(dayTimelineProvider(date)).value;
     final timeline = server?.value;
+    // VV-006: the server's figures only once it has actually processed the
+    // day (every session ended and carrying a processed km).
+    final processed = timeline?.processed ?? false;
     final tiles = ref.watch(mapTileProviderProvider);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.myDayTitle)),
@@ -112,8 +122,8 @@ class _MyDayScreenState extends ConsumerState<MyDayScreen> {
                         Expanded(
                           child: StatTile(
                             key: const Key('my-day-km'),
-                            value: timeline != null && timeline.km > 0
-                                ? timeline.km.toStringAsFixed(1)
+                            value: processed
+                                ? timeline!.km.toStringAsFixed(1)
                                 : _km(d.distanceM),
                             label: l10n.myDayKm(''),
                             icon: Icons.route_outlined,
@@ -122,6 +132,7 @@ class _MyDayScreenState extends ConsumerState<MyDayScreen> {
                         const SizedBox(width: Tokens.space2),
                         Expanded(
                           child: StatTile(
+                            key: const Key('my-day-stops'),
                             value: formatIndianDigits(
                               timeline?.stops.length ?? 0,
                             ),
@@ -147,7 +158,8 @@ class _MyDayScreenState extends ConsumerState<MyDayScreen> {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: FieldCaption(
-                        timeline != null && timeline.km > 0
+                        key: const Key('my-day-km-source'),
+                        processed
                             ? l10n.myDayKmProcessed
                             : l10n.myDayKmEstimated,
                         icon: Icons.info_outline,

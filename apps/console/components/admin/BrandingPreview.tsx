@@ -4,10 +4,16 @@
  * C102 live preview (WC-012): phone mockups of the field agent app and the farmer app home
  * screens rendered from the unsaved branding (app names, primary colour, logo, support phone).
  * Only the branding comes from the form; the rest of each screen is a static sketch.
+ *
+ * FA-008: the preview paints the *derived* palette — `brandedPalette` from lib/brand.ts, the
+ * same function the console shell and (as a line-for-line Dart port) both apps use. So an owner
+ * who picks a colour that would be unreadable sees here exactly the corrected colour the
+ * officer will get, not the raw swatch. `BrandingPreview.test.tsx` holds the two together.
  */
 import type * as React from "react";
 import { CalendarCheck, Camera, Leaf, MapPin, Phone, Play, Sprout } from "lucide-react";
 import { DEFAULT_APP_NAMES, DEFAULT_PRIMARY_COLOUR, HEX_COLOUR } from "@/lib/settings-form";
+import { brandedPalette, type BrandPalette } from "@/lib/brand";
 import { useT } from "@/lib/i18n-client";
 
 export interface BrandingPreviewProps {
@@ -18,15 +24,17 @@ export interface BrandingPreviewProps {
   supportPhone: string;
 }
 
-/** Readable text on the brand colour (WCAG relative luminance). */
-export function onColour(hex: string): "#FFFFFF" | "#1A1A1A" {
-  if (!HEX_COLOUR.test(hex)) return "#FFFFFF";
-  const channel = (i: number) => {
-    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  };
-  const l = 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
-  return l > 0.4 ? "#1A1A1A" : "#FFFFFF";
+/**
+ * The Light-theme palette the apps and the console will actually paint for [hex]. An invalid
+ * (half-typed) colour previews as the shipped one rather than flickering.
+ */
+export function previewPalette(hex: string): BrandPalette {
+  return brandedPalette(HEX_COLOUR.test(hex) ? hex : DEFAULT_PRIMARY_COLOUR, "light");
+}
+
+/** Readable text on the brand colour, as the apps derive it. */
+export function onColour(hex: string): string {
+  return previewPalette(hex).primaryOn;
 }
 
 const showableLogo = (uri: string) => /^(https:\/\/|data:image\/)/.test(uri.trim());
@@ -63,8 +71,9 @@ function PhoneFrame({
   testId: string;
   children: React.ReactNode;
 }) {
-  const bg = HEX_COLOUR.test(colour) ? colour : DEFAULT_PRIMARY_COLOUR;
-  const fg = onColour(bg);
+  const palette = previewPalette(colour);
+  const bg = palette.primary;
+  const fg = palette.primaryOn;
   return (
     <figure className="flex flex-col items-center gap-2" data-testid={testId}>
       <div className="w-56 overflow-hidden rounded-[2rem] border-8 border-text bg-background shadow-lg">
@@ -94,8 +103,9 @@ export function BrandingPreview({
   supportPhone,
 }: BrandingPreviewProps) {
   const t = useT();
-  const bg = HEX_COLOUR.test(colour) ? colour : DEFAULT_PRIMARY_COLOUR;
-  const fg = onColour(bg);
+  const palette = previewPalette(colour);
+  const bg = palette.primary;
+  const fg = palette.primaryOn;
   const agent = agentName.trim() || DEFAULT_APP_NAMES.agent;
   const farmer = farmerName.trim() || DEFAULT_APP_NAMES.farmer;
   const card = "flex items-center gap-2 rounded-input border border-border bg-surface p-2";

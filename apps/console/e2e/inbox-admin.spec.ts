@@ -214,6 +214,11 @@ test("C102: branding preview is live; a change needs step-up and links to the au
   await page.getByLabel("Primary colour", { exact: true }).fill("#AA3300");
   await expect(page.getByTestId("preview-agent-header")).toHaveAttribute("data-colour", "#AA3300");
   await expect(page.getByTestId("preview-farmer-header")).toHaveAttribute("data-colour", "#AA3300");
+  // FA-008: the preview paints the *derived* palette, so a colour that would be unreadable
+  // shows here already corrected — exactly the colour the officer's phone will paint.
+  await page.getByLabel("Primary colour", { exact: true }).fill("#FFCC00");
+  await expect(page.getByTestId("preview-agent-header")).toHaveAttribute("data-colour", "#876C00");
+  await page.getByLabel("Primary colour", { exact: true }).fill("#AA3300");
   await page.getByLabel("Support phone").fill("+918000000000");
   await expect(page.getByTestId("preview-support")).toHaveText("Help: +918000000000");
 

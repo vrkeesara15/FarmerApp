@@ -2953,6 +2953,18 @@
   "meSectionTitle": "My work",
   "settingsLogOut": "Log out",
   "settingsLogOutHelp": "You will need your phone and an OTP to sign in again.",
+  "settingsCallSupport": "Call support",
+  "@settingsCallSupport": {
+    "description": "FA-008 A63/F70: call the tenant support phone from branding"
+  },
+  "settingsCallSupportNone": "Your organisation has not added a support number",
+  "@settingsCallSupportNone": {
+    "description": "FA-008: branding.support_phone is not set"
+  },
+  "settingsCallSupportFailed": "Could not start the call. Try again.",
+  "@settingsCallSupportFailed": {
+    "description": "FA-008: the dialler could not be opened"
+  },
   "inboxTitle": "Notifications",
   "inboxEmpty": "No notifications",
   "inboxEmptyHelp": "Visit confirmations, orders and approvals show up here.",
@@ -3091,6 +3103,14 @@
   "travelKmByDay": "Km by day",
   "travelTaTotal": "Allowance from km",
   "travelPayable": "Payable so far",
+  "travelKmProcessed": "Km processed by the server",
+  "@travelKmProcessed": {
+    "description": "VV-006 A61: km come from the server track processing"
+  },
+  "travelKmEstimated": "Estimate from this phone — not processed yet",
+  "@travelKmEstimated": {
+    "description": "VV-006 A61: the day is not processed yet (a session is still open)"
+  },
   "travelCapped": "Capped at {cap} km",
   "@travelCapped": {
     "placeholders": {

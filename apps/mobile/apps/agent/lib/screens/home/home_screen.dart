@@ -15,8 +15,9 @@ final StreamProvider<int> farmersAddedTodayProvider = StreamProvider<int>((
   return ref.watch(dutyRepositoryProvider).watchFarmersAdded(from, to);
 });
 
-/// A10 Home: DutyToggle at the top (FA-010), today's stats, "Next up",
-/// quick actions, SyncStatusPill and the bottom nav.
+/// A10 Home: the tenant's logo and app name in the header (FA-008),
+/// DutyToggle at the top (FA-010), today's stats, "Next up", quick actions,
+/// SyncStatusPill and the bottom nav.
 class HomeScreen extends ConsumerWidget {
   /// Creates the screen.
   const HomeScreen({super.key});
@@ -55,7 +56,23 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.homeTitle),
+        title: Row(
+          children: <Widget>[
+            const BrandLogo(
+              key: Key('home-brand-logo'),
+              size: Tokens.space6 + Tokens.space1,
+              bordered: false,
+            ),
+            const SizedBox(width: Tokens.space2),
+            Flexible(
+              child: Text(
+                ref.watch(appBrandProvider).name(l10n),
+                key: const Key('home-brand-name'),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
         actions: <Widget>[
           SyncStatusPillLive(onTap: () => context.push(AppRoutes.syncDetails)),
           IconButton(

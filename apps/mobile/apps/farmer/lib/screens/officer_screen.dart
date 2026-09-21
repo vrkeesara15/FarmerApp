@@ -4,9 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../widgets/kisan_widgets.dart';
 
-/// `tel:` link for an E.164 phone.
-String telUri(String phone) => 'tel:$phone';
-
 /// WhatsApp click-to-chat link (`https://wa.me/<digits>`).
 String whatsAppUri(String phone) =>
     'https://wa.me/${phone.replaceAll(RegExp(r'[^0-9]'), '')}';

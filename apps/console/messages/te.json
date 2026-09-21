@@ -70,7 +70,9 @@
     "unreadCount": "{n} చదవనివి",
     "profile": "ప్రొఫైల్ మెనూ",
     "dateRange": "తేదీ పరిధి",
-    "signOut": "సైన్ అవుట్"
+    "signOut": "సైన్ అవుట్",
+    "callSupport": "సహాయం: {phone}",
+    "brandLogo": "{tenant} లోగో"
   },
   "login": {
     "title": "కన్సోల్‌కు సైన్ ఇన్ చేయండి",

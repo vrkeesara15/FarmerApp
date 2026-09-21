@@ -70,7 +70,9 @@
     "unreadCount": "{n} ಓದದವು",
     "profile": "ಪ್ರೊಫೈಲ್ ಮೆನು",
     "dateRange": "ದಿನಾಂಕ ವ್ಯಾಪ್ತಿ",
-    "signOut": "ಸೈನ್ ಔಟ್"
+    "signOut": "ಸೈನ್ ಔಟ್",
+    "callSupport": "ಸಹಾಯ: {phone}",
+    "brandLogo": "{tenant} ಲೋಗೋ"
   },
   "login": {
     "title": "ಕನ್ಸೋಲ್‌ಗೆ ಸೈನ್ ಇನ್ ಮಾಡಿ",
