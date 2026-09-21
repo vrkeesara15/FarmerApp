@@ -20,6 +20,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.auth.deps import AuthServices
+from farmerapp.auth.models import TENANT_ROLES as _TENANT_ROLES
 from farmerapp.auth.models import User, UserRole
 from farmerapp.catalog.crops import Crop
 from farmerapp.catalog.models import LabelClaim, Sku
@@ -35,7 +36,10 @@ ROLES: tuple[str, ...] = tuple(r.value for r in UserRole)
 #: The roles a customer tenant has. WC-014's ``platform_admin`` is not one of them: it only
 #: exists in the platform tenant, and the ``world`` fixture injects that one account into both
 #: tenants' role maps so the SEC-006 matrix can still drive every route as every role.
-TENANT_ROLES: frozenset[UserRole] = frozenset(UserRole) - {UserRole.PLATFORM_ADMIN}
+TENANT_ROLES: frozenset[UserRole] = frozenset(_TENANT_ROLES)  # FA-002, from the model
+#: The same ten, ordered, as wire values — for tests that drive "every role a tenant has"
+#: rather than the SEC-006 matrix (which deliberately includes ``platform_admin``).
+TENANT_ROLE_VALUES: tuple[str, ...] = tuple(r.value for r in _TENANT_ROLES)
 
 
 @dataclass(frozen=True)

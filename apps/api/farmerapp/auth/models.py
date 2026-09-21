@@ -55,6 +55,23 @@ class UserRole(StrEnum):
     PLATFORM_ADMIN = "platform_admin"  # WC-014, platform level (see the class docstring)
 
 
+#: The ten roles of SPEC FA-002 / 2.6, in the order the spec lists them. Every customer tenant
+#: has exactly these; ``UserRole.PLATFORM_ADMIN`` is deliberately absent because it belongs to
+#: the platform tenant and holds no tenant data access (WC-014).
+TENANT_ROLES: tuple[UserRole, ...] = (
+    UserRole.OWNER,
+    UserRole.DIRECTOR,
+    UserRole.CLUSTER_HEAD,
+    UserRole.AUDITOR,
+    UserRole.STORE_MANAGER,
+    UserRole.ACCOUNTANT,
+    UserRole.FIELD_OFFICER,
+    UserRole.AGRONOMIST,
+    UserRole.TENANT_ADMIN,
+    UserRole.FARMER,
+)
+
+
 class UserStatus(StrEnum):
     ACTIVE = "active"
     DISABLED = "disabled"

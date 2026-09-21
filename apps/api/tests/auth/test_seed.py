@@ -5,7 +5,7 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from farmerapp.auth.models import User, UserRole
+from farmerapp.auth.models import TENANT_ROLES, User
 from farmerapp.db.models import Tenant
 from farmerapp.db.session import tenant_scope
 from farmerapp.jobs.seed import DEMO_TENANTS, DEMO_USERS, SMALL, seed_demo
@@ -65,7 +65,7 @@ async def test_second_tenant_has_every_role(db_session: AsyncSession) -> None:
         users = (
             (await db_session.execute(select(User).where(User.tenant_id == gfl_id))).scalars().all()
         )
-    assert {u.role for u in users} == {r.value for r in UserRole}
+    assert {u.role for u in users} == {r.value for r in TENANT_ROLES}
     assert all(u.phone.startswith("+9191") for u in users)
 
 

@@ -43,6 +43,7 @@ ALLOWED_UNBOUNDED: dict[str, str] = {
     "farmerapp.farmers.schemas.PhoneVerifySendRequest.phone": "validated by _phone",
     "farmerapp.farmers.schemas.PhoneVerifyConfirmRequest.phone": "validated by _phone",
     "farmerapp.users.schemas.UserCreate.phone": "validated by _phone (WC-011)",
+    "farmerapp.referrals.schemas.ReferralInviteIn.phone": "validated by _phone (FM-013)",
 }
 
 #: query parameter -> why it is not length-bounded.

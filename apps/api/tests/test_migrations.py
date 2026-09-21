@@ -11,7 +11,15 @@ from farmerapp.db.models import Tenant
 from farmerapp.db.session import set_tenant, tenant_scope
 
 BASE_COLUMNS = {"id", "tenant_id", "created_at", "updated_at", "deleted_at", "version"}
-TENANT_COLUMNS = BASE_COLUMNS | {"name", "plan", "branding", "settings", "slug"}
+TENANT_COLUMNS = BASE_COLUMNS | {
+    "name",
+    "plan",
+    "branding",
+    "settings",
+    "slug",
+    "status",  # 0042 (WC-014 tenant lifecycle: active / suspended / archived)
+    "plan_limits",  # 0042 (WC-014 sparse per-tenant overrides on the plan)
+}
 USER_COLUMNS = BASE_COLUMNS | {
     "phone",
     "phone_enc",  # SEC-026 (Alembic 0025)

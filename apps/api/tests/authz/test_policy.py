@@ -8,7 +8,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 
-from farmerapp.auth.models import User
+from farmerapp.auth.models import TENANT_ROLES, User
 from farmerapp.auth.policy import (
     PUBLIC,
     Policy,
@@ -21,7 +21,12 @@ from farmerapp.auth.policy import (
 
 
 def test_role_enum_has_the_ten_fa002_roles() -> None:
-    assert [r.value for r in Role] == [
+    """The ten FA-002 roles, in the spec's order, plus WC-014's platform role last.
+
+    ``platform_admin`` is not an eleventh tenant role: it exists only in the platform tenant
+    and has no visibility of tenant data, which is why it is excluded from ``TENANT_ROLES``.
+    """
+    assert [r.value for r in TENANT_ROLES] == [
         "owner",
         "director",
         "cluster_head",
@@ -33,6 +38,7 @@ def test_role_enum_has_the_ten_fa002_roles() -> None:
         "tenant_admin",
         "farmer",
     ]
+    assert [r.value for r in Role] == [r.value for r in TENANT_ROLES] + ["platform_admin"]
 
 
 def test_require_roles_needs_at_least_one_role() -> None:

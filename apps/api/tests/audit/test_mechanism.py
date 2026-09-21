@@ -15,7 +15,7 @@ from sqlalchemy import String, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from farmerapp.auth.models import User, UserRole
+from farmerapp.auth.models import TENANT_ROLES, User, UserRole
 from farmerapp.db import audit
 from farmerapp.db.base import BaseColumns
 from farmerapp.db.models import AuditLog, Tenant
@@ -186,7 +186,7 @@ async def test_seed_creates_user_create_rows(db_session: AsyncSession) -> None:
             assert len(users) == len(demo.all_users)
             assert all(r.before is None and r.after is not None for r in users)
             assert all(r.actor_id is None and r.actor_role == audit.SYSTEM_ROLE for r in users)
-            assert {r.after["role"] for r in users if r.after} == {r.value for r in UserRole}
+            assert {r.after["role"] for r in users if r.after} == {r.value for r in TENANT_ROLES}
             tenants = await audit_rows(db_session, action="tenant.create")
             assert len(tenants) == 1 and tenants[0].entity_id == tenant_id
     # Re-running the (idempotent) seed changes nothing and audits nothing new.

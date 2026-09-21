@@ -17,7 +17,7 @@ from farmerapp.catalog.models import SEED_SOURCE_REF, ClaimStatus, LabelClaim, P
 from farmerapp.db.session import tenant_scope
 from farmerapp.jobs.seed_catalog import SMALL_PRODUCT_KEYS
 from farmerapp.stock.ledger import stock_on_hand
-from tests.authz.conftest import ROLES, Bearer, World
+from tests.authz.conftest import TENANT_ROLE_VALUES, Bearer, World
 
 
 async def _pages(
@@ -42,7 +42,7 @@ async def _pages(
 async def test_every_role_lists_products_with_skus_and_prices(
     client: AsyncClient, world: World, bearer: Bearer
 ) -> None:
-    for role in ROLES:
+    for role in TENANT_ROLE_VALUES:
         items = await _pages(client, "/v1/catalog/products", bearer(world.a.user(role)), limit=2)
         assert len(items) == len(SMALL_PRODUCT_KEYS), role
         assert all(i["tenant_id"] == str(world.a.tenant.id) for i in items)
@@ -140,7 +140,7 @@ async def test_sku_detail_hides_draft_claims_except_for_claim_maintainers(
 ) -> None:
     draft = await _add_draft_claim(db_session, world)
     url = f"/v1/catalog/skus/{world.a.sku_id}"
-    for role in ROLES:
+    for role in TENANT_ROLE_VALUES:
         resp = await client.get(url, headers=bearer(world.a.user(role)))
         assert resp.status_code == 200, (role, resp.text)
         body = resp.json()

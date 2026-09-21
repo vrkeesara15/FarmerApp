@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from collections.abc import AsyncIterator
+from typing import Any
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -306,4 +307,16 @@ def _register_problem_schema(app: FastAPI) -> None:
     app.openapi = custom_openapi  # type: ignore[method-assign]
 
 
-app = create_app()
+def __getattr__(name: str) -> Any:
+    """Build the ASGI app on first attribute access, not at import.
+
+    ``uvicorn farmerapp.api.app:app`` still works: uvicorn reads the attribute after the
+    process has its environment. Importing ``create_app`` (tests, the OpenAPI exporter) no
+    longer constructs an application, and with it a database engine, as a side effect of the
+    import — which used to pin the engine to whatever ``DATABASE_URL`` was set at import time.
+    """
+    if name == "app":
+        application = create_app()
+        globals()["app"] = application
+        return application
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

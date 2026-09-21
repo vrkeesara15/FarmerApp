@@ -43,6 +43,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engin
 from sqlalchemy.pool import NullPool
 
 from farmerapp.api.app import create_app
+from farmerapp.db import session as session_mod
 from farmerapp.db.rls import APP_ROLE
 from farmerapp.db.session import get_session
 from farmerapp.settings import get_settings
@@ -224,6 +225,11 @@ def _env() -> Iterator[None]:
     os.environ.pop("ANTHROPIC_API_KEY", None)
     os.environ["BLOB_LOCAL_DIR"] = tempfile.mkdtemp(prefix="farmerapp-blobs-")
     get_settings.cache_clear()
+    # Anything that built an engine while this module was being imported holds the developer's
+    # DATABASE_URL. Drop it so every later session — jobs included — opens this worker's
+    # database, not the machine's own.
+    session_mod.get_engine.cache_clear()
+    session_mod.get_session_factory.cache_clear()
     yield
     shutil.rmtree(os.environ["BLOB_LOCAL_DIR"], ignore_errors=True)
     get_settings.cache_clear()

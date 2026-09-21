@@ -51,6 +51,13 @@ M3_TABLES = (
 )
 #: Column-name fragments that mean money; such a column must be an integer type.
 MONEY_WORDS = ("paise", "price", "amount", "mrp", "cost", "total", "tax", "discount", "limit")
+#: Columns whose name contains a money word but hold no currency. Each needs a reason: the
+#: words above are a heuristic, and a false positive must be named here rather than silently
+#: widening the rule.
+NOT_MONEY: dict[str, str] = {
+    "tenant.plan_limits": "WC-014: counts (farmers, officers, photos), not currency",
+    "platform_tenant.plan_limits": "WC-014: the same override map on the registry row",
+}
 TODAY = date(2026, 9, 18)
 
 
@@ -64,7 +71,11 @@ def test_money_columns_are_integer_paise() -> None:
             name = column.name
             if not any(word in name for word in MONEY_WORDS):
                 continue
-            if name.endswith(("_at", "_id", "_uri", "_text", "_note", "_bp", "_words")):
+            if f"{table.name}.{name}" in NOT_MONEY:
+                continue
+            # ``_date`` joins ``_at``: a date is never money, however the name reads
+            # (FM-012 ``mandi_price.price_date`` is the day a quote is for).
+            if name.endswith(("_at", "_date", "_id", "_uri", "_text", "_note", "_bp", "_words")):
                 continue
             money_columns += 1
             if isinstance(column.type, Numeric | Float) or not isinstance(
@@ -79,7 +90,9 @@ def test_money_columns_are_integer_paise() -> None:
     # plus 6 on invoice in 0013 (ST-001), plus travel_claim.amount_paise in 0030 (FA-023),
     # plus 5 in 0031 (WC-009: sales_target sales / collections, incentive_payout gross /
     # clawback / amount).
-    assert money_columns == 31
+    # M8 adds 8: mandi_price min / modal / max (FM-012), referral referrer / store reward
+    # (FM-013), billing_statement base_price / overage / total (WC-014).
+    assert money_columns == 39
 
 
 def test_every_m3_table_is_a_model_table() -> None:

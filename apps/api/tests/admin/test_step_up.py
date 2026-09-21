@@ -103,6 +103,15 @@ def test_contract_marks_protected_operations() -> None:
         # M7 NF-013: the two data-principal actions that change or destroy personal data.
         ("POST", "/v1/admin/data-requests/{id}/apply-correction"),
         ("POST", "/v1/admin/data-requests/{id}/erase"),
+        # M8 WC-014: every platform-level write that creates, changes, ends or bills a
+        # tenant. Reads (list, usage, statements) are not step-up.
+        ("POST", "/v1/admin/tenants"),
+        ("PATCH", "/v1/admin/tenants/{id}"),
+        ("POST", "/v1/admin/tenants/{id}/invite"),
+        ("POST", "/v1/admin/tenants/{id}/suspend"),
+        ("POST", "/v1/admin/tenants/{id}/resume"),
+        ("POST", "/v1/admin/tenants/{id}/archive"),
+        ("POST", "/v1/admin/tenants/{id}/statements"),
     }
     patch_user = spec["paths"]["/v1/users/{id}"]["patch"]
     assert "step_up_required" in patch_user["responses"]["401"]["description"]

@@ -9,7 +9,7 @@ from typing import Any
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from farmerapp.auth.models import UserRole
+from farmerapp.auth.models import TENANT_ROLES, UserRole
 from tests.authz.conftest import Bearer, World
 
 CLUSTER_1 = uuid.UUID(int=11)
@@ -44,9 +44,13 @@ async def test_owner_lists_every_user_in_own_tenant(
     assert body["next_cursor"] is None
     ids = {item["id"] for item in body["items"]}
     assert ids == {str(u.id) for u in world.a.everyone}
-    assert {str(u.id) for u in world.a.users.values()} <= ids
+    # The role map also carries the platform tenant's ``platform_admin`` so the SEC-006
+    # matrix can drive every route as every role; it is not a user of this tenant and
+    # must not appear in the tenant's own list.
+    assert {str(world.a.users[r].id) for r in TENANT_ROLES if r in world.a.users} <= ids
+    assert str(world.a.users[UserRole.PLATFORM_ADMIN].id) not in ids
     assert all(item["tenant_id"] == str(world.a.tenant.id) for item in body["items"])
-    assert {item["role"] for item in body["items"]} == {r.value for r in UserRole}
+    assert {item["role"] for item in body["items"]} == {r.value for r in TENANT_ROLES}
     assert "code_hash" not in resp.text and "device_id" not in body["items"][0]
 
 

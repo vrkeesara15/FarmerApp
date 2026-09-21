@@ -153,6 +153,8 @@ SETTINGS_KEYS: Mapping[str, str] = {
     "outbreak": "DX-013 / FM-009 outbreak rule (min_cases, ratio, baseline_weeks) and alerts",
     "diagnosis_evaluation": "DX-011 nightly evaluation alert threshold (top-1 drop in points)",
     "branding": "C102 app names, primary colour, logo and support phone (tenant.branding)",
+    "mandi": "FM-012 mandi prices: whether the daily pull runs and which markets to show",
+    "referral": "FM-013 referral rewards: the amounts credited to referrer and store",
 }
 
 

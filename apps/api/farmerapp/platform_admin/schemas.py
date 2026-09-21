@@ -43,8 +43,8 @@ class TenantCreate(BaseModel):
 
     name: str = Field(min_length=2, max_length=200)
     slug: Slug
-    plan: str = Field(default="pilot")
-    region: str = Field(default=DEFAULT_REGION)
+    plan: str = Field(default="pilot", max_length=32)
+    region: str = Field(default=DEFAULT_REGION, max_length=40)
     primary_contact_name: str = Field(min_length=2, max_length=200)
     primary_contact_phone: Phone
     languages: list[Language] = Field(default_factory=list)
@@ -85,7 +85,7 @@ class TenantUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str | None = Field(default=None, min_length=2, max_length=200)
-    plan: str | None = None
+    plan: str | None = Field(default=None, max_length=32)
     plan_limits: PlanLimits | None = None
     primary_contact_name: str | None = Field(default=None, min_length=2, max_length=200)
     notes: str | None = Field(default=None, max_length=1000)
