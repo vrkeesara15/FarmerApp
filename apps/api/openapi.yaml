@@ -33516,10 +33516,12 @@ components:
           title: Slug
         plan:
           type: string
+          maxLength: 32
           title: Plan
           default: pilot
         region:
           type: string
+          maxLength: 40
           title: Region
           default: asia-south1
         primary_contact_name:
@@ -33931,6 +33933,7 @@ components:
         plan:
           anyOf:
           - type: string
+            maxLength: 32
           - type: 'null'
           title: Plan
         plan_limits:
