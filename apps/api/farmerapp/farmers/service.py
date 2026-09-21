@@ -73,6 +73,8 @@ from farmerapp.farmers.schemas import (
     GeoJsonPolygon,
 )
 from farmerapp.pii.lookup import phone_match
+from farmerapp.platform_admin import usage
+from farmerapp.platform_admin.plans import Metric
 from farmerapp.rules import engine as rules_engine
 from farmerapp.rules.schema import Subject
 from farmerapp.settings import Settings
@@ -464,6 +466,9 @@ async def create_farmer(
     if _is_farmer(actor):
         raise ForbiddenError("Farmers cannot register other farmers.")
     tenant_id = actor.tenant_id
+    # WC-014: the tenant's plan caps how many farmers it may hold. One indexed counter read,
+    # never a count over the tenant's farmers (NF-007).
+    await usage.check_and_record(session, tenant_id, Metric.FARMERS)
     await _check_phone(session, tenant_id, body.phone)
     await _village(session, tenant_id, body.village_id)
     verified = False

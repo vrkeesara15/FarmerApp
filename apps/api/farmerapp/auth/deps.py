@@ -22,6 +22,8 @@ from farmerapp.auth.scheduler import InProcessScheduler, Scheduler
 from farmerapp.auth.tokens import TokenService
 from farmerapp.db import audit
 from farmerapp.db.session import get_session, get_session_factory, set_tenant
+from farmerapp.platform_admin.errors import TenantSuspendedError
+from farmerapp.platform_admin.state import get_tenant_state
 from farmerapp.settings import Settings
 
 
@@ -140,6 +142,14 @@ async def get_current_user(
         if device_status == DeviceStatus.REVOKED:
             raise SessionRevokedError("This device is no longer bound.", headers=challenge)
         request.state.device_id = claims.device_id
+    # WC-014: a suspended or archived tenant works for nobody, whatever their role. Read from
+    # the per-process tenant-state cache (TTL <= 60 s), so this costs no query in the common
+    # case; the platform admin who suspended the tenant already revoked its sessions, this is
+    # the belt to that braces.
+    tenant_state = await get_tenant_state(session, user.tenant_id)
+    if tenant_state.blocked:
+        raise TenantSuspendedError(f"This workspace is {tenant_state.status}.")
+    request.state.tenant_state = tenant_state
     request.state.user = user
     audit.bind_actor(audit.actor_from_request(request, user))
     return user

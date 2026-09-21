@@ -78,6 +78,8 @@ from farmerapp.jobs.seed_corpus import M6_FULL, M6_SMALL, CorpusSeeder, M6Profil
 from farmerapp.jobs.seed_m2 import M2Generator, M2Profile
 from farmerapp.jobs.seed_m3 import M3_FULL, M3_SMALL, M3Generator, M3Profile
 from farmerapp.location import partitions
+from farmerapp.platform_admin.provisioning import ensure_platform_admin
+from farmerapp.platform_admin.usage import recount
 from farmerapp.settings import get_settings
 from farmerapp.tenants.models import Cluster, Store, Village
 from farmerapp.uploads.blobstore import BlobStore, build_blob_store
@@ -183,6 +185,8 @@ SMALL = SeedProfile(
 
 DEMO_TENANT_NAME = "Future Crop Care"
 DEMO_TENANT_SLUG = "fcc"
+#: WC-014: the demo platform administrator (platform tenant, not fcc or gfl).
+PLATFORM_ADMIN_PHONE = "+919999900001"
 
 DEMO_USERS: tuple[DemoUser, ...] = (
     ("+919000000001", "Suresh Reddy", UserRole.OWNER, "en"),
@@ -813,6 +817,12 @@ async def seed_demo(
         for table in SEEDED_TABLES:
             created[table] += c[table]
             totals[table] += t[table]
+    # WC-014: the platform tenant and its admin, then honest usage counters for every demo
+    # tenant (the seed writes rows directly, so the incremental counters need one recount).
+    await ensure_platform_admin(session, phone=PLATFORM_ADMIN_PHONE, name="Platform admin")
+    for _slug, tid in seeded:
+        async with tenant_scope(session, tid):
+            await recount(session, tid)
     primary = dict(seeded)[DEMO_TENANT_SLUG]
     return SeedResult(
         tenant_id=primary,

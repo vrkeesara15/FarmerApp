@@ -118,6 +118,7 @@ markers = [
   "serial: timing-sensitive; `make test-api` runs it after the parallel (xdist) phase, alone",
   "perf: NF-005 latency suite (tests/perf); `make perf-api` only (FARMERAPP_PERF=1)",
   "slow: M6 kNN benchmark over 200k vectors; skipped unless FARMERAPP_SLOW=1",
+  "scale: NF-007 scale suite (tests/scale); `make scale-api` only (FARMERAPP_SCALE=1)",
 ]
 
 [tool.coverage.run]

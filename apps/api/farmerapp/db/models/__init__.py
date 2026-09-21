@@ -38,6 +38,7 @@ from farmerapp.notifications.models import Notification, PushToken
 from farmerapp.orders.models import Order, OrderLine, OrderStatusEvent
 from farmerapp.payments.models import DayClose, Payment, WebhookEvent
 from farmerapp.pii.models import TenantDataKey
+from farmerapp.platform_admin.models import BillingStatement, PlatformTenant, UsageCounter
 from farmerapp.privacy.models import DataRequest
 from farmerapp.rules.models import CropCalendar
 from farmerapp.stock.models import StockBatch, StockMovement, StockReservation
@@ -53,6 +54,7 @@ install_feed_listener()  # FA-007: notifications in the sync change feed (offlin
 __all__ = [
     "AuditLog",
     "BeatPlan",
+    "BillingStatement",
     "Campaign",
     "CampaignRecipient",
     "Cluster",
@@ -109,6 +111,7 @@ __all__ = [
     "OverrideRequest",
     "Payment",
     "PestOrDisease",
+    "PlatformTenant",
     "PolicyAcceptance",
     "PriceList",
     "Product",
@@ -132,6 +135,7 @@ __all__ = [
     "TravelClaim",
     "UploadChunk",
     "UploadSession",
+    "UsageCounter",
     "User",
     "Village",
     "Visit",

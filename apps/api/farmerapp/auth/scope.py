@@ -58,6 +58,8 @@ DEFAULT_VISIBILITY: Mapping[UserRole, Visibility] = {
     UserRole.FIELD_OFFICER: Visibility.OWN,
     UserRole.AGRONOMIST: Visibility.NONE,
     UserRole.FARMER: Visibility.OWN,
+    # WC-014: the platform role administers tenants, it never reads their data.
+    UserRole.PLATFORM_ADMIN: Visibility.NONE,
 }
 
 

@@ -166,6 +166,17 @@ class OtpService:
         if tenant_id is None:
             raise ValueError("tenant_id is required for non-login purposes")
         await set_tenant(session, tenant_id)
+        # WC-014: a suspended or archived tenant sends no login codes, so a session cannot
+        # even be opened for one (the request path re-checks; this stops the SMS spend).
+        from farmerapp.platform_admin.errors import TenantSuspendedError
+        from farmerapp.platform_admin.state import get_tenant_state
+
+        tenant_state = await get_tenant_state(session, tenant_id)
+        if tenant_state.blocked:
+            log.warning(
+                "otp_send_tenant_blocked", tenant_id=str(tenant_id), status=tenant_state.status
+            )
+            raise TenantSuspendedError(f"This workspace is {tenant_state.status}.")
         # SEC-021: country, block list, velocity and the hourly cost guard, in that order.
         await otp_abuse.check_send(
             session,

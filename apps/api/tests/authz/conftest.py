@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import pytest
 from fastapi import FastAPI
@@ -28,9 +28,14 @@ from farmerapp.db.session import set_tenant, tenant_scope
 from farmerapp.farmers.models import CropPlot, Farm, Farmer
 from farmerapp.jobs.seed import DEMO_TENANTS, SMALL, seed_demo
 from farmerapp.orders.models import Order, OrderChannel
+from farmerapp.platform_admin.provisioning import ensure_platform_admin
 from farmerapp.visits.models import Visit
 
 ROLES: tuple[str, ...] = tuple(r.value for r in UserRole)
+#: The roles a customer tenant has. WC-014's ``platform_admin`` is not one of them: it only
+#: exists in the platform tenant, and the ``world`` fixture injects that one account into both
+#: tenants' role maps so the SEC-006 matrix can still drive every route as every role.
+TENANT_ROLES: frozenset[UserRole] = frozenset(UserRole) - {UserRole.PLATFORM_ADMIN}
 
 
 @dataclass(frozen=True)
@@ -67,6 +72,8 @@ class SeededTenant:
 class World:
     a: SeededTenant  # Future Crop Care (fcc)
     b: SeededTenant  # Green Fields (gfl)
+    #: WC-014: the one ``platform_admin``, in the platform tenant (neither a nor b).
+    platform_admin: User | None = None
 
 
 async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
@@ -136,7 +143,7 @@ async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
     by_role: dict[UserRole, User] = {}
     for u in users:
         by_role.setdefault(UserRole(u.role), u)
-    assert set(by_role) == set(UserRole), f"seed for {slug} must have one user per role"
+    assert set(by_role) == TENANT_ROLES, f"seed for {slug} must have one user per tenant role"
     assert farmers, f"seed for {slug} must have farmers"
     assert farm is not None and plot is not None and crop is not None
     assert visit is not None, f"seed for {slug} must visit its first farmer"
@@ -160,13 +167,23 @@ async def _load_tenant(session: AsyncSession, slug: str) -> SeededTenant:
     )
 
 
+PLATFORM_ADMIN_PHONE = "+919999900001"
+
+
 @pytest.fixture
 async def world(db_session: AsyncSession) -> World:
-    """Both demo tenants (small profile); the session is left bound to tenant A."""
+    """Both demo tenants (small profile) plus the WC-014 platform tenant and its one
+    ``platform_admin``; the session is left bound to tenant A."""
     await seed_demo(db_session, SMALL)
     slugs = [t.slug for t in DEMO_TENANTS]
     assert slugs == ["fcc", "gfl"]
-    world = World(a=await _load_tenant(db_session, "fcc"), b=await _load_tenant(db_session, "gfl"))
+    platform_admin = await ensure_platform_admin(db_session, phone=PLATFORM_ADMIN_PHONE)
+    a, b = await _load_tenant(db_session, "fcc"), await _load_tenant(db_session, "gfl")
+    # The platform admin is nobody's tenant user; it is added to the role maps only so the
+    # matrix can call every route as it and prove it is refused everywhere but /v1/admin.
+    a = replace(a, users={**a.users, UserRole.PLATFORM_ADMIN: platform_admin})
+    b = replace(b, users={**b.users, UserRole.PLATFORM_ADMIN: platform_admin})
+    world = World(a=a, b=b, platform_admin=platform_admin)
     await set_tenant(db_session, world.a.tenant.id)
     return world
 

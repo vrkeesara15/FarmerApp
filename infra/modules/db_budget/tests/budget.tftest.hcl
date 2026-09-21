@@ -134,3 +134,38 @@ run "pool_below_two_is_refused" {
   }
   expect_failures = [var.processes]
 }
+
+# NF-007 (docs/perf/NF-007.md): 50 tenants add no pools — a pool belongs to a process, not a
+# tenant — but they add concurrent requests, so the api / worker ceilings rise. At the SaaS
+# shape (api 60, worker 40, today's 17 jobs) prd's current 250 is not enough and the plan says
+# *before* an apply exhausts Cloud SQL. Raising sql_max_connections restarts the instance, so
+# it stays a human gate in a maintenance window (docs/deploy/configuration.md).
+run "saas_shape_needs_a_bigger_flag" {
+  command = plan
+
+  variables {
+    processes = {
+      api    = { instances = 60, pool_size = 2, max_overflow = 1 }
+      worker = { instances = 40, pool_size = 2, max_overflow = 0 }
+      jobs   = { instances = 17, pool_size = 1, max_overflow = 1 }
+    }
+  }
+  expect_failures = [output.env]
+}
+
+run "saas_shape_fits_at_500_connections" {
+  command = plan
+
+  variables {
+    max_connections = 500
+    processes = {
+      api    = { instances = 60, pool_size = 2, max_overflow = 1 }
+      worker = { instances = 40, pool_size = 2, max_overflow = 0 }
+      jobs   = { instances = 17, pool_size = 1, max_overflow = 1 }
+    }
+  }
+  assert {
+    condition     = output.total == 314 && output.ceiling == 400
+    error_message = "SaaS shape: 180 + 80 + 34 + 20 = 314 of 400"
+  }
+}

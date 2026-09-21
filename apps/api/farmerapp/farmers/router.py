@@ -84,6 +84,7 @@ _VERIFY_PROBLEMS = (
 _WRITE_PROBLEMS = (
     (404, "not_found"),
     (409, "farmer_phone_exists"),
+    (409, "plan_limit_exceeded"),  # WC-014
     (409, "version_conflict"),
     (422, "farm_boundary_invalid"),
     (422, "farmer_phone_is_staff"),

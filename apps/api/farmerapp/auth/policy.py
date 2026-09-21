@@ -133,6 +133,17 @@ def require_roles(*roles: Role, self_param: str | None = None) -> Any:
     return Depends(_check)
 
 
+def tag_policy(fn: Callable[..., Any], policy: Policy) -> Callable[..., Any]:
+    """Declare ``policy`` for a hand-written dependency.
+
+    ``require_roles`` is enough for a role list. A dependency that adds a *further* condition
+    to the same role check — WC-014's ``platform_admin`` must also be in the platform tenant —
+    has to be the route's top-level dependency (``policy_of`` only reads those), so it tags
+    itself with this.
+    """
+    return _tag(fn, policy)
+
+
 def policy_of(route: APIRoute) -> Policy | None:
     """The policy declared on a route (top-level dependencies only). ``None`` if missing."""
     found: list[Policy] = []
@@ -214,4 +225,5 @@ __all__ = [
     "policy_of",
     "require_roles",
     "route_template",
+    "tag_policy",
 ]

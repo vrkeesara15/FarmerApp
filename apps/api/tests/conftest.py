@@ -49,7 +49,12 @@ from farmerapp.settings import get_settings
 
 API_ROOT = Path(__file__).resolve().parents[1]
 # NF-005 latency suite: only with `make perf-api` (FARMERAPP_PERF=1), never in the default run.
-collect_ignore_glob = [] if os.environ.get("FARMERAPP_PERF") == "1" else ["perf/*"]
+# NF-007 scale suite: only with `make scale-api` (FARMERAPP_SCALE=1) — it seeds ~840,000 rows
+# and commits them, so it needs a database of its own and minutes of wall clock.
+collect_ignore_glob = [
+    *([] if os.environ.get("FARMERAPP_PERF") == "1" else ["perf/*"]),
+    *([] if os.environ.get("FARMERAPP_SCALE") == "1" else ["scale/*"]),
+]
 #: M6 kNN benchmark (``slow``: 200k vectors): only with FARMERAPP_SLOW=1, never by default.
 RUN_SLOW = os.environ.get("FARMERAPP_SLOW") == "1"
 
