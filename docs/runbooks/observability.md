@@ -28,7 +28,16 @@ hold tokens (Slack, PagerDuty) and Firebase Crashlytics.
 | OPS-005 | `[env] job <name> failed` (one per Cloud Run job) | sev2 | job owner | job-failure |
 | OPS-009 | `[env] diagnosis review queue older than 18 h` (per tenant, `farmerapp_diagnosis_queue_oldest_hours` p99 > 18 in the hourly window) | sev2 | agronomist-lead | [OPS-009 below](#ops-009-diagnosis-review-queue-and-llm-fallback) |
 | OPS-009 | `[env] diagnosis LLM fallback > 40% today` (per tenant, any `diagnosis_llm_fallback_alert` line) | sev3 | agronomist-lead | [OPS-009 below](#ops-009-diagnosis-review-queue-and-llm-fallback) |
-| OPS-011 / AN-010 | `dbt source freshness`: orders, payments, visits, duty sessions warn > 15 min, error > 30 min behind Postgres (Datastream `source_timestamp`); dbt run / test failure. Checked by the dbt job and `make dbt-freshness`; a Cloud Monitoring policy on `datastream.googleapis.com/stream/freshness` is an OPS-011 follow-up (not in M7 kickoff) | sev2 | data owner | [datastream-cdc-setup](datastream-cdc-setup.md) |
+| OPS-011 | `[env] Datastream <stream> lag > 30 min` (`stream/freshness` > 1800 s for 15 min) and `[env] Datastream <stream> dropped events` (`unsupported_event_count` > 0) | sev2 | data owner | [datastream-cdc-setup §6b](datastream-cdc-setup.md#6b-ops-011-the-stream-is-behind-or-dbt-failed) |
+| OPS-011 | `[env] dbt run or test failed` and `[env] dbt source past 30 min` — log-based, from the JSON lines `dbt/scripts/dbt_run.py` emits after every dbt invocation (CI, `make dbt*`, the scheduled job) | sev2 | data owner | [datastream-cdc-setup §6b](datastream-cdc-setup.md#6b-ops-011-the-stream-is-behind-or-dbt-failed) |
+| OPS-012 | `[env] daily spend above 130% of the 7-day average` — the BigQuery cost watch (`modules/cost`) fails its run on a breach; the alert watches `transfer_config/completed_transfer_run_count{run_status="FAILED"}` | sev2 | product owner + platform lead | [cost-and-budget](cost-and-budget.md) |
+| OPS-012 | `[env] LLM spend above Rs <n>/day for one tenant` (`farmerapp_llm_input_tokens` / `_output_tokens` per tenant) and the same for SMS (`farmerapp_otp_sent{channel="sms"}`), converted with the rate card in `modules/cost` | sev2 | product owner | [cost-and-budget](cost-and-budget.md) |
+| OPS-012 / NF-015 | `[env] monthly budget threshold crossed` — Cloud Billing budget at 50 / 90 / 100 / 130%, actual and forecast, via the `cost.budget` topic | sev2 | product owner | [cost-and-budget](cost-and-budget.md) |
+| OPS-013 | `[env] Security Command Center high finding` — anything published to the `scc.findings` topic (the org-level notification config is a human gate) | sev1 | platform lead | [suspected-data-breach](suspected-data-breach.md) |
+| OPS-013 | `[env] Cloud Armor blocked-request spike` — > 500 DENY responses / 5 min per backend, from the load-balancer request log | sev1 | platform lead | [platform-incident](platform-incident.md) |
+| OPS-013 | `[env] OTP send spike, possible SMS pumping` — > 300 SMS OTPs for one tenant / 5 min | sev1 | platform lead | [otp-provider-outage](otp-provider-outage.md), [cost-and-budget](cost-and-budget.md) |
+| OPS-014 | `[env] <check> certificate expires in < 21 days` — `uptime_check/time_until_ssl_cert_expires`, one per OPS-001 host | sev2 | platform lead | [platform-incident](platform-incident.md) |
+| OPS-014 / SEC-013 | `[env] secret older than 90 days` — Secret Manager's own rotation reminder on the `secret.rotation` topic (`modules/secrets` owns the topic and sets `rotation_period` on every secret) | sev2 | platform lead | [platform-incident](platform-incident.md) |
 | SLO | availability burn 14x / 1 h, 6x / 6 h | sev1 / sev2 | platform-lead | platform-incident |
 | SLO | read p95 > 300 ms, write p95 > 600 ms for 15 min | sev2 | platform-lead | platform-incident |
 | SLO | sync success < 97% for 30 min (burn > 3x / 30 min) | sev2 | mobile-lead | mass-location-anomaly |
@@ -50,7 +59,7 @@ hold tokens (Slack, PagerDuty) and Firebase Crashlytics.
 
 - **FarmerApp <env> platform**: requests, 5xx, latency p95 per service, API read / write p95, instances, error lines, Cloud SQL CPU / disk / connections / replica lag, Pub/Sub age and undelivered (incl. DLQ), job executions by result, sync requests vs 2xx.
 - **FarmerApp <env> business ops**: officers on duty, open flags, visits / orders / payments captured per hour, webhooks applied, flags raised by rule, OTP sent / delivered / WhatsApp fallback.
-- **FarmerApp <env> cost (placeholder)**: Cloud Run instance time by service and job, SQL CPU, OTP volume. Spend by service / tenant needs the billing export to BigQuery (human gate, OPS-012).
+- **FarmerApp <env> cost**: the usage drivers behind each line of the bill (Cloud Run instance time by service and by job, SQL CPU, log bytes ingested, BigQuery bytes scanned, bucket size) plus the two vendors that never appear on the GCP bill and *are* per tenant — SMS OTP sends and LLM tokens by `tenant_id`. The rupee figures are BigQuery views over the Cloud Billing export (`v_cost_daily_by_service`, `v_cost_daily_by_sku`, `v_cost_daily_by_tenant`, `v_cost_monthly_vs_budget`, `modules/cost`), because Cloud Monitoring cannot query BigQuery and GCP publishes no spend metric. Cost by tenant is an apportionment, not a measurement: see [docs/cost-model.md](../cost-model.md).
 - **Mobile** (active devices, versions, crash-free, sync backlog): Firebase, outside Terraform.
 
 ## Structured-log contract (what the log-based metrics read)
@@ -79,10 +88,12 @@ Each event below has a test asserting its JSON fields (`apps/api/tests/logcontra
 | `store_day_alert` (WARNING) | `tenant_id`, `store_id`, `store_code`, `day`, `kind` (`store_zero_sales` / `store_day_not_closed`) | (log-based alert candidate, OPS-007) | `store-day-watch` job |
 | `integrity_signal` (WARNING) / `integrity_verdict` | `status` (`failed` / `absent` for the signal), `actions`, `reasons`, `device_id` | (VA-E01 reads the audit rows) | `integrity/deps.py` (login and sensitive actions) |
 | `diagnosis_requested` / `diagnosis_answered` | `tenant_id`, `diagnosis_id`; answered: `status`, `source`, `confidence`, `llm_used`, `out_of_scope_reason`, `top1`, `processing_ms`, `turnaround_ms` (int) | (diagnosis turnaround SLI, M6) | `diagnosis/service.py`, `diagnosis/pipeline.py` |
-| `llm_call` / `llm_refusal` (WARNING) | `provider`, `model`, `attempt`, `outcome`, `stop_reason`, `latency_ms`, `input_tokens`, `output_tokens` (never prompts or images; those are in `llm_call_log`) | (LLM cost / error dashboards) | `diagnosis/pipeline.py`, `diagnosis/llm.py` |
+| `llm_call` / `llm_refusal` (WARNING) | **`tenant_id`**, `diagnosis_id`, `provider`, `model`, `attempt`, `outcome`, `stop_reason`, `latency_ms`, `input_tokens`, `output_tokens` (never prompts or images; those are in `llm_call_log`) | `farmerapp_llm_calls`, `farmerapp_llm_input_tokens`, `farmerapp_llm_output_tokens` (OPS-012 LLM spend by tenant) | `diagnosis/pipeline.py`, `diagnosis/llm.py` |
 | `diagnosis_queue_snapshot` / `diagnosis_queue_aged` (WARNING) | `tenant_id`, `queue`, `overdue`, `oldest_hours`; aged: `newly_overdue`, `notified` | OPS-009 business metric / log-based alert (review queue > 18 h) | `diagnosis-queue-age` job |
 | `diagnosis_llm_fallback_rate` / `diagnosis_llm_fallback_alert` (WARNING) | `tenant_id`, `day`, `answered`, `llm_fallbacks`, `rate` (float); alert: `threshold` | OPS-009 (LLM fallback > 40 % in a day) | `diagnosis-queue-age` job |
 | `data_request_received` | `tenant_id`, `data_request_id`, `type`, `role`, `notified` | (FM-015 / NF-013 ticket volume) | `privacy/router.py` |
+| `dbt_run_result` / `dbt_run_failed` (ERROR) | `command`, `target`, `status`, `nodes`, `errors`, `warnings`, `elapsed_s`, `invocation_id`; failed also `first_failure`, `failures[]` | `farmerapp_dbt_failed` (OPS-011) | `dbt/scripts/dbt_run.py`, one line per dbt invocation |
+| `dbt_source_freshness` / `dbt_source_stale` (ERROR) | `source`, `state`, `max_loaded_at`, `staleness_s`, `warn_after_s`, `error_after_s` | `farmerapp_dbt_staleness_seconds`, `farmerapp_dbt_source_stale` (OPS-011 / AN-010) | `dbt/scripts/dbt_run.py` on `source freshness` |
 | any line with `level` = `error` / `critical` | `event` | `farmerapp_app_errors` | everywhere |
 
 Never log raw phone numbers, OTP codes, tokens or payment secrets (use `mask_phone`).
@@ -145,6 +156,30 @@ The 40 % / 5-answer rule is applied by the job (`LLM_RATE_ALERT`, `MIN_SAMPLE` i
   deliveries (the worker already turns the case into "unknown" at its 5th,
   `DIAGNOSIS_MAX_ATTEMPTS`), replay from `diagnosis.requested.dlq.replay`.
 
+## Crash, performance and remote config in the apps (NF-014 / SPEC 8.4)
+
+Three transports, all behind seams in `packages/core/lib/src/obs/` with the Firebase adapters
+in `apps/*/lib/observability.dart` — the same shape as the FA-007 push transport, so the core,
+the workspace tests and any build without `google-services.json` stay free of Firebase. A
+build with no Firebase gets `NoCrashReporter`, `NoPerformanceMonitor` and `LocalRemoteFlags`
+and every farmer-facing flow works unchanged.
+
+| Seam | Firebase | What it is for |
+|---|---|---|
+| `CrashReporter` | Crashlytics | Crash-free sessions per app version (OPS-002) is what halts a staged rollout, and it is only trustworthy if handled failures are reported too (`recordError(..., fatal: false)`). `runWithCrashReporting` installs it on `FlutterError.onError`, `PlatformDispatcher.onError` and a guarded zone around start-up. Custom keys: `app_version`, `tenant_id`, `trace_id`, `route`, `online`. |
+| `PerformanceMonitor` | Performance | `AppStartTrace` reports `app_start` with `time_to_first_frame_ms` and `time_to_interactive_ms` against the NF-005 3 s budget. It also *prints* them, so a release build on an NF-001 reference device needs no cloud at all (docs/device-matrix.md). |
+| `RemoteFlagSource` | Remote Config | SPEC 8.4's "feature flags and thresholds", and the kill switch the bad-release runbook asks for. Every flag has a local default equal to the shipped behaviour, so a phone that never fetches is not a degraded phone. Fetched **before the first frame** (`remoteFlagOverrides`), because a kill switch that takes effect on the second start is not a kill switch. |
+
+Flags today: `on_device_crop_guess_killed` (DX-001 — the tenant setting opts *in*, this can
+only take it away), `crash_reporting_enabled`, `performance_monitoring_enabled`,
+`trace_sample_ratio`, `sampling_moving_s` / `sampling_stationary_s` / `sampling_upload_s`
+(FA-010, clamped to 30 s..1 h on read), `min_supported_version`. An unknown key in the payload
+is ignored and a missing key keeps its default, so an old app and a new config never disagree
+dangerously.
+
+Reporting is **off in debug**: a developer's own crashes would swamp the number that decides
+whether a release ships.
+
 ## Traces (NF-014)
 
 OpenTelemetry, configured by `farmerapp/telemetry.py`: `OTEL_EXPORTER=gcp` (Cloud Trace; the
@@ -156,3 +191,15 @@ message attributes by the publisher and continued by the worker (`pubsub.process
 consumer span), so one trace covers app -> API -> worker. The log `trace_id` **is** the OTel
 trace id; with tracing off it is still carried from `traceparent` / `X-Cloud-Trace-Context`
 into the Pub/Sub attributes, so API and worker log lines correlate.
+
+**The phone starts the trace** (M7). `SecureApiClient` — the one client both apps send every
+API call through — puts a W3C `traceparent` on each request
+(`packages/core/lib/src/obs/trace_context.dart`), so the API's server span and every worker
+span behind it are children of the tap that caused them, and the API's log line carries the
+same `trace_id`. The same id is set as the Crashlytics `trace_id` custom key, so a crash
+report and the API's logs meet. Head sampling is on the phone (`TraceSampler`, ratio from the
+`trace_sample_ratio` remote flag); an unsampled request still carries a `traceparent`, it just
+asks the server not to record spans, so the log lines still join. The apps run no
+OpenTelemetry SDK: a mobile exporter would add a background queue and hundreds of kilobytes to
+a 25 MB APK budget (FM-014) for spans nobody reads — the useful span tree is on the server, and
+what the phone has to do is start the trace and hand the id over.

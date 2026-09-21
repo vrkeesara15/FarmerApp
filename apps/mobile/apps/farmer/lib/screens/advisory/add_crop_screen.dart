@@ -84,59 +84,88 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
                       help: l10n.kisanNoCropsHelp,
                     )
                   : ListView(
-                      padding: const EdgeInsets.all(Tokens.spaceScreenPadding),
+                      // NF-009: the side padding is applied per item, not to
+                      // the list, so the calendar below can use the full
+                      // width. Material sizes a day cell at width / 7: inside
+                      // 16 dp of padding that is 43 dp, under the 48 dp
+                      // minimum; full-bleed it is 49 dp.
+                      padding: const EdgeInsets.symmetric(
+                        vertical: Tokens.spaceScreenPadding,
+                      ),
                       children: <Widget>[
-                        SpokenText(
-                          promptId: 'f41_help',
-                          text: l10n.addCropHelp,
-                        ),
-                        const SizedBox(height: Tokens.space3),
-                        Text(l10n.addCropWhichCrop, style: app.text.heading),
-                        const SizedBox(height: Tokens.space2),
-                        ChoiceGrid(
-                          children: <Widget>[
-                            for (final crop in crops)
-                              ChoiceTile(
-                                key: Key('add-crop-${crop.code}'),
-                                icon: Icons.grass,
-                                label: crop.nameIn(lang),
-                                selected: crop.id == _cropId,
-                                onTap: () => setState(() => _cropId = crop.id),
-                              ),
-                          ],
-                        ),
-                        if (farms.length > 1) ...<Widget>[
-                          const SizedBox(height: Tokens.space4),
-                          Text(l10n.addCropWhichFarm, style: app.text.heading),
-                          const SizedBox(height: Tokens.space2),
-                          ChoiceGrid(
-                            columns: 2,
+                        _Padded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: <Widget>[
-                              for (final farm in farms)
-                                ChoiceTile(
-                                  key: Key('add-farm-${farm.id}'),
-                                  icon: Icons.landscape_outlined,
-                                  label: farm.name?.isNotEmpty == true
-                                      ? farm.name!
-                                      : l10n.kisanFarmUnnamed,
-                                  selected:
-                                      farm.id == (_farmId ?? farms.first.id),
-                                  onTap: () =>
-                                      setState(() => _farmId = farm.id),
+                              SpokenText(
+                                promptId: 'f41_help',
+                                text: l10n.addCropHelp,
+                              ),
+                              const SizedBox(height: Tokens.space3),
+                              Text(
+                                l10n.addCropWhichCrop,
+                                style: app.text.heading,
+                              ),
+                              const SizedBox(height: Tokens.space2),
+                              ChoiceGrid(
+                                children: <Widget>[
+                                  for (final crop in crops)
+                                    ChoiceTile(
+                                      key: Key('add-crop-${crop.code}'),
+                                      icon: Icons.grass,
+                                      label: crop.nameIn(lang),
+                                      selected: crop.id == _cropId,
+                                      onTap: () =>
+                                          setState(() => _cropId = crop.id),
+                                    ),
+                                ],
+                              ),
+                              if (farms.length > 1) ...<Widget>[
+                                const SizedBox(height: Tokens.space4),
+                                Text(
+                                  l10n.addCropWhichFarm,
+                                  style: app.text.heading,
+                                ),
+                                const SizedBox(height: Tokens.space2),
+                                ChoiceGrid(
+                                  columns: 2,
+                                  children: <Widget>[
+                                    for (final farm in farms)
+                                      ChoiceTile(
+                                        key: Key('add-farm-${farm.id}'),
+                                        icon: Icons.landscape_outlined,
+                                        label: farm.name?.isNotEmpty == true
+                                            ? farm.name!
+                                            : l10n.kisanFarmUnnamed,
+                                        selected:
+                                            farm.id ==
+                                            (_farmId ?? farms.first.id),
+                                        onTap: () =>
+                                            setState(() => _farmId = farm.id),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                              const SizedBox(height: Tokens.space4),
+                              Text(
+                                l10n.addCropWhenSown,
+                                style: app.text.heading,
+                              ),
+                              if (_sowingDate != null)
+                                Text(
+                                  l10n.addCropSownOn(
+                                    formatDateIst(_sowingDate!),
+                                  ),
+                                  key: const Key('add-crop-sown-on'),
+                                  style: app.text.body,
                                 ),
                             ],
                           ),
-                        ],
-                        const SizedBox(height: Tokens.space4),
-                        Text(l10n.addCropWhenSown, style: app.text.heading),
-                        if (_sowingDate != null)
-                          Text(
-                            l10n.addCropSownOn(formatDateIst(_sowingDate!)),
-                            key: const Key('add-crop-sown-on'),
-                            style: app.text.body,
-                          ),
+                        ),
                         // A calendar, not a text field: NF-010 allows no
-                        // typing outside the phone number and the OTP.
+                        // typing outside the phone number and the OTP. It is
+                        // the one full-bleed item on the screen, so its day
+                        // cells clear 48 dp (NF-009).
                         CalendarDatePicker(
                           key: const Key('add-crop-date'),
                           initialDate: _sowingDate ?? _today,
@@ -145,47 +174,55 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
                           onDateChanged: (date) =>
                               setState(() => _sowingDate = date.toUtc()),
                         ),
-                        const SizedBox(height: Tokens.space3),
-                        Text(l10n.addCropWater, style: app.text.heading),
-                        const SizedBox(height: Tokens.space2),
-                        ChoiceGrid(
-                          children: <Widget>[
-                            for (final value in IrrigationTypes.values)
-                              ChoiceTile(
-                                key: Key('add-irrigation-$value'),
-                                icon: irrigationIcon(value),
-                                label: IrrigationTypes.label(l10n, value),
-                                selected: value == _irrigation,
-                                onTap: () =>
-                                    setState(() => _irrigation = value),
+                        _Padded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              const SizedBox(height: Tokens.space3),
+                              Text(l10n.addCropWater, style: app.text.heading),
+                              const SizedBox(height: Tokens.space2),
+                              ChoiceGrid(
+                                children: <Widget>[
+                                  for (final value in IrrigationTypes.values)
+                                    ChoiceTile(
+                                      key: Key('add-irrigation-$value'),
+                                      icon: irrigationIcon(value),
+                                      label: IrrigationTypes.label(l10n, value),
+                                      selected: value == _irrigation,
+                                      onTap: () =>
+                                          setState(() => _irrigation = value),
+                                    ),
+                                ],
                               ),
-                          ],
-                        ),
-                        const SizedBox(height: Tokens.space4),
-                        Text(l10n.addCropSoil, style: app.text.heading),
-                        const SizedBox(height: Tokens.space2),
-                        ChoiceGrid(
-                          children: <Widget>[
-                            for (final value in SoilTypes.values)
-                              ChoiceTile(
-                                key: Key('add-soil-$value'),
-                                icon: soilIcon(value),
-                                label: SoilTypes.label(l10n, value),
-                                selected: value == _soil,
-                                onTap: () => setState(() => _soil = value),
+                              const SizedBox(height: Tokens.space4),
+                              Text(l10n.addCropSoil, style: app.text.heading),
+                              const SizedBox(height: Tokens.space2),
+                              ChoiceGrid(
+                                children: <Widget>[
+                                  for (final value in SoilTypes.values)
+                                    ChoiceTile(
+                                      key: Key('add-soil-$value'),
+                                      icon: soilIcon(value),
+                                      label: SoilTypes.label(l10n, value),
+                                      selected: value == _soil,
+                                      onTap: () =>
+                                          setState(() => _soil = value),
+                                    ),
+                                ],
                               ),
-                          ],
+                              const SizedBox(height: Tokens.space4),
+                              AppButton(
+                                key: const Key('add-crop-save'),
+                                label: l10n.addCropSave,
+                                icon: Icons.check,
+                                onPressed: !ready || _saving
+                                    ? null
+                                    : () => _save(farms),
+                              ),
+                              const SizedBox(height: Tokens.space4),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: Tokens.space4),
-                        AppButton(
-                          key: const Key('add-crop-save'),
-                          label: l10n.addCropSave,
-                          icon: Icons.check,
-                          onPressed: !ready || _saving
-                              ? null
-                              : () => _save(farms),
-                        ),
-                        const SizedBox(height: Tokens.space4),
                       ],
                     ),
             ),
@@ -194,4 +231,18 @@ class _AddCropScreenState extends ConsumerState<AddCropScreen> {
       ),
     );
   }
+}
+
+/// The screen's side padding, applied per item because the calendar between
+/// them is deliberately full-bleed (NF-009: 48 dp day cells).
+class _Padded extends StatelessWidget {
+  const _Padded({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: Tokens.spaceScreenPadding),
+    child: child,
+  );
 }

@@ -5,6 +5,7 @@ import 'dart:io' show TlsException;
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 
+import '../obs/trace_context.dart';
 import 'certificate_pinning.dart';
 import 'device_attestation.dart';
 
@@ -89,6 +90,11 @@ List<SensitiveAction> sensitiveActionsOf(
 /// * turns TLS failures (pin mismatch, handshake) into
 ///   [http.ClientException], which every API client handles as a network
 ///   failure;
+/// * starts the NF-014 trace: every request carries a W3C `traceparent`, so
+///   the API's server span (and every worker span behind it) is a child of
+///   the tap that caused it, and the API's log lines carry the same
+///   `trace_id`. This is the only choke point both apps share, so it is the
+///   only place the header has to be added;
 /// * runs over [inner] (the pinned `dart:io` client in the apps).
 class SecureApiClient extends http.BaseClient {
   /// Creates the client.
@@ -97,7 +103,9 @@ class SecureApiClient extends http.BaseClient {
     this.wipeSignal,
     this.attestation,
     this.attestationTimeout = const Duration(seconds: 3),
-  });
+    TraceSampler? sampler,
+    this.onTrace,
+  }) : sampler = sampler ?? TraceSampler();
 
   final http.Client _inner;
 
@@ -110,8 +118,29 @@ class SecureApiClient extends http.BaseClient {
   /// Longest wait for a token before sending `unavailable`.
   final Duration attestationTimeout;
 
+  /// NF-014: decides the trace id and whether the server records the trace.
+  final TraceSampler sampler;
+
+  /// Called with each request's trace context. The apps hand it to the crash
+  /// reporter (custom key `trace_id`, `CrashKeys.traceId`) so a Crashlytics
+  /// report names the trace that was in flight when the app died.
+  final void Function(TraceContext trace)? onTrace;
+
+  /// The trace of the most recent request, or null before the first one.
+  TraceContext? get lastTrace => _lastTrace;
+
+  TraceContext? _lastTrace;
+
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    // NF-014: a caller that already has a trace (a retry of the same action)
+    // keeps it; everything else starts one here.
+    final trace =
+        TraceContext.parse(request.headers[traceparentHeader]) ??
+        sampler.next();
+    request.headers[traceparentHeader] = trace.header;
+    _lastTrace = trace;
+    onTrace?.call(trace);
     final attest = attestation;
     if (attest != null && request is http.Request) {
       final actions = sensitiveActionsOf(
@@ -178,10 +207,14 @@ http.Client buildApiHttpClient({
   WipeSignal? wipeSignal,
   DeviceAttestation? attestation,
   CertificatePinning? pinning,
+  TraceSampler? sampler,
+  void Function(TraceContext trace)? onTrace,
 }) => SecureApiClient(
   inner: IOClient(
     createPinnedHttpClient(pinning ?? CertificatePinning.fromEnvironment()),
   ),
   wipeSignal: wipeSignal,
   attestation: attestation,
+  sampler: sampler,
+  onTrace: onTrace,
 );

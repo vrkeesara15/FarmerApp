@@ -30,9 +30,16 @@ locals {
       labels      = {}
     }
     otp_sent = {
-      description = "SLO OTP delivery (total): event=otp_sent (farmerapp/auth/otp.py)."
+      # OPS-012 (SMS spend by tenant) and OPS-013 (send spikes) both group by tenant_id,
+      # which the line has carried since M5 (docs/runbooks/observability.md).
+      description = "SLO OTP delivery (total): event=otp_sent (farmerapp/auth/otp.py). Labels drive the OPS-012 SMS spend and OPS-013 spike alerts."
       filter      = "${local.api_logs} AND jsonPayload.event=\"otp_sent\""
-      labels      = { channel = "channel", purpose = "purpose" }
+      labels      = { channel = "channel", purpose = "purpose", tenant_id = "tenant_id" }
+    }
+    llm_calls = {
+      description = "OPS-012: LLM fallback calls by tenant, model and outcome (event=llm_call, farmerapp/diagnosis/pipeline.py)."
+      filter      = "${local.api_or_worker} AND jsonPayload.event=\"llm_call\""
+      labels      = { tenant_id = "tenant_id", model = "model", outcome = "outcome" }
     }
     otp_delivered = {
       description = "SLO OTP delivery (good): event=otp_delivered, logged by the 30 s delivery check."
@@ -71,13 +78,15 @@ locals {
     }
   }
 
-  # name -> filter + numeric field + explicit bucket bounds (ms or count).
+  # name -> filter + numeric field + explicit bucket bounds (ms or count) + string labels
+  # (label -> jsonPayload field), same shape as counter_metrics.
   distribution_metrics = {
     api_read_latency = {
       description = "NF-005 / SLO latency: API read latency in ms (GET/HEAD access log duration_ms)."
       filter      = "${local.api_access} AND jsonPayload.method=(\"GET\" OR \"HEAD\")"
       field       = "duration_ms"
       unit        = "ms"
+      labels      = {}
       bounds      = [25, 50, 100, 150, 200, 250, 300, 400, 500, 600, 800, 1000, 1500, 2000, 3000, 5000, 10000, 30000]
     }
     api_write_latency = {
@@ -85,6 +94,7 @@ locals {
       filter      = "${local.api_access} AND jsonPayload.method=(\"POST\" OR \"PUT\" OR \"PATCH\" OR \"DELETE\")"
       field       = "duration_ms"
       unit        = "ms"
+      labels      = {}
       bounds      = [25, 50, 100, 150, 200, 250, 300, 400, 500, 600, 800, 1000, 1500, 2000, 3000, 5000, 10000, 30000]
     }
     webhook_processing = {
@@ -92,6 +102,7 @@ locals {
       filter      = "resource.type=\"cloud_run_revision\" AND jsonPayload.event=\"webhook_applied\" AND jsonPayload.processing_ms>=0"
       field       = "processing_ms"
       unit        = "ms"
+      labels      = {}
       bounds      = [1000, 5000, 10000, 30000, 60000, 120000, 300000, 600000, 1800000]
     }
     officers_on_duty = {
@@ -99,13 +110,31 @@ locals {
       filter      = "resource.type=(\"cloud_run_job\" OR \"cloud_run_revision\") AND jsonPayload.event=\"ops_snapshot\""
       field       = "officers_on_duty"
       unit        = "1"
+      labels      = { tenant_id = "tenant_id" }
       bounds      = [0, 1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000]
+    }
+    llm_input_tokens = {
+      description = "OPS-012: LLM input tokens per call, by tenant and model (event=llm_call). The LLM bill is tokens x the rate card (docs/cost-model.md)."
+      filter      = "${local.api_or_worker} AND jsonPayload.event=\"llm_call\" AND jsonPayload.input_tokens>=0"
+      field       = "input_tokens"
+      unit        = "1"
+      labels      = { tenant_id = "tenant_id", model = "model" }
+      bounds      = [100, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
+    }
+    llm_output_tokens = {
+      description = "OPS-012: LLM output tokens per call, by tenant and model (event=llm_call)."
+      filter      = "${local.api_or_worker} AND jsonPayload.event=\"llm_call\" AND jsonPayload.output_tokens>=0"
+      field       = "output_tokens"
+      unit        = "1"
+      labels      = { tenant_id = "tenant_id", model = "model" }
+      bounds      = [100, 250, 500, 1000, 2000, 4000, 8000, 16000]
     }
     open_flags = {
       description = "Business ops: open validation flags per tenant (event=ops_snapshot, field open_flags)."
       filter      = "resource.type=(\"cloud_run_job\" OR \"cloud_run_revision\") AND jsonPayload.event=\"ops_snapshot\""
       field       = "open_flags"
       unit        = "1"
+      labels      = { tenant_id = "tenant_id" }
       bounds      = [0, 1, 10, 50, 100, 250, 500, 1000, 2500, 5000, 10000]
     }
   }
@@ -153,15 +182,15 @@ resource "google_logging_metric" "distribution" {
     display_name = "farmerapp ${each.key}"
 
     dynamic "labels" {
-      for_each = contains(["officers_on_duty", "open_flags"], each.key) ? [1] : []
+      for_each = each.value.labels
       content {
-        key        = "tenant_id"
+        key        = labels.key
         value_type = "STRING"
       }
     }
   }
 
-  label_extractors = contains(["officers_on_duty", "open_flags"], each.key) ? { tenant_id = "EXTRACT(jsonPayload.tenant_id)" } : {}
+  label_extractors = { for k, field in each.value.labels : k => "EXTRACT(jsonPayload.${field})" }
 
   bucket_options {
     explicit_buckets {

@@ -72,4 +72,64 @@ void main() {
       expect(formatCountdown(const Duration(minutes: 4, seconds: 9)), '4:09');
     });
   });
+
+  // NF-008: "numbers in Indian format (1,00,000); dates DD-MM-YYYY; units
+  // acre and litre". Money and dates were covered from M0; these are the
+  // units and the non-money numbers, which until M7 were formatted ad hoc at
+  // each call site (`acres.toStringAsFixed(2)`), so a large holding printed
+  // as 100000.00 rather than 1,00,000.
+  group('formatIndianDecimal', () {
+    test('groups the Indian way and drops trailing zeros', () {
+      expect(formatIndianDecimal(125000.5), '1,25,000.5');
+      expect(formatIndianDecimal(100000), '1,00,000');
+      expect(formatIndianDecimal(2), '2');
+      expect(formatIndianDecimal(2.50), '2.5');
+      expect(formatIndianDecimal(999), '999');
+      expect(formatIndianDecimal(1234), '1,234');
+      expect(formatIndianDecimal(12345678.91), '1,23,45,678.91');
+    });
+
+    test('rounds to maxDecimals', () {
+      // 1.005 is not representable in binary and rounds down; 1.006 is the
+      // honest way to assert rounding without pretending otherwise.
+      expect(formatIndianDecimal(1.006), '1.01');
+      expect(formatIndianDecimal(1.994, maxDecimals: 1), '2');
+      expect(formatIndianDecimal(1.25, maxDecimals: 0), '1');
+    });
+
+    test('negatives keep one sign and zero never gets one', () {
+      expect(formatIndianDecimal(-125000.5), '-1,25,000.5');
+      expect(formatIndianDecimal(-0.001), '0');
+      expect(formatIndianDecimal(0), '0');
+    });
+
+    test('a non-finite value degrades to a dash, not a crash', () {
+      expect(formatIndianDecimal(double.nan), '-');
+      expect(formatIndianDecimal(double.infinity), '-');
+    });
+  });
+
+  group('units (NF-008)', () {
+    test(
+      'formatAcres groups and trims, leaving the word to the ARB string',
+      () {
+        expect(formatAcres(2), '2');
+        expect(formatAcres(2.5), '2.5');
+        expect(formatAcres(1.333), '1.33');
+        expect(formatAcres(100000), '1,00,000');
+        // The unit word is never in the number: it is translated per language.
+        expect(formatAcres(2), isNot(contains('acre')));
+      },
+    );
+
+    test('formatVolume reads in ml below a litre and in L above it', () {
+      expect(formatVolume(250), '250 ml');
+      expect(formatVolume(999), '999 ml');
+      expect(formatVolume(1000), '1 L');
+      expect(formatVolume(1500), '1.5 L');
+      expect(formatVolume(15000), '15 L');
+      expect(formatVolume(0), '0 ml');
+      expect(formatVolume(-500), '-500 ml');
+    });
+  });
 }

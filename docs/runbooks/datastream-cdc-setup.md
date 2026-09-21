@@ -135,6 +135,63 @@ FROM pg_replication_slots WHERE slot_name = 'farmerapp_datastream';
 SELECT pg_drop_replication_slot('farmerapp_datastream');   -- as postgres; the stream must then backfill again
 ```
 
+## 6b. OPS-011: the stream is behind, or dbt failed
+
+Four alert policies point here. They are two different failures wearing similar clothes, so
+the first question is always *which layer*.
+
+| Alert | What it means | First check |
+|---|---|---|
+| `Datastream <stream> lag > 30 min` | CDC itself is behind: `stream/freshness` over 1800 s for 15 min | The stream's state and its slot (sections 5 and 6) |
+| `Datastream <stream> dropped events` | `unsupported_event_count > 0`: rows that could not be replicated at all | The stream's error log; the marts under-count until it is fixed **and backfilled** |
+| `dbt source past 30 min` | `dbt source freshness` found a table behind its AN-010 threshold | The lag alert above — if the stream is healthy the staleness is in the merge, or the table is genuinely quiet |
+| `dbt run or test failed` | a `dbt build` broke: a model errored or a test failed | The failure line, below |
+
+**Where the dbt signal comes from.** dbt writes `target/run_results.json` and exits; nothing
+reaches Cloud Monitoring on its own. `dbt/scripts/dbt_run.py` wraps every invocation (the
+Makefile targets, `ci-dbt.yml`, and the scheduled job when it exists), reads the artefact and
+emits one structured JSON line per run in the same shape as the API's structlog lines:
+
+| `event` | Level | Fields |
+|---|---|---|
+| `dbt_run_result` | info | `command`, `target`, `status`, `nodes`, `errors`, `warnings`, `elapsed_s`, `invocation_id`, `exit_code` |
+| `dbt_run_failed` | error | the same, plus `first_failure` and `failures[]` (`node`, `status`, `message`) |
+| `dbt_source_freshness` | info | `source`, `state`, `max_loaded_at`, `staleness_s`, `warn_after_s`, `error_after_s` |
+| `dbt_source_stale` | error | the same, for a source past its error threshold |
+
+With `DBT_CLOUD_LOG_PROJECT` set the wrapper also writes the line to Cloud Logging
+(`logName=projects/<project>/logs/dbt`) using the run's own credentials — which is how a CI
+run raises OPS-011 even though the scheduled dbt Cloud Run job does not exist yet. The
+log-based metrics and alerts are in `infra/modules/monitoring/data.tf`.
+
+**Reading a failure:**
+
+```bash
+gcloud logging read 'jsonPayload.event="dbt_run_failed"' \
+  --project farmerapp-prd --freshness 1d --limit 5 \
+  --format='value(jsonPayload.first_failure, jsonPayload.errors, jsonPayload.failures)'
+```
+
+`failures[].status` tells you which kind of problem it is:
+
+- `error` on a `model.*` node — the SQL broke, usually a source column that changed shape or
+  disappeared from the Datastream allowlist. Check
+  `infra/modules/analytics/replicated_columns.json` against the model.
+- `fail` on a `test.*` node — the data broke, not the code. AN-012's generic tests and the KPI
+  reconciliations are the ones that catch a bad CDC merge; do **not** re-run until you know
+  why, because a passing second run usually means the stream caught up and the first answer
+  was the true one.
+- `warn` — a test at warn severity. Reported, counted, and deliberately *not* an alert.
+
+**A quiet source is not an outage.** `dbt source freshness` measures the newest row, so a table
+with no writes overnight reads as stale at 06:00. AN-010 puts the hot thresholds only on the
+tables that change every working hour (orders, payments, visits, duty sessions); if an alert
+fires for one of those outside working hours, check the clock before the stream.
+
+**Self-test.** `python scripts/dbt_run.py --self-test` runs the parser over synthetic artefacts
+with no dbt, no cloud and no credentials. It runs in `make check-dbt` and in `ci-dbt.yml`, so
+the alerting path is covered by CI rather than by hope.
+
 ## 7. Teardown
 
 1. `datastream_stream_enabled = false` and apply (deletes the stream and source profile).

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
 import 'main_version.dart';
+import 'observability.dart';
 import 'platform.dart';
 import 'push.dart';
 import 'router.dart';
@@ -15,22 +16,48 @@ import 'security.dart';
 const String farmerAppVersion = kisanAppVersion;
 
 Future<void> main() async {
+  // NF-005 / NF-001: the clock starts on the first line of main(), before the
+  // bindings, so the measured cold start includes everything the farmer waits
+  // for (docs/device-matrix.md).
+  final startTrace = AppStartTrace();
   WidgetsFlutterBinding.ensureInitialized();
-  await startKisan();
+  // NF-014: Crashlytics, Performance and Remote Config, or the core's no-op
+  // seams when this build has no Firebase (observability.dart).
+  final obs = await FarmerObservability.create(appVersion: farmerAppVersion);
+  // Everything after this point runs inside the guarded zone, so an error on
+  // the start-up path is a reported crash rather than a blank screen.
+  await runWithCrashReporting(
+    obs.crashes,
+    () => startKisan(obs: obs, startTrace: startTrace),
+  );
 }
 
 /// Builds the provider container and runs the app; a remote wipe (SEC-025)
 /// tears this run down, wipes and calls [startKisan] again, which opens on
 /// the "signed out by your administrator" screen.
-Future<void> startKisan() async {
+Future<void> startKisan({
+  FarmerObservability obs = FarmerObservability.disabled,
+  AppStartTrace? startTrace,
+}) async {
   // Real API (FA-001): base URL from --dart-define=API_BASE_URL, default
   // http://10.0.2.2:8000 (host machine from the Android emulator). One
   // client for every call: pinning, Play Integrity on login, wipe detection.
   final store = SecureTokenStore();
   final wipe = WipeSignal();
+  // SPEC 8.4: remote flags first -- a kill switch that only takes effect on
+  // the *second* start is not a kill switch. A failed fetch keeps the local
+  // defaults (remote_flags.dart), so this never blocks the start.
+  final flagOverrides = await remoteFlagOverrides(obs.flags);
+  final flags = obs.flags.flags;
   final client = buildApiHttpClient(
     wipeSignal: wipe,
     attestation: const PlayIntegrityAttestation(),
+    // NF-014: every request carries a W3C traceparent, and the trace id goes
+    // on the crash report, so a Crashlytics issue names the API trace that
+    // was in flight when the app died.
+    sampler: TraceSampler(ratio: flags.traceSampleRatio),
+    onTrace: (trace) =>
+        unawaited(obs.crashes.setCustomKey(CrashKeys.traceId, trace.traceId)),
   );
   final auth = HttpAuthApi(
     store: store,
@@ -60,6 +87,11 @@ Future<void> startKisan() async {
   final container = ProviderContainer(
     overrides: [
       ...settings,
+      ...flagOverrides,
+      // NF-014: the seams the app reports through. Inert when this build has
+      // no Firebase.
+      crashReporterProvider.overrideWithValue(obs.crashes),
+      performanceMonitorProvider.overrideWithValue(obs.performance),
       appDatabaseProvider.overrideWithValue(db),
       tokenStoreProvider.overrideWithValue(store),
       authApiProvider.overrideWithValue(auth),
@@ -163,7 +195,12 @@ Future<void> startKisan() async {
       unawaited(flush());
     });
   }
+  // NF-005: the app has its database, settings and session; the farmer can
+  // act from the first frame on.
+  startTrace?.markInteractive();
   runApp(
     UncontrolledProviderScope(container: container, child: const KisanApp()),
   );
+  // Reports app_start once the engine has actually rasterised that frame.
+  startTrace?.reportFirstFrame(obs.performance);
 }

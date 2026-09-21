@@ -111,3 +111,25 @@ variable "deletion_protection" {
   type        = bool
   default     = false
 }
+
+# OPS-012: the billing export groups spend by resource label, so every job carries what it
+# is (`component`) and whose it is (`tenancy`). Today every job is `shared` -- one job run
+# takes `--tenant-id` arguments for all tenants rather than one job per tenant -- so the
+# cost model apportions their cost; `dedicated` plus a `tenant_id` label is what a
+# single-tenant job would set, and modules/cost already bills that directly.
+variable "labels" {
+  description = "Extra labels merged into the job's labels (OPS-012 cost attribution: env, tenant_id on a dedicated job)."
+  type        = map(string)
+  default     = {}
+}
+
+variable "tenancy" {
+  description = "OPS-012: `shared` (every tenant, cost apportioned) or `dedicated` (one tenant, cost billed to the `tenant_id` label)."
+  type        = string
+  default     = "shared"
+
+  validation {
+    condition     = contains(["shared", "dedicated"], var.tenancy)
+    error_message = "tenancy must be shared or dedicated."
+  }
+}

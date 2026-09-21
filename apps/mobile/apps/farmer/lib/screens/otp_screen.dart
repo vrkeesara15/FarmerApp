@@ -57,6 +57,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 l10n.otpSubtitle(flow.phone),
                 style: app.text.body.copyWith(color: app.palette.textSecondary),
               ),
+              // NF-009: read aloud, because this is the screen where a farmer
+              // who cannot read is told a number arrived by SMS.
+              AudioButton(
+                promptId: 'f03_otp',
+                text: l10n.otpSubtitle(flow.phone),
+              ),
               const SizedBox(height: Tokens.space6),
               OtpInput(
                 enabled: !flow.busy && !flow.locked,

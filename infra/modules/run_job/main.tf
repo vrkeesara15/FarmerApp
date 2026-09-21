@@ -3,7 +3,7 @@ resource "google_cloud_run_v2_job" "job" {
   name                = var.name
   location            = var.region
   deletion_protection = var.deletion_protection
-  labels              = { app = "farmerapp", job = var.name }
+  labels              = merge({ app = "farmerapp", job = var.name, component = var.name, tenancy = var.tenancy }, var.labels)
 
   template {
     template {

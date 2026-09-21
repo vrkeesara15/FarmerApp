@@ -31,3 +31,20 @@ db_pool = {
 
 # M7 VA-004 review agent (docs/prs/M7-rules.md): on.
 flag_summary_llm = "claude"
+
+# NF-015 (docs/cost-model.md): pilot (5 stores) under Rs 25,000/month. Raise to 100000 at 50
+# stores -- the model says the shape holds; see the "50 stores" column and its levers.
+# HUMAN GATE (with the human-only prd apply): billing export + budget binding,
+# docs/runbooks/cost-and-budget.md; then set billing_export_table and billing_account.
+monthly_budget_inr   = 25000
+billing_export_table = ""
+billing_account      = ""
+# OPS-012 per tenant, per day (excluded from the infra budget by NF-015).
+llm_daily_inr_per_tenant = 500
+sms_daily_inr_per_tenant = 500
+# OPS-013: Armor enforces in prd; a spike here is real traffic being blocked.
+armor_denied_per_5m = 500
+otp_sends_per_5m    = 300
+# OPS-013: set the organisation id to let the SCC service agent publish findings; pointing
+# SCC at the topic is a separate org-level human gate (see the alert's documentation).
+scc_organization_id = ""

@@ -10,6 +10,7 @@ import '../geo/geo.dart';
 import '../i18n/generated/core_localizations.dart';
 import '../theme/app_theme.dart';
 import '../tokens/tokens.g.dart';
+import '../utils/format.dart';
 
 /// 1x1 transparent PNG, encoded once.
 final Uint8List _transparentPng = img.encodePng(
@@ -205,7 +206,7 @@ class _MapPanelState extends State<MapPanel> {
     final semantics = widget.boundary.isEmpty
         ? l10n.mapNoBoundary
         : '${l10n.mapFarmBoundary}, ${l10n.regPointsCount(widget.boundary.length)}, '
-              '${l10n.regComputedArea(acres.toStringAsFixed(2))}';
+              '${l10n.regComputedArea(formatAcres(acres))}';
 
     return Semantics(
       container: true,
@@ -221,104 +222,113 @@ class _MapPanelState extends State<MapPanel> {
         ),
         child: Stack(
           children: <Widget>[
-            FlutterMap(
-              mapController: _controller,
-              options: MapOptions(
-                initialCenter: _ll(_initialCenter),
-                initialZoom: MapPanel.pointZoom,
-                backgroundColor: app.tint(p.primaryContainer),
-                interactionOptions: InteractionOptions(
-                  flags: widget.interactive
-                      ? InteractiveFlag.all & ~InteractiveFlag.rotate
-                      : InteractiveFlag.none,
+            // NF-009 (labeledTapTargetGuideline): flutter_map installs gesture
+            // recognisers whether or not interaction is enabled, so the tile
+            // stack is always a tappable node -- and `explicitChildNodes` on
+            // the container above stops it inheriting a label. Naming it here
+            // keeps the corner and position markers (which carry their own
+            // labels) instead of excluding the whole subtree.
+            Semantics(
+              label: l10n.mapFarmBoundary,
+              child: FlutterMap(
+                mapController: _controller,
+                options: MapOptions(
+                  initialCenter: _ll(_initialCenter),
+                  initialZoom: MapPanel.pointZoom,
+                  backgroundColor: app.tint(p.primaryContainer),
+                  interactionOptions: InteractionOptions(
+                    flags: widget.interactive
+                        ? InteractiveFlag.all & ~InteractiveFlag.rotate
+                        : InteractiveFlag.none,
+                  ),
+                  onTap: widget.onTap == null
+                      ? null
+                      : (_, latLng) => widget.onTap!(
+                          GeoPoint(latLng.latitude, latLng.longitude),
+                        ),
+                  onMapReady: () {
+                    _ready = true;
+                    if (widget.boundary.length > 1) _follow();
+                  },
                 ),
-                onTap: widget.onTap == null
-                    ? null
-                    : (_, latLng) => widget.onTap!(
-                        GeoPoint(latLng.latitude, latLng.longitude),
-                      ),
-                onMapReady: () {
-                  _ready = true;
-                  if (widget.boundary.length > 1) _follow();
-                },
-              ),
-              children: <Widget>[
-                TileLayer(
-                  urlTemplate: osmTileUrlTemplate,
-                  userAgentPackageName: widget.userAgentPackageName,
-                  tileProvider: widget.tileProvider,
-                  tileDisplay: const TileDisplay.instantaneous(),
-                ),
-                if (ring.length >= 3 && widget.closed)
-                  PolygonLayer(
-                    polygons: <Polygon<Object>>[
-                      Polygon<Object>(
-                        points: ring,
-                        color: ringColor.withValues(alpha: 0.25),
-                        borderColor: ringColor,
-                        borderStrokeWidth: ringWidth,
-                      ),
-                    ],
-                  )
-                else if (ring.length >= 2)
-                  PolylineLayer(
-                    polylines: <Polyline<Object>>[
-                      Polyline<Object>(
-                        points: ring,
-                        color: p.primary,
-                        strokeWidth: app.borderWidth + 1,
-                      ),
-                    ],
+                children: <Widget>[
+                  TileLayer(
+                    urlTemplate: osmTileUrlTemplate,
+                    userAgentPackageName: widget.userAgentPackageName,
+                    tileProvider: widget.tileProvider,
+                    tileDisplay: const TileDisplay.instantaneous(),
                   ),
-                if (meeting != null && widget.meetingRadiusM != null)
-                  CircleLayer(
-                    circles: <CircleMarker<Object>>[
-                      CircleMarker<Object>(
-                        point: _ll(meeting),
-                        radius: widget.meetingRadiusM!,
-                        useRadiusInMeter: true,
-                        color: ringColor.withValues(alpha: 0.15),
-                        borderColor: ringColor,
-                        borderStrokeWidth: ringWidth,
-                      ),
-                    ],
-                  ),
-                if (fix != null)
-                  CircleLayer(
-                    circles: <CircleMarker<Object>>[
-                      CircleMarker<Object>(
-                        point: _ll(fix.point),
-                        radius: fix.accuracyMetres,
-                        useRadiusInMeter: true,
-                        color: p.statusInfo.withValues(alpha: 0.15),
-                        borderColor: p.statusInfo,
-                        borderStrokeWidth: 1,
-                      ),
-                    ],
-                  ),
-                MarkerLayer(
-                  markers: <Marker>[
-                    if (widget.showCorners)
-                      for (var i = 0; i < ring.length; i++)
+                  if (ring.length >= 3 && widget.closed)
+                    PolygonLayer(
+                      polygons: <Polygon<Object>>[
+                        Polygon<Object>(
+                          points: ring,
+                          color: ringColor.withValues(alpha: 0.25),
+                          borderColor: ringColor,
+                          borderStrokeWidth: ringWidth,
+                        ),
+                      ],
+                    )
+                  else if (ring.length >= 2)
+                    PolylineLayer(
+                      polylines: <Polyline<Object>>[
+                        Polyline<Object>(
+                          points: ring,
+                          color: p.primary,
+                          strokeWidth: app.borderWidth + 1,
+                        ),
+                      ],
+                    ),
+                  if (meeting != null && widget.meetingRadiusM != null)
+                    CircleLayer(
+                      circles: <CircleMarker<Object>>[
+                        CircleMarker<Object>(
+                          point: _ll(meeting),
+                          radius: widget.meetingRadiusM!,
+                          useRadiusInMeter: true,
+                          color: ringColor.withValues(alpha: 0.15),
+                          borderColor: ringColor,
+                          borderStrokeWidth: ringWidth,
+                        ),
+                      ],
+                    ),
+                  if (fix != null)
+                    CircleLayer(
+                      circles: <CircleMarker<Object>>[
+                        CircleMarker<Object>(
+                          point: _ll(fix.point),
+                          radius: fix.accuracyMetres,
+                          useRadiusInMeter: true,
+                          color: p.statusInfo.withValues(alpha: 0.15),
+                          borderColor: p.statusInfo,
+                          borderStrokeWidth: 1,
+                        ),
+                      ],
+                    ),
+                  MarkerLayer(
+                    markers: <Marker>[
+                      if (widget.showCorners)
+                        for (var i = 0; i < ring.length; i++)
+                          Marker(
+                            point: ring[i],
+                            width: Tokens.space6,
+                            height: Tokens.space6,
+                            child: _CornerDot(
+                              index: i + 1,
+                              label: l10n.mapCorner(i + 1),
+                            ),
+                          ),
+                      if (fix != null)
                         Marker(
-                          point: ring[i],
+                          point: _ll(fix.point),
                           width: Tokens.space6,
                           height: Tokens.space6,
-                          child: _CornerDot(
-                            index: i + 1,
-                            label: l10n.mapCorner(i + 1),
-                          ),
+                          child: _PositionDot(label: l10n.mapCurrentPosition),
                         ),
-                    if (fix != null)
-                      Marker(
-                        point: _ll(fix.point),
-                        width: Tokens.space6,
-                        height: Tokens.space6,
-                        child: _PositionDot(label: l10n.mapCurrentPosition),
-                      ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
             Positioned(
               right: Tokens.space2,

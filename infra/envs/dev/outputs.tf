@@ -63,3 +63,18 @@ output "analytics" {
     stream_name            = module.analytics.stream_name
   }
 }
+
+output "cost" {
+  description = "OPS-012 / NF-015: the cost dataset, its views and the budget topic. `views` is empty until a billing admin enables the Cloud Billing export (docs/runbooks/cost-and-budget.md) and billing_export_table is set."
+  value = {
+    dataset      = module.cost.dataset_id
+    views        = module.cost.views
+    budget_topic = module.cost.budget_topic
+    thresholds   = module.cost.thresholds
+  }
+}
+
+output "secret_rotation_topic" {
+  description = "OPS-014: topic Secret Manager publishes 90-day rotation reminders to (the secret-age alert watches it)."
+  value       = module.secrets.rotation_topic
+}

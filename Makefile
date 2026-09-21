@@ -116,29 +116,34 @@ check-infra: ## Terraform fmt/validate/tflint/checkov
 
 # ---------------------------------------------------------------- analytics (dbt, SPEC 5)
 # `ci` target = DuckDB over the fixture seeds: no GCP, no credentials (dbt/README.md).
+# Every dbt invocation goes through scripts/dbt_run.py (OPS-011): it runs dbt, then turns
+# target/run_results.json and target/sources.json into the structured JSON lines the
+# Cloud Monitoring log metrics alert on, and exits with dbt's own code.
 DBT_DIR := dbt
 DBT_RUN := cd $(DBT_DIR) && DBT_PROFILES_DIR=. $(UV) run
+DBT := $(DBT_RUN) python scripts/dbt_run.py
 
 $(DBT_DIR)/.venv/.synced: $(DBT_DIR)/pyproject.toml $(DBT_DIR)/uv.lock
 	cd $(DBT_DIR) && $(UV) sync --frozen --quiet && touch .venv/.synced
 
 dbt: $(DBT_DIR)/.venv/.synced ## dbt build on DuckDB fixtures: seeds, models, tests (no cloud)
 	rm -f $(DBT_DIR)/target/ci.duckdb
-	$(DBT_RUN) dbt build --target ci
+	$(DBT) build --target ci
 
 dbt-dev: $(DBT_DIR)/.venv/.synced ## dbt build on dev BigQuery (ADC; DBT_IMPERSONATE_SA to run as the dbt SA)
-	$(DBT_RUN) dbt build --target dev
+	$(DBT) build --target dev
 
 dbt-freshness: $(DBT_DIR)/.venv/.synced ## AN-010 source freshness on dev BigQuery (warn 15 min, error 30)
-	$(DBT_RUN) dbt source freshness --target dev
+	$(DBT) source freshness --target dev
 
-check-dbt: ## Replication allowlist check + dbt build --target ci (skips without uv)
+check-dbt: ## Allowlist check + OPS-011 wrapper self-test + dbt build --target ci (skips without uv)
 	@if ! command -v $(UV) >/dev/null 2>&1; then echo "check-dbt: uv not installed, skipping"; \
 	elif [ ! -f $(DBT_DIR)/pyproject.toml ]; then echo "check-dbt: dbt/pyproject.toml not found, skipping"; \
 	else $(MAKE) --no-print-directory $(DBT_DIR)/.venv/.synced && \
 	  (cd $(DBT_DIR) && $(UV) run python scripts/check_replication.py) && \
+	  (cd $(DBT_DIR) && $(UV) run python scripts/dbt_run.py --self-test) && \
 	  rm -f $(DBT_DIR)/target/ci.duckdb && \
-	  $(DBT_RUN) dbt build --target ci --fail-fast; fi
+	  $(DBT) build --target ci --fail-fast; fi
 
 check: check-api check-console check-mobile check-infra check-dbt ## Everything CI runs
 

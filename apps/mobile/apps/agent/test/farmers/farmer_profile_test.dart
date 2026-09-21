@@ -49,7 +49,9 @@ void main() {
     expect(find.text('Home farm'), findsOneWidget);
     expect(find.byType(MapPanel), findsOneWidget);
     expect(
-      find.text('2.50 acres · 2 crops · Black · Borewell'),
+      // NF-008: acres go through formatAcres now, which groups the Indian way
+      // and drops trailing zeros -- "2.5", not "2.50".
+      find.text('2.5 acres · 2 crops · Black · Borewell'),
       findsOneWidget,
     );
     expect(find.text('Cotton'), findsWidgets);

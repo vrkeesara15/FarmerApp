@@ -201,9 +201,8 @@ class _QuickSetupState extends ConsumerState<_QuickSetup> {
     }
   }
 
-  String _acreLabel(CoreLocalizations l10n, double a) => a >= 10
-      ? l10n.kisanAcresPlus('10')
-      : l10n.kisanAcres(a.toStringAsFixed(0));
+  String _acreLabel(CoreLocalizations l10n, double a) =>
+      a >= 10 ? l10n.kisanAcresPlus('10') : l10n.kisanAcres(formatAcres(a));
 
   String _sownLabel(CoreLocalizations l10n, int days) => switch (days) {
     3 => l10n.kisanSownThisWeek,

@@ -138,11 +138,19 @@ class ConsentCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: Tokens.space2),
-                  Switch(
-                    key: toggleKey,
-                    value: granted,
-                    onChanged: onChanged,
-                    activeTrackColor: p.primary,
+                  // NF-009: the label beside a Switch is its own semantics
+                  // node, so a screen reader announced "switch, on" and
+                  // nothing about *what* was being consented to. Naming the
+                  // consent on the switch itself is the whole point here: it
+                  // is a DPDP consent toggle (NF-013), not a preference.
+                  Semantics(
+                    label: '$title. ${agreeLabel ?? l10n.regConsentGiven}',
+                    child: Switch(
+                      key: toggleKey,
+                      value: granted,
+                      onChanged: onChanged,
+                      activeTrackColor: p.primary,
+                    ),
                   ),
                 ],
               ),
