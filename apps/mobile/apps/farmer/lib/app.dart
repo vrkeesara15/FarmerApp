@@ -6,7 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'router.dart';
 
-/// Root widget of the farmer app ("Kisan").
+/// Root widget of the farmer app (working name "Kisan"; FA-008: the
+/// tenant's own name, colour and logo replace it at run time).
 class KisanApp extends ConsumerStatefulWidget {
   /// Creates the app.
   const KisanApp({super.key});
@@ -44,11 +45,16 @@ class _KisanAppState extends ConsumerState<KisanApp> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
+    final brand = ref.watch(appBrandProvider);
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
-      onGenerateTitle: (context) => CoreLocalizations.of(context).appNameFarmer,
+      onGenerateTitle: (context) => brand.name(CoreLocalizations.of(context)),
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.build(settings.themeMode, locale: settings.locale),
+      theme: AppTheme.build(
+        settings.themeMode,
+        locale: settings.locale,
+        brand: brand,
+      ),
       locale: settings.locale,
       localizationsDelegates: CoreLocalizations.localizationsDelegates,
       supportedLocales: CoreLocalizations.supportedLocales,

@@ -31,6 +31,7 @@ import { useT } from "@/lib/i18n-client";
 import { useAnalyticsFilters } from "@/lib/hooks/use-analytics-filters";
 import { isAnalyticsRoute, visibleNavItems } from "@/lib/nav";
 import { SessionProvider, useSession } from "@/lib/session-context";
+import { BrandProvider, useBrand } from "@/lib/brand-context";
 
 const ROLE_KEYS = [
   "owner",
@@ -59,7 +60,11 @@ function isoDaysAgo(days: number): string {
 export function ConsoleShell({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <Shell>{children}</Shell>
+      {/* FA-008: the tenant's colour, logo, name and support number, from the brand of the
+          signed-in user's tenant (`GET /v1/settings/public`). */}
+      <BrandProvider>
+        <Shell>{children}</Shell>
+      </BrandProvider>
     </SessionProvider>
   );
 }
@@ -67,6 +72,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
 function Shell({ children }: { children: React.ReactNode }) {
   const t = useT();
   const session = useSession();
+  const brand = useBrand();
   const router = useRouter();
   const [collapsed, setCollapsed] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -115,8 +121,11 @@ function Shell({ children }: { children: React.ReactNode }) {
   ];
   // Role-based nav (SPEC 2.6, lib/nav.ts ROUTE_ROLES): hide what the signed-in role cannot read.
   const items = visibleNavItems(allItems, session.user?.role);
+  const tenantName = brand.name ?? t("app.tenantFallback");
   const topBar: SharedTopBarProps = {
-    tenantName: t("app.tenantFallback"),
+    tenantName,
+    tenantLogoUrl: brand.logoUrl,
+    supportPhone: brand.supportPhone,
     search,
     onSearchChange: setSearch,
     unreadNotifications: 0,
@@ -138,9 +147,12 @@ function Shell({ children }: { children: React.ReactNode }) {
         collapsed={collapsed}
         onCollapsedChange={onCollapsedChange}
         header={
-          <span className="flex items-center gap-2 text-heading font-semibold text-primary">
+          <span
+            className="flex items-center gap-2 text-heading font-semibold text-primary"
+            data-testid="nav-brand"
+          >
             <Leaf className="size-6 shrink-0" aria-hidden="true" />
-            {collapsed ? <span className="sr-only">{t("app.name")}</span> : t("app.name")}
+            {collapsed ? <span className="sr-only">{tenantName}</span> : tenantName}
           </span>
         }
       />

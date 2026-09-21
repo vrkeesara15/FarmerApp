@@ -4164,6 +4164,16 @@ class CoreLocalizationsTe extends CoreLocalizations {
       'మళ్లీ సైన్ ఇన్ కావడానికి మీ ఫోన్, OTP అవసరం.';
 
   @override
+  String get settingsCallSupport => 'సహాయానికి కాల్ చేయండి';
+
+  @override
+  String get settingsCallSupportNone => 'మీ సంస్థ సహాయ నంబర్‌ను ఇవ్వలేదు';
+
+  @override
+  String get settingsCallSupportFailed =>
+      'కాల్ చేయడం కుదరలేదు. మళ్లీ ప్రయత్నించండి.';
+
+  @override
   String get inboxTitle => 'నోటిఫికేషన్లు';
 
   @override
@@ -4403,6 +4413,12 @@ class CoreLocalizationsTe extends CoreLocalizations {
 
   @override
   String get travelPayable => 'ఇప్పటివరకు చెల్లించాల్సినది';
+
+  @override
+  String get travelKmProcessed => 'సర్వర్ లెక్కించిన కిలోమీటర్లు';
+
+  @override
+  String get travelKmEstimated => 'ఈ ఫోన్‌లో అంజనా — ఇంకా లెక్కించలేదు';
 
   @override
   String travelCapped(int cap) {

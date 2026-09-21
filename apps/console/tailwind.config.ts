@@ -27,7 +27,13 @@ const config: Config = {
           secondary: "var(--color-text-secondary)",
           muted: "var(--color-text-muted)",
         },
-        border: "var(--color-border)",
+        // NF-009 split the border token in two (design/tokens.json): `border` is the
+        // decorative hairline, `border-strong` the 3:1 outline of a control. The generated
+        // tokens.css emits `--color-border-default` / `--color-border-strong`.
+        border: {
+          DEFAULT: "var(--color-border-default)",
+          strong: "var(--color-border-strong)",
+        },
         surface: "var(--color-surface)",
         background: "var(--color-background)",
         success: { DEFAULT: "var(--color-success)", container: "var(--color-success-container)" },

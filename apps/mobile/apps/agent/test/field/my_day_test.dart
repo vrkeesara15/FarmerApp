@@ -115,4 +115,40 @@ void main() {
     );
     expect(find.byKey(const Key('my-day-gaps')), findsOneWidget);
   });
+
+  testWidgets('VV-006 A12: with the day still on duty the km are this phone\'s '
+      'estimate, and say so', (tester) async {
+    final deps = AgentDeps();
+    addTearDown(deps.dispose);
+    await acceptPolicy(deps);
+    await seedOnDuty(deps, points: 5);
+    // The duty session is still open: the server sends a day, but it has
+    // not been through VV-006 track processing.
+    await seedFieldCaches(deps, processed: false);
+    await tester.pumpWidget(deps.app(initialLocation: AppRoutes.myDay));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Estimated on this phone'), findsOneWidget);
+    expect(find.text('Processed by the server'), findsNothing);
+    // The server's 24.5 processed km are not shown: they are not final.
+    expect(find.text('24.5'), findsNothing);
+  });
+
+  testWidgets('VV-006 A12: once every session is processed the server figures '
+      'replace the estimate', (tester) async {
+    final deps = AgentDeps();
+    addTearDown(deps.dispose);
+    await acceptPolicy(deps);
+    await seedOnDuty(deps, points: 5);
+    await seedFieldCaches(deps);
+    await tester.pumpWidget(deps.app(initialLocation: AppRoutes.myDay));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('my-day-km-source')), findsOneWidget);
+    expect(find.text('Processed by the server'), findsOneWidget);
+    expect(find.text('24.5'), findsOneWidget);
+    // One stop and one visit pin, both from the processed track.
+    expect(find.byKey(const Key('my-day-stops')), findsOneWidget);
+    expect(find.text('1 stops'), findsOneWidget);
+  });
 }

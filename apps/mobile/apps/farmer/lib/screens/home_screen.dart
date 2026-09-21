@@ -73,7 +73,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final farms = profile?.value.farms ?? const <KisanFarm>[];
     return KisanTabScaffold(
       tab: KisanTab.home,
-      title: l10n.appNameFarmer,
+      // FA-008: the tenant's app name and logo, else the working name.
+      title: ref.watch(appBrandProvider).name(l10n),
+      showBrandLogo: true,
       actions: const <Widget>[_InboxAction()],
       body: RefreshIndicator(
         onRefresh: () => refreshKisan(ref),

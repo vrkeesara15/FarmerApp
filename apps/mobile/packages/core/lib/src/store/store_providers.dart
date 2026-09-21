@@ -19,6 +19,10 @@ final Provider<StoreApi> storeApiProvider = Provider<StoreApi>(
   (ref) => FakeStoreApi(),
 );
 
+/// The dialler URI for [phone] (FA-008: every "call support" action, and
+/// the officer / store calls, go through this one helper).
+String telUri(String phone) => 'tel:$phone';
+
 /// Opens a URL outside the app (the invoice PDF).
 abstract interface class UrlOpener {
   /// Opens [url]; false when nothing could handle it.

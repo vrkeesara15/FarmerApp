@@ -624,6 +624,71 @@ class DayVisit {
   int get hashCode => id.hashCode;
 }
 
+/// One duty session of the day as `GET /v1/me/day` reports it
+/// (`DutySessionBrief`).
+///
+/// [km] is the VV-006 *processed* distance: the server writes it only when
+/// the track has been through `duty/processing.py` (filtered, or snapped to
+/// roads), so a null km on an ended session means "not processed yet" and
+/// the officer is still looking at this phone's own estimate.
+@immutable
+class DaySession {
+  /// Creates the session.
+  const DaySession({
+    required this.id,
+    required this.startAt,
+    this.endAt,
+    this.km,
+    this.endReason,
+  });
+
+  /// Parses `DutySessionBrief`.
+  factory DaySession.fromJson(Map<String, Object?> json) => DaySession(
+    id: _str(json['id']),
+    startAt: _time(json['start_at']) ?? DateTime.utc(1970),
+    endAt: _time(json['end_at']),
+    km: _num(json['km']),
+    endReason: json['end_reason'] as String?,
+  );
+
+  /// Session id.
+  final String id;
+
+  /// Duty start (UTC).
+  final DateTime startAt;
+
+  /// Duty end (UTC); null while the officer is still on duty.
+  final DateTime? endAt;
+
+  /// VV-006 processed km; null until the track has been processed.
+  final double? km;
+
+  /// VV-007 end reason.
+  final String? endReason;
+
+  /// True once the server has processed this session's track.
+  bool get processed => endAt != null && km != null;
+
+  /// Wire shape (what the cache keeps).
+  Map<String, Object?> toJson() => <String, Object?>{
+    'id': id,
+    'start_at': startAt.toIso8601String(),
+    'end_at': endAt?.toIso8601String(),
+    'km': km,
+    'end_reason': endReason,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is DaySession &&
+      other.id == id &&
+      other.endAt == endAt &&
+      other.km == km;
+
+  @override
+  int get hashCode => Object.hash(id, endAt, km);
+}
+
 /// `GET /v1/me/day` — the officer's own copy of the console day replay.
 @immutable
 class DayTimeline {
@@ -631,6 +696,7 @@ class DayTimeline {
   const DayTimeline({
     required this.date,
     this.km = 0,
+    this.sessions = const <DaySession>[],
     this.track = const <GeoPoint>[],
     this.stops = const <DayStop>[],
     this.gaps = const <DayGap>[],
@@ -656,6 +722,9 @@ class DayTimeline {
     return DayTimeline(
       date: _str(json['date']),
       km: _num(json['km']) ?? 0,
+      sessions: <DaySession>[
+        for (final d in _rows(json['duty_sessions'])) DaySession.fromJson(d),
+      ],
       track: track,
       stops: <DayStop>[
         for (final s in _rows(json['stops'])) DayStop.fromJson(s),
@@ -676,8 +745,13 @@ class DayTimeline {
   /// `YYYY-MM-DD` in IST.
   final String date;
 
-  /// Processed km (server); 0 until the track has been processed.
+  /// The day's km as the server reports them. VV-006: processed km for the
+  /// sessions that have been processed, the server's own haversine estimate
+  /// for the rest — [processed] says which this is.
   final double km;
+
+  /// The day's duty sessions (VV-006 processing state per session).
+  final List<DaySession> sessions;
 
   /// The day's track.
   final List<GeoPoint> track;
@@ -698,6 +772,15 @@ class DayTimeline {
   /// being empty (A12 shows the client km estimate until then).
   final bool fromServer;
 
+  /// VV-006: true when every duty session of the day has been through the
+  /// server's track processing, so km, stops and gaps are the processed
+  /// figures and not this phone's estimate.
+  ///
+  /// A day with a session still open is never processed: its km cannot be
+  /// final while the officer is still moving.
+  bool get processed =>
+      fromServer && sessions.isNotEmpty && sessions.every((s) => s.processed);
+
   /// Gaps still without a reason.
   List<DayGap> get unexplainedGaps => <DayGap>[
     for (final g in gaps)
@@ -708,6 +791,7 @@ class DayTimeline {
   DayTimeline withGap(DayGap gap) => DayTimeline(
     date: date,
     km: km,
+    sessions: sessions,
     track: track,
     stops: stops,
     gaps: <DayGap>[
@@ -723,6 +807,7 @@ class DayTimeline {
   Map<String, Object?> toJson() => <String, Object?>{
     'date': date,
     'km': km,
+    'duty_sessions': <Object?>[for (final s in sessions) s.toJson()],
     'track': <String, Object?>{
       'type': 'MultiLineString',
       'coordinates': <Object?>[
@@ -990,6 +1075,11 @@ class TravelDay {
   /// The cap bit into the day's km.
   bool get capped => km > kmCapped;
 
+  /// VV-006: the km of this day are the server's processed figure. A day
+  /// with an open duty session is not: its track has not been processed,
+  /// so what the screen shows is still an estimate.
+  bool get processed => !openSession;
+
   /// Wire shape.
   Map<String, Object?> toJson() => <String, Object?>{
     'date': date,
@@ -1206,6 +1296,11 @@ class TravelStatement {
 
   /// Paise per km.
   final int ratePerKmPaise;
+
+  /// VV-006: every day of the month carries the server's processed km (no
+  /// duty session is still open), so the allowance below is final rather
+  /// than a running estimate.
+  bool get processed => days.every((d) => d.processed);
 
   /// Nothing recorded this month.
   bool get isEmpty => days.isEmpty && claims.isEmpty;

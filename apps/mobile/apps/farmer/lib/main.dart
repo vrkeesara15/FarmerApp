@@ -70,6 +70,8 @@ Future<void> startKisan({
   final opener = EncryptedDatabaseOpener(keyStore: SecureDatabaseKeyStore());
   final db = openAppDatabase(opener: opener);
   final settings = await settingsOverrides(KvSettingsStore(db));
+  // FA-008: the cached tenant brand, also before the first frame.
+  final branding = await brandingOverrides(db);
   final wipedBefore = await hasWipeNotice(db);
   final signedIn = !wipedBefore && await store.read() != null;
   final rest = RestJsonClient(
@@ -87,7 +89,9 @@ Future<void> startKisan({
   final container = ProviderContainer(
     overrides: [
       ...settings,
+      ...branding,
       ...flagOverrides,
+      brandSurfaceProvider.overrideWithValue(BrandSurface.farmer),
       // NF-014: the seams the app reports through. Inert when this build has
       // no Firebase.
       crashReporterProvider.overrideWithValue(obs.crashes),

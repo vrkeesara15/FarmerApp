@@ -52,53 +52,67 @@ BeatPlan beatFixture({String status = 'generated', int version = 3}) =>
     );
 
 /// A day with a track, one stop, one visit and one unexplained gap.
-DayTimeline dayFixture({GapReason? reason}) => DayTimeline(
-  date: testDate,
-  km: 24.5,
-  fromServer: true,
-  track: const <GeoPoint>[
-    GeoPoint(17.4, 78.4),
-    GeoPoint(17.41, 78.41),
-    GeoPoint(17.42, 78.42),
-  ],
-  stops: <DayStop>[
-    DayStop(
-      point: const GeoPoint(17.41, 78.41),
-      start: DateTime.utc(2026, 9, 20, 5),
-      end: DateTime.utc(2026, 9, 20, 5, 20),
-      durationS: 1200,
-    ),
-  ],
-  visits: <DayVisit>[
-    DayVisit(
-      id: 'visit-1',
-      point: const GeoPoint(17.41, 78.41),
-      checkinAt: DateTime.utc(2026, 9, 20, 5),
-      farmerName: 'Ramesh Reddy',
-      status: 'verified',
-      score: 88,
-    ),
-  ],
-  gaps: <DayGap>[
-    DayGap(
-      id: 'gap-1',
-      start: DateTime.utc(2026, 9, 20, 7),
-      end: DateTime.utc(2026, 9, 20, 8),
-      durationS: 3600,
-      dutySessionId: 'duty-1',
-      reason: reason,
-    ),
-  ],
-  travel: const TravelDay(
-    date: testDate,
-    km: 24.5,
-    kmCapped: 24.5,
-    capKm: 150,
-    ratePerKmPaise: 300,
-    taPaise: 7350,
-    sessions: 1,
-  ),
-);
+///
+/// VV-006: [processed] drives the duty session the day's km hang off — an
+/// ended session with a processed km, or one still open, which is what the
+/// server sends while the officer is on duty and its km are an estimate.
+DayTimeline dayFixture({GapReason? reason, bool processed = true}) =>
+    DayTimeline(
+      date: testDate,
+      km: 24.5,
+      fromServer: true,
+      sessions: <DaySession>[
+        DaySession(
+          id: 'duty-1',
+          startAt: DateTime.utc(2026, 9, 20, 3, 30),
+          endAt: processed ? DateTime.utc(2026, 9, 20, 12, 30) : null,
+          km: processed ? 24.5 : null,
+          endReason: processed ? 'manual' : null,
+        ),
+      ],
+      track: const <GeoPoint>[
+        GeoPoint(17.4, 78.4),
+        GeoPoint(17.41, 78.41),
+        GeoPoint(17.42, 78.42),
+      ],
+      stops: <DayStop>[
+        DayStop(
+          point: const GeoPoint(17.41, 78.41),
+          start: DateTime.utc(2026, 9, 20, 5),
+          end: DateTime.utc(2026, 9, 20, 5, 20),
+          durationS: 1200,
+        ),
+      ],
+      visits: <DayVisit>[
+        DayVisit(
+          id: 'visit-1',
+          point: const GeoPoint(17.41, 78.41),
+          checkinAt: DateTime.utc(2026, 9, 20, 5),
+          farmerName: 'Ramesh Reddy',
+          status: 'verified',
+          score: 88,
+        ),
+      ],
+      gaps: <DayGap>[
+        DayGap(
+          id: 'gap-1',
+          start: DateTime.utc(2026, 9, 20, 7),
+          end: DateTime.utc(2026, 9, 20, 8),
+          durationS: 3600,
+          dutySessionId: 'duty-1',
+          reason: reason,
+        ),
+      ],
+      travel: const TravelDay(
+        date: testDate,
+        km: 24.5,
+        kmCapped: 24.5,
+        capKm: 150,
+        ratePerKmPaise: 300,
+        taPaise: 7350,
+        sessions: 1,
+      ),
+    );
 
 /// Performance with targets and a trend.
 Performance performanceFixture() =>
@@ -125,7 +139,7 @@ Performance performanceFixture() =>
     );
 
 /// A travel statement with three days and one approved claim.
-TravelStatement travelFixture() => const TravelStatement(
+TravelStatement travelFixture({bool processed = true}) => TravelStatement(
   month: testMonth,
   ratePerKmPaise: 300,
   kmTotal: 168,
@@ -142,8 +156,9 @@ TravelStatement travelFixture() => const TravelStatement(
       ratePerKmPaise: 300,
       taPaise: 7350,
       sessions: 1,
+      openSession: !processed,
     ),
-    TravelDay(
+    const TravelDay(
       date: '2026-09-19',
       km: 168,
       kmCapped: 150,
@@ -153,7 +168,7 @@ TravelStatement travelFixture() => const TravelStatement(
       sessions: 2,
     ),
   ],
-  claims: <TravelClaim>[
+  claims: const <TravelClaim>[
     TravelClaim(
       id: 'claim-server-1',
       claimDate: '2026-09-18',
@@ -237,11 +252,17 @@ Future<void> seedFieldCaches(
   bool travel = true,
   bool flags = true,
   bool inbox = true,
+
+  /// VV-006: false leaves the day's duty session open, so the server's km
+  /// are not the processed ones and the screens must say so.
+  bool processed = true,
 }) async {
   if (beat) deps.field.beats[testDate] = beatFixture();
-  if (day) deps.field.days[testDate] = dayFixture();
+  if (day) deps.field.days[testDate] = dayFixture(processed: processed);
   if (performance) deps.field.performanceOut = performanceFixture();
-  if (travel) deps.field.statements[testMonth] = travelFixture();
+  if (travel) {
+    deps.field.statements[testMonth] = travelFixture(processed: processed);
+  }
   if (flags) deps.field.flags = flagsFixture();
   if (inbox) deps.field.inbox = inboxFixture();
   final c = deps.container();

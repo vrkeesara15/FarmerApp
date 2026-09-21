@@ -160,7 +160,16 @@ class AgentDeps {
     String initialLocation = AppRoutes.farmers,
     Locale locale = const Locale('en'),
     AppThemeMode theme = AppThemeMode.light,
+    TenantBranding branding = const TenantBranding(),
   }) => <Override>[
+    // FA-008: the tenant brand this run renders with — what
+    // `GET /v1/settings/public` returned and `brandingOverrides` read back
+    // from the cache before the first frame — plus a logo loader that
+    // serves the fixture PNGs from memory instead of the network.
+    initialBrandingProvider.overrideWithValue(branding),
+    brandingProvider.overrideWithValue(branding),
+    brandSurfaceProvider.overrideWithValue(BrandSurface.agent),
+    brandLogoLoaderProvider.overrideWithValue(TestBrands.logoLoader),
     appDatabaseProvider.overrideWithValue(db),
     clockProvider.overrideWithValue(() => now),
     idGeneratorProvider.overrideWithValue(ids.call),
@@ -229,11 +238,13 @@ class AgentDeps {
     String initialLocation = AppRoutes.farmers,
     Locale locale = const Locale('en'),
     AppThemeMode theme = AppThemeMode.light,
+    TenantBranding branding = const TenantBranding(),
   }) => ProviderScope(
     overrides: overrides(
       initialLocation: initialLocation,
       locale: locale,
       theme: theme,
+      branding: branding,
     ),
     child: const MitraApp(),
   );

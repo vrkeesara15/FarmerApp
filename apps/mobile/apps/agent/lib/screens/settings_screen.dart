@@ -23,6 +23,7 @@ class SettingsScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
     final sunlight = settings.themeMode == AppThemeMode.sunlight;
+    final support = ref.watch(supportPhoneProvider);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: SafeArea(
@@ -163,6 +164,40 @@ class SettingsScreen extends ConsumerWidget {
               icon: Icons.science_outlined,
               title: l10n.demoTitle,
               route: AppRoutes.demoPlots,
+            ),
+            const SizedBox(height: Tokens.space3),
+            // FA-008: the tenant's own support number, from the branding in
+            // `GET /v1/settings/public`. Disabled when the tenant set none.
+            Material(
+              color: app.palette.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(Tokens.radiusCard),
+                side: app.borderSide,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
+                key: const Key('support-setting'),
+                leading: Icon(Icons.support_agent, color: app.palette.primary),
+                title: Text(l10n.settingsCallSupport, style: app.text.label),
+                subtitle: Text(
+                  support ?? l10n.settingsCallSupportNone,
+                  style: app.text.body,
+                ),
+                onTap: support == null
+                    ? null
+                    : () async {
+                        final ok = await ref
+                            .read(urlOpenerProvider)
+                            .open(telUri(support));
+                        if (!ok && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(l10n.settingsCallSupportFailed),
+                            ),
+                          );
+                        }
+                      },
+              ),
             ),
             const SizedBox(height: Tokens.space3),
             Material(

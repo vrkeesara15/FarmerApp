@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Bell, Check, ChevronDown, Languages, LogOut } from "lucide-react";
+import { Bell, Check, ChevronDown, Languages, Leaf, LogOut, Phone } from "lucide-react";
 import { LOCALE_OPTIONS, setLocale } from "@/lib/i18n";
 import { useLocale, useT } from "@/lib/i18n-client";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,10 @@ import { SearchBar } from "./SearchBar";
 
 export interface TopBarProps {
   tenantName: string;
+  /** FA-008: the tenant's logo, shown before the name; the leaf mark when absent. */
+  tenantLogoUrl?: string | null;
+  /** FA-008: the tenant's support number, offered in the profile menu as a `tel:` link. */
+  supportPhone?: string | null;
   /** Optional tenant switcher content (rendered as a dropdown trigger when provided). */
   onTenantClick?: () => void;
   search: string;
@@ -27,6 +31,27 @@ export interface TopBarProps {
   className?: string;
 }
 
+/** FA-008: the tenant's logo, or the shipped leaf when it set none / the image fails. */
+function BrandMark({ tenantName, logoUrl }: { tenantName: string; logoUrl?: string | null }) {
+  const t = useT();
+  const [broken, setBroken] = React.useState(false);
+  React.useEffect(() => setBroken(false), [logoUrl]);
+  if (!logoUrl || broken)
+    return (
+      <Leaf className="size-6 shrink-0 text-primary" aria-hidden="true" data-testid="brand-leaf" />
+    );
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- tenant logo from its own storage
+    <img
+      src={logoUrl}
+      alt={t("topbar.brandLogo", { tenant: tenantName })}
+      data-testid="brand-logo"
+      onError={() => setBroken(true)}
+      className="size-6 shrink-0 rounded-pill object-contain"
+    />
+  );
+}
+
 function initials(name: string): string {
   return name
     .split(/\s+/)
@@ -40,7 +65,15 @@ function initials(name: string): string {
  * Profile menu: language (five launch languages, FA-004; the console has no dedicated
  * language screen — SPEC 13.4) and sign out. Closes on Escape, outside click or selection.
  */
-function ProfileMenu({ user, onSignOut }: { user: TopBarProps["user"]; onSignOut?: () => void }) {
+function ProfileMenu({
+  user,
+  onSignOut,
+  supportPhone,
+}: {
+  user: TopBarProps["user"];
+  onSignOut?: () => void;
+  supportPhone?: string | null;
+}) {
   const t = useT();
   const locale = useLocale();
   const [open, setOpen] = React.useState(false);
@@ -134,6 +167,21 @@ function ProfileMenu({ user, onSignOut }: { user: TopBarProps["user"]; onSignOut
               </button>
             );
           })}
+          {supportPhone ? (
+            <>
+              <hr className="my-2 border-border" />
+              <a
+                role="menuitem"
+                data-testid="support-phone"
+                href={`tel:${supportPhone}`}
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center gap-2 rounded-input px-2 py-2 text-left text-body text-text hover:bg-background"
+              >
+                <Phone className="size-4" aria-hidden="true" />
+                {t("topbar.callSupport", { phone: supportPhone })}
+              </a>
+            </>
+          ) : null}
           {onSignOut ? (
             <>
               <hr className="my-2 border-border" />
@@ -160,6 +208,8 @@ function ProfileMenu({ user, onSignOut }: { user: TopBarProps["user"]; onSignOut
 
 export function TopBar({
   tenantName,
+  tenantLogoUrl,
+  supportPhone,
   onTenantClick,
   search,
   onSearchChange,
@@ -182,6 +232,7 @@ export function TopBar({
         className,
       )}
     >
+      <BrandMark tenantName={tenantName} logoUrl={tenantLogoUrl} />
       {onTenantClick ? (
         <button
           type="button"
@@ -232,7 +283,7 @@ export function TopBar({
             </span>
           ) : null}
         </button>
-        <ProfileMenu user={user} onSignOut={onSignOut} />
+        <ProfileMenu user={user} onSignOut={onSignOut} supportPhone={supportPhone} />
       </div>
     </header>
   );

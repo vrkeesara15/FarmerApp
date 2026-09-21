@@ -14,6 +14,12 @@ import 'field_widgets.dart';
 /// The statement is cached (`GET /v1/travel/statement`), so the screen
 /// opens offline; a new claim is queued in the outbox with its receipt as a
 /// resumable upload and shows as "Waiting to sync" until the op is applied.
+///
+/// VV-006: the km are the server's processed distance (filtered, or snapped
+/// to roads) for every day whose duty sessions have ended. A day with a
+/// session still open has not been processed, so its row is marked as an
+/// estimate and the caption under the totals says the month is not final
+/// yet — the officer is paid on the processed figure, not on this.
 class TravelScreen extends ConsumerStatefulWidget {
   /// Creates the screen.
   const TravelScreen({super.key});
@@ -160,6 +166,17 @@ class _TravelScreenState extends ConsumerState<TravelScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: Tokens.space2),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: FieldCaption(
+                          key: const Key('travel-km-source'),
+                          s.processed
+                              ? l10n.travelKmProcessed
+                              : l10n.travelKmEstimated,
+                          icon: Icons.info_outline,
+                        ),
+                      ),
                       const SizedBox(height: Tokens.space4),
                       Text(l10n.travelKmByDay, style: app.text.heading),
                       const SizedBox(height: Tokens.space2),
@@ -174,13 +191,19 @@ class _TravelScreenState extends ConsumerState<TravelScreen> {
                               ),
                               style: app.text.label,
                             ),
-                            subtitle: d.capped
-                                ? FieldCaption(
-                                    l10n.travelCapped(d.capKm),
-                                    icon: Icons.warning_amber_outlined,
-                                    color: p.statusWarning,
-                                  )
-                                : null,
+                            subtitle: switch (d) {
+                              final day when !day.processed => FieldCaption(
+                                key: Key('travel-day-estimate-${d.date}'),
+                                l10n.travelKmEstimated,
+                                icon: Icons.info_outline,
+                              ),
+                              final day when day.capped => FieldCaption(
+                                l10n.travelCapped(d.capKm),
+                                icon: Icons.warning_amber_outlined,
+                                color: p.statusWarning,
+                              ),
+                              _ => null,
+                            },
                             trailing: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.end,

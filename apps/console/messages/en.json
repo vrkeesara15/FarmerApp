@@ -70,7 +70,9 @@
     "unreadCount": "{n} unread",
     "profile": "Profile menu",
     "dateRange": "Date range",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "callSupport": "Call support: {phone}",
+    "brandLogo": "{tenant} logo"
   },
   "login": {
     "title": "Sign in to the console",

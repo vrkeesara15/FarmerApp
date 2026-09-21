@@ -29,6 +29,7 @@ class KisanTabScaffold extends ConsumerWidget {
     required this.title,
     required this.body,
     this.actions = const <Widget>[],
+    this.showBrandLogo = false,
     super.key,
   });
 
@@ -44,6 +45,9 @@ class KisanTabScaffold extends ConsumerWidget {
   /// App bar actions.
   final List<Widget> actions;
 
+  /// FA-008: show the tenant's logo before the title (the home header).
+  final bool showBrandLogo;
+
   static const Map<KisanTab, String> _paths = <KisanTab, String>{
     KisanTab.home: AppRoutes.home,
     KisanTab.cropDoctor: AppRoutes.cropDoctor,
@@ -56,7 +60,28 @@ class KisanTabScaffold extends ConsumerWidget {
     final l10n = CoreLocalizations.of(context);
     final offline = ref.watch(offlineProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(title), actions: actions),
+      appBar: AppBar(
+        title: showBrandLogo
+            ? Row(
+                children: <Widget>[
+                  const BrandLogo(
+                    key: Key('home-brand-logo'),
+                    size: Tokens.space6 + Tokens.space1,
+                    bordered: false,
+                  ),
+                  const SizedBox(width: Tokens.space2),
+                  Flexible(
+                    child: Text(
+                      title,
+                      key: const Key('home-brand-name'),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              )
+            : Text(title),
+        actions: actions,
+      ),
       body: SafeArea(
         child: Column(
           children: <Widget>[

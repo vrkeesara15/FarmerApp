@@ -109,4 +109,40 @@ void main() {
 
     expect(find.byKey(const Key('travel-empty')), findsOneWidget);
   });
+
+  testWidgets('VV-006 A61: a day whose duty session is still open is marked an '
+      'estimate', (tester) async {
+    final deps = AgentDeps();
+    addTearDown(deps.dispose);
+    await seedFieldCaches(deps, processed: false);
+    await tester.pumpWidget(deps.app(initialLocation: AppRoutes.travel));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('travel-km-source')), findsOneWidget);
+    expect(
+      find.text('Estimate from this phone \u2014 not processed yet'),
+      findsWidgets,
+    );
+    expect(
+      find.byKey(const Key('travel-day-estimate-2026-09-20')),
+      findsOneWidget,
+    );
+    expect(find.text('Km processed by the server'), findsNothing);
+  });
+
+  testWidgets('VV-006 A61: a processed month says the km are the server\'s', (
+    tester,
+  ) async {
+    final deps = AgentDeps();
+    addTearDown(deps.dispose);
+    await seedFieldCaches(deps);
+    await tester.pumpWidget(deps.app(initialLocation: AppRoutes.travel));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Km processed by the server'), findsOneWidget);
+    expect(
+      find.byKey(const Key('travel-day-estimate-2026-09-20')),
+      findsNothing,
+    );
+  });
 }

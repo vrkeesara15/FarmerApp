@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../tokens/tokens.g.dart';
+import 'brand.dart';
 
 /// The two mobile themes from SPEC 13.1.
 ///
@@ -175,11 +176,24 @@ class AppThemeData extends ThemeExtension<AppThemeData> {
 /// Builds Material [ThemeData] for the FarmerApp mobile themes.
 abstract final class AppTheme {
   /// Builds the theme for [mode] and [locale].
-  static ThemeData build(AppThemeMode mode, {Locale? locale}) {
-    final palette = switch (mode) {
+  ///
+  /// FA-008: when [brand] carries a tenant primary colour, the four
+  /// `color.primary.*` tokens are derived from it ([brandedPalette]) with a
+  /// contrast check, so the tenant's colour reaches every widget through
+  /// the same token system and still passes NF-009 in both mobile themes.
+  static ThemeData build(
+    AppThemeMode mode, {
+    Locale? locale,
+    AppBrand brand = AppBrand.agent,
+  }) {
+    final base = switch (mode) {
       AppThemeMode.light => Tokens.light,
       AppThemeMode.sunlight => Tokens.sunlight,
     };
+    final brandColour = brand.primary;
+    final palette = brandColour == null
+        ? base
+        : brandedPalette(base, brandColour, mode);
     final borderWidth = switch (mode) {
       AppThemeMode.light => Tokens.borderWidthLight,
       AppThemeMode.sunlight => Tokens.borderWidthSunlight,

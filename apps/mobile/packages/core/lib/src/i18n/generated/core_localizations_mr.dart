@@ -4136,6 +4136,17 @@ class CoreLocalizationsMr extends CoreLocalizations {
       'पुन्हा साइन इन करण्यासाठी फोन आणि OTP लागेल.';
 
   @override
+  String get settingsCallSupport => 'मदतीसाठी कॉल करा';
+
+  @override
+  String get settingsCallSupportNone =>
+      'तुमच्या संस्थेने मदत क्रमांक दिलेला नाही';
+
+  @override
+  String get settingsCallSupportFailed =>
+      'कॉल सुरू करता आला नाही. पुन्हा प्रयत्न करा.';
+
+  @override
   String get inboxTitle => 'सूचना';
 
   @override
@@ -4373,6 +4384,12 @@ class CoreLocalizationsMr extends CoreLocalizations {
 
   @override
   String get travelPayable => 'आतापर्यंत देय';
+
+  @override
+  String get travelKmProcessed => 'सर्व्हरने काढलेले किलोमीटर';
+
+  @override
+  String get travelKmEstimated => 'या फोनवरील अंदाज — अद्याप गणना झालेली नाही';
 
   @override
   String travelCapped(int cap) {

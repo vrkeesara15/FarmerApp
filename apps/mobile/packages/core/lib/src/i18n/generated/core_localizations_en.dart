@@ -4150,6 +4150,17 @@ class CoreLocalizationsEn extends CoreLocalizations {
       'You will need your phone and an OTP to sign in again.';
 
   @override
+  String get settingsCallSupport => 'Call support';
+
+  @override
+  String get settingsCallSupportNone =>
+      'Your organisation has not added a support number';
+
+  @override
+  String get settingsCallSupportFailed =>
+      'Could not start the call. Try again.';
+
+  @override
   String get inboxTitle => 'Notifications';
 
   @override
@@ -4390,6 +4401,13 @@ class CoreLocalizationsEn extends CoreLocalizations {
 
   @override
   String get travelPayable => 'Payable so far';
+
+  @override
+  String get travelKmProcessed => 'Km processed by the server';
+
+  @override
+  String get travelKmEstimated =>
+      'Estimate from this phone — not processed yet';
 
   @override
   String travelCapped(int cap) {
