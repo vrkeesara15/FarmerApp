@@ -89,6 +89,27 @@ EGRESS: tuple[Egress, ...] = (
         control="farmerapp.pii.llm_guard.scrub + guard_prompt (SEC-027)",
     ),
     Egress(
+        name="anthropic_nlq",
+        module="farmerapp.nlq.llm",
+        purpose="AN-016 turning an owner's question into read-only SQL",
+        carries="the question, the authorised views' schema (column names and meanings) and "
+        "the caller's role and scope in words — never a row, an id or a tenant",
+        indian_region=False,
+        personal_data=False,
+        control="farmerapp.pii.llm_guard.guard_prompt with NLQ_PROMPT_FIELDS (SEC-027); the "
+        "rows the query returns never go back to a model",
+    ),
+    Egress(
+        name="data_gov_in",
+        module="farmerapp.market.provider",
+        purpose="FM-012 daily mandi prices from the public OGD India / Agmarknet resource",
+        carries="a state, a district and a commodity name, plus the API key",
+        indian_region=True,
+        personal_data=False,
+        control="MandiPriceProvider.params pins the query-parameter set; the apps never call "
+        "the provider, and no farmer, id or coordinate is part of a request",
+    ),
+    Egress(
         name="open_meteo",
         module="farmerapp.advisory.weather",
         purpose="FM-008 seven-day forecast and spray windows",

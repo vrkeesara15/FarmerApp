@@ -6,6 +6,7 @@ import 'screens/advisory/add_crop_screen.dart';
 import 'screens/advisory/alerts_screen.dart';
 import 'screens/advisory/crop_calendar_screen.dart';
 import 'screens/advisory/inbox_screen.dart';
+import 'screens/advisory/mandi_prices_screen.dart';
 import 'screens/advisory/weather_screen.dart';
 import 'screens/consent_screen.dart';
 import 'screens/consent_settings_screen.dart';
@@ -27,6 +28,7 @@ import 'screens/orders/shop_screen.dart';
 import 'screens/otp_screen.dart';
 import 'screens/payment_receipt_screen.dart';
 import 'screens/phone_screen.dart';
+import 'screens/referral_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/visit/visit_confirm_screen.dart';
 import 'screens/visit/visit_rating_screen.dart';
@@ -101,6 +103,9 @@ abstract final class AppRoutes {
   /// F44 District pest and disease alerts.
   static const String alerts = '/alerts';
 
+  /// F45 Mandi prices for the farmer's crops (FM-012).
+  static const String mandiPrices = '/mandi-prices';
+
   /// FA-007 notification inbox.
   static const String inbox = '/inbox';
 
@@ -133,6 +138,9 @@ abstract final class AppRoutes {
 
   /// F70 Delete my account.
   static const String deleteAccount = '/me/delete';
+
+  /// F71 Invite a farmer (FM-013).
+  static const String referral = '/me/referral';
 
   /// Signed out by your administrator (SEC-025; the officer app's A08).
   static const String signedOut = '/signed-out';
@@ -300,6 +308,10 @@ GoRouter buildRouter({String initialLocation = AppRoutes.language}) {
         builder: (context, state) => const AlertsScreen(),
       ),
       GoRoute(
+        path: AppRoutes.mandiPrices,
+        builder: (context, state) => const MandiPricesScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.inbox,
         builder: (context, state) => const InboxScreen(),
       ),
@@ -352,6 +364,10 @@ GoRouter buildRouter({String initialLocation = AppRoutes.language}) {
           GoRoute(
             path: 'delete',
             builder: (context, state) => const DeleteAccountScreen(),
+          ),
+          GoRoute(
+            path: 'referral',
+            builder: (context, state) => const ReferralScreen(),
           ),
         ],
       ),

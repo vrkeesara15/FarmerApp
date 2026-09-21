@@ -16,7 +16,9 @@ import {
 import {
   analytics,
   type AnalyticsApiFilters,
+  type AskOut,
   type FarmerDirectoryQuery,
+  type ReferralStatus,
   type ScorecardRow,
   type SegmentDefinition,
   type StoreRow,
@@ -44,6 +46,10 @@ export const analyticsKeys = {
     ["analytics", "segment-preview", f, d] as const,
   churnRisk: (f: AnalyticsApiFilters, days: number) =>
     ["analytics", "churn-risk", f, days] as const,
+  askViews: () => ["analytics", "ask-views"] as const,
+  referralSummary: () => ["referrals", "summary"] as const,
+  referrals: (q: { store_id?: string; status?: ReferralStatus }) =>
+    ["referrals", "list", q] as const,
 };
 
 function useReady(): boolean {
@@ -296,4 +302,55 @@ export function useFilterOptions(): FilterOptionSets {
     officers.isLoading,
     crops.isLoading,
   ]);
+}
+
+// ---- AN-016 "Ask" ------------------------------------------------------------------------
+/**
+ * One question, one answer. A mutation rather than a query: the owner asks on purpose, the
+ * reply is never cached, and a repeated question is deliberately re-run.
+ */
+export function useAsk() {
+  return useMutation<AskOut, unknown, string>({ mutationFn: (q) => analytics.ask(q) });
+}
+
+/** The authorised views the assistant may read — shown so nobody has to guess (AN-016). */
+export function useAskViews() {
+  const ready = useReady();
+  return useQuery({
+    queryKey: analyticsKeys.askViews(),
+    queryFn: analytics.askViews,
+    enabled: ready,
+    staleTime: 10 * 60_000,
+  });
+}
+
+// ---- FM-013 referrals --------------------------------------------------------------------
+export function useReferralSummary() {
+  const ready = useReady();
+  return useQuery({
+    queryKey: analyticsKeys.referralSummary(),
+    queryFn: analytics.referralSummary,
+    enabled: ready,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useReferrals(q: { store_id?: string; status?: ReferralStatus } = {}) {
+  const ready = useReady();
+  return useQuery({
+    queryKey: analyticsKeys.referrals(q),
+    queryFn: () => analytics.referrals(q),
+    enabled: ready,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useRewardReferral() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => analytics.rewardReferral(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["referrals"] });
+    },
+  });
 }

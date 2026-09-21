@@ -48,8 +48,10 @@ from farmerapp.khata import router as khata_routes
 from farmerapp.location import batch_router as location_batch_routes
 from farmerapp.location import router as location_routes
 from farmerapp.logging import configure_logging, get_logger
+from farmerapp.market import router as market_routes
 from farmerapp.meetings import router as meeting_routes
 from farmerapp.mlops import router as mlops_routes
+from farmerapp.nlq import router as nlq_routes
 from farmerapp.notifications import router as notification_routes
 from farmerapp.orders import payment_events as order_payment_events
 from farmerapp.orders import router as order_routes
@@ -61,6 +63,7 @@ from farmerapp.performance import router as performance_routes
 from farmerapp.performance.ports import IncentivePort
 from farmerapp.policies import router as policy_routes
 from farmerapp.privacy import router as privacy_routes
+from farmerapp.referrals import router as referral_routes
 from farmerapp.rules import events as rule_events
 from farmerapp.rules.loader import validate_rules
 from farmerapp.settings import Settings, get_settings
@@ -267,6 +270,11 @@ def create_app(
     v1.include_router(reorder_routes.router)
     # M7 farmer P1: crop calendar, weather, outbreak alerts, crop health (FM-007..009, AN-006).
     v1.include_router(advisory_routes.router)
+    # M8: mandi prices (FM-012), referrals (FM-013), natural-language questions (AN-016).
+    v1.include_router(market_routes.router)
+    v1.include_router(referral_routes.me_router)
+    v1.include_router(referral_routes.router)
+    v1.include_router(nlq_routes.router)
     app.include_router(v1)
 
     # FA-002: refuse to start unless every route declares a role policy (or is public), and

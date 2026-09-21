@@ -5046,4 +5046,93 @@ class CoreLocalizationsMr extends CoreLocalizations {
 
   @override
   String get farmerNotifGenericBody => 'पाहण्यासाठी स्पर्श करा.';
+
+  @override
+  String get mandiTitle => 'मंडी भाव';
+
+  @override
+  String get mandiOpen => 'मंडी भाव';
+
+  @override
+  String get mandiEmptyTitle => 'अजून भाव नाहीत';
+
+  @override
+  String get mandiEmptyHelp =>
+      'बाजाराने भाव जाहीर केल्यावर तुमच्या पिकांचे भाव इथे दिसतील.';
+
+  @override
+  String get mandiIndicative =>
+      'हे भाव फक्त माहितीसाठी आहेत. ते सरकारी बाजार यादीतून येतात, दुकानातून नाही.';
+
+  @override
+  String mandiSource(String source) {
+    return '$source कडून';
+  }
+
+  @override
+  String mandiPriceOn(String date) {
+    return '$date चा भाव';
+  }
+
+  @override
+  String get mandiPerQuintal => 'प्रति क्विंटल';
+
+  @override
+  String mandiRange(String low, String high) {
+    return '$low ते $high';
+  }
+
+  @override
+  String get mandiNoPriceYet => 'या पिकाचा भाव अजून नाही';
+
+  @override
+  String get referralTitle => 'शेतकऱ्याला बोलवा';
+
+  @override
+  String get referralOpen => 'शेतकऱ्याला बोलवा';
+
+  @override
+  String get referralIntro =>
+      'तुमच्या ओळखीच्या शेतकऱ्याला तुमचा कोड पाठवा. ते जोडले की तुम्हाला आणि तुमच्या जवळच्या दुकानाला बक्षीस मिळेल.';
+
+  @override
+  String get referralYourCode => 'तुमचा कोड';
+
+  @override
+  String get referralShareWhatsApp => 'व्हॉट्सअ‍ॅपवर पाठवा';
+
+  @override
+  String get referralShareSms => 'SMS ने पाठवा';
+
+  @override
+  String referralShareMessage(String link, String code) {
+    return 'पीक सल्ला आणि शेती सामानासाठी किसानवर माझ्यासोबत या. $link उघडा किंवा माझा कोड $code वापरा.';
+  }
+
+  @override
+  String referralInvited(int count) {
+    return '$count बोलावले';
+  }
+
+  @override
+  String referralJoined(int count) {
+    return '$count जोडले';
+  }
+
+  @override
+  String referralRewarded(int count) {
+    return '$count ना बक्षीस';
+  }
+
+  @override
+  String get referralRewardNone => 'बक्षीस काय आहे ते तुमचे दुकान सांगेल.';
+
+  @override
+  String get referralOff => 'सध्या आमंत्रणे बंद आहेत.';
+
+  @override
+  String get referralClaimed => 'धन्यवाद. तुमचे आमंत्रण मोजले गेले.';
+
+  @override
+  String get referralClaimFailed => 'ते आमंत्रण वापरता आले नाही.';
 }

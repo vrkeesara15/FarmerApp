@@ -332,6 +332,45 @@ class Settings(BaseSettings):
         le=86_400,
         description="FM-008 forecast cache per 0.1-degree grid cell (3 h), per instance.",
     )
+    # --- M8 market, referral, NLQ (FM-012, FM-013, AN-016) ---------------------------------
+    mandi_provider: Literal["data_gov_in", "fake", "off"] = Field(
+        default="off",
+        description="FM-012 mandi price source: 'data_gov_in' = the OGD India daily mandi "
+        "resource (Agmarknet figures; needs MANDI_API_KEY and the licence acceptance — a "
+        "human gate), 'fake' = deterministic in-process prices (tests, offline dev), 'off' = "
+        "the refresh job does nothing (the default until the key exists).",
+    )
+    mandi_base_url: str = Field(
+        default="https://api.data.gov.in", description="OGD India (data.gov.in) API base URL."
+    )
+    mandi_api_key: str = Field(
+        default="",
+        description="data.gov.in API key (Secret Manager in stg / prd). Empty disables the "
+        "provider. Only the state, district and commodity name are ever sent with it.",
+    )
+    mandi_timeout_s: float = Field(default=10.0, gt=0, le=60, description="Price fetch timeout.")
+    mandi_page_size: int = Field(
+        default=500, ge=1, le=1000, description="Records per data.gov.in request."
+    )
+    nlq_llm: Literal["claude", "fake", "off"] = Field(
+        default="off",
+        description="AN-016 natural-language questions: 'claude' = Anthropic Messages API "
+        "(ANTHROPIC_API_KEY), 'fake' = deterministic in-process SQL writer (tests, offline "
+        "dev), 'off' = /v1/analytics/ask answers 503.",
+    )
+    nlq_llm_model: str = Field(default="claude-opus-5", description="AN-016 model id.")
+    nlq_llm_max_tokens: int = Field(
+        default=4_000, ge=256, description="max_tokens of one AN-016 question."
+    )
+    nlq_row_limit: int = Field(
+        default=200, ge=1, le=2_000, description="AN-016 hard row cap on the generated SELECT."
+    )
+    nlq_statement_timeout_ms: int = Field(
+        default=5_000,
+        ge=100,
+        le=60_000,
+        description="AN-016 SET LOCAL statement_timeout for the read-only query.",
+    )
     corpus_bucket: str = Field(
         default="farmerapp-local-corpus",
         description="DX-011 / DX-012 corpus bucket: held-out test manifest, training-set "
@@ -615,6 +654,12 @@ class Settings(BaseSettings):
             problems.append("DIAGNOSIS_LLM=fake is not allowed in prd")
         if self.push_provider == "fake":
             problems.append("PUSH_PROVIDER=fake is not allowed in prd")
+        if self.mandi_provider == "fake":
+            problems.append("MANDI_PROVIDER=fake is not allowed in prd (FM-012 shows a source)")
+        if self.mandi_provider == "data_gov_in" and not self.mandi_api_key:
+            problems.append("MANDI_PROVIDER=data_gov_in needs MANDI_API_KEY (Secret Manager)")
+        if self.nlq_llm == "fake":
+            problems.append("NLQ_LLM=fake is not allowed in prd (AN-016)")
         problems.extend(self._prd_database_problems(service))
         if problems:
             raise ValueError("; ".join(problems))

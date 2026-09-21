@@ -794,6 +794,26 @@ def activate_encoder(
         )
 
 
+@cli.command("mandi-prices")
+def mandi_prices(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        ..., "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable)."
+    ),
+) -> None:
+    """FM-012 (daily 07:30 IST): pull mandi prices for each tenant's districts and grown
+    crops from the public source into `mandi_price`. Idempotent: the same day rewrites the
+    same rows. Does nothing when MANDI_PROVIDER is off or the tenant switched it off."""
+    from farmerapp.market.jobs import run_mandi_prices
+
+    _setup()
+    for r in asyncio.run(run_mandi_prices(_tenants(tenant))):
+        typer.echo(
+            f"mandi-prices: tenant={r.tenant_id} provider={r.provider} "
+            f"districts={r.districts} crops={r.crops} fetched={r.fetched} "
+            f"written={r.written} purged={r.purged} failures={r.failures}"
+        )
+
+
 # M7 growth jobs (WC-008, WC-009, WC-013, AN-015, ST-004, ST-008) register themselves on `cli`.
 from farmerapp.jobs import growth as _growth  # noqa: E402, F401
 

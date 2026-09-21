@@ -43,6 +43,7 @@ OTP_COLUMNS = BASE_COLUMNS | {
     "provider_ref",
     "user_id",
     "device_id",
+    "request_ip",  # 0040 (M7, SEC-021): the IP the code was requested from
 }
 REFRESH_COLUMNS = BASE_COLUMNS | {
     "user_id",

@@ -11,6 +11,7 @@ import 'platform.dart';
 import 'push.dart';
 import 'router.dart';
 import 'security.dart';
+import 'widgets/share_plus_text_sharer.dart';
 
 /// App version sent on login and refresh (pubspec).
 const String farmerAppVersion = kisanAppVersion;
@@ -127,6 +128,10 @@ Future<void> startKisan({
       diagnosisApiProvider.overrideWithValue(HttpDiagnosisApi(rest)),
       // M7 advisory (FM-007, FM-008, FM-009) and the FA-007 inbox / push.
       advisoryApiProvider.overrideWithValue(HttpAdvisoryApi(rest)),
+      // M8 market and referrals (FM-012, FM-013): mandi prices, the invite
+      // code, and the OS share sheet the WhatsApp / SMS invite goes through.
+      marketApiProvider.overrideWithValue(HttpMarketApi(rest)),
+      textSharerProvider.overrideWithValue(const SharePlusTextSharer()),
       // FA-007 push: the shared seam (packages/core/src/push/) with this
       // app's FCM adapter and its own token registry / inbox handler.
       pushServiceProvider.overrideWithValue(push),

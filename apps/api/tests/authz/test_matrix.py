@@ -750,6 +750,27 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
             "app_version": "0.2.0",
         }
     ),
+    # M7 NF-013 data-subject rights (outcomes in tests/privacy). An unknown ticket id is a
+    # 404 for every allowed role; the two writes are SEC-028 step-up actions.
+    "GET /v1/admin/data-requests/{id}/export": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}
+    ),
+    "POST /v1/admin/data-requests/{id}/apply-correction": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, step_up=True
+    ),
+    "POST /v1/admin/data-requests/{id}/erase": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, step_up=True
+    ),
+    # M8 (FM-012, FM-013, AN-016): outcomes in tests/market, tests/referrals, tests/nlq.
+    "GET /v1/farmers/{id}/mandi-prices": RouteFixture(path_params=_target_farmer_id),
+    "POST /v1/me/referral/invites": RouteFixture(body=lambda _ctx: {}),
+    "POST /v1/me/referral/claim": RouteFixture(body=lambda _ctx: {"code": "MATRIX01"}),
+    "POST /v1/referrals/{id}/reward": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {}
+    ),
+    # NLQ_LLM defaults to "off" in tests, so an allowed role gets 503 ask_unavailable — not
+    # 401/403, which is all the matrix asserts.
+    "POST /v1/analytics/ask": RouteFixture(body=lambda _ctx: {"question": "how many stores?"}),
 }
 
 
@@ -905,7 +926,12 @@ async def test_collections_never_contain_other_tenants(
     ):
         return  # file downloads (CSV export): the leak check above covers them
     body = resp.json()
-    for item in body.get("items", []):
+    # Most collections answer `{items: [...]}`; a few (NF-013 data requests, retention
+    # exceptions) answer a bare JSON array.
+    items = body if isinstance(body, list) else body.get("items", [])
+    for item in items:
+        if not isinstance(item, dict):
+            continue
         assert item.get("tenant_id", str(world.a.tenant.id)) == str(world.a.tenant.id)
 
 

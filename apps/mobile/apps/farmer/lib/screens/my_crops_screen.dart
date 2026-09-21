@@ -99,6 +99,13 @@ class MyCropsScreen extends ConsumerWidget {
                                 label: Text(l10n.kisanAlerts),
                                 onPressed: () => context.push(AppRoutes.alerts),
                               ),
+                              ActionChip(
+                                key: const Key('crops-mandi'),
+                                avatar: const Icon(Icons.storefront_outlined),
+                                label: Text(l10n.mandiOpen),
+                                onPressed: () =>
+                                    context.push(AppRoutes.mandiPrices),
+                              ),
                             ],
                           ),
                           const SizedBox(height: Tokens.space2),

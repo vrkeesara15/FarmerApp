@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/ds/EmptyState";
 import { KpiCard } from "@/components/ds/KpiCard";
 import { SeverityBadge, type Severity } from "@/components/ds/SeverityBadge";
 import { AnalyticsFilterBar } from "@/components/analytics/AnalyticsFilterBar";
+import { AskPanel } from "@/components/analytics/AskPanel";
 import {
   BarCompare,
   CHART,
@@ -52,6 +53,7 @@ import { formatDateTimeIst } from "@/lib/format";
 import { useFilterOptions, useOwnerHome } from "@/lib/hooks/analytics";
 import { useAnalyticsFilters } from "@/lib/hooks/use-analytics-filters";
 import { useT } from "@/lib/i18n-client";
+import { useSession } from "@/lib/session-context";
 
 export function OwnerHomeView() {
   const t = useT();
@@ -68,8 +70,12 @@ const SEVERITIES: Severity[] = ["critical", "high", "medium", "low"];
 const asSeverity = (s: string): Severity =>
   (SEVERITIES as string[]).includes(s) ? (s as Severity) : "high";
 
+/** AN-016: the roles the API lets ask (owner, director, cluster head scoped to their own). */
+const ASK_ROLES: readonly string[] = ["owner", "director", "cluster_head"];
+
 function OwnerHome() {
   const t = useT();
+  const role = useSession().role;
   const router = useRouter();
   const filters = useAnalyticsFilters();
   const q = useOwnerHome(filters.apiFilters);
@@ -133,6 +139,8 @@ function OwnerHome() {
       {header}
       <AnalyticsFilterBar state={filters} onExport={onExport} />
       {q.error ? <ProblemState error={q.error} onRetry={() => void q.refetch()} /> : null}
+
+      {ASK_ROLES.includes(role ?? "") ? <AskPanel /> : null}
 
       <section aria-label={t("home.kpiRow")} data-testid="kpi-row">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-7">

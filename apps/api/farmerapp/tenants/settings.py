@@ -339,6 +339,45 @@ class OutbreakSettings(BaseModel):
     active_weeks: int = Field(default=2, ge=1, le=8)
 
 
+class MandiSettings(BaseModel):
+    """FM-012: how the daily refresh asks the public source for this tenant's crops.
+
+    The feed uses its own commodity vocabulary ("Paddy(Dhan)(Common)"), so ``commodities``
+    maps a tenant crop code to the published names to ask for. A crop with no entry is asked
+    for by its English name, which is correct for Cotton, Maize and Tomato.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    enabled: bool = True
+    #: crop code -> published commodity names (TODO-DATA: reviewed against the live feed).
+    commodities: dict[str, list[str]] = Field(default_factory=dict)
+    #: A published figure older than this is ignored by the refresh (the feed lags a day or two).
+    lookback_days: int = Field(default=7, ge=1, le=60)
+
+
+class ReferralSettings(BaseModel):
+    """FM-013: the reward rule, left as a tenant setting.
+
+    **The values are placeholders (0 paise).** What a referrer and the crediting store
+    actually get is a commercial decision recorded per tenant before the pilot — a human gate
+    (docs/prs/M8-market-referral-nlq.md); a zero reward still attributes the referral, which
+    is what FM-013 is graded on.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    enabled: bool = True
+    #: Credited to the referring farmer when a referral is rewarded. Placeholder: 0.
+    referrer_reward_paise: int = Field(default=0, ge=0, le=10_000_00)
+    #: Credited to the invited farmer's nearest store. Placeholder: 0.
+    store_reward_paise: int = Field(default=0, ge=0, le=10_000_00)
+    #: Free text shown with the share message and in the console (what the reward is).
+    reward_note: str | None = Field(default=None, max_length=200)
+    #: A code may be claimed this many days after the invited farmer was registered.
+    claim_window_days: int = Field(default=30, ge=1, le=365)
+
+
 class EvaluationSettings(BaseModel):
     """DX-011: the nightly evaluation alerts when top-1 accuracy drops by more than this many
     percentage points against the previous run."""
@@ -424,6 +463,8 @@ class TenantSettings(BaseModel):
     weather: WeatherSettings = Field(default_factory=WeatherSettings)
     outbreak: OutbreakSettings = Field(default_factory=OutbreakSettings)
     diagnosis_evaluation: EvaluationSettings = Field(default_factory=EvaluationSettings)
+    mandi: MandiSettings = Field(default_factory=MandiSettings)
+    referral: ReferralSettings = Field(default_factory=ReferralSettings)
     branding: Branding = Field(default_factory=Branding)
 
     def auto_duty_end_time(self) -> time:

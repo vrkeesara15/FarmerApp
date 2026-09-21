@@ -9,23 +9,24 @@
   --color-secondary-on: #3A2A00;
   --color-text: #2B2520;
   --color-text-secondary: #5E554C;
-  --color-text-muted: #8A8076;
-  --color-border: #E3DDD3;
+  --color-text-muted: #756C64;
+  --color-border-default: #E3DDD3;
+  --color-border-strong: #6B635B;
   --color-surface: #FFFFFF;
   --color-background: #FAF7F0;
-  --color-success: #2E7D32;
+  --color-success: #26702C;
   --color-success-container: #E3F3E4;
-  --color-warning: #B26A00;
+  --color-warning: #8A5200;
   --color-warning-container: #FBEFCF;
   --color-danger: #C62828;
   --color-danger-container: #FBE4E4;
   --color-info: #1565C0;
   --color-info-container: #E1ECF9;
-  --color-confidence-high: #2E7D32;
-  --color-confidence-medium: #B26A00;
-  --color-confidence-low: #8A8076;
-  --color-visit-verified: #2E7D32;
-  --color-visit-partial: #B26A00;
+  --color-confidence-high: #26702C;
+  --color-confidence-medium: #8A5200;
+  --color-confidence-low: #756C64;
+  --color-visit-verified: #26702C;
+  --color-visit-partial: #8A5200;
   --color-visit-unverified: #C62828;
   --font-family-latin-stack: "Noto Sans", system-ui, sans-serif;
   --font-family-telugu-stack: "Noto Sans Telugu", "Noto Sans", sans-serif;
@@ -100,14 +101,15 @@
   --color-text: #F2EEE7;
   --color-text-secondary: #C9C2B8;
   --color-text-muted: #9A9188;
-  --color-border: #3A3631;
+  --color-border-default: #3A3631;
+  --color-border-strong: #8A8078;
   --color-surface: #1E1C19;
   --color-background: #151412;
   --color-success: #66BB6A;
   --color-success-container: #1B3A1E;
   --color-warning: #E0A21B;
   --color-warning-container: #3A2E10;
-  --color-danger: #EF5350;
+  --color-danger: #F4706D;
   --color-danger-container: #3F1A1A;
   --color-info: #64B5F6;
   --color-info-container: #15294A;
@@ -116,7 +118,7 @@
   --color-confidence-low: #9A9188;
   --color-visit-verified: #66BB6A;
   --color-visit-partial: #E0A21B;
-  --color-visit-unverified: #EF5350;
+  --color-visit-unverified: #F4706D;
 }
 
 /* Mobile-only text scale is emitted for reference; console uses --text-* (display/title/heading/body/small). */

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { handleAdmin, resetMockAdmin } from "@/lib/mock/admin";
-import { handleAnalytics, handleClusters } from "@/lib/mock/analytics";
+import { handleAnalytics, handleClusters, handleReferrals } from "@/lib/mock/analytics";
 import {
   handleCatalog,
   resetMockCatalog,
@@ -174,6 +174,7 @@ async function handle(req: NextRequest, rawPath: string[]): Promise<NextResponse
     handleGrowth(req.method, path, req.nextUrl.searchParams, body, actorFrom(req), req.headers) ??
     handleAnalytics(req.method, path, req.nextUrl.searchParams, actorFrom(req), body) ??
     handleClusters(req.method, path, actorFrom(req)) ??
+    handleReferrals(req.method, path, req.nextUrl.searchParams, actorFrom(req)) ??
     handleFlags(req.method, path, req.nextUrl.searchParams, body, actorFrom(req)) ??
     handleDiagnosis(req.method, path, req.nextUrl.searchParams, body, actorFrom(req)) ??
     handleAdmin(req.method, path, req.nextUrl.searchParams, body, actorFrom(req), req.headers);

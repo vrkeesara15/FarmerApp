@@ -14218,6 +14218,458 @@ paths:
       - director
       - owner
       - tenant_admin
+  /v1/me/mandi-prices:
+    get:
+      tags:
+      - market
+      summary: 'FM-012: mandi prices for the farmer''s own crops, with the date and the source'
+      operationId: getMyMandiPrices
+      parameters:
+      - name: markets
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 10
+          minimum: 1
+          default: 5
+          title: Markets
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MandiPricesOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
+  /v1/farmers/{id}/mandi-prices:
+    get:
+      tags:
+      - market
+      summary: 'FM-012: mandi prices for one farmer''s crops (staff in scope, or the farmer)'
+      operationId: getFarmerMandiPrices
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: markets
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 10
+          minimum: 1
+          default: 5
+          title: Markets
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MandiPricesOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/me/referral:
+    get:
+      tags:
+      - referrals
+      summary: 'FM-013: the farmer''s invite code, share link, reward and referrals'
+      operationId: getMyReferral
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyReferralOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
+  /v1/me/referral/invites:
+    post:
+      tags:
+      - referrals
+      summary: 'FM-013: record an invite the farmer is about to share'
+      operationId: createReferralInvite
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReferralInviteIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`referral_disabled`, `referral_self`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
+  /v1/me/referral/claim:
+    post:
+      tags:
+      - referrals
+      summary: 'FM-013: the invited farmer applies the code from the invite link'
+      operationId: claimReferral
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReferralClaimIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`referral_already_attributed`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`referral_code_unknown`, `referral_disabled`, `referral_self`, `referral_window_closed`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
+  /v1/referrals:
+    get:
+      tags:
+      - referrals
+      summary: 'FM-013: referrals, newest first (a store manager sees their own store)'
+      operationId: listReferrals
+      parameters:
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/ReferralStatus'
+          - type: 'null'
+          title: Status
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralListOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/referrals/summary:
+    get:
+      tags:
+      - referrals
+      summary: 'FM-013: referrals per store for the console'
+      operationId: getReferralSummary
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralSummaryOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/referrals/{id}/reward:
+    post:
+      tags:
+      - referrals
+      summary: 'FM-013: mark an attributed referral as rewarded'
+      operationId: rewardReferral
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReferralRewardIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`referral_not_attributed`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/analytics/ask:
+    post:
+      tags:
+      - analytics
+      summary: 'AN-016: ask a question in words; read-only SQL over authorised views'
+      operationId: askAnalytics
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AskIn'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AskOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '503':
+          description: '`ask_unavailable`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
+  /v1/analytics/ask/views:
+    get:
+      tags:
+      - analytics
+      summary: 'AN-016: the authorised views the assistant may read'
+      operationId: listAskViews
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AskViewsOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - cluster_head
+      - director
+      - owner
 components:
   schemas:
     AccountingSettings:
@@ -14411,6 +14863,151 @@ components:
       type: object
       title: AskExpertIn
       description: FM-006 "Ask an expert" on an answered case.
+    AskIn:
+      properties:
+        question:
+          type: string
+          maxLength: 500
+          minLength: 3
+          title: Question
+      additionalProperties: false
+      type: object
+      required:
+      - question
+      title: AskIn
+    AskOut:
+      properties:
+        answered:
+          type: boolean
+          title: Answered
+        question:
+          type: string
+          title: Question
+        answer:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Answer
+          description: Plain-language answer; null when the question failed.
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+          description: Why it could not be answered (refusal or validation reason).
+        message_key:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Key
+          description: i18n key of the "I could not answer that" headline.
+        sql:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Sql
+          description: The generated read-only SELECT, after validation.
+        views:
+          items:
+            type: string
+          type: array
+          title: Views
+          description: Authorised views the query read.
+        columns:
+          items:
+            type: string
+          type: array
+          title: Columns
+        rows:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Rows
+        row_count:
+          type: integer
+          title: Row Count
+          default: 0
+        truncated:
+          type: boolean
+          title: Truncated
+          description: True when the row limit cut the answer short.
+          default: false
+        scope:
+          type: string
+          title: Scope
+          description: What the caller may see, in words.
+          default: ''
+        model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model
+        elapsed_ms:
+          type: integer
+          title: Elapsed Ms
+          default: 0
+      type: object
+      required:
+      - answered
+      - question
+      title: AskOut
+      description: '``POST /v1/analytics/ask``.
+
+
+        ``sql`` is **generated and read-only** — the console labels it exactly that way. It is
+
+        returned even when the query failed to run, so the reader can see what was attempted.'
+    AskViewColumnOut:
+      properties:
+        name:
+          type: string
+          title: Name
+        description:
+          type: string
+          title: Description
+      type: object
+      required:
+      - name
+      - description
+      title: AskViewColumnOut
+    AskViewOut:
+      properties:
+        name:
+          type: string
+          title: Name
+        grain:
+          type: string
+          title: Grain
+        description:
+          type: string
+          title: Description
+        columns:
+          items:
+            $ref: '#/components/schemas/AskViewColumnOut'
+          type: array
+          title: Columns
+      type: object
+      required:
+      - name
+      - grain
+      - description
+      title: AskViewOut
+    AskViewsOut:
+      properties:
+        views:
+          items:
+            $ref: '#/components/schemas/AskViewOut'
+          type: array
+          title: Views
+        enabled:
+          type: boolean
+          title: Enabled
+      type: object
+      required:
+      - enabled
+      title: AskViewsOut
+      description: '``GET /v1/analytics/ask/views`` — what the assistant can answer from.'
     AssignIn:
       properties:
         user_id:
@@ -17455,6 +18052,52 @@ components:
           title: Area Acres
       type: object
       title: CropPlotUpdate
+    CropPricesOut:
+      properties:
+        crop_id:
+          type: string
+          format: uuid
+          title: Crop Id
+        crop_code:
+          type: string
+          title: Crop Code
+        crop_name:
+          type: string
+          title: Crop Name
+        crop_names:
+          additionalProperties:
+            type: string
+          type: object
+          title: Crop Names
+          description: 'Localised names, e.g. {"te": "వరి"}.'
+        price_date:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Price Date
+          description: The "as of" date; null when no price is held yet.
+        source_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source Name
+        source_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source Url
+        quotes:
+          items:
+            $ref: '#/components/schemas/MandiQuoteOut'
+          type: array
+          title: Quotes
+      type: object
+      required:
+      - crop_id
+      - crop_code
+      - crop_name
+      title: CropPricesOut
     CropStage:
       type: string
       enum:
@@ -20347,6 +20990,14 @@ components:
           - type: 'null'
           title: Phone Verification Token
           description: From `POST /v1/farmers/phone/verify/confirm`; absent for offline capture.
+        referral_code:
+          anyOf:
+          - type: string
+            maxLength: 24
+          - type: 'null'
+          title: Referral Code
+          description: 'FM-013: the invite code the farmer was referred with. A code that cannot be attributed
+            never fails the registration — the reason comes back in `warnings`.'
       type: object
       required:
       - phone
@@ -20504,6 +21155,13 @@ components:
             type: string
           type: array
           title: Warnings
+        referral_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Referral Id
+          description: 'FM-013 (writes only): the referral this registration was attributed to.'
         officer:
           anyOf:
           - $ref: '#/components/schemas/AssignedOfficerOut'
@@ -23129,6 +23787,136 @@ components:
       required:
       - refresh_token
       title: LogoutRequest
+    MandiPricesOut:
+      properties:
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        district:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: District
+        as_of:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: As Of
+        indicative_note_key:
+          type: string
+          title: Indicative Note Key
+          default: mandi.indicative
+        crops:
+          items:
+            $ref: '#/components/schemas/CropPricesOut'
+          type: array
+          title: Crops
+      type: object
+      required:
+      - farmer_id
+      title: MandiPricesOut
+      description: '``GET /v1/me/mandi-prices`` and ``GET /v1/farmers/{id}/mandi-prices``.'
+    MandiQuoteOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        market:
+          type: string
+          title: Market
+          description: Mandi name as published by the source.
+        district:
+          type: string
+          title: District
+        state:
+          type: string
+          title: State
+        variety:
+          type: string
+          title: Variety
+        grade:
+          type: string
+          title: Grade
+        price_date:
+          type: string
+          format: date
+          title: Price Date
+          description: The "as of" date of the figure (IST).
+        min_price_paise:
+          type: integer
+          title: Min Price Paise
+        modal_price_paise:
+          type: integer
+          title: Modal Price Paise
+          description: The headline price per quintal, in paise.
+        max_price_paise:
+          type: integer
+          title: Max Price Paise
+        source:
+          type: string
+          title: Source
+          description: 'Dataset key: `agmarknet` or `fake`.'
+        source_name:
+          type: string
+          title: Source Name
+          description: Display name of the source, shown with the date.
+        source_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source Url
+        fetched_at:
+          type: string
+          format: date-time
+          title: Fetched At
+      type: object
+      required:
+      - id
+      - market
+      - district
+      - state
+      - variety
+      - grade
+      - price_date
+      - min_price_paise
+      - modal_price_paise
+      - max_price_paise
+      - source
+      - source_name
+      - fetched_at
+      title: MandiQuoteOut
+    MandiSettings:
+      properties:
+        enabled:
+          type: boolean
+          title: Enabled
+          default: true
+        commodities:
+          additionalProperties:
+            items:
+              type: string
+            type: array
+          type: object
+          title: Commodities
+        lookback_days:
+          type: integer
+          maximum: 60.0
+          minimum: 1.0
+          title: Lookback Days
+          default: 7
+      type: object
+      title: MandiSettings
+      description: 'FM-012: how the daily refresh asks the public source for this tenant''s crops.
+
+
+        The feed uses its own commodity vocabulary ("Paddy(Dhan)(Common)"), so ``commodities``
+
+        maps a tenant crop code to the published names to ask for. A crop with no entry is asked
+
+        for by its English name, which is correct for Cotton, Maize and Tomato.'
     MeDayOut:
       properties:
         date:
@@ -23604,6 +24392,64 @@ components:
       - created_at
       - version
       title: ModelReleaseOut
+    MyReferralOut:
+      properties:
+        farmer_id:
+          type: string
+          format: uuid
+          title: Farmer Id
+        code:
+          type: string
+          maxLength: 8
+          minLength: 8
+          title: Code
+        share_link:
+          type: string
+          title: Share Link
+          description: The link the share message carries.
+        enabled:
+          type: boolean
+          title: Enabled
+        referrer_reward_paise:
+          type: integer
+          title: Referrer Reward Paise
+        store_reward_paise:
+          type: integer
+          title: Store Reward Paise
+        reward_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reward Note
+        invited:
+          type: integer
+          title: Invited
+          description: Invites shared but not yet registered.
+        attributed:
+          type: integer
+          title: Attributed
+          description: Farmers who registered with this code.
+        rewarded:
+          type: integer
+          title: Rewarded
+        referrals:
+          items:
+            $ref: '#/components/schemas/ReferralOut'
+          type: array
+          title: Referrals
+      type: object
+      required:
+      - farmer_id
+      - code
+      - share_link
+      - enabled
+      - referrer_reward_paise
+      - store_reward_paise
+      - invited
+      - attributed
+      - rewarded
+      title: MyReferralOut
+      description: '``GET /v1/me/referral`` — the farmer app''s Refer screen (F70).'
     NearestStoreOut:
       properties:
         farmer_id:
@@ -27572,6 +28418,203 @@ components:
       - safety_text
       - efficacy_tier
       title: RecommendableSkuOut
+    ReferralClaimIn:
+      properties:
+        code:
+          type: string
+          maxLength: 24
+          minLength: 4
+          title: Code
+          description: From the invite link.
+      additionalProperties: false
+      type: object
+      required:
+      - code
+      title: ReferralClaimIn
+    ReferralInviteIn:
+      properties:
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone
+          description: 'Optional: the number the invite was sent to, so the referral can be matched when
+            that farmer registers. Stored only as a SEC-026 hash.'
+      additionalProperties: false
+      type: object
+      title: ReferralInviteIn
+    ReferralListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ReferralOut'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+      type: object
+      required:
+      - total
+      title: ReferralListOut
+    ReferralOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        code:
+          type: string
+          title: Code
+        status:
+          $ref: '#/components/schemas/ReferralStatus'
+        source:
+          type: string
+          title: Source
+        referrer_farmer_id:
+          type: string
+          format: uuid
+          title: Referrer Farmer Id
+        invited_farmer_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Invited Farmer Id
+        invited_phone_last4:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Invited Phone Last4
+          description: Last four digits only (AN-014 / SEC-026).
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+          description: The invited farmer's nearest store, credited with the referral.
+        referrer_reward_paise:
+          type: integer
+          title: Referrer Reward Paise
+        store_reward_paise:
+          type: integer
+          title: Store Reward Paise
+        reward_note:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reward Note
+        attributed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Attributed At
+        rewarded_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Rewarded At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - code
+      - status
+      - source
+      - referrer_farmer_id
+      - referrer_reward_paise
+      - store_reward_paise
+      - created_at
+      title: ReferralOut
+    ReferralRewardIn:
+      properties:
+        note:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Note
+      additionalProperties: false
+      type: object
+      title: ReferralRewardIn
+    ReferralSettings:
+      properties:
+        enabled:
+          type: boolean
+          title: Enabled
+          default: true
+        referrer_reward_paise:
+          type: integer
+          maximum: 1000000.0
+          minimum: 0.0
+          title: Referrer Reward Paise
+          default: 0
+        store_reward_paise:
+          type: integer
+          maximum: 1000000.0
+          minimum: 0.0
+          title: Store Reward Paise
+          default: 0
+        reward_note:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Reward Note
+        claim_window_days:
+          type: integer
+          maximum: 365.0
+          minimum: 1.0
+          title: Claim Window Days
+          default: 30
+      type: object
+      title: ReferralSettings
+      description: 'FM-013: the reward rule, left as a tenant setting.
+
+
+        **The values are placeholders (0 paise).** What a referrer and the crediting store
+
+        actually get is a commercial decision recorded per tenant before the pilot — a human gate
+
+        (docs/prs/M8-market-referral-nlq.md); a zero reward still attributes the referral, which
+
+        is what FM-013 is graded on.'
+    ReferralStatus:
+      type: string
+      enum:
+      - pending
+      - attributed
+      - rewarded
+      - rejected
+      title: ReferralStatus
+    ReferralSummaryOut:
+      properties:
+        stores:
+          items:
+            $ref: '#/components/schemas/StoreReferralsOut'
+          type: array
+          title: Stores
+        pending:
+          type: integer
+          title: Pending
+        attributed:
+          type: integer
+          title: Attributed
+        rewarded:
+          type: integer
+          title: Rewarded
+      type: object
+      required:
+      - pending
+      - attributed
+      - rewarded
+      title: ReferralSummaryOut
     RefreshRequest:
       properties:
         refresh_token:
@@ -30601,6 +31644,51 @@ components:
       - score
       - band
       title: StoreMapItem
+    StoreReferralsOut:
+      properties:
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        store_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Store Code
+        store_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Store Name
+        pending:
+          type: integer
+          title: Pending
+        attributed:
+          type: integer
+          title: Attributed
+        rewarded:
+          type: integer
+          title: Rewarded
+        total:
+          type: integer
+          title: Total
+        referrer_reward_paise:
+          type: integer
+          title: Referrer Reward Paise
+        store_reward_paise:
+          type: integer
+          title: Store Reward Paise
+      type: object
+      required:
+      - pending
+      - attributed
+      - rewarded
+      - total
+      - referrer_reward_paise
+      - store_reward_paise
+      title: StoreReferralsOut
     StoreRow:
       properties:
         id:
@@ -31738,6 +32826,10 @@ components:
           $ref: '#/components/schemas/OutbreakSettings'
         diagnosis_evaluation:
           $ref: '#/components/schemas/EvaluationSettings'
+        mandi:
+          $ref: '#/components/schemas/MandiSettings'
+        referral:
+          $ref: '#/components/schemas/ReferralSettings'
         branding:
           $ref: '#/components/schemas/Branding'
       type: object

@@ -160,6 +160,10 @@ two URLs are used exactly as before.
 | `CORPUS_BUCKET` | TF `module.storage.bucket_names.corpus` | the `corpus` bucket: DX-011 held-out manifest, DX-012 training exports and candidate models | J (A signs approved-model URLs by `gs://` URI) | yes (jobs) |
 | `DIAGNOSIS_EVAL_MANIFEST` | default | `eval/heldout/manifest.csv` in `CORPUS_BUCKET` (or a `gs://` URI); upload is a human gate | J | no |
 | `WEATHER_PROVIDER` / `WEATHER_BASE_URL` / `WEATHER_TIMEOUT_S` / `WEATHER_CACHE_TTL_SECONDS` | default | `open_meteo` / `https://api.open-meteo.com` / 8 / 10800 (FM-008; only 0.1-degree grid-cell coordinates are sent; Terraform never sets the name, so deployments get `open_meteo`) | A | no |
+| `MANDI_PROVIDER` / `MANDI_BASE_URL` / `MANDI_TIMEOUT_S` / `MANDI_PAGE_SIZE` | default (M8) | `off` / `https://api.data.gov.in` / 10 / 500 — FM-012; `data_gov_in` is the OGD India daily mandi resource (Agmarknet figures) and needs `MANDI_API_KEY`; the prd guard refuses `fake` | A J | no |
+| `MANDI_API_KEY` | Secret Manager (to create; human gate: register the data.gov.in account and accept the GODL licence) | the data.gov.in API key; only a state, a district and a commodity name are ever sent with it | A J | no |
+| `NLQ_LLM` / `NLQ_LLM_MODEL` / `NLQ_LLM_MAX_TOKENS` | default (M8) | `off` / `claude-opus-5` / 4000 — AN-016; `claude` needs `ANTHROPIC_API_KEY`; the prd guard refuses `fake` | A | no |
+| `NLQ_ROW_LIMIT` / `NLQ_STATEMENT_TIMEOUT_MS` | default (M8) | 200 / 5000 — the hard row cap and `statement_timeout` of the read-only AN-016 query | A | no |
 | `PLAY_INTEGRITY_MODE` / `PLAY_INTEGRITY_PACKAGE_NAMES` / `PLAY_INTEGRITY_TIMEOUT_S` | default | `off` / both app ids / 2.0 (`google` is a human gate, SEC-024) | A | no |
 | `PUSH_PROVIDER` | default (M7; TF wiring pending) | `off`; `fcm` once the Firebase project is set up (human gate; prd guard refuses `fake`) — FCM HTTP v1 with the runtime SA's OAuth token (role `cloudmessaging.messages.create`), no server key | W J | no |
 | `FCM_PROJECT` / `NOTIFY_MAX_ATTEMPTS` | default | `GCP_PROJECT` / 5 | W J | no |
@@ -181,6 +185,10 @@ two URLs are used exactly as before.
 | `WHATSAPP_PROVIDER_URL` | SM `otp-whatsapp-provider-url` | the WhatsApp gateway endpoint | A | yes |
 | `OTP_DEV_CODE` | local | `123456` locally | local (allowed, but not set, in dev) | **forbidden** in stg / prd (prd guard) |
 | `OTP_TTL_SECONDS` / `OTP_MAX_ATTEMPTS` / `OTP_LOCKOUT_SECONDS` / `OTP_MAX_RESENDS` / `OTP_RESEND_WINDOW_SECONDS` / `OTP_RESEND_AFTER_SECONDS` / `OTP_WHATSAPP_FALLBACK_SECONDS` | default | 300 / 5 / 900 / 3 / 900 / 30 / 30 | A | no |
+| `OTP_MAX_SENDS_PER_PHONE_DAY` / `OTP_MAX_SENDS_PER_IP_HOUR` / `OTP_ABUSE_BLOCK_SECONDS` | default (M7, SEC-021) | 10 / 30 / 3600 — SMS-pumping velocity rules; a breach blocks the hashed phone or IP for that long | A | no |
+| `OTP_ALLOWED_COUNTRY_CODES` / `OTP_BLOCKED_COUNTRY_CODES` | default (M7, SEC-021) | `+91` / empty — per-country block list | A | no |
+| `OTP_COST_ALERT_PER_HOUR` / `OTP_COST_BLOCK_PER_HOUR` | default (M7, SEC-021) | the tenant-wide send rate that warns / stops sending | A | no |
+| `GRIEVANCE_OFFICER_NAME` / `GRIEVANCE_OFFICER_EMAIL` / `GRIEVANCE_OFFICER_PHONE` / `GRIEVANCE_RESPONSE_DAYS` | default (M7, NF-013) | the DPDP grievance officer shown in the public privacy notice, and the response SLA in days (a human gate: real contact details before the pilot) | A | no |
 | `JWT_ALGORITHM` / `JWT_ISSUER` | default | `HS256` / `farmerapp` | A | no |
 | `ACCESS_TOKEN_TTL_SECONDS` / `REFRESH_TOKEN_TTL_SECONDS` / `STEP_UP_TOKEN_TTL_SECONDS` / `SECURITY_CACHE_TTL_SECONDS` | default | 900 / 30 d / 300 / 30 | A | no |
 | `CORS_ORIGINS` | TF | `["https://console.<domain>"]` | A | yes |

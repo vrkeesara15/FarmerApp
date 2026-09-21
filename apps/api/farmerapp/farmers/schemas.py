@@ -214,6 +214,10 @@ class FarmerDetailOut(FarmerOut):
     farms: list[FarmOut] = Field(default_factory=list)
     consents: list[ConsentRecordOut] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+    referral_id: uuid.UUID | None = Field(
+        default=None,
+        description="FM-013 (writes only): the referral this registration was attributed to.",
+    )
     officer: AssignedOfficerOut | None = Field(
         default=None,
         description=(
@@ -331,6 +335,12 @@ class FarmerCreate(BaseModel):
         default=None,
         max_length=1024,
         description="From `POST /v1/farmers/phone/verify/confirm`; absent for offline capture.",
+    )
+    referral_code: str | None = Field(
+        default=None,
+        max_length=24,
+        description="FM-013: the invite code the farmer was referred with. A code that cannot "
+        "be attributed never fails the registration — the reason comes back in `warnings`.",
     )
 
     @model_validator(mode="after")

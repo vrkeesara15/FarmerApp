@@ -5066,4 +5066,94 @@ class CoreLocalizationsEn extends CoreLocalizations {
 
   @override
   String get farmerNotifGenericBody => 'Tap to see it.';
+
+  @override
+  String get mandiTitle => 'Mandi prices';
+
+  @override
+  String get mandiOpen => 'Mandi prices';
+
+  @override
+  String get mandiEmptyTitle => 'No prices yet';
+
+  @override
+  String get mandiEmptyHelp =>
+      'Prices for your crops will appear here once the market publishes them.';
+
+  @override
+  String get mandiIndicative =>
+      'These prices are only for your information. They come from a public market list, not from the store.';
+
+  @override
+  String mandiSource(String source) {
+    return 'From $source';
+  }
+
+  @override
+  String mandiPriceOn(String date) {
+    return 'Price of $date';
+  }
+
+  @override
+  String get mandiPerQuintal => 'per quintal';
+
+  @override
+  String mandiRange(String low, String high) {
+    return '$low to $high';
+  }
+
+  @override
+  String get mandiNoPriceYet => 'No price for this crop yet';
+
+  @override
+  String get referralTitle => 'Invite a farmer';
+
+  @override
+  String get referralOpen => 'Invite a farmer';
+
+  @override
+  String get referralIntro =>
+      'Share your code with a farmer you know. When they join, you and your nearest store both get the reward.';
+
+  @override
+  String get referralYourCode => 'Your code';
+
+  @override
+  String get referralShareWhatsApp => 'Share on WhatsApp';
+
+  @override
+  String get referralShareSms => 'Send by SMS';
+
+  @override
+  String referralShareMessage(String link, String code) {
+    return 'Join me on Kisan for crop advice and farm supplies. Open $link or use my code $code.';
+  }
+
+  @override
+  String referralInvited(int count) {
+    return '$count invited';
+  }
+
+  @override
+  String referralJoined(int count) {
+    return '$count joined';
+  }
+
+  @override
+  String referralRewarded(int count) {
+    return '$count rewarded';
+  }
+
+  @override
+  String get referralRewardNone =>
+      'Your store will tell you what the reward is.';
+
+  @override
+  String get referralOff => 'Invites are switched off right now.';
+
+  @override
+  String get referralClaimed => 'Thank you. Your invite has been counted.';
+
+  @override
+  String get referralClaimFailed => 'That invite could not be used.';
 }
