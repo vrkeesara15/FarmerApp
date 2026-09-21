@@ -203,7 +203,7 @@ jobs:
           # MOBSF_HIGH_LIMIT comes from the workflow env; the gate reads it.
           python3 "$GITHUB_WORKSPACE/scripts/mobile/mobsf_gate.py" mobsf-report.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: ${{ steps.app.outputs.app }}-${{ steps.app.outputs.version }}

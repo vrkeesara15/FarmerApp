@@ -63,7 +63,7 @@ jobs:
       # (tool/apk_size_check.sh), so the same command a developer runs locally
       # is the one CI runs.
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: debug-apks
           path: |
