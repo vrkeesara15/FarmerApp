@@ -2,7 +2,7 @@
 
 One module is the single source of truth for three consumers:
 
-* **Alembic ``0042``** creates :data:`VIEWS` and the ``farmerapp_readonly`` role from
+* **Alembic ``0043``** creates :data:`VIEWS` and the ``farmerapp_readonly`` role from
   :func:`ddl_statements` / :func:`role_statements`.
 * **The validator** (:mod:`farmerapp.nlq.sql_guard`) allows exactly :data:`VIEW_NAMES` and
   nothing else — no table, no other schema, no function outside its own allowlist.

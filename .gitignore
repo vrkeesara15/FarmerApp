@@ -25,6 +25,13 @@ build/
 **/android/.kotlin/
 **/android/local.properties
 **/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/ephemeral/
+**/ios/Podfile.lock
+**/*.xcuserdatad/
+**/*.xcworkspace/xcuserdata/
 # Terraform
 .terraform/
 *.tfstate

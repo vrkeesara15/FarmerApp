@@ -1,4 +1,4 @@
-"""FM-012 data model (Alembic ``0042_m8_market_referral_nlq``).
+"""FM-012 data model (Alembic ``0043_m8_market_referral_nlq``).
 
 ``mandi_price`` — one row per (market, crop, variety, grade, price date) as published by the
 public source. Prices are **integer paise per quintal** (CLAUDE.md: money is integer paise);

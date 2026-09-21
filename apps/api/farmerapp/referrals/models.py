@@ -1,4 +1,4 @@
-"""FM-013 data model (Alembic ``0042_m8_market_referral_nlq``).
+"""FM-013 data model (Alembic ``0043_m8_market_referral_nlq``).
 
 ``farmer.referral_code`` (added by the same migration) is the farmer's own code: a short,
 unambiguous string the farmer app puts into a WhatsApp / SMS message. It is minted the first
