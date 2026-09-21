@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type {
+  ChurnListOut,
   DayReplayOut,
   Farmer360Out,
   FarmerDirectoryOut,
   FieldTeamOut,
   OwnerHomeOut,
+  SavedSegment,
+  SegmentPreviewOut,
   StoreDetailOut,
+  StoreRow,
 } from "../analytics";
 import type { ClusterList } from "../clusters";
 import { handleAnalytics, handleClusters, MOCK_OFFICERS, MOCK_STORES } from "./analytics";
@@ -201,5 +205,95 @@ describe("mock /v1/clusters and the flag cross-links", () => {
       expect(get(`analytics/farmers/${id}/360`).status).toBe(200);
     for (const id of Object.values(MOCK_EVIDENCE_OFFICER_IDS))
       expect(get(`analytics/officers/${id}`).status).toBe(200);
+  });
+});
+
+describe("mock AN-004 segments and AN-005 store fields", () => {
+  const call = (method: string, path: string, role = "owner", qs = "", body?: unknown) =>
+    handleAnalytics(method, path.split("/"), new URLSearchParams(qs), as(role), body)!;
+  const preview = (definition: object, role = "owner") =>
+    call("POST", "analytics/segments/preview", role, "", { definition });
+
+  it("previews a definition with counts and every AN-004 breakdown", () => {
+    const r = preview({});
+    expect(r.status).toBe(200);
+    const body = r.json as SegmentPreviewOut;
+    expect(body.matched).toBeGreaterThan(0);
+    expect(body.consented + body.excluded_no_consent).toBe(body.matched);
+    const sum = (f: SegmentPreviewOut["by_acreage_band"]) => f.reduce((n, x) => n + x.count, 0);
+    expect(sum(body.by_acreage_band)).toBe(body.matched);
+    expect(sum(body.by_spend_band)).toBe(body.matched);
+    expect(sum(body.by_last_visit)).toBe(body.matched);
+    expect(sum(body.by_consent)).toBe(body.matched);
+    expect(sum(body.by_app_usage)).toBe(body.matched);
+    expect(body.by_acreage_band.map((f) => f.key)).toEqual(["under_2", "2_5", "5_10", "over_10"]);
+    expect(body.churn_window_days).toBe(90);
+  });
+
+  it("narrows on criteria and by role scope", () => {
+    const all = (preview({}).json as SegmentPreviewOut).matched;
+    const big = (preview({ min_acres: 6 }).json as SegmentPreviewOut).matched;
+    expect(big).toBeLessThan(all);
+    const head = (preview({}, "cluster_head").json as SegmentPreviewOut).matched;
+    expect(head).toBeLessThan(all);
+    expect(preview({}, "field_officer").status).toBe(403);
+  });
+
+  it("saves, renames, lists and deletes a segment; names are unique", () => {
+    const created = call("POST", "analytics/segments", "owner", "", {
+      name: "Vitest segment",
+      definition: { app_user: true },
+    });
+    expect(created.status).toBe(201);
+    const row = created.json as SavedSegment;
+    expect(row.last_count).not.toBeNull();
+    expect(
+      call("POST", "analytics/segments", "owner", "", {
+        name: "vitest segment",
+        definition: {},
+      }).status,
+    ).toBe(409);
+    expect(
+      call("POST", "analytics/segments", "cluster_head", "", { name: "x", definition: {} }).status,
+    ).toBe(403);
+    const listed = call("GET", "analytics/segments").json as { items: SavedSegment[] };
+    expect(listed.items.map((s) => s.id)).toContain(row.id);
+    const patched = call("PATCH", `analytics/segments/${row.id}`, "owner", "", {
+      name: "Vitest renamed",
+    });
+    expect((patched.json as SavedSegment).name).toBe("Vitest renamed");
+    expect(call("DELETE", `analytics/segments/${row.id}`).status).toBe(204);
+    expect(call("GET", `analytics/segments/${row.id}`).status).toBe(404);
+  });
+
+  it("lists churn-risk farmers, biggest LTV first, honouring the window", () => {
+    const body = get("analytics/farmers-churn-risk", "owner", "days=90").json as ChurnListOut;
+    expect(body.window_days).toBe(90);
+    expect(body.items.length).toBeLessThanOrEqual(50);
+    for (const row of body.items) {
+      expect(row.orders).toBeGreaterThan(0);
+      expect(row.days_since_last_purchase).toBeGreaterThan(90);
+      expect(row.phone_masked).toMatch(/^\*{9}\d{4}$/);
+    }
+    const ltvs = body.items.map((r) => r.ltv_paise);
+    expect([...ltvs].sort((a, b) => b - a)).toEqual(ltvs);
+    const wider = get("analytics/farmers-churn-risk", "owner", "days=365").json as ChurnListOut;
+    expect(wider.total).toBeLessThanOrEqual(body.total);
+  });
+
+  it("store rows and detail carry the AN-005 fields", () => {
+    const list = get("analytics/stores").json as { items: StoreRow[] };
+    const row = list.items[0]!;
+    expect(row.stock_turns_annualised).not.toBeNull();
+    expect(Object.keys(row.credit_overdue_buckets)).toEqual(["0_30", "31_60", "61_90", "90_plus"]);
+    expect(typeof row.day_close_variance_paise).toBe("number");
+    const detail = get(`analytics/stores/${row.id}`).json as StoreDetailOut;
+    expect(detail.sales_by_brand.some((b) => b.own_brand)).toBe(true);
+    const shares = detail.sales_by_brand.map((b) => b.net_sales_paise);
+    expect([...shares].sort((a, b) => b - a)).toEqual(shares);
+    expect(detail.stock.stockouts.length).toBe(row.stockouts);
+    expect(detail.stock.stockout_days).toBe(
+      detail.stock.stockouts.reduce((n, s) => n + s.days_out_of_stock, 0),
+    );
   });
 });

@@ -217,3 +217,71 @@ models:
     columns:
       - name: flag_event_id
         data_tests: [unique, not_null]
+
+  - name: stg_campaign
+    description: AN-008 campaigns without the message text, the segment definition or the notes.
+    columns:
+      - name: campaign_id
+        data_tests: [unique, not_null]
+      - name: tenant_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_tenant'), field: tenant_id}}
+      - name: channel
+        data_tests:
+          - not_null
+          - accepted_values: {arguments: {values: [sms, whatsapp, push]}}
+      - name: status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [draft, scheduled, sending, sent, cancelled]
+      - name: attribution_days
+        data_tests:
+          - not_null
+          - expression_is_true:
+              arguments: {expression: "attribution_days between 1 and 90"}
+      - name: holdout_pct
+        data_tests:
+          - not_null
+          - expression_is_true: {arguments: {expression: "holdout_pct between 0 and 50"}}
+
+  - name: stg_campaign_recipient
+    description: AN-008 one row per farmer of a scheduled campaign (arm, delivery status, send / delivery / open times).
+    columns:
+      - name: campaign_recipient_id
+        data_tests: [unique, not_null]
+      - name: tenant_id
+        data_tests: [not_null]
+      - name: campaign_id
+        description: >-
+          No relationships test: soft-deleting a campaign leaves its recipient rows behind
+          (the FK cascades on hard delete only), so stg_campaign drops rows this still points
+          at. mart_campaign_roi joins the two and carries the tested foreign key.
+        data_tests: [not_null]
+      - name: farmer_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_farmer'), field: farmer_id}}
+      - name: arm
+        data_tests:
+          - not_null
+          - accepted_values: {arguments: {values: [target, holdout]}}
+      - name: status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [pending, sent, delivered, failed, skipped, holdout]
+      - name: skip_reason
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [consent_withdrawn, no_app, farmer_deleted, campaign_cancelled]
+    data_tests:
+      - unique_combination:
+          arguments: {combination_of_columns: [tenant_id, campaign_id, farmer_id]}
+      - expression_is_true:
+          arguments:
+            expression: "(not is_sent or sent_at is not null) and (opened_at is null or delivered_at is not null)"

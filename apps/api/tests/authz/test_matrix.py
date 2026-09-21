@@ -215,6 +215,16 @@ _RULES_BODY = {
 
 
 ROUTE_FIXTURES: dict[str, RouteFixture] = {
+    # AN-004 farmer segments (analytics); outcomes in tests/analytics/test_segments.py.
+    "POST /v1/analytics/segments/preview": RouteFixture(body=lambda _ctx: {"definition": {}}),
+    "POST /v1/analytics/segments": RouteFixture(
+        body=lambda _ctx: {"name": "Matrix segment", "definition": {}}
+    ),
+    "GET /v1/analytics/segments/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
+    "PATCH /v1/analytics/segments/{id}": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"name": "Matrix"}
+    ),
+    "DELETE /v1/analytics/segments/{id}": RouteFixture(path_params=lambda _ctx: {"id": NO_SUCH_ID}),
     # M7 growth (WC-008, WC-009, WC-013, AN-008, ST-004, ST-008); outcomes in tests/growth.
     "POST /v1/campaigns/segment-count": RouteFixture(body=lambda _ctx: {"segment": {}}),
     "POST /v1/campaigns": RouteFixture(

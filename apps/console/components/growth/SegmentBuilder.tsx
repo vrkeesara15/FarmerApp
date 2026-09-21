@@ -148,6 +148,20 @@ export function SegmentBuilder({ value, onChange, actions, error, onCount }: Seg
           min={1}
           onChange={(app_active_within_days) => patch({ app_active_within_days })}
         />
+        <NumberField
+          id="seg-minacres"
+          label={t("campaigns.segment.minAcres")}
+          value={value.min_acres}
+          min={0}
+          onChange={(min_acres) => patch({ min_acres })}
+        />
+        <NumberField
+          id="seg-maxacres"
+          label={t("campaigns.segment.maxAcres")}
+          value={value.max_acres}
+          min={0}
+          onChange={(max_acres) => patch({ max_acres })}
+        />
         <div className="flex items-end">
           <AppButton variant="tertiary" onClick={() => onChange({})} disabled={empty}>
             {t("campaigns.segment.clear")}

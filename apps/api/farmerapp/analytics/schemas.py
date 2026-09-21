@@ -14,6 +14,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from farmerapp.analytics.filters import FiltersOut
+from farmerapp.campaigns.segments import Segment
 
 Granularity = Literal["day", "week"]
 Band = Literal["green", "amber", "red", "none"]
@@ -291,7 +292,13 @@ class FarmerRow(BaseModel):
     balance_paise: int
     overdue_paise: int
     credit_risk: Literal["low", "medium", "high"]
-    ltv_paise: int
+    ltv_paise: int = Field(description="SPEC 5.2 farmer LTV: cumulative gross margin.")
+    spend_paise: int = Field(default=0, description="Cumulative net sales to the farmer.")
+    orders: int = Field(default=0, description="Fulfilled orders, all time.")
+    churn_risk: bool = Field(
+        default=False,
+        description="AN-004: bought before, but no purchase and no visit in the churn window.",
+    )
     app_user: bool
     consent_marketing: bool
 
@@ -383,6 +390,16 @@ class AppUsageOut(BaseModel):
     proxy: str = Field(description="How app sessions are measured (refresh-token issuance).")
 
 
+class ChurnRiskOut(BaseModel):
+    """AN-004 churn risk of one farmer, with the numbers behind the flag."""
+
+    at_risk: bool
+    window_days: int = Field(description="Quiet for this long counts as churn risk.")
+    days_since_last_purchase: int | None
+    days_since_last_visit: int | None
+    orders: int = Field(description="Fulfilled orders all time (0: never a customer).")
+
+
 class FarmerProfileOut(BaseModel):
     id: uuid.UUID
     name: str
@@ -411,11 +428,111 @@ class Farmer360Out(BaseModel):
     khata: KhataSummaryOut
     consent: ConsentOut
     app_usage: AppUsageOut
-    ltv_paise: int
+    ltv_paise: int = Field(description="SPEC 5.2 farmer LTV: cumulative gross margin.")
+    spend_paise: int = Field(default=0, description="Cumulative net sales to the farmer.")
     last_visit_at: datetime | None
     last_purchase_at: datetime | None
     active: bool
+    churn_risk: ChurnRiskOut
     notes: dict[str, str]
+
+
+# --------------------------------------------------------------------------- AN-004 segments
+class SegmentFacetOut(BaseModel):
+    key: str = Field(description="Crop code, district, stage, band key or window key.")
+    count: int
+
+
+class SegmentPreviewOut(BaseModel):
+    """AN-004: what a segment definition selects inside the caller's role scope."""
+
+    filters: FiltersOut
+    definition: Segment
+    matched: int = Field(description="Farmers matching every criterion (consent aside).")
+    consented: int = Field(description="Of those, with current marketing consent: the reach.")
+    excluded_no_consent: int
+    app_users: int
+    churn_risk: int
+    churn_window_days: int
+    ltv_paise: int = Field(description="Cumulative gross margin of the segment (SPEC 5.2).")
+    spend_paise: int
+    by_crop: list[SegmentFacetOut]
+    by_district: list[SegmentFacetOut]
+    by_stage: list[SegmentFacetOut]
+    by_acreage_band: list[SegmentFacetOut]
+    by_spend_band: list[SegmentFacetOut]
+    by_last_visit: list[SegmentFacetOut]
+    by_consent: list[SegmentFacetOut]
+    by_app_usage: list[SegmentFacetOut]
+
+
+class SegmentPreviewIn(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    definition: Segment = Field(default_factory=Segment)
+
+
+class SavedSegmentIn(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    name: str = Field(min_length=1, max_length=120)
+    description: str | None = Field(default=None, max_length=2000)
+    definition: Segment = Field(default_factory=Segment)
+
+
+class SavedSegmentPatch(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    description: str | None = Field(default=None, max_length=2000)
+    definition: Segment | None = None
+
+
+class SavedSegmentOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    description: str | None
+    definition: Segment
+    created_by: uuid.UUID | None
+    created_at: datetime
+    updated_at: datetime
+    last_count: int | None = Field(description="Consented reach when the definition was saved.")
+    last_counted_at: datetime | None
+    version: int
+
+
+class SavedSegmentListOut(BaseModel):
+    items: list[SavedSegmentOut]
+
+
+class ChurnRowOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    phone_masked: str
+    village: str
+    district: str
+    store_id: uuid.UUID | None
+    registered_by: uuid.UUID | None
+    crops: list[str]
+    ltv_paise: int
+    spend_paise: int
+    orders: int
+    last_purchase_at: datetime | None
+    last_visit_at: datetime | None
+    days_since_last_purchase: int | None
+    days_since_last_visit: int | None
+    balance_paise: int
+    overdue_paise: int
+    credit_risk: Literal["low", "medium", "high"]
+    app_user: bool
+    consent_marketing: bool
+
+
+class ChurnListOut(BaseModel):
+    filters: FiltersOut
+    window_days: int
+    total: int = Field(description="Farmers at risk in scope (the list is capped).")
+    items: list[ChurnRowOut]
 
 
 # --------------------------------------------------------------------------- stores
@@ -438,9 +555,23 @@ class StoreRow(BaseModel):
     own_brand_share: float | None
     orders: int
     stock_value_paise: int
+    stock_turns_annualised: float | None = Field(
+        default=None,
+        description="AN-005: COGS over the range / stock value at cost, scaled to a year.",
+    )
+    stockouts: int = Field(
+        default=0, description="SKUs the store has stocked whose on-hand is now zero."
+    )
     credit_outstanding_paise: int
     credit_overdue_paise: int
+    credit_overdue_buckets: dict[str, int] = Field(
+        default_factory=dict,
+        description="AN-005 credit book ageing: `0_30` / `31_60` / `61_90` / `90_plus` paise.",
+    )
     last_day_close: LastDayCloseOut | None
+    day_close_variance_paise: int = Field(
+        default=0, description="Sum of the day-close variances in the range (AN-005)."
+    )
 
 
 class StoreListOut(BaseModel):
@@ -452,6 +583,17 @@ class CategorySalesOut(BaseModel):
     category: str
     net_sales_paise: int
     gross_margin_paise: int
+    share: float | None
+
+
+class BrandSalesOut(BaseModel):
+    """AN-005 sales by brand: the product's brand, own-brand or multi-brand."""
+
+    brand: str
+    own_brand: bool
+    net_sales_paise: int
+    gross_margin_paise: int
+    gross_margin_pct: float | None
     share: float | None
 
 
@@ -467,6 +609,10 @@ class StockoutOut(BaseModel):
     sku_id: uuid.UUID
     product_name: str
     pack: str
+    days_out_of_stock: int = Field(
+        default=0, description="IST days in the range with no stock (from the ledger)."
+    )
+    currently_out: bool = Field(default=True, description="On-hand is zero as of now.")
 
 
 class StockSummaryOut(BaseModel):
@@ -474,7 +620,11 @@ class StockSummaryOut(BaseModel):
     skus_in_stock: int
     turns: float | None = Field(description="COGS in the range / current stock value at cost.")
     turns_annualised: float | None
-    stockouts: list[StockoutOut] = Field(description="SKUs the store has stocked, now at zero.")
+    stockout_days: int = Field(default=0, description="SKU-days out of stock over the range.")
+    stockouts: list[StockoutOut] = Field(
+        description="SKUs the store has stocked that are out of stock now or were during the "
+        "range, worst first."
+    )
 
 
 class CreditBookOut(BaseModel):
@@ -518,6 +668,9 @@ class StoreDetailOut(BaseModel):
     gross_margin_paise: int
     gross_margin_pct: float | None
     sales_by_category: list[CategorySalesOut]
+    sales_by_brand: list[BrandSalesOut] = Field(
+        default_factory=list, description="AN-005: net sales and margin per brand, biggest first."
+    )
     brand_split: BrandSplitOut
     stock: StockSummaryOut
     credit_book: CreditBookOut

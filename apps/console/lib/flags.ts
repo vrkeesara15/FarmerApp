@@ -286,7 +286,59 @@ export function recordHref(type: string, id: string): string | null {
 }
 
 // ---- calls -------------------------------------------------------------------------------
+// ---- AN-009 data quality --------------------------------------------------------------------
+/** One rule's flag volume, resolution time and VA-006 precision. */
+export interface RuleVolume {
+  rule_id: string;
+  title: string | null;
+  total: number;
+  open: number;
+  resolved: number;
+  false_positives: number;
+  false_positive_rate: number | null;
+  median_resolution_hours: number | null;
+  p90_resolution_hours: number | null;
+  /** VA-006 precision over the last four weeks of resolutions. */
+  precision: number | null;
+  precision_resolved: number;
+}
+
+/** A subject flagged more than once in the window ("repeat offender"). */
+export interface RepeatSubject {
+  subject_type: string;
+  subject_id: string;
+  title: string | null;
+  flags: number;
+  open_flags: number;
+  rules: string[];
+  last_at: string;
+}
+
+export interface FlagSummary {
+  days: number;
+  from_date: string;
+  to_date: string;
+  total: number;
+  open: number;
+  resolved: number;
+  overdue: number;
+  by_severity: Record<string, number>;
+  by_subject_type: Record<string, number>;
+  by_rule: RuleVolume[];
+  median_resolution_hours: number | null;
+  p90_resolution_hours: number | null;
+  false_positive_rate: number | null;
+  repeat_min: number;
+  repeat_subjects: RepeatSubject[];
+  precision_floor: number;
+  precision_window_weeks: number;
+}
+
+/** Windows the C70 data-quality tab offers (IST days back). */
+export const DATA_QUALITY_WINDOWS = [30, 90, 180] as const;
+
 export const flagsApi = {
+  summary: (days: number) => authedFetch<FlagSummary>(`v1/flags/summary?days=${days}`),
   list: (f: FlagFilters) => authedFetch<FlagPage>(`v1/flags${flagQuery(f)}`),
   get: (id: string) => authedFetch<FlagDetail>(`v1/flags/${id}`),
   transition: (id: string, to: FlagStatus, note: string | null) =>

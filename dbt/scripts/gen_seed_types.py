@@ -20,7 +20,7 @@ OUT = ROOT / "seeds" / "_seeds.yml"
 
 BOOLEAN = {"own_brand", "consent_marketing", "phone_verified", "variance_flagged", "llm_used"}
 DATE = {"expiry", "due_date", "harvest_month", "sowing_date", "expected_harvest", "business_date"}
-BIGINT = {"score", "_ds_source_timestamp"}
+BIGINT = {"score", "attribution_days", "holdout_pct", "audience_size", "_ds_source_timestamp"}
 DECIMAL = {"qty", "km", "area_acres"}
 
 

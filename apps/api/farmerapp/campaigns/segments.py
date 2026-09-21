@@ -2,7 +2,8 @@
 
 A ``Segment`` is a conjunction of optional criteria over the farmer's crops (a live crop
 plot of one of ``crop_ids``, optionally at one of ``stages``), place (``districts`` of the
-village, ``store_ids``), purchase history (fulfilled / open orders within
+village, ``store_ids``), holding size (``min_acres`` / ``max_acres`` over the live farms), purchase
+history (fulfilled / open orders within
 ``purchase_within_days`` with at least ``min_spend_paise`` in that window; or **no**
 purchase within ``no_purchase_within_days``), the last visit (a visit within
 ``visited_within_days``; or none within ``not_visited_within_days``) and app usage
@@ -55,6 +56,10 @@ class Segment(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     crop_ids: list[uuid.UUID] = Field(default_factory=list, max_length=50)
+    min_acres: float | None = Field(
+        default=None, ge=0, le=10_000, description="Total live farm area of the farmer, acres."
+    )
+    max_acres: float | None = Field(default=None, ge=0, le=10_000)
     stages: list[CropStage] = Field(
         default_factory=list, description="Crop stage of a plot (with `crop_ids`: of that crop)."
     )
@@ -77,6 +82,12 @@ class Segment(BaseModel):
             raise ValueError("purchase_within_days and no_purchase_within_days exclude each other")
         if self.visited_within_days and self.not_visited_within_days:
             raise ValueError("visited_within_days and not_visited_within_days exclude each other")
+        if (
+            self.min_acres is not None
+            and self.max_acres is not None
+            and self.min_acres > self.max_acres
+        ):
+            raise ValueError("min_acres must not exceed max_acres")
         return self
 
 
@@ -146,6 +157,17 @@ def _criteria(segment: Segment, ctx: SegmentContext) -> list[ColumnElement[bool]
         out.append(Farmer.village_id.in_(village))
     if segment.languages:
         out.append(Farmer.language.in_(segment.languages))
+    if segment.min_acres is not None or segment.max_acres is not None:
+        acres = (
+            select(func.coalesce(func.sum(Farm.area_acres), 0))
+            .where(Farm.tenant_id == t, Farm.farmer_id == Farmer.id, Farm.deleted_at.is_(None))
+            .correlate(Farmer)
+            .scalar_subquery()
+        )
+        if segment.min_acres is not None:
+            out.append(acres >= segment.min_acres)
+        if segment.max_acres is not None:
+            out.append(acres <= segment.max_acres)
     bought = and_(
         Order.tenant_id == t,
         Order.farmer_id == Farmer.id,

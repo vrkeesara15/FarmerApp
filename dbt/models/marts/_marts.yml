@@ -284,6 +284,39 @@ models:
           - accepted_values:
               arguments:
                 values: [sown, vegetative, flowering, fruiting, maturity, harvested]
+      - name: village_id
+        data_tests:
+          - relationships: {arguments: {to: ref('stg_village'), field: village_id}}
+      - name: current_crop_id
+        data_tests:
+          - relationships: {arguments: {to: ref('stg_crop'), field: crop_id}}
+      - name: registered_by
+        data_tests:
+          - relationships: {arguments: {to: ref('stg_user'), field: user_id}}
+      - &as_of
+        name: as_of_date
+        data_tests: [not_null]
+      - name: is_active
+        <<: &boolean
+          data_tests:
+            - not_null
+            - accepted_values: {arguments: {values: [true, false], quote: false}}
+      - name: app_user
+        <<: *boolean
+      - name: acreage
+        data_tests: [not_null, non_negative]
+      - name: lifetime_net_sales_paise
+        data_tests: [not_null, non_negative]
+      - name: ltv_paise
+        data_tests: [not_null]
+      - name: credit_outstanding_paise
+        data_tests: [not_null, non_negative]
+      - name: credit_overdue_paise
+        data_tests: [not_null, non_negative]
+    data_tests:
+      - expression_is_true:
+          arguments:
+            expression: "credit_overdue_paise <= credit_outstanding_paise and (days_since_last_activity is null) = (last_activity_date is null)"
 
   - name: mart_farmer_segments
     description: AN-004 farmers and acreage by district, crop, stage and segment.
@@ -307,6 +340,13 @@ models:
                 values: [sown, vegetative, flowering, fruiting, maturity, harvested]
       - name: farmers
         data_tests: [not_null, non_negative]
+      - name: acreage
+        data_tests: [not_null, non_negative]
+      - *as_of
+    data_tests:
+      - unique_combination:
+          arguments:
+            combination_of_columns: [tenant_id, store_id, district, crop_id, stage, segment]
 
   # ------------------------------------------------------------------ AN-005 stores
   - name: mart_credit_accounts
@@ -328,7 +368,27 @@ models:
         data_tests:
           - not_null
           - accepted_values: {arguments: {values: [low, medium, high]}}
+      - *as_of
+      - name: debits_paise
+        data_tests: [not_null, non_negative]
+      - name: credits_paise
+        data_tests: [not_null, non_negative]
+      - name: outstanding_paise
+        data_tests: [not_null, non_negative]
+      - name: overdue_paise
+        data_tests: [not_null, non_negative]
+      - name: overdue_0_30_paise
+        <<: &bucket
+          data_tests: [not_null, non_negative]
+      - name: overdue_31_60_paise
+        <<: *bucket
+      - name: overdue_61_90_paise
+        <<: *bucket
+      - name: overdue_90_plus_paise
+        <<: *bucket
     data_tests:
+      - unique_combination:
+          arguments: {combination_of_columns: [tenant_id, store_id, farmer_id]}
       - expression_is_true:
           arguments:
             expression: "overdue_paise = overdue_0_30_paise + overdue_31_60_paise + overdue_61_90_paise + overdue_90_plus_paise and overdue_paise <= outstanding_paise"
@@ -348,6 +408,25 @@ models:
           - accepted_values: {arguments: {values: [30], quote: false}}
       - name: stockout_skus
         data_tests: [not_null, non_negative]
+      - *as_of
+      - name: stocked_skus
+        data_tests: [not_null, non_negative]
+      - name: stock_value_paise
+        data_tests: [not_null, non_negative]
+      - name: cogs_30d_paise
+        data_tests: [not_null, non_negative]
+      - name: net_sales_30d_paise
+        data_tests: [not_null, non_negative]
+      - name: open_credit_accounts
+        data_tests: [not_null, non_negative]
+      - name: credit_outstanding_paise
+        data_tests: [not_null, non_negative]
+      - name: credit_overdue_paise
+        data_tests: [not_null, non_negative]
+    data_tests:
+      - expression_is_true:
+          arguments:
+            expression: "stockout_skus <= stocked_skus and credit_overdue_paise <= credit_outstanding_paise"
 
   - name: mart_store_category_monthly
     description: AN-005 sales by category and brand with margin per store and month.
@@ -367,7 +446,27 @@ models:
                 values: [seed, fertiliser, pesticide, fungicide, herbicide, growth, tool, other]
       - name: own_brand
         data_tests:
+          - not_null
           - accepted_values: {arguments: {values: [true, false], quote: false}}
+      - name: month_start
+        data_tests: [not_null]
+      - name: brand
+        data_tests: [not_null]
+      - name: orders
+        data_tests: [not_null, non_negative]
+      - name: qty
+        data_tests: [not_null, non_negative]
+      - name: net_sales_paise
+        data_tests: [not_null, non_negative]
+      - name: cogs_paise
+        data_tests: [not_null, non_negative]
+    data_tests:
+      - unique_combination:
+          arguments:
+            combination_of_columns: [store_id, month_start, category, brand, own_brand]
+      - expression_is_true:
+          arguments:
+            expression: "margin_pct is null or (margin_pct <= 1 and gross_margin_paise = net_sales_paise - cogs_paise)"
 
   # ------------------------------------------------------------------ AN-006 crop health
   - name: mart_crop_health_weekly
@@ -426,14 +525,44 @@ models:
 
   # ------------------------------------------------------------------ AN-008 campaigns
   - name: mart_campaign_roi
-    description: AN-008 campaign ROI -- placeholder with the final shape and no rows until WC-008.
+    description: AN-008 sends, deliveries, opens and attributed orders per campaign and ISO week.
     columns:
       - name: campaign_week_key
         data_tests: [unique, not_null]
       - *tenant_fk
+      - name: campaign_id
+        data_tests:
+          - not_null
+          - relationships: {arguments: {to: ref('stg_campaign'), field: campaign_id}}
       - name: channel
         data_tests:
+          - not_null
           - accepted_values: {arguments: {values: [sms, whatsapp, push]}}
+      - name: week_start
+        data_tests: [not_null]
+      - name: sent
+        data_tests: [not_null, non_negative]
+      - name: delivered
+        data_tests: [not_null, non_negative]
+      - name: opened
+        data_tests: [not_null, non_negative]
+      - name: orders
+        data_tests: [not_null, non_negative]
+      - name: revenue_paise
+        data_tests: [not_null, non_negative]
+      - name: own_brand_lift
+        description: Target own-brand share minus holdout own-brand share; NULL without a holdout arm.
+        data_tests:
+          - expression_is_true:
+              arguments: {expression: "own_brand_lift is null or own_brand_lift between -1 and 1"}
+    data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [campaign_id, week_start]}}
+      # Opens are a push-only signal and only a delivered message can be opened or counted sent.
+      - expression_is_true:
+          arguments:
+            expression: "delivered <= sent and opened <= delivered and (channel = 'push' or opened = 0)"
+      - expression_is_true:
+          arguments: {expression: "orders > 0 or revenue_paise = 0"}
 
   # ------------------------------------------------------------------ AN-009 data quality
   - name: mart_flags_weekly
@@ -446,8 +575,27 @@ models:
         data_tests: [not_null]
       - name: rule_family
         data_tests:
+          - not_null
           - accepted_values: {arguments: {values: [employee, farmer, store, visit, other]}}
+      - name: week_start
+        data_tests: [not_null]
+      - name: raised
+        data_tests: [not_null, non_negative]
+      - name: high_severity
+        <<: &counter
+          data_tests: [not_null, non_negative]
+      - name: open_now
+        <<: *counter
+      - name: resolved
+        <<: *counter
+      - name: true_positive
+        <<: *counter
+      - name: false_positive
+        <<: *counter
+      - name: avg_resolution_hours
+        data_tests: [non_negative]
     data_tests:
+      - unique_combination: {arguments: {combination_of_columns: [tenant_id, week_start, rule_id]}}
       - expression_is_true:
           arguments:
             expression: "open_now + resolved <= raised and true_positive + false_positive <= resolved + open_now"
@@ -468,4 +616,16 @@ models:
           - accepted_values: {arguments: {values: [90], quote: false}}
       - name: flags_90d
         data_tests:
+          - not_null
           - expression_is_true: {arguments: {expression: "flags_90d >= 2"}}
+      - *as_of
+      - name: open_flags
+        data_tests: [not_null, non_negative]
+      - name: distinct_rules
+        data_tests: [not_null, non_negative]
+      - name: last_flag_at
+        data_tests: [not_null]
+    data_tests:
+      - expression_is_true:
+          arguments:
+            expression: "open_flags <= flags_90d and distinct_rules between 1 and flags_90d"

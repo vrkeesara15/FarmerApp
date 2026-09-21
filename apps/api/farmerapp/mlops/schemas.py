@@ -4,15 +4,38 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from farmerapp.mlops.models import EvaluationRun, ModelRelease
 
 
+class EvaluationCropOut(BaseModel):
+    """AN-007: one crop's slice of a DX-011 run (the console plots accuracy per crop)."""
+
+    crop_code: str
+    cases: int
+    correct: int
+    top1_accuracy: float | None
+
+
+def crop_rows(per_crop: dict[str, Any] | None) -> list[EvaluationCropOut]:
+    """``{crop_code: tally}`` as the row stores it -> the stable, ordered API list."""
+    return [
+        EvaluationCropOut(
+            crop_code=code,
+            cases=int(tally.get("cases", 0)),
+            correct=int(tally.get("correct", 0)),
+            top1_accuracy=tally.get("top1_accuracy"),
+        )
+        for code, tally in sorted((per_crop or {}).items())
+        if isinstance(tally, dict)
+    ]
+
+
 class EvaluationSummaryOut(BaseModel):
-    """One DX-011 run without the per-crop / per-problem tallies."""
+    """One DX-011 run with the per-crop accuracy, without the per-problem tallies."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -33,20 +56,22 @@ class EvaluationSummaryOut(BaseModel):
     top1_delta_points: float | None
     alerted: bool
     error: str | None
+    crops: list[EvaluationCropOut] = Field(
+        default_factory=list,
+        description="AN-007: top-1 accuracy per crop of this run, by crop code.",
+    )
 
     @classmethod
-    def from_row(cls, row: EvaluationRun) -> EvaluationSummaryOut:
-        return cls.model_validate(row)
+    def from_row(cls, row: EvaluationRun) -> Self:
+        out = cls.model_validate(row)
+        out.crops = crop_rows(row.per_crop)
+        return out
 
 
 class EvaluationRunOut(EvaluationSummaryOut):
     totals: dict[str, Any] = Field(validation_alias="summary")
     per_crop: dict[str, Any]
     per_problem: dict[str, Any]
-
-    @classmethod
-    def from_row(cls, row: EvaluationRun) -> EvaluationRunOut:
-        return cls.model_validate(row)
 
 
 class EvaluationListOut(BaseModel):
@@ -88,6 +113,11 @@ class QualityOut(BaseModel):
     review: ReviewSlaOut
     top_unknowns: list[UnknownOut]
     latest_evaluation: EvaluationSummaryOut | None
+    evaluation_alert_drop_points: float = Field(
+        default=5.0,
+        description="DX-011: a top-1 drop of more than this many points against the previous "
+        "run alerts (tenant setting `diagnosis_evaluation.alert_drop_points`).",
+    )
 
 
 class ModelReleaseOut(BaseModel):
@@ -147,6 +177,7 @@ class OnDeviceModelOut(BaseModel):
 
 
 __all__ = [
+    "EvaluationCropOut",
     "EvaluationListOut",
     "EvaluationRunOut",
     "EvaluationSummaryOut",
@@ -157,4 +188,5 @@ __all__ = [
     "ReleaseDecisionIn",
     "ReviewSlaOut",
     "UnknownOut",
+    "crop_rows",
 ]

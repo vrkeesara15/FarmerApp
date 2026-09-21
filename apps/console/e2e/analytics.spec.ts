@@ -188,7 +188,13 @@ test("C40 -> C41 store detail shows the P&L by month", async ({ page }) => {
   await expect(page.getByTestId("sales-by-category").getByTestId("bar-chart")).toBeVisible();
   await expect(page.getByTestId("brand-split").getByTestId("bar-chart")).toBeVisible();
   await expect(page.getByTestId("credit-ageing").getByTestId("bar-chart")).toBeVisible();
-  await expect(page.getByTestId("stockouts")).toBeVisible();
+  await expect(page.getByTestId("sales-by-brand").getByTestId("bar-chart")).toBeVisible();
+  await expect(page.getByTestId("day-closes").getByTestId("bar-chart")).toBeVisible();
+  // AN-005: stockouts carry the days at zero, and the total is on the stock panel.
+  const stockouts = page.getByTestId("stockouts");
+  await expect(stockouts).toBeVisible();
+  await expect(stockouts.getByRole("listitem").first()).toContainText("days");
+  await expect(page.getByTestId("stockout-days")).toBeVisible();
   const pnl = page.getByTestId("pnl-table");
   await expect(pnl).toBeVisible();
   await expect(pnl.locator("thead th")).toHaveCount(13); // line + 12 months
@@ -219,4 +225,34 @@ test("a store manager never sees a location replay", async ({ page }) => {
   await expect(refused).toBeVisible();
   await expect(refused).toContainText("never shown to store managers");
   await expect(page.getByTestId("replay-map")).toHaveCount(0);
+});
+
+test("AN-005: the C40 list carries stock turns, stockouts and the range variance", async ({
+  page,
+}) => {
+  await login(page, "9876510011");
+  await page.goto("/stores");
+  const table = page.getByTestId("data-table");
+  for (const header of ["Stock turns (yr)", "Stockouts", "Day-close variance (range)"])
+    await expect(table.getByRole("columnheader", { name: header })).toBeVisible();
+  const row = table.getByRole("row").filter({ hasText: "FCC Warangal" });
+  await expect(row).toBeVisible();
+  // Sorting by stockouts keeps the table usable and the filters in the URL (AN-011).
+  await table.getByRole("button", { name: "Stockouts" }).click();
+  await expect(page).toHaveURL(/\/stores/);
+});
+
+test("AN-004: the churn flag and credit risk show on the farmer 360", async ({ page }) => {
+  await login(page, "9876510012");
+  await page.goto("/farmers");
+  // Wait for the directory to fill before clicking: an empty table has no row to open.
+  await expect(page.getByTestId("farmer-total")).toHaveText("72 farmers");
+  const rows = page.getByTestId("data-table").getByRole("row");
+  await expect(rows.nth(1)).toBeVisible();
+  await rows.nth(1).click();
+  await expect(page).toHaveURL(/\/farmers\/farmer-\d{3}/);
+  await expect(page.getByTestId("credit-risk")).toBeVisible();
+  await expect(page.getByTestId("churn-note")).toBeVisible();
+  await page.getByRole("tab", { name: /^App/ }).click();
+  await expect(page.getByTestId("tab-app")).toContainText("Lifetime spend");
 });

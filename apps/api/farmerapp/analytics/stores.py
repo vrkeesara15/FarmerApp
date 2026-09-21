@@ -15,6 +15,10 @@ expense ledger in P0, so ``pnl_opex_included`` is ``false`` and ``pnl_note`` say
 
 Stock turns = COGS in the range / current stock value at cost (annualised: x 365 / days).
 A stockout is a SKU the store has stocked (a batch exists) whose on-hand quantity is zero.
+``days_out_of_stock`` replays the append-only stock ledger backwards from today's on-hand
+(``stock_movement`` is never updated, so on-hand at the end of an earlier IST day is the
+on-hand now minus every movement after it) and counts the days in the range at zero, from
+the day the store first stocked the SKU.
 """
 
 from __future__ import annotations
@@ -32,6 +36,7 @@ from farmerapp.analytics.filters import Scope, StoreInfo
 from farmerapp.analytics.kpi import credit_book, ratio
 from farmerapp.analytics.owner_home import tenant_settings
 from farmerapp.analytics.schemas import (
+    BrandSalesOut,
     BrandSplitOut,
     CategorySalesOut,
     CreditBookOut,
@@ -49,7 +54,6 @@ from farmerapp.catalog.models import Product, Sku
 from farmerapp.khata.ledger import credit_settings
 from farmerapp.khata.models import KhataEntry
 from farmerapp.payments.models import DayClose
-from farmerapp.stock.models import StockBatch
 
 PNL_NOTE = "operating_expenses_out_of_scope"
 
@@ -98,6 +102,26 @@ async def _last_day_closes(
     return {r.store_id: r for r in rows}
 
 
+async def _range_variance(
+    session: AsyncSession, scope: Scope, store_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, int]:
+    """Summed day-close variance per store over the range (AN-005 day-close variance)."""
+    if not store_ids:
+        return {}
+    rows = await session.execute(
+        select(DayClose.store_id, func.sum(DayClose.variance_paise))
+        .where(
+            DayClose.tenant_id == scope.tenant_id,
+            DayClose.deleted_at.is_(None),
+            DayClose.store_id.in_(store_ids),
+            DayClose.business_date >= scope.filters.from_,
+            DayClose.business_date <= scope.filters.to,
+        )
+        .group_by(DayClose.store_id)
+    )
+    return {r[0]: int(r[1] or 0) for r in rows}
+
+
 async def store_list(session: AsyncSession, scope: Scope) -> StoreListOut:
     f = scope.filters
     start, end = f.bounds
@@ -118,16 +142,19 @@ async def store_list(session: AsyncSession, scope: Scope) -> StoreListOut:
         for r in await facts.sales_aggregate(session, scope, start, end, ["store_id"])
     }
     stock = await facts.stock_value_by_store(session, scope.tenant_id, ids)
+    stockouts = await facts.stockouts_by_store(session, scope.tenant_id, ids)
     entries = await facts.khata_entries(session, scope, end)
     by_store: dict[uuid.UUID, list[KhataEntry]] = defaultdict(list)
     for e in entries:
         by_store[e.store_id].append(e)
     closes = await _last_day_closes(session, scope, ids)
+    variance = await _range_variance(session, scope, ids)
     items = []
     for s in scope.stores:
         book = credit_book(by_store.get(s.id, []), f.to, due_days, until=end)
         close = closes.get(s.id)
         margin = net[s.id] - cost[s.id]
+        turns = ratio(cost[s.id], stock.get(s.id, 0))
         items.append(
             StoreRow(
                 id=s.id,
@@ -142,8 +169,11 @@ async def store_list(session: AsyncSession, scope: Scope) -> StoreListOut:
                 own_brand_share=_pct(own[s.id], net[s.id]),
                 orders=order_counts.get(s.id, 0),
                 stock_value_paise=stock.get(s.id, 0),
+                stock_turns_annualised=(None if turns is None else round(turns * 365 / f.days, 4)),
+                stockouts=stockouts.get(s.id, 0),
                 credit_outstanding_paise=book.outstanding_paise,
                 credit_overdue_paise=book.overdue_paise,
+                credit_overdue_buckets=book.buckets,
                 last_day_close=(
                     LastDayCloseOut(
                         business_date=close.business_date,
@@ -153,9 +183,74 @@ async def store_list(session: AsyncSession, scope: Scope) -> StoreListOut:
                     if close is not None
                     else None
                 ),
+                day_close_variance_paise=variance.get(s.id, 0),
             )
         )
     return StoreListOut(filters=scope.echo(), items=items)
+
+
+async def _stockout_days(
+    session: AsyncSession,
+    scope: Scope,
+    store_id: uuid.UUID,
+    on_hand: dict[uuid.UUID, tuple[Decimal, int, date]],
+) -> dict[uuid.UUID, int]:
+    """IST days in the range on which each SKU was out of stock (AN-005 stockouts per SKU).
+
+    The stock ledger is append-only, so on-hand at the end of IST day *d* is the on-hand now
+    minus every movement after *d*. Walking the range backwards from the end therefore needs
+    one grouped query and no per-day state in SQL.
+    """
+    f = scope.filters
+    start, _ = f.bounds
+    deltas: dict[uuid.UUID, dict[date, Decimal]] = defaultdict(dict)
+    after_range: dict[uuid.UUID, Decimal] = defaultdict(Decimal)
+    for sku_id, day, qty in await facts.stock_deltas(session, scope.tenant_id, store_id, start):
+        if day > f.to:
+            after_range[sku_id] += qty
+        else:
+            deltas[sku_id][day] = deltas[sku_id].get(day, Decimal(0)) + qty
+    out: dict[uuid.UUID, int] = {}
+    for sku_id, (qty_now, _value, first_day) in on_hand.items():
+        running = qty_now - after_range.get(sku_id, Decimal(0))  # end of `to`
+        days = 0
+        day = f.to
+        while day >= f.from_:
+            if day >= first_day and running <= 0:
+                days += 1
+            running -= deltas.get(sku_id, {}).get(day, Decimal(0))
+            day -= timedelta(days=1)
+        if days:
+            out[sku_id] = days
+    return out
+
+
+async def _stockout_rows(
+    session: AsyncSession,
+    on_hand: dict[uuid.UUID, tuple[Decimal, int, date]],
+    days_out: dict[uuid.UUID, int],
+) -> list[StockoutOut]:
+    """One row per SKU out of stock now or at any point in the range, worst first."""
+    sku_ids = {s for s, (qty, _, _) in on_hand.items() if qty <= 0} | set(days_out)
+    if not sku_ids:
+        return []
+    names = await session.execute(
+        select(Sku.id, Product.name, Sku.pack_size_value, Sku.pack_size_unit)
+        .join(Product, Product.id == Sku.product_id)
+        .where(Sku.id.in_(sku_ids))
+    )
+    rows = [
+        StockoutOut(
+            sku_id=i,
+            product_name=n,
+            pack=f"{v.normalize():f} {u}",
+            days_out_of_stock=days_out.get(i, 0),
+            currently_out=on_hand.get(i, (Decimal(0), 0, date.min))[0] <= 0,
+        )
+        for i, n, v, u in names
+    ]
+    rows.sort(key=lambda r: (-r.days_out_of_stock, not r.currently_out, r.product_name, r.pack))
+    return rows
 
 
 def _months(first: date, last: date) -> list[tuple[date, date, date, bool]]:
@@ -181,47 +276,19 @@ async def store_detail(session: AsyncSession, scope: Scope, store_id: uuid.UUID)
 
     by_category = await facts.sales_aggregate(session, one, start, end, ["category"])
     by_brand = await facts.sales_aggregate(session, one, start, end, ["own_brand"])
+    by_brand_name = await facts.sales_aggregate(session, one, start, end, ["brand", "own_brand"])
     by_month = await facts.sales_aggregate(session, one, start, end, ["month"])
     net = sum(r.net_paise for r in by_brand)
     cogs = sum(r.cost_paise for r in by_brand)
     own = next((r for r in by_brand if r.keys["own_brand"]), None)
     multi = next((r for r in by_brand if not r.keys["own_brand"]), None)
 
-    # Stock.
-    stock_rows = await session.execute(
-        select(
-            StockBatch.sku_id,
-            func.sum(StockBatch.qty),
-            func.sum(StockBatch.qty * StockBatch.cost_paise),
-        )
-        .where(
-            StockBatch.tenant_id == one.tenant_id,
-            StockBatch.store_id == store.id,
-            StockBatch.deleted_at.is_(None),
-        )
-        .group_by(StockBatch.sku_id)
-    )
-    value = 0
-    in_stock = 0
-    out_skus: list[uuid.UUID] = []
-    for sku_id, qty, val in stock_rows:
-        value += facts._paise(val)
-        if (qty or Decimal(0)) > 0:
-            in_stock += 1
-        else:
-            out_skus.append(sku_id)
-    stockouts: list[StockoutOut] = []
-    if out_skus:
-        names = await session.execute(
-            select(Sku.id, Product.name, Sku.pack_size_value, Sku.pack_size_unit)
-            .join(Product, Product.id == Sku.product_id)
-            .where(Sku.id.in_(out_skus))
-            .order_by(Product.name, Sku.pack_size_value)
-        )
-        stockouts = [
-            StockoutOut(sku_id=i, product_name=n, pack=f"{v.normalize():f} {u}")
-            for i, n, v, u in names
-        ]
+    # Stock: value, SKUs in stock, and the days each SKU spent at zero over the range.
+    on_hand = await facts.stock_on_hand(session, one.tenant_id, store.id)
+    value = sum(v for _, v, _ in on_hand.values())
+    in_stock = sum(1 for qty, _, _ in on_hand.values() if qty > 0)
+    days_out = await _stockout_days(session, one, store.id, on_hand)
+    stockouts = await _stockout_rows(session, on_hand, days_out)
     turns = ratio(cogs, value)
 
     # Credit book.
@@ -312,6 +379,20 @@ async def store_detail(session: AsyncSession, scope: Scope, store_id: uuid.UUID)
             ),
             key=lambda c: (-c.net_sales_paise, c.category),
         ),
+        sales_by_brand=sorted(
+            (
+                BrandSalesOut(
+                    brand=r.keys["brand"],
+                    own_brand=bool(r.keys["own_brand"]),
+                    net_sales_paise=r.net_paise,
+                    gross_margin_paise=r.margin_paise,
+                    gross_margin_pct=_pct(r.margin_paise, r.net_paise),
+                    share=_pct(r.net_paise, net),
+                )
+                for r in by_brand_name
+            ),
+            key=lambda b: (-b.net_sales_paise, b.brand),
+        ),
         brand_split=BrandSplitOut(
             own_brand_paise=own.net_paise if own else 0,
             multi_brand_paise=multi.net_paise if multi else 0,
@@ -324,6 +405,7 @@ async def store_detail(session: AsyncSession, scope: Scope, store_id: uuid.UUID)
             skus_in_stock=in_stock,
             turns=None if turns is None else round(turns, 4),
             turns_annualised=None if turns is None else round(turns * 365 / f.days, 4),
+            stockout_days=sum(days_out.values()),
             stockouts=stockouts,
         ),
         credit_book=CreditBookOut(

@@ -13,6 +13,7 @@ from typing import Annotated
 from fastapi import APIRouter, Query, Request, status
 from sqlalchemy import func, select
 
+from farmerapp.analytics import segments as analytics_segments
 from farmerapp.api.errors import problem_responses
 from farmerapp.api.idempotency import idempotent
 from farmerapp.api.pagination import Page
@@ -39,7 +40,7 @@ from farmerapp.campaigns.schemas import (
     SegmentCountIn,
     SegmentCountOut,
 )
-from farmerapp.campaigns.segments import SegmentContext, count_segment
+from farmerapp.campaigns.segments import Segment, SegmentContext, count_segment
 from farmerapp.farmers.models import Farmer
 
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
@@ -106,7 +107,7 @@ async def list_campaigns(
     summary="Create a draft campaign (segment, channel, messages per language)",
     status_code=status.HTTP_201_CREATED,
     response_model=CampaignOut,
-    responses=problem_responses((422, "idempotency_key_reuse")),
+    responses=problem_responses((404, "not_found"), (422, "idempotency_key_reuse")),
 )
 @idempotent(status_code=status.HTTP_201_CREATED)
 async def create_campaign(
@@ -115,12 +116,18 @@ async def create_campaign(
     actor: Annotated[User, require_roles(*WRITE_ROLES)],
     session: DbSession,
 ) -> CampaignOut:
+    segment = body.segment
+    if body.saved_segment_id is not None:
+        # AN-004: the campaign takes a copy, so editing the saved segment later never
+        # rewrites what this campaign was sent to.
+        saved = await analytics_segments.get_saved(session, actor.tenant_id, body.saved_segment_id)
+        segment = Segment.model_validate(saved.definition or {})
     campaign = await service.create_campaign(
         session,
         actor,
         name=body.name,
         channel=body.channel,
-        segment=body.segment,
+        segment=segment,
         messages=dict(body.messages),
         template_key=body.template_key,
         attribution_days=body.attribution_days,

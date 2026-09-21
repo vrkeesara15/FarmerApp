@@ -53,6 +53,7 @@ from farmerapp.analytics.kpi import (
 from farmerapp.analytics.owner_home import tenant_settings
 from farmerapp.analytics.schemas import (
     AppUsageOut,
+    ChurnRiskOut,
     ConsentEventOut,
     ConsentOut,
     Farmer360Out,
@@ -79,6 +80,10 @@ from farmerapp.tenants.models import Village
 from farmerapp.visits.models import Visit
 
 SORTS = ("name", "last_visit", "last_purchase", "ltv", "balance", "overdue")
+#: AN-004 churn risk: a farmer who has bought before but has neither bought nor been visited
+#: for this long is on the churn-risk list. A working definition -- SPEC 5.1 names the list
+#: but not the window -- to confirm with the owner.
+CHURN_WINDOW_DAYS = 90
 LastVisit = Literal["7d", "30d", "90d", "over_90d", "never"]
 Risk = Literal["low", "medium", "high"]
 HISTORY_LIMIT = 50
@@ -111,9 +116,35 @@ def mask_phone(phone: str) -> str:
     return "*" * max(len(phone) - 4, 0) + phone[-4:]
 
 
+def churn_risk(
+    *,
+    last_purchase_at: datetime | None,
+    last_visit_at: datetime | None,
+    orders: int,
+    as_of: datetime,
+    days: int = CHURN_WINDOW_DAYS,
+) -> bool:
+    """AN-004: a farmer with a purchase history who has gone quiet for ``days``.
+
+    "Quiet" is neither a purchase nor a visit in the window: a farmer an officer saw last
+    week is not churning, whatever the till says. Without a prior purchase there is nothing
+    to churn from (a never-buyer is an acquisition problem, not a retention one).
+    """
+    if orders <= 0 or last_purchase_at is None:
+        return False
+    cutoff = as_of - timedelta(days=days)
+    if last_purchase_at >= cutoff:
+        return False
+    return last_visit_at is None or last_visit_at < cutoff
+
+
 def mask_last4(last4: str) -> str:
     """The directory mask of an E.164 Indian mobile (13 characters) from its last four."""
     return "*" * 9 + last4
+
+
+def _days_since(at: datetime | None, as_of: datetime) -> int | None:
+    return None if at is None else max((as_of - at).days, 0)
 
 
 def _as_phone(term: str) -> str | None:
@@ -168,7 +199,7 @@ def credit_by_farmer(as_of: date, until: datetime, due_days: int, tenant_id: uui
     )
 
 
-def _directory_rows(scope: Scope, due_days: int) -> Any:
+def directory_rows(scope: Scope, due_days: int) -> Any:
     f = scope.filters
     _, end = f.bounds
     tid = scope.tenant_id
@@ -193,7 +224,12 @@ def _directory_rows(scope: Scope, due_days: int) -> Any:
     )
     lines = facts.tenant_sales_lines(tid)
     ltv = (
-        select(lines.c.farmer_id, func.sum(lines.c.net - lines.c.cost).label("ltv"))
+        select(
+            lines.c.farmer_id,
+            func.sum(lines.c.net - lines.c.cost).label("ltv"),
+            func.sum(lines.c.net).label("spend"),
+            func.count(func.distinct(lines.c.order_id)).label("orders"),
+        )
         .where(lines.c.farmer_id.is_not(None), lines.c.sold_at < end)
         .group_by(lines.c.farmer_id)
         .subquery("ltv")
@@ -243,6 +279,8 @@ def _directory_rows(scope: Scope, due_days: int) -> Any:
             overdue.label("overdue"),
             risk.label("risk"),
             func.coalesce(ltv.c.ltv, 0).label("ltv"),
+            func.coalesce(ltv.c.spend, 0).label("spend"),
+            func.coalesce(ltv.c.orders, 0).label("orders"),
             (Farmer.user_id.is_not(None)).label("app_user"),
             Farmer.consent_marketing.label("consent_marketing"),
             Farmer.phone_last4.label("phone_last4"),
@@ -275,7 +313,7 @@ async def directory(
 ) -> FarmerDirectoryOut:
     settings = await tenant_settings(session, scope.tenant_id)
     due_days = credit_settings(settings).credit_due_days
-    rows = _directory_rows(scope, due_days)
+    rows = directory_rows(scope, due_days)
     where: list[Any] = []
     if q:
         term = q.strip()
@@ -348,6 +386,14 @@ async def directory(
             overdue_paise=int(r.overdue or 0),
             credit_risk=r.risk,
             ltv_paise=facts._paise(r.ltv),
+            spend_paise=facts._paise(r.spend),
+            orders=int(r.orders or 0),
+            churn_risk=churn_risk(
+                last_purchase_at=r.last_purchase_at,
+                last_visit_at=r.last_visit_at,
+                orders=int(r.orders or 0),
+                as_of=scope.filters.bounds[1],
+            ),
             app_user=bool(r.app_user),
             consent_marketing=bool(r.consent_marketing),
         )
@@ -572,11 +618,16 @@ async def farmer_360(session: AsyncSession, scope: Scope, farmer_id: uuid.UUID) 
             ).scalars()
         )
     lines = facts.tenant_sales_lines(tid)
-    ltv_raw = await session.scalar(
-        select(func.sum(lines.c.net - lines.c.cost)).where(
-            lines.c.farmer_id == farmer.id, lines.c.sold_at < end
+    money = (
+        await session.execute(
+            select(
+                func.sum(lines.c.net - lines.c.cost),
+                func.sum(lines.c.net),
+                func.count(func.distinct(lines.c.order_id)),
+            ).where(lines.c.farmer_id == farmer.id, lines.c.sold_at < end)
         )
-    )
+    ).one()
+    ltv_raw, spend_raw, order_count = money[0], money[1], int(money[2] or 0)
     last_visit_at = await session.scalar(
         select(func.max(Visit.checkin_at)).where(
             Visit.farmer_id == farmer.id, Visit.deleted_at.is_(None), Visit.checkin_at < end
@@ -647,11 +698,35 @@ async def farmer_360(session: AsyncSession, scope: Scope, farmer_id: uuid.UUID) 
             proxy=APP_USAGE_PROXY,
         ),
         ltv_paise=facts._paise(ltv_raw),
+        spend_paise=facts._paise(spend_raw),
         last_visit_at=last_visit_at,
         last_purchase_at=last_purchase_at,
         active=active,
+        churn_risk=ChurnRiskOut(
+            at_risk=churn_risk(
+                last_purchase_at=last_purchase_at,
+                last_visit_at=last_visit_at,
+                orders=order_count,
+                as_of=end,
+            ),
+            window_days=CHURN_WINDOW_DAYS,
+            days_since_last_purchase=_days_since(last_purchase_at, end),
+            days_since_last_visit=_days_since(last_visit_at, end),
+            orders=order_count,
+        ),
         notes={"diagnoses": "pending_m6_diagnosis"},
     )
 
 
-__all__ = ["SORTS", "decode_offset", "directory", "encode_offset", "farmer_360", "mask_phone"]
+__all__ = [
+    "CHURN_WINDOW_DAYS",
+    "SORTS",
+    "churn_risk",
+    "credit_by_farmer",
+    "decode_offset",
+    "directory",
+    "directory_rows",
+    "encode_offset",
+    "farmer_360",
+    "mask_phone",
+]

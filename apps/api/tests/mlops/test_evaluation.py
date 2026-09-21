@@ -239,8 +239,14 @@ async def test_quality_summary_api(
     assert review["open_queue"] >= 2 and review["open_overdue"] >= 1
     assert any(u["reason"] == "not_a_plant" for u in body["top_unknowns"])
     assert body["latest_evaluation"]["id"] == str(run.id)
+    # DX-011 in the console: the alert threshold and top-1 accuracy per crop, on every run.
+    assert body["evaluation_alert_drop_points"] == 5.0
+    crops = {c["crop_code"]: c for c in body["latest_evaluation"]["crops"]}
+    assert crops["paddy"]["cases"] == run.per_crop["paddy"]["cases"]
+    assert crops["paddy"]["top1_accuracy"] == run.per_crop["paddy"]["top1_accuracy"]
     runs = await client.get("/v1/diagnoses/evaluations", headers=bearer(world.a.owner))
     assert [r["id"] for r in runs.json()["items"]] == [str(run.id)]
+    assert [c["crop_code"] for c in runs.json()["items"][0]["crops"]] == sorted(run.per_crop)
     detail = await client.get(f"/v1/diagnoses/evaluations/{run.id}", headers=bearer(world.a.owner))
     assert detail.status_code == 200 and "paddy_bph" in detail.json()["per_problem"]
     missing = await client.get(

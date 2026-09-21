@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from httpx import AsyncClient
 
+from farmerapp.stock.models import StockMovement
 from tests.analytics.builders import Mini, ist
 from tests.analytics.conftest import get
 from tests.analytics.test_owner_home import FROM, TO
@@ -45,6 +46,13 @@ async def test_store_list(client: AsyncClient, bearer: Bearer, mini: Mini) -> No
     assert n1["orders"] == 1
     assert n1["stock_value_paise"] == 7_000  # own 10 x 700; multi sold out
     assert (n1["credit_outstanding_paise"], n1["credit_overdue_paise"]) == (9_000, 6_000)
+    # AN-005 on the list: ageing buckets, stock turns, stockouts and the range variance.
+    assert n1["credit_overdue_buckets"] == {"0_30": 0, "31_60": 0, "61_90": 6_000, "90_plus": 0}
+    days = body["filters"]["days"]
+    assert n1["stock_turns_annualised"] == pytest.approx(round(1_900 / 7_000 * 365 / days, 4))
+    assert n1["stockouts"] == 1  # the multi-brand SKU is sold out
+    assert n1["day_close_variance_paise"] == -250  # 8 Aug -250, 9 Aug 0 (July is outside)
+    assert stores["N2"]["stockouts"] == 0
     assert n1["last_day_close"] == {
         "business_date": "2026-08-09",
         "variance_paise": 0,
@@ -102,7 +110,34 @@ async def test_store_detail_and_pnl_by_month(
     assert stock["turns"] == pytest.approx(round(2_600 / 7_000, 4))
     assert stock["turns_annualised"] == pytest.approx(round(2_600 / 7_000 * 365 / 62, 4))
     assert stock["stockouts"] == [
-        {"sku_id": str(mini.skus["multi"].id), "product_name": "Other Shield", "pack": "500 ml"}
+        {
+            "sku_id": str(mini.skus["multi"].id),
+            "product_name": "Other Shield",
+            "pack": "500 ml",
+            # The batches were received today, after the range: no day in it counts.
+            "days_out_of_stock": 0,
+            "currently_out": True,
+        }
+    ]
+    assert stock["stockout_days"] == 0
+    # AN-005 sales by brand (own vs multi).
+    assert body["sales_by_brand"] == [
+        {
+            "brand": "FCC",
+            "own_brand": True,
+            "net_sales_paise": 2_800,
+            "gross_margin_paise": 700,
+            "gross_margin_pct": round(700 / 2_800, 4),
+            "share": round(2_800 / 3_520, 4),
+        },
+        {
+            "brand": "Other",
+            "own_brand": False,
+            "net_sales_paise": 720,
+            "gross_margin_paise": 220,
+            "gross_margin_pct": round(220 / 720, 4),
+            "share": round(720 / 3_520, 4),
+        },
     ]
     assert body["credit_book"] == {
         "outstanding_paise": 9_000,
@@ -144,6 +179,53 @@ async def test_store_detail_and_pnl_by_month(
     ).json()
     assert [(p["month"], p["partial"]) for p in partial["pnl"]] == [("2026-08", True)]
     assert partial["pnl"][0]["net_sales_paise"] == 2_520
+
+
+async def test_stockout_days_replay_the_ledger(
+    client: AsyncClient, bearer: Bearer, mini: Mini
+) -> None:
+    """AN-005: days at zero are counted from the append-only ledger, not from `qty` alone."""
+    n1, own = mini.stores["N1"], mini.skus["own"]
+    batch = mini.batches[("N1", "own")]
+    batch.created_at = ist(date(2026, 8, 1), 8)
+    batch.qty = Decimal(4)  # on hand now
+    # Sold out on 5 Aug (10 -> 0), restocked on 8 Aug (0 -> 4): 5, 6, 7 August are stockouts.
+    await mini.add(
+        StockMovement(
+            tenant_id=mini.tid,
+            store_id=n1.id,
+            sku_id=own.id,
+            batch_id=batch.id,
+            kind="sale",
+            qty=Decimal(-10),
+            ref_type="order",
+            created_at=ist(date(2026, 8, 5), 10),
+        ),
+        StockMovement(
+            tenant_id=mini.tid,
+            store_id=n1.id,
+            sku_id=own.id,
+            batch_id=batch.id,
+            kind="receipt",
+            qty=Decimal(4),
+            ref_type="grn",
+            created_at=ist(date(2026, 8, 8), 10),
+        ),
+    )
+    body = (
+        await get(
+            client,
+            bearer,
+            mini.user("owner"),
+            f"/stores/{n1.id}",
+            from_="2026-08-01",
+            to="2026-08-10",
+        )
+    ).json()
+    rows = {s["sku_id"]: s for s in body["stock"]["stockouts"]}
+    assert rows[str(own.id)]["days_out_of_stock"] == 3
+    assert rows[str(own.id)]["currently_out"] is False
+    assert body["stock"]["stockout_days"] == 3
 
 
 @pytest.mark.parametrize(

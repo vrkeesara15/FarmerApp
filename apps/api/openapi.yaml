@@ -6785,6 +6785,52 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+  /v1/flags/summary:
+    get:
+      tags:
+      - flags
+      summary: 'AN-009 data quality: volume by rule, resolution time, repeat subjects, precision'
+      operationId: getFlagSummary
+      parameters:
+      - name: days
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 365
+          minimum: 1
+          description: IST days back (default 90).
+          default: 90
+          title: Days
+        description: IST days back (default 90).
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagSummaryOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
   /v1/flags/mine:
     get:
       tags:
@@ -8022,6 +8068,603 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Farmer360Out'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_date_range`, `invalid_filter_combination`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/analytics/segments/preview:
+    post:
+      tags:
+      - analytics
+      summary: 'AN-004: counts and breakdowns of a segment definition in the caller''s scope'
+      operationId: previewFarmerSegment
+      parameters:
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'First IST day (inclusive). Default: `to` - 29 days.'
+          title: From
+        description: 'First IST day (inclusive). Default: `to` - 29 days.'
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'Last IST day (inclusive). Default: today (IST).'
+          title: To
+        description: 'Last IST day (inclusive). Default: today (IST).'
+      - name: cluster_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Cluster to narrow to.
+          title: Cluster Id
+        description: Cluster to narrow to.
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Store to narrow to.
+          title: Store Id
+        description: Store to narrow to.
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Field officer to narrow to.
+          title: Officer Id
+        description: Field officer to narrow to.
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Crop: farmers with a plot of it.'
+          title: Crop Id
+        description: 'Crop: farmers with a plot of it.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SegmentPreviewIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentPreviewOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_date_range`, `invalid_filter_combination`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - tenant_admin
+  /v1/analytics/segments:
+    get:
+      tags:
+      - analytics
+      summary: 'AN-004: the tenant''s saved segments (reusable by campaigns)'
+      operationId: listSavedSegments
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSegmentListOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - tenant_admin
+    post:
+      tags:
+      - analytics
+      summary: 'AN-004: save a segment definition under a name'
+      operationId: createSavedSegment
+      parameters:
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'First IST day (inclusive). Default: `to` - 29 days.'
+          title: From
+        description: 'First IST day (inclusive). Default: `to` - 29 days.'
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'Last IST day (inclusive). Default: today (IST).'
+          title: To
+        description: 'Last IST day (inclusive). Default: today (IST).'
+      - name: cluster_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Cluster to narrow to.
+          title: Cluster Id
+        description: Cluster to narrow to.
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Store to narrow to.
+          title: Store Id
+        description: Store to narrow to.
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Field officer to narrow to.
+          title: Officer Id
+        description: Field officer to narrow to.
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Crop: farmers with a plot of it.'
+          title: Crop Id
+        description: 'Crop: farmers with a plot of it.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedSegmentIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSegmentOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_date_range`, `invalid_filter_combination`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`segment_name_taken`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/analytics/segments/{id}:
+    get:
+      tags:
+      - analytics
+      summary: 'AN-004: one saved segment'
+      operationId: getSavedSegment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSegmentOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - tenant_admin
+    patch:
+      tags:
+      - analytics
+      summary: 'AN-004: rename a saved segment or change its definition'
+      operationId: updateSavedSegment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'First IST day (inclusive). Default: `to` - 29 days.'
+          title: From
+        description: 'First IST day (inclusive). Default: `to` - 29 days.'
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'Last IST day (inclusive). Default: today (IST).'
+          title: To
+        description: 'Last IST day (inclusive). Default: today (IST).'
+      - name: cluster_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Cluster to narrow to.
+          title: Cluster Id
+        description: Cluster to narrow to.
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Store to narrow to.
+          title: Store Id
+        description: Store to narrow to.
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Field officer to narrow to.
+          title: Officer Id
+        description: Field officer to narrow to.
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Crop: farmers with a plot of it.'
+          title: Crop Id
+        description: 'Crop: farmers with a plot of it.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedSegmentPatch'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSegmentOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`invalid_date_range`, `invalid_filter_combination`, `validation_error`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`segment_name_taken`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+    delete:
+      tags:
+      - analytics
+      summary: 'AN-004: delete a saved segment (campaigns keep their copy)'
+      operationId: deleteSavedSegment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - director
+      - owner
+      - tenant_admin
+  /v1/analytics/farmers-churn-risk:
+    get:
+      tags:
+      - analytics
+      summary: 'AN-004 churn-risk list: prior customers with no purchase or visit in N days'
+      operationId: listChurnRiskFarmers
+      parameters:
+      - name: days
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 730
+          minimum: 7
+          description: Quiet window in days (default 90).
+          default: 90
+          title: Days
+        description: Quiet window in days (default 90).
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'First IST day (inclusive). Default: `to` - 29 days.'
+          title: From
+        description: 'First IST day (inclusive). Default: `to` - 29 days.'
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: 'Last IST day (inclusive). Default: today (IST).'
+          title: To
+        description: 'Last IST day (inclusive). Default: today (IST).'
+      - name: cluster_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Cluster to narrow to.
+          title: Cluster Id
+        description: Cluster to narrow to.
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Store to narrow to.
+          title: Store Id
+        description: Store to narrow to.
+      - name: officer_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: Field officer to narrow to.
+          title: Officer Id
+        description: Field officer to narrow to.
+      - name: crop_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          description: 'Crop: farmers with a plot of it.'
+          title: Crop Id
+        description: 'Crop: farmers with a plot of it.'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChurnListOut'
         default:
           description: Error (RFC 9457 problem+json)
           content:
@@ -11422,6 +12065,10 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
         '422':
           description: '`idempotency_key_reuse`'
           content:
@@ -14123,6 +14770,40 @@ components:
       - village_name
       - items
       title: BeatVillageOut
+    BrandSalesOut:
+      properties:
+        brand:
+          type: string
+          title: Brand
+        own_brand:
+          type: boolean
+          title: Own Brand
+        net_sales_paise:
+          type: integer
+          title: Net Sales Paise
+        gross_margin_paise:
+          type: integer
+          title: Gross Margin Paise
+        gross_margin_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Gross Margin Pct
+        share:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Share
+      type: object
+      required:
+      - brand
+      - own_brand
+      - net_sales_paise
+      - gross_margin_paise
+      - gross_margin_pct
+      - share
+      title: BrandSalesOut
+      description: 'AN-005 sales by brand: the product''s brand, own-brand or multi-brand.'
     BrandSplitOut:
       properties:
         own_brand_paise:
@@ -14323,6 +15004,13 @@ components:
           $ref: '#/components/schemas/CampaignChannel'
         segment:
           $ref: '#/components/schemas/Segment'
+        saved_segment_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Saved Segment Id
+          description: 'AN-004: copy the definition of this saved segment instead of `segment`.'
         messages:
           additionalProperties:
             type: string
@@ -14646,6 +15334,169 @@ components:
       - received_chunks
       - missing_chunks
       title: ChunkAck
+    ChurnListOut:
+      properties:
+        filters:
+          $ref: '#/components/schemas/FiltersOut'
+        window_days:
+          type: integer
+          title: Window Days
+        total:
+          type: integer
+          title: Total
+          description: Farmers at risk in scope (the list is capped).
+        items:
+          items:
+            $ref: '#/components/schemas/ChurnRowOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - filters
+      - window_days
+      - total
+      - items
+      title: ChurnListOut
+    ChurnRiskOut:
+      properties:
+        at_risk:
+          type: boolean
+          title: At Risk
+        window_days:
+          type: integer
+          title: Window Days
+          description: Quiet for this long counts as churn risk.
+        days_since_last_purchase:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Days Since Last Purchase
+        days_since_last_visit:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Days Since Last Visit
+        orders:
+          type: integer
+          title: Orders
+          description: 'Fulfilled orders all time (0: never a customer).'
+      type: object
+      required:
+      - at_risk
+      - window_days
+      - days_since_last_purchase
+      - days_since_last_visit
+      - orders
+      title: ChurnRiskOut
+      description: AN-004 churn risk of one farmer, with the numbers behind the flag.
+    ChurnRowOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        phone_masked:
+          type: string
+          title: Phone Masked
+        village:
+          type: string
+          title: Village
+        district:
+          type: string
+          title: District
+        store_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+        registered_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Registered By
+        crops:
+          items:
+            type: string
+          type: array
+          title: Crops
+        ltv_paise:
+          type: integer
+          title: Ltv Paise
+        spend_paise:
+          type: integer
+          title: Spend Paise
+        orders:
+          type: integer
+          title: Orders
+        last_purchase_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Purchase At
+        last_visit_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Visit At
+        days_since_last_purchase:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Days Since Last Purchase
+        days_since_last_visit:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Days Since Last Visit
+        balance_paise:
+          type: integer
+          title: Balance Paise
+        overdue_paise:
+          type: integer
+          title: Overdue Paise
+        credit_risk:
+          type: string
+          enum:
+          - low
+          - medium
+          - high
+          title: Credit Risk
+        app_user:
+          type: boolean
+          title: App User
+        consent_marketing:
+          type: boolean
+          title: Consent Marketing
+      type: object
+      required:
+      - id
+      - name
+      - phone_masked
+      - village
+      - district
+      - store_id
+      - registered_by
+      - crops
+      - ltv_paise
+      - spend_paise
+      - orders
+      - last_purchase_at
+      - last_visit_at
+      - days_since_last_purchase
+      - days_since_last_visit
+      - balance_paise
+      - overdue_paise
+      - credit_risk
+      - app_user
+      - consent_marketing
+      title: ChurnRowOut
     ClaimDecisionIn:
       properties:
         note:
@@ -18161,6 +19012,30 @@ components:
       - debit
       - credit
       title: EntryType
+    EvaluationCropOut:
+      properties:
+        crop_code:
+          type: string
+          title: Crop Code
+        cases:
+          type: integer
+          title: Cases
+        correct:
+          type: integer
+          title: Correct
+        top1_accuracy:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Top1 Accuracy
+      type: object
+      required:
+      - crop_code
+      - cases
+      - correct
+      - top1_accuracy
+      title: EvaluationCropOut
+      description: 'AN-007: one crop''s slice of a DX-011 run (the console plots accuracy per crop).'
     EvaluationListOut:
       properties:
         items:
@@ -18249,6 +19124,12 @@ components:
           - type: string
           - type: 'null'
           title: Error
+        crops:
+          items:
+            $ref: '#/components/schemas/EvaluationCropOut'
+          type: array
+          title: Crops
+          description: 'AN-007: top-1 accuracy per crop of this run, by crop code.'
         totals:
           additionalProperties: true
           type: object
@@ -18375,6 +19256,12 @@ components:
           - type: string
           - type: 'null'
           title: Error
+        crops:
+          items:
+            $ref: '#/components/schemas/EvaluationCropOut'
+          type: array
+          title: Crops
+          description: 'AN-007: top-1 accuracy per crop of this run, by crop code.'
       type: object
       required:
       - id
@@ -18395,7 +19282,7 @@ components:
       - alerted
       - error
       title: EvaluationSummaryOut
-      description: One DX-011 run without the per-crop / per-problem tallies.
+      description: One DX-011 run with the per-crop accuracy, without the per-problem tallies.
     EvidenceOut:
       properties:
         records:
@@ -18876,6 +19763,12 @@ components:
         ltv_paise:
           type: integer
           title: Ltv Paise
+          description: 'SPEC 5.2 farmer LTV: cumulative gross margin.'
+        spend_paise:
+          type: integer
+          title: Spend Paise
+          description: Cumulative net sales to the farmer.
+          default: 0
         last_visit_at:
           anyOf:
           - type: string
@@ -18891,6 +19784,8 @@ components:
         active:
           type: boolean
           title: Active
+        churn_risk:
+          $ref: '#/components/schemas/ChurnRiskOut'
         notes:
           additionalProperties:
             type: string
@@ -18911,6 +19806,7 @@ components:
       - last_visit_at
       - last_purchase_at
       - active
+      - churn_risk
       - notes
       title: Farmer360Out
     FarmerConfirm:
@@ -19574,6 +20470,22 @@ components:
         ltv_paise:
           type: integer
           title: Ltv Paise
+          description: 'SPEC 5.2 farmer LTV: cumulative gross margin.'
+        spend_paise:
+          type: integer
+          title: Spend Paise
+          description: Cumulative net sales to the farmer.
+          default: 0
+        orders:
+          type: integer
+          title: Orders
+          description: Fulfilled orders, all time.
+          default: 0
+        churn_risk:
+          type: boolean
+          title: Churn Risk
+          description: 'AN-004: bought before, but no purchase and no visit in the churn window.'
+          default: false
         app_user:
           type: boolean
           title: App User
@@ -20060,6 +20972,97 @@ components:
       - escalated
       - resolved_action
       title: FlagStatus
+    FlagSummaryOut:
+      properties:
+        days:
+          type: integer
+          title: Days
+        from_date:
+          type: string
+          format: date
+          title: From Date
+        to_date:
+          type: string
+          format: date
+          title: To Date
+        total:
+          type: integer
+          title: Total
+        open:
+          type: integer
+          title: Open
+        resolved:
+          type: integer
+          title: Resolved
+        overdue:
+          type: integer
+          title: Overdue
+          description: Unresolved and past the SLA.
+        by_severity:
+          additionalProperties:
+            type: integer
+          type: object
+          title: By Severity
+        by_subject_type:
+          additionalProperties:
+            type: integer
+          type: object
+          title: By Subject Type
+        by_rule:
+          items:
+            $ref: '#/components/schemas/RuleVolumeOut'
+          type: array
+          title: By Rule
+        median_resolution_hours:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Median Resolution Hours
+        p90_resolution_hours:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: P90 Resolution Hours
+        false_positive_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: False Positive Rate
+        repeat_min:
+          type: integer
+          title: Repeat Min
+        repeat_subjects:
+          items:
+            $ref: '#/components/schemas/RepeatSubjectOut'
+          type: array
+          title: Repeat Subjects
+        precision_floor:
+          type: number
+          title: Precision Floor
+        precision_window_weeks:
+          type: integer
+          title: Precision Window Weeks
+      type: object
+      required:
+      - days
+      - from_date
+      - to_date
+      - total
+      - open
+      - resolved
+      - overdue
+      - by_severity
+      - by_subject_type
+      - by_rule
+      - median_resolution_hours
+      - p90_resolution_hours
+      - false_positive_rate
+      - repeat_min
+      - repeat_subjects
+      - precision_floor
+      - precision_window_weeks
+      title: FlagSummaryOut
+      description: AN-009 data quality over the flags raised in the last `days` IST days.
     ForceLogoutOut:
       properties:
         user_id:
@@ -25744,6 +26747,12 @@ components:
           anyOf:
           - $ref: '#/components/schemas/EvaluationSummaryOut'
           - type: 'null'
+        evaluation_alert_drop_points:
+          type: number
+          title: Evaluation Alert Drop Points
+          description: 'DX-011: a top-1 drop of more than this many points against the previous run alerts
+            (tenant setting `diagnosis_evaluation.alert_drop_points`).'
+          default: 5.0
       type: object
       required:
       - days
@@ -26192,6 +27201,47 @@ components:
       - default_reorder_level
       - items
       title: ReorderLevelsOut
+    RepeatSubjectOut:
+      properties:
+        subject_type:
+          type: string
+          title: Subject Type
+        subject_id:
+          type: string
+          format: uuid
+          title: Subject Id
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+          description: Title of the newest flag on the subject.
+        flags:
+          type: integer
+          title: Flags
+        open_flags:
+          type: integer
+          title: Open Flags
+        rules:
+          items:
+            type: string
+          type: array
+          title: Rules
+        last_at:
+          type: string
+          format: date-time
+          title: Last At
+      type: object
+      required:
+      - subject_type
+      - subject_id
+      - title
+      - flags
+      - open_flags
+      - rules
+      - last_at
+      title: RepeatSubjectOut
+      description: 'AN-009 repeat offender: one subject flagged more than once in the window.'
     ReplayPoint:
       properties:
         ts:
@@ -27051,6 +28101,68 @@ components:
       - created_at
       - activated_at
       title: RuleSetOut
+    RuleVolumeOut:
+      properties:
+        rule_id:
+          type: string
+          title: Rule Id
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        total:
+          type: integer
+          title: Total
+        open:
+          type: integer
+          title: Open
+        resolved:
+          type: integer
+          title: Resolved
+        false_positives:
+          type: integer
+          title: False Positives
+        false_positive_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: False Positive Rate
+        median_resolution_hours:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Median Resolution Hours
+        p90_resolution_hours:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: P90 Resolution Hours
+        precision:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Precision
+          description: VA-006 precision over the last four weeks of resolutions.
+        precision_resolved:
+          type: integer
+          title: Precision Resolved
+          description: Labelled resolutions behind `precision`.
+      type: object
+      required:
+      - rule_id
+      - title
+      - total
+      - open
+      - resolved
+      - false_positives
+      - false_positive_rate
+      - median_resolution_hours
+      - p90_resolution_hours
+      - precision
+      - precision_resolved
+      title: RuleVolumeOut
+      description: 'AN-009: one rule''s flag volume, resolution time and VA-006 precision.'
     SamplingPatch:
       properties:
         moving_s:
@@ -27093,6 +28205,117 @@ components:
           default: 900
       type: object
       title: SamplingSettings
+    SavedSegmentIn:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        description:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Description
+        definition:
+          $ref: '#/components/schemas/Segment'
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      title: SavedSegmentIn
+    SavedSegmentListOut:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/SavedSegmentOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: SavedSegmentListOut
+    SavedSegmentOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        definition:
+          $ref: '#/components/schemas/Segment'
+        created_by:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Created By
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        last_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Last Count
+          description: Consented reach when the definition was saved.
+        last_counted_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Counted At
+        version:
+          type: integer
+          title: Version
+      type: object
+      required:
+      - id
+      - name
+      - description
+      - definition
+      - created_by
+      - created_at
+      - updated_at
+      - last_count
+      - last_counted_at
+      - version
+      title: SavedSegmentOut
+    SavedSegmentPatch:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 1
+          - type: 'null'
+          title: Name
+        description:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Description
+        definition:
+          anyOf:
+          - $ref: '#/components/schemas/Segment'
+          - type: 'null'
+      additionalProperties: false
+      type: object
+      title: SavedSegmentPatch
     ScheduleList:
       properties:
         items:
@@ -27358,6 +28581,21 @@ components:
           type: array
           maxItems: 50
           title: Crop Ids
+        min_acres:
+          anyOf:
+          - type: number
+            maximum: 10000.0
+            minimum: 0.0
+          - type: 'null'
+          title: Min Acres
+          description: Total live farm area of the farmer, acres.
+        max_acres:
+          anyOf:
+          - type: number
+            maximum: 10000.0
+            minimum: 0.0
+          - type: 'null'
+          title: Max Acres
         stages:
           items:
             $ref: '#/components/schemas/CropStage'
@@ -27459,6 +28697,122 @@ components:
       - count
       - excluded_no_consent
       title: SegmentCountOut
+    SegmentFacetOut:
+      properties:
+        key:
+          type: string
+          title: Key
+          description: Crop code, district, stage, band key or window key.
+        count:
+          type: integer
+          title: Count
+      type: object
+      required:
+      - key
+      - count
+      title: SegmentFacetOut
+    SegmentPreviewIn:
+      properties:
+        definition:
+          $ref: '#/components/schemas/Segment'
+      additionalProperties: false
+      type: object
+      title: SegmentPreviewIn
+    SegmentPreviewOut:
+      properties:
+        filters:
+          $ref: '#/components/schemas/FiltersOut'
+        definition:
+          $ref: '#/components/schemas/Segment'
+        matched:
+          type: integer
+          title: Matched
+          description: Farmers matching every criterion (consent aside).
+        consented:
+          type: integer
+          title: Consented
+          description: 'Of those, with current marketing consent: the reach.'
+        excluded_no_consent:
+          type: integer
+          title: Excluded No Consent
+        app_users:
+          type: integer
+          title: App Users
+        churn_risk:
+          type: integer
+          title: Churn Risk
+        churn_window_days:
+          type: integer
+          title: Churn Window Days
+        ltv_paise:
+          type: integer
+          title: Ltv Paise
+          description: Cumulative gross margin of the segment (SPEC 5.2).
+        spend_paise:
+          type: integer
+          title: Spend Paise
+        by_crop:
+          items:
+            $ref: '#/components/schemas/SegmentFacetOut'
+          type: array
+          title: By Crop
+        by_district:
+          items:
+            $ref: '#/components/schemas/SegmentFacetOut'
+          type: array
+          title: By District
+        by_stage:
+          items:
+            $ref: '#/components/schemas/SegmentFacetOut'
+          type: array
+          title: By Stage
+        by_acreage_band:
+          items:
+            $ref: '#/components/schemas/SegmentFacetOut'
+          type: array
+          title: By Acreage Band
+        by_spend_band:
+          items:
+            $ref: '#/components/schemas/SegmentFacetOut'
+          type: array
+          title: By Spend Band
+        by_last_visit:
+          items:
+            $ref: '#/components/schemas/SegmentFacetOut'
+          type: array
+          title: By Last Visit
+        by_consent:
+          items:
+            $ref: '#/components/schemas/SegmentFacetOut'
+          type: array
+          title: By Consent
+        by_app_usage:
+          items:
+            $ref: '#/components/schemas/SegmentFacetOut'
+          type: array
+          title: By App Usage
+      type: object
+      required:
+      - filters
+      - definition
+      - matched
+      - consented
+      - excluded_no_consent
+      - app_users
+      - churn_risk
+      - churn_window_days
+      - ltv_paise
+      - spend_paise
+      - by_crop
+      - by_district
+      - by_stage
+      - by_acreage_band
+      - by_spend_band
+      - by_last_visit
+      - by_consent
+      - by_app_usage
+      title: SegmentPreviewOut
+      description: 'AN-004: what a segment definition selects inside the caller''s role scope.'
     SeriesPoint:
       properties:
         start:
@@ -28392,12 +29746,18 @@ components:
           - type: number
           - type: 'null'
           title: Turns Annualised
+        stockout_days:
+          type: integer
+          title: Stockout Days
+          description: SKU-days out of stock over the range.
+          default: 0
         stockouts:
           items:
             $ref: '#/components/schemas/StockoutOut'
           type: array
           title: Stockouts
-          description: SKUs the store has stocked, now at zero.
+          description: SKUs the store has stocked that are out of stock now or were during the range,
+            worst first.
       type: object
       required:
       - value_paise
@@ -28446,6 +29806,16 @@ components:
         pack:
           type: string
           title: Pack
+        days_out_of_stock:
+          type: integer
+          title: Days Out Of Stock
+          description: IST days in the range with no stock (from the ledger).
+          default: 0
+        currently_out:
+          type: boolean
+          title: Currently Out
+          description: On-hand is zero as of now.
+          default: true
       type: object
       required:
       - sku_id
@@ -28576,6 +29946,12 @@ components:
             $ref: '#/components/schemas/CategorySalesOut'
           type: array
           title: Sales By Category
+        sales_by_brand:
+          items:
+            $ref: '#/components/schemas/BrandSalesOut'
+          type: array
+          title: Sales By Brand
+          description: 'AN-005: net sales and margin per brand, biggest first.'
         brand_split:
           $ref: '#/components/schemas/BrandSplitOut'
         stock:
@@ -28750,16 +30126,38 @@ components:
         stock_value_paise:
           type: integer
           title: Stock Value Paise
+        stock_turns_annualised:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Stock Turns Annualised
+          description: 'AN-005: COGS over the range / stock value at cost, scaled to a year.'
+        stockouts:
+          type: integer
+          title: Stockouts
+          description: SKUs the store has stocked whose on-hand is now zero.
+          default: 0
         credit_outstanding_paise:
           type: integer
           title: Credit Outstanding Paise
         credit_overdue_paise:
           type: integer
           title: Credit Overdue Paise
+        credit_overdue_buckets:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Credit Overdue Buckets
+          description: 'AN-005 credit book ageing: `0_30` / `31_60` / `61_90` / `90_plus` paise.'
         last_day_close:
           anyOf:
           - $ref: '#/components/schemas/LastDayCloseOut'
           - type: 'null'
+        day_close_variance_paise:
+          type: integer
+          title: Day Close Variance Paise
+          description: Sum of the day-close variances in the range (AN-005).
+          default: 0
       type: object
       required:
       - id

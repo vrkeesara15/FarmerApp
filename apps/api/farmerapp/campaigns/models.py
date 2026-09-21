@@ -1,5 +1,7 @@
 """Campaigns (WC-008, AN-008; migration 0031_growth).
 
+* ``saved_segment`` — AN-004: a named, reusable segment definition the console's C32 builder
+  stores and a campaign can be created from.
 * ``campaign`` — a marketing message to a segment of farmers over one channel (``sms``,
   ``whatsapp`` or ``push``). ``segment`` is the stored segment definition
   (``farmerapp.campaigns.segments.Segment``); ``messages`` the text per language
@@ -79,6 +81,33 @@ class SkipReason(StrEnum):
     CAMPAIGN_CANCELLED = "campaign_cancelled"
 
 
+class SavedSegment(Base, BaseColumns):
+    """AN-004: a named, reusable audience definition (``campaigns.segments.Segment``).
+
+    The console's C32 builder saves one instead of handing a draft to C81 through the
+    browser; ``POST /v1/campaigns`` takes ``saved_segment_id`` and copies the definition into
+    the campaign, so a campaign stays a frozen record of what it was sent to even after the
+    saved segment is edited. ``last_count`` / ``last_counted_at`` cache the consented reach
+    of the last preview, purely for the list screen.
+    """
+
+    __tablename__ = "saved_segment"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "name"),
+        CheckConstraint("char_length(name) > 0", name="name"),
+        Index("ix_saved_segment_tenant_name", "tenant_id", "name"),
+    )
+
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    definition: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("user.id", ondelete="SET NULL"), nullable=True
+    )
+    last_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    last_counted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 class Campaign(Base, BaseColumns):
     __tablename__ = "campaign"
     __table_args__ = (
@@ -152,5 +181,6 @@ __all__ = [
     "CampaignStatus",
     "RecipientArm",
     "RecipientStatus",
+    "SavedSegment",
     "SkipReason",
 ]

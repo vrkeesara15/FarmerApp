@@ -170,7 +170,7 @@ async function handle(req: NextRequest, rawPath: string[]): Promise<NextResponse
     handleMlops(req.method, path, req.nextUrl.searchParams, body, actorFrom(req), req.headers) ??
     handleTravelDecision(req.method, path, body, actorFrom(req)) ??
     handleGrowth(req.method, path, req.nextUrl.searchParams, body, actorFrom(req), req.headers) ??
-    handleAnalytics(req.method, path, req.nextUrl.searchParams, actorFrom(req)) ??
+    handleAnalytics(req.method, path, req.nextUrl.searchParams, actorFrom(req), body) ??
     handleClusters(req.method, path, actorFrom(req)) ??
     handleFlags(req.method, path, req.nextUrl.searchParams, body, actorFrom(req)) ??
     handleDiagnosis(req.method, path, req.nextUrl.searchParams, body, actorFrom(req)) ??

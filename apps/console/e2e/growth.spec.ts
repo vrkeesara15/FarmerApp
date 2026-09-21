@@ -21,6 +21,7 @@ const OWNERS = [
 const CLUSTER_HEAD = "9000000013";
 const AGRONOMIST = "9000000018";
 const CAMPAIGN_NAME = `Cotton advisory ${Date.now().toString(36)}`;
+const SEGMENT_NAME = `Cotton kharif ${Date.now().toString(36)}`;
 
 async function login(page: Page, phone: string) {
   await page.route("https://tile.openstreetmap.org/**", (route) => route.abort());
@@ -215,7 +216,7 @@ test("DX-012: approving a model release needs step-up", async ({ page }) => {
   await expect(page.getByTestId("release-status").first()).toHaveText("Approved");
 });
 
-test("AN-009: the flags inbox has a data-quality tab", async ({ page }) => {
+test("AN-009: the data-quality tab reads the summary endpoint", async ({ page }) => {
   await login(page, OWNERS[4]);
   await page.goto("/flags");
   await page.getByRole("tab", { name: "Data quality" }).click();
@@ -223,16 +224,59 @@ test("AN-009: the flags inbox has a data-quality tab", async ({ page }) => {
   await expect(page.getByTestId("data-quality-sample")).toContainText("flags");
   await expect(page.getByTestId("dq-resolution")).toBeVisible();
   await expect(page.getByTestId("dq-false-positive")).toBeVisible();
+  await expect(page.getByTestId("dq-subjects")).toBeVisible();
+  // Volume by rule now carries the median / p90 resolution time and the VA-006 precision.
+  const volume = page.getByTestId("data-table").first();
+  for (const header of ["Median resolution", "90th percentile", "Precision"])
+    await expect(volume.getByRole("columnheader", { name: header })).toBeVisible();
+  // The window is a server query, not a browser roll-up: changing it refetches.
+  await page.getByLabel("Window").selectOption("30");
+  await expect(page.getByTestId("data-quality-sample")).toContainText("flags");
 });
 
-test("C32: the farmers directory opens the segments builder", async ({ page }) => {
+test("C32: the segments builder previews, saves and hands a real segment to C81", async ({
+  page,
+}) => {
   await login(page, OWNERS[5]);
   await page.goto("/farmers");
   await page.getByTestId("open-segments").click();
   await expect(page.getByRole("heading", { level: 1, name: "Farmer segments" })).toBeVisible();
+  // The saved segments of the tenant are listed before anything is built.
+  await expect(page.getByTestId("saved-segments")).toContainText("Paddy growers");
+
   await page.getByTestId("segment-crops").getByRole("checkbox").first().check();
   await expect(page.getByTestId("consent-line")).toContainText("marketing consent");
+  // AN-004 preview: counts and the breakdowns, as bars.
+  const preview = page.getByTestId("segment-preview");
+  await expect(preview).toBeVisible();
+  await expect(preview.getByTestId("segment-preview-note")).toContainText("marketing consent");
+  for (const id of ["segment-by-crop", "segment-by-acreage", "segment-by-spend"])
+    await expect(preview.getByTestId(id).getByTestId("bar-chart")).toBeVisible();
+
+  await page.getByTestId("segment-name").fill(SEGMENT_NAME);
+  await page.getByTestId("segment-save").click();
+  await expect(page.getByTestId("saved-segments")).toContainText(SEGMENT_NAME);
+
+  // "Create a campaign" carries the saved segment's id, and C81 loads the definition.
   await page.getByTestId("segment-to-campaign").click();
-  await page.waitForURL(/\/campaigns\/new/);
+  await page.waitForURL(/\/campaigns\/new\?segment=/);
   await expect(page.getByTestId("consent-line")).toBeVisible();
+  await expect(page.getByTestId("segment-crops").getByRole("checkbox").first()).toBeChecked();
+});
+
+test("DX-011: C62 shows the nightly run, the alert state and accuracy per crop over time", async ({
+  page,
+}) => {
+  await login(page, AGRONOMIST);
+  await page.goto("/agronomist/quality");
+  const panel = page.getByTestId("quality-accuracy");
+  await expect(panel).toBeVisible();
+  await expect(panel.getByTestId("eval-run")).toContainText("Status");
+  await expect(panel.getByTestId("eval-top1")).toBeVisible();
+  // No alert on the mock's latest run: the drop is under the tenant threshold.
+  await expect(panel.getByTestId("eval-no-alert")).toContainText("5");
+  await expect(panel.getByTestId("eval-crop-row").first()).toBeVisible();
+  const trend = page.getByTestId("accuracy-trend");
+  await expect(trend).toBeVisible();
+  await expect(trend.getByTestId("line-chart")).toBeVisible();
 });

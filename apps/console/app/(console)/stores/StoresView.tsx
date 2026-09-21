@@ -15,8 +15,14 @@ import {
   SectionSkeleton,
 } from "@/components/analytics/Page";
 import { isBlockingProblem, ProblemState } from "@/components/analytics/ProblemState";
-import type { StoreRow } from "@/lib/analytics";
-import { formatDay, formatInrShort, formatRange, formatRatio } from "@/lib/analytics-format";
+import { OVERDUE_BUCKETS, type StoreRow } from "@/lib/analytics";
+import {
+  formatDay,
+  formatDecimal,
+  formatInrShort,
+  formatRange,
+  formatRatio,
+} from "@/lib/analytics-format";
 import { csvFilename, downloadCsv, paiseToRupees, type CsvColumn } from "@/lib/csv";
 import { useStoresAnalytics } from "@/lib/hooks/analytics";
 import { useAnalyticsFilters } from "@/lib/hooks/use-analytics-filters";
@@ -107,6 +113,24 @@ function Stores() {
       sortable: true,
     },
     {
+      id: "turns",
+      header: t("stores.columns.stockTurns"),
+      accessor: (s) => s.stock_turns_annualised,
+      cell: (s) => formatDecimal(s.stock_turns_annualised, 1),
+      numeric: true,
+      sortable: true,
+    },
+    {
+      id: "stockouts",
+      header: t("stores.columns.stockouts"),
+      accessor: (s) => s.stockouts,
+      numeric: true,
+      sortable: true,
+      cell: (s) => (
+        <span className={cn(s.stockouts > 0 && "font-semibold text-warning")}>{s.stockouts}</span>
+      ),
+    },
+    {
       id: "outstanding",
       header: t("stores.columns.creditOutstanding"),
       accessor: (s) => s.credit_outstanding_paise,
@@ -121,6 +145,23 @@ function Stores() {
       cell: (s) => formatInrShort(s.credit_overdue_paise),
       numeric: true,
       sortable: true,
+    },
+    {
+      id: "rangeVariance",
+      header: t("stores.columns.rangeVariance"),
+      accessor: (s) => s.day_close_variance_paise,
+      numeric: true,
+      sortable: true,
+      cell: (s) => (
+        <span
+          className={cn(
+            Math.abs(s.day_close_variance_paise) > VARIANCE_THRESHOLD_PAISE &&
+              "font-semibold text-danger",
+          )}
+        >
+          {formatInrShort(s.day_close_variance_paise)}
+        </span>
+      ),
     },
     {
       id: "variance",
@@ -178,6 +219,16 @@ function Stores() {
       header: t("stores.columns.lastVarianceRupees"),
       value: (s) => paiseToRupees(s.last_day_close?.variance_paise),
     },
+    {
+      header: t("stores.columns.rangeVarianceRupees"),
+      value: (s) => paiseToRupees(s.day_close_variance_paise),
+    },
+    { header: t("stores.columns.stockTurns"), value: (s) => s.stock_turns_annualised },
+    { header: t("stores.columns.stockouts"), value: (s) => s.stockouts },
+    ...OVERDUE_BUCKETS.map((b) => ({
+      header: t("stores.columns.bucketRupees", { bucket: t(`buckets.${b}`) }),
+      value: (s: StoreRow) => paiseToRupees(s.credit_overdue_buckets[b] ?? 0),
+    })),
   ];
 
   const chartRows = [...rows]

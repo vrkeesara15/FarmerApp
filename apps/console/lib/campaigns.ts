@@ -43,6 +43,9 @@ export interface CampaignSegment {
   stages?: string[];
   districts?: string[];
   store_ids?: string[];
+  /** AN-004: total live farm area of the farmer, in acres. */
+  min_acres?: number;
+  max_acres?: number;
   purchase_within_days?: number;
   min_spend_paise?: number;
   no_purchase_within_days?: number;

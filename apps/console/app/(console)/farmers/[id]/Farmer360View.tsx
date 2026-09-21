@@ -166,6 +166,23 @@ function Farmer360({ id }: { id: string }) {
             <Badge variant={data.active ? "default" : "neutral"}>
               {data.active ? t("farmer360.active") : t("farmer360.inactive")}
             </Badge>
+            <Badge
+              variant={
+                data.khata.credit_risk === "high"
+                  ? "danger"
+                  : data.khata.credit_risk === "medium"
+                    ? "warning"
+                    : "success"
+              }
+              data-testid="credit-risk"
+            >
+              {t("farmer360.creditRisk", { level: t(`farmers.risk.${data.khata.credit_risk}`) })}
+            </Badge>
+            {data.churn_risk.at_risk ? (
+              <Badge variant="warning" data-testid="churn-risk">
+                {t("farmer360.churnRisk", { n: data.churn_risk.window_days })}
+              </Badge>
+            ) : null}
           </span>
         }
         actions={
@@ -207,6 +224,17 @@ function Farmer360({ id }: { id: string }) {
         />
         <StatTile label={t("farmer360.appSessions")} value={data.app_usage.sessions_last_60_days} />
       </section>
+      <p className="text-small text-text-muted" data-testid="churn-note">
+        {data.churn_risk.at_risk
+          ? t("farmer360.churnNote", {
+              purchase: data.churn_risk.days_since_last_purchase ?? 0,
+              visit:
+                data.churn_risk.days_since_last_visit === null
+                  ? t("farmers.never")
+                  : String(data.churn_risk.days_since_last_visit),
+            })
+          : t("farmer360.churnClear", { n: data.churn_risk.window_days })}
+      </p>
 
       <Tabs<Tab>
         label={t("farmer360.tabsLabel")}
@@ -642,6 +670,8 @@ function AppTab({ data }: { data: F }) {
         />
         <StatTile label={t("farmer360.app.sessions")} value={a.sessions_last_60_days} />
         <StatTile label={t("farmer360.ltv")} value={formatInrShort(data.ltv_paise)} />
+        <StatTile label={t("farmer360.spend")} value={formatInrShort(data.spend_paise)} />
+        <StatTile label={t("farmer360.orderCount")} value={data.churn_risk.orders} />
       </div>
       <p className="text-small text-text-muted">{t("farmer360.app.proxyNote")}</p>
     </div>

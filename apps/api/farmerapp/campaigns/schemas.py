@@ -46,6 +46,10 @@ class CampaignIn(BaseModel):
     name: Annotated[str, StringConstraints(min_length=1, max_length=120, strip_whitespace=True)]
     channel: CampaignChannel
     segment: Segment = Field(default_factory=Segment)
+    saved_segment_id: uuid.UUID | None = Field(
+        default=None,
+        description="AN-004: copy the definition of this saved segment instead of `segment`.",
+    )
     messages: dict[str, MessageText] = Field(
         description="Message text per language code (`te`, `kn`, `hi`, `mr`, `en`)."
     )

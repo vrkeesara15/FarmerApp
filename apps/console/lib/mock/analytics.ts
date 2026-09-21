@@ -982,14 +982,24 @@ function farmerFacts(f: Farmer, to: string) {
     lastVisitDaysAgo,
     last_purchase_at:
       lastPurchaseDaysAgo === null ? null : istAt(addDays(to, -lastPurchaseDaysAgo), 16, 40),
+    lastPurchaseDaysAgo,
     balance,
     overdue,
     risk: risk as "low" | "medium" | "high",
     ltv: Math.round(2_000 + rnd(`${f.id}:ltv`) * 60_000) * 100,
+    spend: Math.round(6_000 + rnd(`${f.id}:spend`) * 180_000) * 100,
+    orders: lastPurchaseDaysAgo === null ? 0 : 1 + (hash(`${f.id}:orders`) % 9),
+    churn:
+      lastPurchaseDaysAgo !== null &&
+      lastPurchaseDaysAgo > CHURN_WINDOW_DAYS &&
+      (lastVisitDaysAgo === null || lastVisitDaysAgo > CHURN_WINDOW_DAYS),
     app_user: rnd(`${f.id}:app`) > 0.4,
     consent_marketing: rnd(`${f.id}:mkt`) > 0.35,
   };
 }
+
+/** AN-004 churn window, as the API defines it (`analytics.farmers.CHURN_WINDOW_DAYS`). */
+const CHURN_WINDOW_DAYS = 90;
 
 function farmerRow(f: Farmer, to: string) {
   const x = farmerFacts(f, to);
@@ -1011,6 +1021,9 @@ function farmerRow(f: Farmer, to: string) {
     overdue_paise: x.overdue,
     credit_risk: x.risk,
     ltv_paise: x.ltv,
+    spend_paise: x.spend,
+    orders: x.orders,
+    churn_risk: x.churn,
     app_user: x.app_user,
     consent_marketing: x.consent_marketing,
   };
@@ -1260,9 +1273,17 @@ function farmer360(f: Farmer, sc: Scope) {
       proxy: "refresh_token_issuance",
     },
     ltv_paise: x.ltv,
+    spend_paise: x.spend,
     last_visit_at: visits[0]!.checkin_at,
     last_purchase_at: orders[0]!.placed_at,
     active: true,
+    churn_risk: {
+      at_risk: x.churn,
+      window_days: CHURN_WINDOW_DAYS,
+      days_since_last_purchase: x.lastPurchaseDaysAgo,
+      days_since_last_visit: x.lastVisitDaysAgo,
+      orders: x.orders,
+    },
     notes: { diagnoses: "pending_m6_diagnosis" },
   };
 }
@@ -1279,6 +1300,7 @@ function storeRow(s: Store, sc: Scope) {
   const { sale, cogs, margin } = storeFigures(s, sc, dayList(sc.from, sc.to));
   const lvl = storeLevels(s.id, sc.to);
   const lastClose = addDays(sc.to, weekday(sc.to) === 0 ? -1 : 0);
+  const stockValue = Math.round((8_00_000 + rnd(`${s.id}:stock`) * 20_00_000) * 100);
   return {
     id: s.id,
     code: s.code,
@@ -1291,14 +1313,20 @@ function storeRow(s: Store, sc: Scope) {
     gross_margin_pct: sale.revenue ? Math.round((margin / sale.revenue) * 1000) / 1000 : null,
     own_brand_share: sale.revenue ? Math.round((sale.own / sale.revenue) * 1000) / 1000 : null,
     orders: Math.round(sale.revenue / 1_800_00),
-    stock_value_paise: Math.round((8_00_000 + rnd(`${s.id}:stock`) * 20_00_000) * 100),
+    stock_value_paise: stockValue,
+    stock_turns_annualised: stockValue
+      ? Math.round(((cogs / stockValue) * 365 * 10_000) / sc.days) / 10_000
+      : null,
+    stockouts: hash(`${s.id}:so`) % 4,
     credit_outstanding_paise: lvl.outstanding,
     credit_overdue_paise: lvl.overdue,
+    credit_overdue_buckets: lvl.buckets,
     last_day_close: {
       business_date: lastClose,
       variance_paise: Math.round((rnd(`${s.id}:${lastClose}:var`) - 0.5) * 1_200) * 100,
       status: "closed",
     },
+    day_close_variance_paise: Math.round((rnd(`${s.id}:rangevar`) - 0.5) * 9_000) * 100,
   };
 }
 
@@ -1369,6 +1397,43 @@ function storeDetail(s: Store, sc: Scope) {
   const turns = row.stock_value_paise
     ? Math.round((row.cogs_paise / row.stock_value_paise) * 100) / 100
     : null;
+  // AN-005: sales by brand — the own-brand range against the multi-brand names it sits next to.
+  const multi = row.net_sales_paise - own;
+  const multiBrands = ["Bayer", "Syngenta", "UPL", "Coromandel"];
+  const mw = multiBrands.map((b) => 0.3 + rnd(`${s.id}:${b}`));
+  const mwSum = mw.reduce((a, b) => a + b, 0);
+  const salesByBrand = [
+    {
+      brand: "FCC",
+      own_brand: true,
+      net_sales_paise: own,
+      gross_margin_paise: Math.round(own * 0.28),
+      gross_margin_pct: 0.28,
+      share: row.net_sales_paise ? Math.round((own / row.net_sales_paise) * 1000) / 1000 : null,
+    },
+    ...multiBrands.map((brand, i) => {
+      const net = Math.round((multi * mw[i]!) / mwSum);
+      return {
+        brand,
+        own_brand: false,
+        net_sales_paise: net,
+        gross_margin_paise: Math.round(net * 0.14),
+        gross_margin_pct: 0.14,
+        share: row.net_sales_paise ? Math.round((net / row.net_sales_paise) * 1000) / 1000 : null,
+      };
+    }),
+  ].sort((a, b) => b.net_sales_paise - a.net_sales_paise);
+  const stockouts = [
+    { sku_id: "sku-imida-100", product_name: "FCC Imida", pack: "100 ml" },
+    { sku_id: "sku-urea-45", product_name: "Neem-coated urea", pack: "45 kg" },
+    { sku_id: "sku-mancozeb-500", product_name: "FCC Mancozeb", pack: "500 g" },
+  ]
+    .slice(0, row.stockouts === 0 ? 0 : row.stockouts)
+    .map((sku, i) => ({
+      ...sku,
+      days_out_of_stock: 1 + (hash(`${s.id}:${sku.sku_id}`) % Math.max(1, Math.min(sc.days, 12))),
+      currently_out: i === 0,
+    }));
   return {
     filters: sc.echo,
     id: s.id,
@@ -1381,6 +1446,7 @@ function storeDetail(s: Store, sc: Scope) {
     gross_margin_paise: row.gross_margin_paise,
     gross_margin_pct: row.gross_margin_pct,
     sales_by_category: salesByCategory,
+    sales_by_brand: salesByBrand,
     brand_split: {
       own_brand_paise: own,
       multi_brand_paise: row.net_sales_paise - own,
@@ -1393,10 +1459,8 @@ function storeDetail(s: Store, sc: Scope) {
       skus_in_stock: 80 + (hash(s.id) % 60),
       turns,
       turns_annualised: turns === null ? null : Math.round(((turns * 365) / sc.days) * 10) / 10,
-      stockouts: [
-        { sku_id: "sku-imida-100", product_name: "FCC Imida", pack: "100 ml" },
-        { sku_id: "sku-urea-45", product_name: "Neem-coated urea", pack: "45 kg" },
-      ].slice(0, 1 + (hash(s.id) % 2)),
+      stockout_days: stockouts.reduce((a, b) => a + b.days_out_of_stock, 0),
+      stockouts,
     },
     credit_book: {
       outstanding_paise: lvl.outstanding,
@@ -1411,7 +1475,299 @@ function storeDetail(s: Store, sc: Scope) {
   };
 }
 
+// ---- AN-004 segments -------------------------------------------------------------------------
+interface SegmentDef {
+  crop_ids?: string[];
+  stages?: string[];
+  districts?: string[];
+  store_ids?: string[];
+  min_acres?: number;
+  max_acres?: number;
+  min_spend_paise?: number;
+  no_purchase_within_days?: number;
+  visited_within_days?: number;
+  not_visited_within_days?: number;
+  app_user?: boolean;
+  app_active_within_days?: number;
+  languages?: string[];
+}
+
+interface SavedSegmentRow {
+  id: string;
+  name: string;
+  description: string | null;
+  definition: SegmentDef;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  last_count: number | null;
+  last_counted_at: string | null;
+  version: number;
+}
+
+const ACREAGE_BANDS: Array<[string, number, number | null]> = [
+  ["under_2", 0, 2],
+  ["2_5", 2, 5],
+  ["5_10", 5, 10],
+  ["over_10", 10, null],
+];
+const SPEND_BANDS: Array<[string, number, number | null]> = [
+  ["none", 0, 1],
+  ["under_5k", 1, 500_000],
+  ["5k_25k", 500_000, 2_500_000],
+  ["25k_1l", 2_500_000, 10_000_000],
+  ["over_1l", 10_000_000, null],
+];
+
+const savedSegments: SavedSegmentRow[] = [
+  {
+    id: "seg-paddy-lapsed",
+    name: "Paddy growers who stopped buying",
+    description: "Paddy, no purchase in 90 days — the kharif win-back list.",
+    definition: { crop_ids: ["crop-paddy"], no_purchase_within_days: 90 },
+    created_by: null,
+    created_at: istAt(addDays(todayIst(), -21), 10, 0),
+    updated_at: istAt(addDays(todayIst(), -21), 10, 0),
+    last_count: 184,
+    last_counted_at: istAt(addDays(todayIst(), -21), 10, 0),
+    version: 1,
+  },
+  {
+    id: "seg-app-actives",
+    name: "App users, 5 acres and up",
+    description: null,
+    definition: { app_user: true, min_acres: 5 },
+    created_by: null,
+    created_at: istAt(addDays(todayIst(), -6), 10, 0),
+    updated_at: istAt(addDays(todayIst(), -2), 10, 0),
+    last_count: 96,
+    last_counted_at: istAt(addDays(todayIst(), -2), 10, 0),
+    version: 2,
+  },
+];
+
+function band(value: number, bands: Array<[string, number, number | null]>): string {
+  for (const [key, low, high] of bands)
+    if (value >= low && (high === null || value < high)) return key;
+  return bands[bands.length - 1]![0];
+}
+
+function matchesSegment(f: Farmer, x: ReturnType<typeof farmerFacts>, d: SegmentDef): boolean {
+  if (d.crop_ids?.length && !d.crop_ids.some((c) => f.crop_ids.includes(c))) return false;
+  if (d.stages?.length && !d.stages.includes(f.stage)) return false;
+  if (d.districts?.length && !d.districts.includes(f.district)) return false;
+  if (d.store_ids?.length && !d.store_ids.includes(f.store_id)) return false;
+  if (d.min_acres !== undefined && f.acres < d.min_acres) return false;
+  if (d.max_acres !== undefined && f.acres > d.max_acres) return false;
+  if (d.min_spend_paise !== undefined && x.spend < d.min_spend_paise) return false;
+  if (
+    d.no_purchase_within_days !== undefined &&
+    x.lastPurchaseDaysAgo !== null &&
+    x.lastPurchaseDaysAgo <= d.no_purchase_within_days
+  )
+    return false;
+  if (
+    d.visited_within_days !== undefined &&
+    (x.lastVisitDaysAgo === null || x.lastVisitDaysAgo > d.visited_within_days)
+  )
+    return false;
+  if (
+    d.not_visited_within_days !== undefined &&
+    x.lastVisitDaysAgo !== null &&
+    x.lastVisitDaysAgo <= d.not_visited_within_days
+  )
+    return false;
+  if (d.app_user !== undefined && x.app_user !== d.app_user) return false;
+  if (d.app_active_within_days !== undefined && !x.app_user) return false;
+  return true;
+}
+
+const visitWindow = (days: number | null): string =>
+  days === null ? "never" : days <= 7 ? "7d" : days <= 30 ? "30d" : days <= 90 ? "90d" : "over_90d";
+
+function facets(counts: Map<string, number>, order?: readonly string[]) {
+  const keys =
+    order ?? [...counts.keys()].sort((a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0));
+  return keys.map((key) => ({ key, count: counts.get(key) ?? 0 }));
+}
+
+function segmentPreview(sc: Scope, definition: SegmentDef) {
+  const rows = farmersInScope(sc, new URLSearchParams())
+    .map((f) => ({ f, x: farmerFacts(f, sc.to) }))
+    .filter(({ f, x }) => matchesSegment(f, x, definition));
+  const bump = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1);
+  const crop = new Map<string, number>();
+  const district = new Map<string, number>();
+  const stage = new Map<string, number>();
+  const acreage = new Map<string, number>();
+  const spend = new Map<string, number>();
+  const visits = new Map<string, number>();
+  const consent = new Map<string, number>();
+  const app = new Map<string, number>();
+  let ltv = 0;
+  let spendTotal = 0;
+  let churn = 0;
+  let consented = 0;
+  let appUsers = 0;
+  for (const { f, x } of rows) {
+    for (const c of f.crop_ids) bump(crop, c.replace("crop-", ""));
+    bump(district, f.district);
+    bump(stage, f.stage);
+    bump(acreage, band(f.acres, ACREAGE_BANDS));
+    bump(spend, band(x.spend, SPEND_BANDS));
+    bump(visits, visitWindow(x.lastVisitDaysAgo));
+    bump(consent, x.consent_marketing ? "granted" : "withheld");
+    bump(app, x.app_user ? "app_user" : "no_app");
+    ltv += x.ltv;
+    spendTotal += x.spend;
+    churn += x.churn ? 1 : 0;
+    consented += x.consent_marketing ? 1 : 0;
+    appUsers += x.app_user ? 1 : 0;
+  }
+  return {
+    filters: sc.echo,
+    definition,
+    matched: rows.length,
+    consented,
+    excluded_no_consent: rows.length - consented,
+    app_users: appUsers,
+    churn_risk: churn,
+    churn_window_days: CHURN_WINDOW_DAYS,
+    ltv_paise: ltv,
+    spend_paise: spendTotal,
+    by_crop: facets(crop),
+    by_district: facets(district),
+    by_stage: facets(stage),
+    by_acreage_band: facets(
+      acreage,
+      ACREAGE_BANDS.map(([k]) => k),
+    ),
+    by_spend_band: facets(
+      spend,
+      SPEND_BANDS.map(([k]) => k),
+    ),
+    by_last_visit: facets(visits, ["7d", "30d", "90d", "over_90d", "never"]),
+    by_consent: facets(consent, ["granted", "withheld"]),
+    by_app_usage: facets(app, ["app_user", "no_app"]),
+  };
+}
+
+function churnList(sc: Scope, days: number, limit: number) {
+  const rows = farmersInScope(sc, new URLSearchParams())
+    .map((f) => ({ f, x: farmerFacts(f, sc.to) }))
+    .filter(
+      ({ x }) =>
+        x.orders > 0 &&
+        x.lastPurchaseDaysAgo !== null &&
+        x.lastPurchaseDaysAgo > days &&
+        (x.lastVisitDaysAgo === null || x.lastVisitDaysAgo > days),
+    )
+    .sort((a, b) => b.x.ltv - a.x.ltv);
+  return {
+    filters: sc.echo,
+    window_days: days,
+    total: rows.length,
+    items: rows.slice(0, limit).map(({ f, x }) => ({
+      id: f.id,
+      name: f.name,
+      phone_masked: `*********${f.phone.slice(-4)}`,
+      village: f.village,
+      district: f.district,
+      store_id: f.store_id,
+      registered_by: f.registered_by,
+      crops: f.crop_ids.map((c) => c.replace("crop-", "")),
+      ltv_paise: x.ltv,
+      spend_paise: x.spend,
+      orders: x.orders,
+      last_purchase_at: x.last_purchase_at,
+      last_visit_at: x.last_visit_at,
+      days_since_last_purchase: x.lastPurchaseDaysAgo,
+      days_since_last_visit: x.lastVisitDaysAgo,
+      balance_paise: x.balance,
+      overdue_paise: x.overdue,
+      credit_risk: x.risk,
+      app_user: x.app_user,
+      consent_marketing: x.consent_marketing,
+    })),
+  };
+}
+
 // ---- router ---------------------------------------------------------------------------------
+/** AN-004 `/v1/analytics/segments*` — preview, and CRUD over the in-memory saved segments. */
+function handleSegments(
+  method: string,
+  id: string | undefined,
+  c: string | undefined,
+  query: URLSearchParams,
+  role: string,
+  body: unknown,
+): MockResult {
+  const readRoles = ["owner", "director", "tenant_admin", "auditor", "cluster_head"];
+  const writeRoles = ["owner", "director", "tenant_admin"];
+  const roles =
+    method === "GET" || (method === "POST" && id === "preview") ? readRoles : writeRoles;
+  if (!roles.includes(role)) return problem(403, "forbidden", "Your role cannot do this.");
+  if (id === "preview" && method === "POST") {
+    const sc = resolveScope(role, query);
+    if ("status" in sc) return sc;
+    const definition = ((body as { definition?: SegmentDef } | undefined)?.definition ??
+      {}) as SegmentDef;
+    return ok(segmentPreview(sc, definition));
+  }
+  if (c) return problem(404, "not_found", "No such segment route.");
+  if (!id && method === "GET") return ok({ items: savedSegments });
+  if (!id && method === "POST") {
+    const input = body as { name: string; description?: string | null; definition?: SegmentDef };
+    if (savedSegments.some((s) => s.name.toLowerCase() === input.name.toLowerCase()))
+      return problem(409, "segment_name_taken", "A segment with that name already exists.");
+    const sc = resolveScope(role, query);
+    const count = "status" in sc ? null : segmentPreview(sc, input.definition ?? {}).consented;
+    const row: SavedSegmentRow = {
+      id: `seg-${hash(input.name).toString(16)}`,
+      name: input.name,
+      description: input.description ?? null,
+      definition: input.definition ?? {},
+      created_by: null,
+      created_at: istAt(todayIst(), 10, 0),
+      updated_at: istAt(todayIst(), 10, 0),
+      last_count: count,
+      last_counted_at: count === null ? null : istAt(todayIst(), 10, 0),
+      version: 1,
+    };
+    savedSegments.unshift(row);
+    return { status: 201, json: row };
+  }
+  const found = savedSegments.find((s) => s.id === id);
+  if (!found) return problem(404, "not_found", "Segment not found.");
+  if (method === "GET") return ok(found);
+  if (method === "PATCH") {
+    const patch = body as { name?: string; description?: string | null; definition?: SegmentDef };
+    if (
+      patch.name &&
+      savedSegments.some(
+        (s) => s.id !== found.id && s.name.toLowerCase() === patch.name!.toLowerCase(),
+      )
+    )
+      return problem(409, "segment_name_taken", "A segment with that name already exists.");
+    if (patch.name !== undefined) found.name = patch.name;
+    if (patch.description !== undefined) found.description = patch.description;
+    if (patch.definition !== undefined) {
+      found.definition = patch.definition;
+      const sc = resolveScope(role, query);
+      found.last_count = "status" in sc ? null : segmentPreview(sc, patch.definition).consented;
+      found.last_counted_at = istAt(todayIst(), 10, 0);
+    }
+    found.updated_at = istAt(todayIst(), 10, 0);
+    found.version += 1;
+    return ok(found);
+  }
+  if (method === "DELETE") {
+    savedSegments.splice(savedSegments.indexOf(found), 1);
+    return { status: 204, json: null };
+  }
+  return problem(405, "method_not_allowed", "Not supported.");
+}
+
 /** `/v1/analytics/*` of the mock API; null when the path is not an analytics route. */
 const TENANT_WIDE = ["owner", "director", "tenant_admin", "auditor", "accountant"];
 
@@ -1456,12 +1812,14 @@ export function handleAnalytics(
   path: string[],
   query: URLSearchParams,
   actor: MockActor | null,
+  body?: unknown,
 ): MockResult | null {
   if (path[0] !== "analytics") return null;
   if (!actor) return problem(401, "unauthenticated", "Bearer token required.");
-  if (method !== "GET") return problem(405, "method_not_allowed", "Read-only.");
   const role = actor.role;
   const [, a, id, c] = path;
+  if (a === "segments") return handleSegments(method, id, c, query, role, body);
+  if (method !== "GET") return problem(405, "method_not_allowed", "Read-only.");
   const gate = (roles: readonly string[], fn: (sc: Scope) => MockResult): MockResult => {
     if (!roles.includes(role)) return problem(403, "forbidden", "Your role cannot read this view.");
     const sc = resolveScope(role, query);
@@ -1499,6 +1857,16 @@ export function handleAnalytics(
   if (a === "stores" && !id)
     return gate(STORE_ROLES, (sc) =>
       ok({ filters: sc.echo, items: sc.stores.map((s) => storeRow(s, sc)) }),
+    );
+  if (a === "farmers-churn-risk" && !id)
+    return gate(FARMER_ROLES, (sc) =>
+      ok(
+        churnList(
+          sc,
+          Number(query.get("days") ?? CHURN_WINDOW_DAYS),
+          Number(query.get("limit") ?? 50),
+        ),
+      ),
     );
   if (a === "stores" && id && !c)
     return gate(STORE_ROLES, (sc) => {

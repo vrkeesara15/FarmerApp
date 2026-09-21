@@ -61,27 +61,35 @@ export interface CropHealthFilters {
 
 // ---- AN-007 diagnosis quality ------------------------------------------------------------------
 
+/** One crop's slice of a DX-011 run (the console plots accuracy per crop over time). */
+export interface EvaluationCrop {
+  crop_code: string;
+  cases: number;
+  correct: number;
+  top1_accuracy: number | null;
+}
+
+/** A DX-011 nightly evaluation run (`GET /v1/diagnoses/evaluations`). */
 export interface EvaluationRun {
   id: string;
-  model_name: string | null;
-  model_version: string | null;
-  ran_at: string;
   status: string;
+  manifest: string;
+  started_at: string;
+  finished_at: string | null;
+  /** The encoder the decision path ran with (e.g. `clip-vit-b32@1`). */
+  encoder: string | null;
+  llm: string | null;
+  corpus_version: number | null;
   cases: number;
   top1_accuracy: number | null;
   corpus_answer_share: number | null;
   escalation_rate: number | null;
-  hallucinated_out_of_scope: number | null;
+  hallucinated_out_of_scope: number;
+  previous_run_id: string | null;
   top1_delta_points: number | null;
   alerted: boolean;
-  per_crop?: Array<{
-    crop_id: string | null;
-    crop_code: string;
-    cases: number;
-    top1_accuracy: number;
-  }>;
-  per_problem?: Array<{ problem_code: string; cases: number; top1_accuracy: number }>;
-  error?: string | null;
+  crops: EvaluationCrop[];
+  error: string | null;
 }
 
 export interface QualityUnknown {
@@ -113,6 +121,41 @@ export interface DiagnosisQuality {
   };
   top_unknowns: QualityUnknown[];
   latest_evaluation: EvaluationRun | null;
+  /** DX-011: a top-1 drop of more than this many points against the previous run alerts. */
+  evaluation_alert_drop_points: number;
+}
+
+/** How many nightly runs the C62 accuracy trend draws. */
+export const EVALUATION_TREND_RUNS = 10;
+
+/** The crop codes present across runs, most-tested first (the trend's series). */
+export function trendCrops(runs: ReadonlyArray<EvaluationRun>, limit = 6): string[] {
+  const cases = new Map<string, number>();
+  for (const run of runs)
+    for (const c of run.crops) cases.set(c.crop_code, (cases.get(c.crop_code) ?? 0) + c.cases);
+  return [...cases.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, limit)
+    .map(([code]) => code);
+}
+
+/** Oldest run first, one point per run: `{ run, started_at, [cropCode]: accuracy }`. */
+export function accuracyTrend(
+  runs: ReadonlyArray<EvaluationRun>,
+  crops: ReadonlyArray<string>,
+): Array<Record<string, string | number | null>> {
+  return [...runs]
+    .sort((a, b) => a.started_at.localeCompare(b.started_at))
+    .map((run) => {
+      const byCrop = new Map(run.crops.map((c) => [c.crop_code, c.top1_accuracy]));
+      const point: Record<string, string | number | null> = {
+        id: run.id,
+        started_at: run.started_at,
+        overall: run.top1_accuracy,
+      };
+      for (const code of crops) point[code] = byCrop.get(code) ?? null;
+      return point;
+    });
 }
 
 // ---- DX-012 model releases ----------------------------------------------------------------------

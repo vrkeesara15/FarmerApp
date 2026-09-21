@@ -1,7 +1,9 @@
 """AN-014 guard: the Datastream column allowlist, the dbt sources and the fixtures agree.
 
   1. infra/modules/analytics/replicated_columns.json (what Datastream replicates) must list
-     exactly the tables and columns of models/staging/_sources.yml (what dbt reads).
+     exactly the tables and columns of models/staging/_sources.yml (what dbt reads), plus the
+     tables of PENDING_REPLICATION below, whose allowlist entry lands with their Terraform
+     change (they are checked like any other table).
   2. The allowlist never contains a PII column (names of people, phones, landmarks, points,
      notes, token hashes, device ids, evidence).
   3. Every fixture seed (seeds/raw/public_<t>.csv) has the allowlisted columns plus the
@@ -41,10 +43,33 @@ PERSON_TABLES = {"user", "farmer"}
 SEED_TEST_PII = {"farmer": {"name", "phone"}, "user": {"name", "phone"}}
 DS_META = {"_ds_uuid", "_ds_source_timestamp"}
 
+# Tables dbt already reads whose entry in replicated_columns.json lands with the Terraform
+# change that adds them to the stream (AN-008 campaigns, WC-008). They are checked here exactly
+# like a replicated table -- same columns in _sources.yml and in the fixture seed, no PII column
+# -- but they are not yet expected in the allowlist. Move a table into replicated_columns.json
+# (removing it from here) with the Datastream stream update; this dict must end up empty.
+PENDING_REPLICATION = {
+    "campaign": [
+        "id", "tenant_id", "channel", "status", "template_key", "scheduled_at", "started_at",
+        "finished_at", "attribution_days", "holdout_pct", "audience_size", "created_by",
+        "created_at", "updated_at", "deleted_at",
+    ],
+    "campaign_recipient": [
+        "id", "tenant_id", "campaign_id", "farmer_id", "arm", "language", "status",
+        "skip_reason", "sent_at", "delivered_at", "opened_at",
+        "created_at", "updated_at", "deleted_at",
+    ],
+}
+
 
 def main() -> int:
     errors: list[str] = []
     allow = {k: v for k, v in json.loads(ALLOWLIST.read_text()).items() if not k.startswith("_")}
+    for t, cols in PENDING_REPLICATION.items():
+        if t in allow:
+            errors.append(f"{t}: now replicated -- drop it from PENDING_REPLICATION in this script")
+        else:
+            allow[t] = cols
 
     sources = yaml.safe_load(SOURCES.read_text())
     tables = {

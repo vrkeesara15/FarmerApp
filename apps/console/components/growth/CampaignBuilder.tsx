@@ -30,6 +30,7 @@ import {
   type DraftIssue,
 } from "@/lib/campaigns";
 import { formatNumber } from "@/lib/format";
+import { useSavedSegments } from "@/lib/hooks/analytics";
 import {
   useCampaign,
   useCreateCampaign,
@@ -42,7 +43,6 @@ import { problemMessage } from "@/lib/problem-messages";
 import { Choice, LinkButton, NumberField, Note, TextField } from "./common";
 import { PhonePreview } from "./PhonePreview";
 import { SegmentBuilder } from "./SegmentBuilder";
-import { readStoredSegment } from "./SegmentsView";
 
 const EMPTY: CampaignDraft = {
   name: "",
@@ -83,15 +83,22 @@ function Builder() {
   const [error, setError] = React.useState<string | undefined>();
   const loadedId = React.useRef<string | null>(null);
 
-  // A segment handed over by C32 (?from=segment) seeds the builder once.
-  const fromSegment = params?.get("from") === "segment";
+  // A saved segment handed over by C32 (?segment=<id>, AN-004) seeds the builder once. The
+  // campaign takes a copy, so editing the saved segment later never rewrites what was sent.
+  const savedSegmentId = params?.get("segment") ?? null;
+  const savedSegments = useSavedSegments(!!savedSegmentId);
   const seeded = React.useRef(false);
   React.useEffect(() => {
-    if (!fromSegment || seeded.current) return;
+    if (!savedSegmentId || seeded.current) return;
+    const row = savedSegments.data?.items.find((s) => s.id === savedSegmentId);
+    if (!row) return;
     seeded.current = true;
-    const stored = readStoredSegment();
-    if (stored) setDraft((d) => ({ ...d, segment: stored }));
-  }, [fromSegment]);
+    setDraft((d) => ({
+      ...d,
+      name: d.name || row.name,
+      segment: row.definition as CampaignSegment,
+    }));
+  }, [savedSegmentId, savedSegments.data]);
 
   // A draft opened from C80 (or created here) fills the form once.
   React.useEffect(() => {

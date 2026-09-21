@@ -62,7 +62,7 @@ pro-rata order discount, cost from the sold batch else the store's average batch
 `fct_visit` (verified, confirmed, time on farm, 30-day conversion), `int_flag_officer`.
 
 **Marts** — SPEC 5.2 definitions, mirroring `apps/api/farmerapp/analytics/kpi.py` (and
-`khata/aging.py`, `analytics/stores.py`, `analytics/field_team.py`):
+`khata/aging.py`, `analytics/stores.py`, `analytics/field_team.py`, `campaigns/service.py`):
 
 | Mart | Dashboard | Grain | KPIs |
 |---|---|---|---|
@@ -79,7 +79,7 @@ pro-rata order discount, cost from the sold batch else the store's average batch
 | `mart_crop_health_weekly` | AN-006 | district x crop x problem x ISO week | confirmed cases, farmers, prior-4-week average, outbreak alert |
 | `mart_diagnosis_quality_weekly` | AN-007 | tenant x ISO week | corpus share, escalation rate, review SLA (24 h), avg review hours; `test_set_accuracy` NULL until DX-011 results are published |
 | `mart_diagnosis_unknowns` | AN-007 | week x crop x reason | out-of-scope cases (top unknowns) |
-| `mart_campaign_roi` | AN-008 | campaign x channel x week | **placeholder with no rows until WC-008** |
+| `mart_campaign_roi` | AN-008 | campaign x channel x ISO week | sent, delivered, opened (push), attributed orders / revenue, own-brand lift vs the holdout arm |
 | `mart_flags_weekly` | AN-009 | rule x ISO week | raised, high, open, resolved, avg resolution hours, true / false positives |
 | `mart_flag_repeat_offenders` | AN-009 | officer (>= 2 flags / 90 d) | flags, open, rules |
 
@@ -100,7 +100,8 @@ IST; `ci` pins the fixture date 2026-09-15.
   values computed by hand from `seeds/raw` (the arithmetic is in each test's header). They cover
   CDC dedup (older versions of an order, a visit, a user, a tenant), soft deletes, the IST day
   boundary, pro-rata discounts, average-cost fallback, FIFO ageing with harvest-month and
-  tenant-default due dates, the 60-day active window and 30-day conversion window.
+  tenant-default due dates, the 60-day active window, the 30-day conversion window and the
+  last-touch campaign attribution window (AN-008, target vs holdout arm).
 * **AN-013**: `tests/an013_row_scopes_hold.sql` (every target, real data included) fails on any
   view row outside its viewer's tenant, cluster, store or role; `tests/fixture_an013_viewer_mapping.sql`
   pins exactly which stores each fixture viewer sees.
@@ -158,6 +159,9 @@ BigQuery client must add it on every query (to be enforced in the console wiring
 ## Replicate a new table or column
 
 Add it to `infra/modules/analytics/replicated_columns.json` **and** `models/staging/_sources.yml`
-(and the seed header), never a PII column; `scripts/check_replication.py` fails otherwise. After
+(and the seed header), never a PII column; `scripts/check_replication.py` fails otherwise. A table
+dbt models before its Terraform change lands sits in that script's `PENDING_REPLICATION` (today:
+`campaign`, `campaign_recipient` for AN-008) — it is checked like any other table, and moving it to
+`replicated_columns.json` with the stream update is what empties the dict. After
 the Terraform apply, re-run `python3 infra/scripts/datastream_sql.py --part owner` on the
 instance (grants, policy, publication: `docs/runbooks/datastream-cdc-setup.md`).

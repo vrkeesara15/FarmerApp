@@ -138,47 +138,69 @@ function cropHealth(weeks: number, district: string | null, cropId: string | nul
 
 interface Evaluation {
   id: string;
-  model_name: string;
-  model_version: string;
-  ran_at: string;
   status: string;
+  manifest: string;
+  started_at: string;
+  finished_at: string | null;
+  encoder: string | null;
+  llm: string | null;
+  corpus_version: number | null;
   cases: number;
   top1_accuracy: number | null;
   corpus_answer_share: number | null;
   escalation_rate: number | null;
-  hallucinated_out_of_scope: number | null;
+  hallucinated_out_of_scope: number;
+  previous_run_id: string | null;
   top1_delta_points: number | null;
   alerted: boolean;
-  per_crop: Json[];
-  per_problem: Json[];
+  crops: Json[];
+  per_crop: Json;
+  per_problem: Json;
   error: string | null;
 }
 
 function evaluation(n: number, version: string, accuracy: number, delta: number): Evaluation {
+  const round = (v: number) => Math.round(v * 1000) / 1000;
+  const perCrop = Object.fromEntries(
+    CROPS.map((c, i) => [
+      c.code,
+      {
+        cases: 140 - i * 20,
+        correct: Math.round((140 - i * 20) * round(accuracy + (i - 1) * 0.04)),
+        top1_accuracy: round(accuracy + (i - 1) * 0.04),
+      },
+    ]),
+  );
   return {
     id: `eval-${String(n).padStart(4, "0")}`,
-    model_name: "farmerapp-ondevice",
-    model_version: version,
-    ran_at: iso(-n * D),
-    status: "completed",
+    status: "ok",
+    manifest: `gs://farmerapp-corpus/eval/${version}/manifest.csv`,
+    started_at: iso(-n * D),
+    finished_at: iso(-n * D + 900_000),
+    encoder: "clip-vit-b32@1",
+    llm: "gemini-1.5-flash",
+    corpus_version: 40 + n,
     cases: 420,
     top1_accuracy: accuracy,
     corpus_answer_share: 0.62,
     escalation_rate: 0.18,
     hallucinated_out_of_scope: 3,
+    previous_run_id: null,
     top1_delta_points: delta,
     alerted: delta < -5,
-    per_crop: CROPS.map((c, i) => ({
-      crop_id: c.id,
+    crops: CROPS.map((c, i) => ({
       crop_code: c.code,
       cases: 140 - i * 20,
-      top1_accuracy: Math.round((accuracy + (i - 1) * 0.04) * 1000) / 1000,
+      correct: Math.round((140 - i * 20) * round(accuracy + (i - 1) * 0.04)),
+      top1_accuracy: round(accuracy + (i - 1) * 0.04),
     })),
-    per_problem: PROBLEMS.map((p, i) => ({
-      problem_code: p.code,
-      cases: 90 - i * 15,
-      top1_accuracy: Math.round((accuracy - i * 0.03) * 1000) / 1000,
-    })),
+    per_crop: perCrop as unknown as Json,
+    per_problem: Object.fromEntries(
+      PROBLEMS.map((p, i) => [
+        p.code,
+        { cases: 90 - i * 15, top1_accuracy: round(accuracy - i * 0.03) },
+      ]),
+    ) as unknown as Json,
     error: null,
   };
 }
@@ -226,6 +248,7 @@ function quality(days: number): Json {
       { crop_id: "crop-chilli", crop_code: "chilli", reason: "no_match", cases: 4 },
     ],
     latest_evaluation: db.evaluations[0],
+    evaluation_alert_drop_points: 5,
   };
 }
 

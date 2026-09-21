@@ -310,7 +310,13 @@ export interface FarmerRow {
   balance_paise: number;
   overdue_paise: number;
   credit_risk: CreditRisk;
+  /** SPEC 5.2 farmer LTV: cumulative gross margin. */
   ltv_paise: number;
+  /** Cumulative net sales to the farmer. */
+  spend_paise: number;
+  orders: number;
+  /** AN-004: bought before, but no purchase and no visit in the churn window. */
+  churn_risk: boolean;
   app_user: boolean;
   consent_marketing: boolean;
 }
@@ -431,10 +437,21 @@ export interface Farmer360Out {
     proxy: string;
   };
   ltv_paise: number;
+  spend_paise: number;
   last_visit_at: string | null;
   last_purchase_at: string | null;
   active: boolean;
+  churn_risk: ChurnRisk;
   notes: Record<string, string>;
+}
+
+/** AN-004 churn risk of one farmer, with the numbers behind the flag. */
+export interface ChurnRisk {
+  at_risk: boolean;
+  window_days: number;
+  days_since_last_purchase: number | null;
+  days_since_last_visit: number | null;
+  orders: number;
 }
 
 // ---- C40 / C41 stores --------------------------------------------------------------------
@@ -451,9 +468,16 @@ export interface StoreRow {
   own_brand_share: number | null;
   orders: number;
   stock_value_paise: number;
+  /** AN-005: COGS over the range / stock at cost, scaled to a year. */
+  stock_turns_annualised: number | null;
+  /** SKUs the store has stocked whose on-hand is now zero. */
+  stockouts: number;
   credit_outstanding_paise: number;
   credit_overdue_paise: number;
+  credit_overdue_buckets: Record<string, number>;
   last_day_close: { business_date: string; variance_paise: number; status: string } | null;
+  /** Summed day-close variance over the range. */
+  day_close_variance_paise: number;
 }
 
 export interface StoreListOut {
@@ -491,6 +515,15 @@ export interface StoreDetailOut {
     gross_margin_paise: number;
     share: number | null;
   }>;
+  /** AN-005 sales by brand, biggest first. */
+  sales_by_brand: Array<{
+    brand: string;
+    own_brand: boolean;
+    net_sales_paise: number;
+    gross_margin_paise: number;
+    gross_margin_pct: number | null;
+    share: number | null;
+  }>;
   brand_split: {
     own_brand_paise: number;
     multi_brand_paise: number;
@@ -503,7 +536,15 @@ export interface StoreDetailOut {
     skus_in_stock: number;
     turns: number | null;
     turns_annualised: number | null;
-    stockouts: Array<{ sku_id: string; product_name: string; pack: string }>;
+    /** SKU-days out of stock over the range. */
+    stockout_days: number;
+    stockouts: Array<{
+      sku_id: string;
+      product_name: string;
+      pack: string;
+      days_out_of_stock: number;
+      currently_out: boolean;
+    }>;
   };
   credit_book: {
     outstanding_paise: number;
@@ -522,6 +563,99 @@ export interface StoreDetailOut {
   pnl: PnlMonth[];
   pnl_opex_included?: boolean;
   pnl_note: string;
+}
+
+// ---- C32 segments (AN-004) ---------------------------------------------------------------
+/** The WC-008 segment definition — the same object a campaign is sent to. */
+export interface SegmentDefinition {
+  crop_ids?: string[];
+  stages?: string[];
+  districts?: string[];
+  store_ids?: string[];
+  min_acres?: number;
+  max_acres?: number;
+  purchase_within_days?: number;
+  min_spend_paise?: number;
+  no_purchase_within_days?: number;
+  visited_within_days?: number;
+  not_visited_within_days?: number;
+  app_user?: boolean;
+  app_active_within_days?: number;
+  languages?: string[];
+}
+
+export interface SegmentFacet {
+  key: string;
+  count: number;
+}
+
+export interface SegmentPreviewOut {
+  filters: FiltersOut;
+  definition: SegmentDefinition;
+  matched: number;
+  consented: number;
+  excluded_no_consent: number;
+  app_users: number;
+  churn_risk: number;
+  churn_window_days: number;
+  ltv_paise: number;
+  spend_paise: number;
+  by_crop: SegmentFacet[];
+  by_district: SegmentFacet[];
+  by_stage: SegmentFacet[];
+  by_acreage_band: SegmentFacet[];
+  by_spend_band: SegmentFacet[];
+  by_last_visit: SegmentFacet[];
+  by_consent: SegmentFacet[];
+  by_app_usage: SegmentFacet[];
+}
+
+export interface SavedSegment {
+  id: string;
+  name: string;
+  description: string | null;
+  definition: SegmentDefinition;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  last_count: number | null;
+  last_counted_at: string | null;
+  version: number;
+}
+
+/** Acreage and spend band keys in display order (the API's own order). */
+export const ACREAGE_BANDS = ["under_2", "2_5", "5_10", "over_10"] as const;
+export const SPEND_BANDS = ["none", "under_5k", "5k_25k", "25k_1l", "over_1l"] as const;
+export const SEGMENT_VISIT_WINDOWS = ["7d", "30d", "90d", "over_90d", "never"] as const;
+
+export interface ChurnRow {
+  id: string;
+  name: string;
+  phone_masked: string;
+  village: string;
+  district: string;
+  store_id: string | null;
+  registered_by: string | null;
+  crops: string[];
+  ltv_paise: number;
+  spend_paise: number;
+  orders: number;
+  last_purchase_at: string | null;
+  last_visit_at: string | null;
+  days_since_last_purchase: number | null;
+  days_since_last_visit: number | null;
+  balance_paise: number;
+  overdue_paise: number;
+  credit_risk: CreditRisk;
+  app_user: boolean;
+  consent_marketing: boolean;
+}
+
+export interface ChurnListOut {
+  filters: FiltersOut;
+  window_days: number;
+  total: number;
+  items: ChurnRow[];
 }
 
 /** Overdue buckets in display order (SPEC 5.2). */
@@ -555,4 +689,28 @@ export const analytics = {
   stores: (f: AnalyticsApiFilters) => get<StoreListOut>("stores", f),
   store: (id: string, f: AnalyticsApiFilters) =>
     get<StoreDetailOut>(`stores/${encodeURIComponent(id)}`, f),
+  churnRisk: (f: AnalyticsApiFilters, q: { days?: number; limit?: number } = {}) =>
+    get<ChurnListOut>("farmers-churn-risk", { ...f, ...q }),
+  segmentPreview: (f: AnalyticsApiFilters, definition: SegmentDefinition) =>
+    authedFetch<SegmentPreviewOut>(`v1/analytics/segments/preview${queryString(f)}`, {
+      body: { definition },
+    }),
+  savedSegments: () => authedFetch<{ items: SavedSegment[] }>("v1/analytics/segments"),
+  savedSegment: (id: string) =>
+    authedFetch<SavedSegment>(`v1/analytics/segments/${encodeURIComponent(id)}`),
+  createSegment: (
+    f: AnalyticsApiFilters,
+    body: { name: string; description: string | null; definition: SegmentDefinition },
+  ) => authedFetch<SavedSegment>(`v1/analytics/segments${queryString(f)}`, { body }),
+  updateSegment: (
+    id: string,
+    f: AnalyticsApiFilters,
+    body: { name?: string; description?: string | null; definition?: SegmentDefinition },
+  ) =>
+    authedFetch<SavedSegment>(`v1/analytics/segments/${encodeURIComponent(id)}${queryString(f)}`, {
+      body,
+      method: "PATCH",
+    }),
+  deleteSegment: (id: string) =>
+    authedFetch<void>(`v1/analytics/segments/${encodeURIComponent(id)}`, { method: "DELETE" }),
 };

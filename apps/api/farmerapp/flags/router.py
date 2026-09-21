@@ -3,6 +3,9 @@
 * ``GET /v1/flags`` — newest first, cursor pagination; filters ``status`` / ``severity``
   (repeatable), ``rule_id``, ``subject_type``, ``owner=me`` (owner or watcher), ``overdue``;
   ``counts`` groups the filtered set by severity and by rule (C70 inbox).
+* ``GET /v1/flags/summary`` — AN-009 data quality over the flags raised in the window:
+  volume by rule and subject, median / p90 resolution time, repeat subjects and the VA-006
+  precision per rule. Registered before ``/{id}`` so ``summary`` is not read as a flag id.
 * ``GET /v1/flags/{id}`` — the flag with its evidence bundle (each record with a short
   summary, photos with signed read URLs), history, comments and allowed transitions (C71).
 * ``POST /v1/flags/{id}/transition`` — SPEC 6.1 state machine, 409 ``invalid_transition``.
@@ -67,6 +70,7 @@ from farmerapp.flags.schemas import (
     FlagEventOut,
     FlagOut,
     FlagPage,
+    FlagSummaryOut,
     RuleEnableIn,
     RuleOverrideOut,
     RulePrecisionOut,
@@ -79,6 +83,8 @@ from farmerapp.flags.schemas import (
     SubjectState,
     TransitionIn,
 )
+from farmerapp.flags.summary import DEFAULT_DAYS as DEFAULT_SUMMARY_DAYS
+from farmerapp.flags.summary import flag_summary
 from farmerapp.payments.models import Payment
 from farmerapp.rules.loader import get_rule_set
 from farmerapp.rules.schema import Severity, Subject
@@ -329,6 +335,24 @@ async def list_flags(
             total=sum(by_severity.values()), by_severity=by_severity, by_rule=by_rule
         ),
     )
+
+
+# --------------------------------------------------------------------------- AN-009
+@router.get(
+    "/summary",
+    operation_id="getFlagSummary",
+    summary="AN-009 data quality: volume by rule, resolution time, repeat subjects, precision",
+    response_model=FlagSummaryOut,
+)
+async def flag_summary_route(
+    actor: Annotated[User, require_roles(*REVIEW_ROLES)],
+    session: DbSession,
+    services: Services,
+    days: Annotated[int, Query(ge=1, le=365, description="IST days back (default 90).")] = (
+        DEFAULT_SUMMARY_DAYS
+    ),
+) -> FlagSummaryOut:
+    return await flag_summary(session, actor, now=services.clock.now(), days=days)
 
 
 # --------------------------------------------------------------------------- VA-005

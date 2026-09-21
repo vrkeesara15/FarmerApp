@@ -177,19 +177,21 @@ def _paise(value: Any) -> int:
     return int(Decimal(value).to_integral_value())
 
 
-PRODUCT_KEYS = frozenset({"own_brand", "category"})
+PRODUCT_KEYS = frozenset({"own_brand", "category", "brand"})
+#: Attributes of a SKU whose product row was deleted between the sale and the read.
+UNKNOWN_SKU: tuple[bool, str, str] = (False, "other", "unknown")
 
 
 async def sku_attributes(
     session: AsyncSession, tenant_id: uuid.UUID
-) -> dict[uuid.UUID, tuple[bool, str]]:
-    """``sku_id -> (own_brand, category)`` for the tenant's catalogue."""
+) -> dict[uuid.UUID, tuple[bool, str, str]]:
+    """``sku_id -> (own_brand, category, brand)`` for the tenant's catalogue."""
     rows = await session.execute(
-        select(Sku.id, Product.own_brand, Product.category)
+        select(Sku.id, Product.own_brand, Product.category, Product.brand)
         .join(Product, Product.id == Sku.product_id)
         .where(Sku.tenant_id == tenant_id)
     )
-    return {r[0]: (bool(r[1]), str(r[2])) for r in rows}
+    return {r[0]: (bool(r[1]), str(r[2]), str(r[3])) for r in rows}
 
 
 async def sales_aggregate(
@@ -197,7 +199,7 @@ async def sales_aggregate(
 ) -> list[SalesRow]:
     """Sums of the scoped sales grouped by ``keys``: columns of ``sales_lines`` (``day``,
     ``month``, ``store_id``, ``farmer_id``, ``placed_by``) and the product keys ``own_brand``
-    / ``category``."""
+    / ``category`` / ``brand``."""
     lines = sales_lines(scope, start, end)
     product_keys = [k for k in keys if k in PRODUCT_KEYS]
     sql_keys = [k for k in keys if k not in PRODUCT_KEYS]
@@ -218,8 +220,8 @@ async def sales_aggregate(
     for r in rows:
         values = dict(zip(sql_keys, r[: len(sql_keys)], strict=True))
         if product_keys:
-            own, category = attrs.get(r[len(sql_keys)], (False, "other"))
-            values.update(own_brand=own, category=category)
+            own, category, brand = attrs.get(r[len(sql_keys)], UNKNOWN_SKU)
+            values.update(own_brand=own, category=category, brand=brand)
         key = tuple(values[k] for k in keys)
         acc = totals.setdefault(key, [Decimal(0), Decimal(0), Decimal(0), Decimal(0), 0])
         for i in range(4):
@@ -432,6 +434,85 @@ async def stock_value_by_store(
     return {r[0]: _paise(r[1]) for r in await session.execute(stmt)}
 
 
+async def stock_on_hand(
+    session: AsyncSession, tenant_id: uuid.UUID, store_id: uuid.UUID
+) -> dict[uuid.UUID, tuple[Decimal, int, date]]:
+    """``sku_id -> (on hand now, value at cost in paise, first day stocked)`` for one store.
+
+    ``stock_batch.qty`` is the maintained cache of the ledger (``stock.ledger``), so the
+    current on-hand of a SKU is the sum over its batches; the first day the store stocked it
+    is the IST day of its oldest batch (AN-005 counts stockout days only from then on).
+    """
+    rows = await session.execute(
+        select(
+            StockBatch.sku_id,
+            func.sum(StockBatch.qty),
+            func.sum(StockBatch.qty * StockBatch.cost_paise),
+            func.min(ist_date(StockBatch.created_at)),
+        )
+        .where(
+            StockBatch.tenant_id == tenant_id,
+            StockBatch.store_id == store_id,
+            StockBatch.deleted_at.is_(None),
+        )
+        .group_by(StockBatch.sku_id)
+    )
+    return {r[0]: (r[1] or Decimal(0), _paise(r[2]), r[3]) for r in rows}
+
+
+async def stock_deltas(
+    session: AsyncSession, tenant_id: uuid.UUID, store_id: uuid.UUID, since: datetime
+) -> list[tuple[uuid.UUID, date, Decimal]]:
+    """``(sku_id, IST day, signed qty)`` of the store's ledger movements from ``since`` on.
+
+    The ledger is append-only, so on-hand at the end of an earlier day is the current
+    on-hand minus every movement after it (``stores._stockout_days``).
+    """
+    rows = await session.execute(
+        select(
+            StockMovement.sku_id,
+            ist_date(StockMovement.created_at),
+            func.sum(StockMovement.qty),
+        )
+        .where(
+            StockMovement.tenant_id == tenant_id,
+            StockMovement.store_id == store_id,
+            StockMovement.created_at >= since,
+        )
+        .group_by(StockMovement.sku_id, ist_date(StockMovement.created_at))
+    )
+    return [(r[0], r[1], r[2] or Decimal(0)) for r in rows]
+
+
+async def stockouts_by_store(
+    session: AsyncSession, tenant_id: uuid.UUID, store_ids: Iterable[uuid.UUID]
+) -> dict[uuid.UUID, int]:
+    """SKUs the store has stocked whose on-hand is now zero or less, per store (C40)."""
+    ids = list(store_ids)
+    if not ids:
+        return {}
+    per_sku = (
+        select(
+            StockBatch.store_id.label("store_id"),
+            StockBatch.sku_id.label("sku_id"),
+            func.sum(StockBatch.qty).label("qty"),
+        )
+        .where(
+            StockBatch.tenant_id == tenant_id,
+            StockBatch.deleted_at.is_(None),
+            StockBatch.store_id.in_(ids),
+        )
+        .group_by(StockBatch.store_id, StockBatch.sku_id)
+        .subquery("on_hand")
+    )
+    rows = await session.execute(
+        select(per_sku.c.store_id, func.count())
+        .where(per_sku.c.qty <= 0)
+        .group_by(per_sku.c.store_id)
+    )
+    return {r[0]: int(r[1] or 0) for r in rows}
+
+
 async def write_offs(
     session: AsyncSession, tenant_id: uuid.UUID, store_id: uuid.UUID, start: datetime, end: datetime
 ) -> list[tuple[date, int]]:
@@ -457,6 +538,7 @@ async def write_offs(
 
 __all__ = [
     "FULFILLED",
+    "UNKNOWN_SKU",
     "DutyFact",
     "SalesRow",
     "activity",
@@ -471,7 +553,10 @@ __all__ = [
     "sales_lines_where",
     "sku_attributes",
     "sold_at",
+    "stock_deltas",
+    "stock_on_hand",
     "stock_value_by_store",
+    "stockouts_by_store",
     "tenant_sales_lines",
     "visit_filters",
     "visits",

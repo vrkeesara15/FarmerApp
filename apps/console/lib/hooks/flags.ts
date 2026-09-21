@@ -9,6 +9,7 @@ export const flagKeys = {
   all: ["flags"] as const,
   list: (f: FlagFilters) => ["flags", "list", f] as const,
   detail: (id: string) => ["flags", "detail", id] as const,
+  summary: (days: number) => ["flags", "summary", days] as const,
 };
 
 function useReady(): boolean {
@@ -23,6 +24,16 @@ export function useFlagInbox(filters: FlagFilters, enabled = true) {
     queryFn: ({ pageParam }) => flagsApi.list({ ...filters, cursor: pageParam }),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.next_cursor ?? undefined,
+    enabled: ready && enabled,
+  });
+}
+
+/** AN-009 data quality summary over the flags raised in the last `days` IST days. */
+export function useFlagSummary(days: number, enabled = true) {
+  const ready = useReady();
+  return useQuery({
+    queryKey: flagKeys.summary(days),
+    queryFn: () => flagsApi.summary(days),
     enabled: ready && enabled,
   });
 }

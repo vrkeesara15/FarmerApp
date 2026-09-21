@@ -12,9 +12,16 @@ import { KpiCard } from "@/components/ds/KpiCard";
 import { Skeleton } from "@/components/ds/Skeleton";
 import { PageHeader, QueryError, RoleGate, SessionGate } from "@/components/admin/common";
 import { Note } from "@/components/growth/common";
+import { LineTrend, CHART, CHART_SERIES } from "@/components/analytics/charts";
 import { formatDateTimeIst, formatNumber, formatPercent } from "@/lib/format";
-import { useDiagnosisQuality } from "@/lib/hooks/mlops";
-import { QUALITY_ROLES, type DiagnosisQuality } from "@/lib/mlops";
+import { useDiagnosisQuality, useEvaluations } from "@/lib/hooks/mlops";
+import {
+  accuracyTrend,
+  QUALITY_ROLES,
+  trendCrops,
+  type DiagnosisQuality,
+  type EvaluationRun,
+} from "@/lib/mlops";
 import { useT } from "@/lib/i18n-client";
 import { AgronomistSubNav, ReadOnlyNote, knownLabel, useCropNames } from "./common";
 
@@ -60,6 +67,7 @@ function QualityContent({
   const t = useT();
   const cropName = useCropNames();
   const q = useDiagnosisQuality(days);
+  const runs = useEvaluations();
   const na = t("quality.notAvailable");
 
   return (
@@ -93,7 +101,10 @@ function QualityContent({
       ) : q.error ? (
         <QueryError error={q.error} onRetry={() => void q.refetch()} />
       ) : q.data ? (
-        <Summary data={q.data} cropName={cropName} na={na} />
+        <>
+          <Summary data={q.data} cropName={cropName} na={na} />
+          <AccuracyTrend runs={runs.data?.items ?? []} loading={runs.isLoading} />
+        </>
       ) : null}
     </div>
   );
@@ -245,11 +256,17 @@ function Summary({
             </p>
           ) : (
             <>
-              <p className="text-small text-text-muted">
-                {t("quality.evaluation.ranAt", { when: formatDateTimeIst(ev.ran_at) })} ·{" "}
+              <p className="text-small text-text-muted" data-testid="eval-run">
+                {t("quality.evaluation.ranAt", { when: formatDateTimeIst(ev.started_at) })} ·{" "}
+                {t("quality.evaluation.status", {
+                  status: t(
+                    ev.status === "ok" ? "quality.evaluation.ok" : "quality.evaluation.failed",
+                  ),
+                })}{" "}
+                ·{" "}
                 {t("quality.evaluation.model", {
-                  name: ev.model_name ?? na,
-                  version: ev.model_version ?? na,
+                  encoder: ev.encoder ?? na,
+                  llm: ev.llm ?? na,
                 })}
               </p>
               <div className="grid grid-cols-3 gap-2">
@@ -276,10 +293,14 @@ function Summary({
                   icon={<AlertTriangle className="size-4" aria-hidden="true" />}
                   testId="eval-alert"
                 >
-                  {t("quality.evaluation.alerted")}
+                  {t("quality.evaluation.alerted", { points: s.evaluation_alert_drop_points })}
                 </Note>
-              ) : null}
-              {ev.per_crop?.length ? (
+              ) : (
+                <p className="text-small text-text-muted" data-testid="eval-no-alert">
+                  {t("quality.evaluation.noAlert", { points: s.evaluation_alert_drop_points })}
+                </p>
+              )}
+              {ev.crops.length ? (
                 <table className="w-full text-small">
                   <caption className="sr-only">{t("quality.evaluation.perCrop")}</caption>
                   <thead>
@@ -294,12 +315,12 @@ function Summary({
                     </tr>
                   </thead>
                   <tbody>
-                    {ev.per_crop.map((row) => (
+                    {ev.crops.map((row) => (
                       <tr key={row.crop_code} data-testid="eval-crop-row">
-                        <td>{cropName(row.crop_id ?? null)}</td>
+                        <td>{row.crop_code}</td>
                         <td className="tnum text-right">{formatNumber(row.cases)}</td>
                         <td className="tnum text-right font-semibold">
-                          {formatPercent(row.top1_accuracy, 1)}
+                          {row.top1_accuracy === null ? na : formatPercent(row.top1_accuracy, 1)}
                         </td>
                       </tr>
                     ))}
@@ -355,5 +376,58 @@ function BarList({
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * DX-011 in the console: top-1 accuracy per crop over the last nightly runs, oldest run on the
+ * left. A line per crop is the exception to "bars for comparisons" (SPEC 13.4): this is a
+ * trend over time, which is what lines are for.
+ */
+function AccuracyTrend({
+  runs,
+  loading,
+}: {
+  runs: ReadonlyArray<EvaluationRun>;
+  loading: boolean;
+}) {
+  const t = useT();
+  const crops = React.useMemo(() => trendCrops(runs), [runs]);
+  const points = React.useMemo(() => accuracyTrend(runs, crops), [runs, crops]);
+  const palette = [...CHART_SERIES, CHART.ownBrand, CHART.good, CHART.bad];
+
+  return (
+    <section
+      className="flex flex-col gap-2 rounded-card border border-border bg-surface p-4"
+      data-testid="accuracy-trend"
+    >
+      <h2 className="text-heading font-semibold">{t("quality.trend.title")}</h2>
+      <p className="text-small text-text-muted">{t("quality.trend.help")}</p>
+      {loading ? (
+        <Skeleton announce className="h-64 w-full" />
+      ) : points.length < 2 ? (
+        <p className="text-small text-text-secondary" data-testid="trend-empty">
+          {t("quality.trend.empty")}
+        </p>
+      ) : (
+        <LineTrend
+          label={t("quality.trend.title")}
+          data={points}
+          xKey="started_at"
+          xFormat={(v) => formatDateTimeIst(v).split(",")[0] ?? v}
+          yFormat={(v) => formatPercent(v, 0)}
+          yDomain={[0, 1]}
+          series={[
+            { key: "overall", label: t("quality.trend.overall"), color: CHART.reference },
+            ...crops.map((code, i) => ({
+              key: code,
+              label: code,
+              color: palette[i % palette.length]!,
+            })),
+          ]}
+          height={280}
+        />
+      )}
+    </section>
   );
 }

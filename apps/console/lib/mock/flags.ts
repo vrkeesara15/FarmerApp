@@ -427,6 +427,105 @@ function problem(status: number, code: string, detail?: string, extra?: Json): M
 }
 const ok = (json: unknown, status = 200): MockResult => ({ status, json });
 
+/** AN-009 `GET /v1/flags/summary`: volume by rule, resolution percentiles, repeat subjects. */
+function summary(actor: MockActor, days: number): Json {
+  const since = Date.now() - days * 24 * H;
+  const rows = visible(actor).filter((f) => Date.parse(f.created_at) >= since);
+  const open = (f: MockFlag) => !RESOLVED.includes(f.status);
+  const pct = (values: number[], q: number): number | null => {
+    if (values.length === 0) return null;
+    const sorted = [...values].sort((a, b) => a - b);
+    return (
+      Math.round(
+        sorted[Math.max(0, Math.min(sorted.length - 1, Math.round(q * (sorted.length - 1))))]! *
+          100,
+      ) / 100
+    );
+  };
+  const hours = (f: MockFlag) =>
+    f.resolved_at === null ? null : (Date.parse(f.resolved_at) - Date.parse(f.created_at)) / H;
+  const bySeverity: Record<string, number> = {};
+  const bySubject: Record<string, number> = {};
+  const perRule = new Map<string, MockFlag[]>();
+  const subjects = new Map<string, Json>();
+  for (const f of rows) {
+    bySeverity[f.severity] = (bySeverity[f.severity] ?? 0) + 1;
+    bySubject[f.subject_type] = (bySubject[f.subject_type] ?? 0) + 1;
+    perRule.set(f.rule_id, [...(perRule.get(f.rule_id) ?? []), f]);
+    const key = `${f.subject_type}|${f.subject_id}`;
+    const seen = subjects.get(key) as
+      | { flags: number; open_flags: number; rules: string[]; last_at: string; title: string }
+      | undefined;
+    if (!seen)
+      subjects.set(key, {
+        subject_type: f.subject_type,
+        subject_id: f.subject_id,
+        title: f.title,
+        flags: 1,
+        open_flags: open(f) ? 1 : 0,
+        rules: [f.rule_id],
+        last_at: f.created_at,
+      });
+    else {
+      seen.flags += 1;
+      seen.open_flags += open(f) ? 1 : 0;
+      if (!seen.rules.includes(f.rule_id)) seen.rules.push(f.rule_id);
+      if (f.created_at > seen.last_at) {
+        seen.last_at = f.created_at;
+        seen.title = f.title;
+      }
+    }
+  }
+  const resolvedRows = rows.filter((f) => !open(f));
+  const falsePositives = resolvedRows.filter((f) => LABELS[f.status] === "false_positive").length;
+  const byRule = [...perRule.entries()]
+    .map(([rule_id, list]) => {
+      const done = list.filter((f) => !open(f));
+      const fp = done.filter((f) => LABELS[f.status] === "false_positive").length;
+      const durations = done.map(hours).filter((h): h is number => h !== null);
+      return {
+        rule_id,
+        title: list[0]!.title,
+        total: list.length,
+        open: list.length - done.length,
+        resolved: done.length,
+        false_positives: fp,
+        false_positive_rate: done.length ? Math.round((fp / done.length) * 1000) / 1000 : null,
+        median_resolution_hours: pct(durations, 0.5),
+        p90_resolution_hours: pct(durations, 0.9),
+        precision: done.length
+          ? Math.round(((done.length - fp) / done.length) * 1000) / 1000
+          : null,
+        precision_resolved: done.length,
+      };
+    })
+    .sort((a, b) => b.total - a.total || a.rule_id.localeCompare(b.rule_id));
+  const all = resolvedRows.map(hours).filter((h): h is number => h !== null);
+  return {
+    days,
+    from_date: new Date(since).toISOString().slice(0, 10),
+    to_date: new Date().toISOString().slice(0, 10),
+    total: rows.length,
+    open: rows.filter(open).length,
+    resolved: resolvedRows.length,
+    overdue: rows.filter((f) => open(f) && Date.parse(f.sla_due_at) < Date.now()).length,
+    by_severity: bySeverity,
+    by_subject_type: bySubject,
+    by_rule: byRule,
+    median_resolution_hours: pct(all, 0.5),
+    p90_resolution_hours: pct(all, 0.9),
+    false_positive_rate: resolvedRows.length
+      ? Math.round((falsePositives / resolvedRows.length) * 1000) / 1000
+      : null,
+    repeat_min: 2,
+    repeat_subjects: [...subjects.values()]
+      .filter((s) => (s as { flags: number }).flags >= 2)
+      .sort((a, b) => (b as { flags: number }).flags - (a as { flags: number }).flags),
+    precision_floor: 0.3,
+    precision_window_weeks: 4,
+  };
+}
+
 function visible(actor: MockActor): MockFlag[] {
   if (TENANT_WIDE.includes(actor.role)) return flags;
   if (actor.role === "field_officer")
@@ -516,6 +615,11 @@ export function handleFlags(
   if (!READ.includes(actor.role))
     return problem(403, "forbidden", "Your role does not allow this action.");
   const [, id, action] = path;
+  if (id === "summary" && method === "GET") {
+    if (!REVIEW.includes(actor.role))
+      return problem(403, "forbidden", "Your role does not allow this action.");
+    return ok(summary(actor, Number(query.get("days") ?? 90)));
+  }
   if (!id)
     return method === "GET" ? list(actor, query) : problem(404, "not_found", "No such route.");
   const flag = visible(actor).find((f) => f.id === id);

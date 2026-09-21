@@ -280,7 +280,12 @@
       "creditOverdue": "Credit overdue",
       "creditOverdueRupees": "Credit overdue (₹)",
       "lastVariance": "Last day-close variance",
-      "lastVarianceRupees": "Last day-close variance (₹)"
+      "lastVarianceRupees": "Last day-close variance (₹)",
+      "stockTurns": "Stock turns (yr)",
+      "stockouts": "Stockouts",
+      "rangeVariance": "Day-close variance (range)",
+      "rangeVarianceRupees": "Day-close variance in range (₹)",
+      "bucketRupees": "Overdue {bucket} (₹)"
     }
   },
   "products": {
@@ -1084,7 +1089,13 @@
       "lastSession": "Last app session",
       "sessions": "Sessions in 60 days",
       "proxyNote": "App sessions are counted from sign-in refreshes until app analytics events arrive."
-    }
+    },
+    "creditRisk": "Credit risk: {level}",
+    "churnRisk": "Churn risk ({n} days quiet)",
+    "churnNote": "No purchase for {purchase} days and no visit for {visit} days.",
+    "churnClear": "Bought or visited within the last {n} days.",
+    "spend": "Lifetime spend",
+    "orderCount": "Orders"
   },
   "storeDetail": {
     "title": "Store",
@@ -1132,7 +1143,11 @@
       "partial": "Partial month",
       "partialShort": "partial",
       "opexNote": "Operating expenses (rent, salaries, power) are not included: contribution is gross margin less write-offs."
-    }
+    },
+    "salesByBrand": "Net sales and gross margin by brand",
+    "stockoutDays": "SKU-days out of stock",
+    "stockoutNowDays": "Out of stock now · {n} days in range",
+    "stockoutPastDays": "Back in stock · {n} days out in range"
   },
   "admin": {
     "subnav": "Administration sections",
@@ -1715,11 +1730,21 @@
         "cases": "Cases",
         "accuracy": "Top-1 accuracy"
       },
-      "model": "Model {name} {version}"
+      "model": "Model {name} {version}",
+      "status": "Status: {status}",
+      "ok": "completed",
+      "failed": "failed",
+      "noAlert": "No alert: accuracy did not drop by more than {points} points."
     },
     "nav": {
       "dashboard": "Quality",
       "models": "Model releases"
+    },
+    "trend": {
+      "title": "Top-1 accuracy per crop over time",
+      "help": "One point per nightly run, oldest first. The grey line is the overall accuracy.",
+      "overall": "Overall",
+      "empty": "At least two evaluation runs are needed for a trend."
     }
   },
   "campaigns": {
@@ -1783,7 +1808,9 @@
       "appActiveWithin": "Used the app in the last (days)",
       "clear": "Clear segment",
       "pickCriterion": "Pick at least one criterion to count the audience.",
-      "any": "Any"
+      "any": "Any",
+      "minAcres": "Smallest holding (acres)",
+      "maxAcres": "Largest holding (acres)"
     },
     "consent": {
       "badge": "Consent-only audience",
@@ -2294,25 +2321,80 @@
     "open": "Segments builder",
     "createCampaign": "Create a campaign from this segment",
     "reach": "Reach",
-    "back": "Back to farmers"
+    "back": "Back to farmers",
+    "saved": "Saved segments",
+    "savedEmptyTitle": "No saved segments yet",
+    "savedEmptyHelp": "Build one below and save it; campaigns can be created from it.",
+    "load": "Load",
+    "delete": "Delete",
+    "save": "Save segment",
+    "update": "Update segment",
+    "nameLabel": "Segment name",
+    "namePlaceholder": "Name this segment",
+    "nameTooShort": "Give the segment a name of at least three characters.",
+    "saveFailed": "The segment could not be saved. Try again.",
+    "untitled": "Untitled segment",
+    "column": {
+      "name": "Segment",
+      "reach": "Reach when saved",
+      "updated": "Updated",
+      "actions": "Actions"
+    },
+    "preview": "Segment preview",
+    "previewNote": "{excluded} farmers match but have no marketing consent. Churn risk counts farmers with no purchase and no visit for {days} days.",
+    "matched": "Farmers matched",
+    "consented": "With marketing consent",
+    "churnRisk": "At churn risk",
+    "ltv": "Lifetime value",
+    "appUsers": "App users",
+    "farmers": "Farmers",
+    "byCrop": "Farmers by crop",
+    "byDistrict": "Farmers by district",
+    "byStage": "Farmers by crop stage",
+    "byAcreage": "Farmers by acreage",
+    "bySpend": "Farmers by lifetime spend",
+    "byLastVisit": "Farmers by last visit",
+    "consentAndApp": "Consent and app usage",
+    "consentSummary": "{granted} consented, {withheld} without consent, {app} on the farmer app.",
+    "acreage": {
+      "under_2": "Under 2 acres",
+      "2_5": "2 to 5 acres",
+      "5_10": "5 to 10 acres",
+      "over_10": "Over 10 acres"
+    },
+    "spend": {
+      "none": "Never bought",
+      "under_5k": "Under ₹5,000",
+      "5k_25k": "₹5,000 to ₹25,000",
+      "25k_1l": "₹25,000 to ₹1 lakh",
+      "over_1l": "Over ₹1 lakh"
+    },
+    "consent": {
+      "granted": "Marketing consent",
+      "withheld": "No consent"
+    },
+    "app": {
+      "app_user": "On the farmer app",
+      "no_app": "Not on the app"
+    }
   },
   "dataQuality": {
     "title": "Data quality",
     "subtitle": "Flag volume by rule, how long flags take to resolve and subjects flagged again and again (AN-009).",
-    "sample": "From {n} flags in your inbox scope.",
+    "sample": "From {n} flags raised in the window, in your inbox scope.",
     "volume": "Flags by rule",
     "column": {
       "rule": "Rule",
       "total": "Flags",
       "open": "Open",
       "resolved": "Resolved",
-      "avgHours": "Average resolution",
-      "falsePositives": "False positives"
+      "falsePositives": "False positives",
+      "medianHours": "Median resolution",
+      "p90Hours": "90th percentile",
+      "precision": "Precision"
     },
     "hours": "{n} h",
     "resolution": "Resolution time",
-    "avg": "Average",
-    "median": "Median",
     "falsePositiveRate": "False-positive rate",
     "falsePositiveHelp": "Share of resolved flags closed as “data valid”.",
     "repeat": "Repeat subjects",
@@ -2325,6 +2407,12 @@
     },
     "repeatEmpty": "No subject was flagged more than once.",
     "emptyTitle": "No flags to summarise",
-    "emptyHelp": "Once the validation agents raise flags, their quality shows here."
+    "emptyHelp": "Once the validation agents raise flags, their quality shows here.",
+    "window": "Window",
+    "windowOption": "Last {n} days",
+    "p90": "90th percentile",
+    "overdue": "{n} past the SLA",
+    "bySubject": "Flags by subject",
+    "precisionHelp": "Precision is how often a rule's flags turn out to be real, over the last {weeks} weeks of resolutions; a rule under {floor} is switched off for review (VA-006)."
   }
 }

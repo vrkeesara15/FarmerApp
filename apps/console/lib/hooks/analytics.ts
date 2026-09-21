@@ -6,12 +6,19 @@
  * loads (no flash of empty content). Filter option lists load in parallel with the data.
  */
 import * as React from "react";
-import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   analytics,
   type AnalyticsApiFilters,
   type FarmerDirectoryQuery,
   type ScorecardRow,
+  type SegmentDefinition,
   type StoreRow,
 } from "../analytics";
 import { catalog, type Crop } from "../catalog";
@@ -32,6 +39,11 @@ export const analyticsKeys = {
   farmer360: (id: string, f: AnalyticsApiFilters) => ["analytics", "farmer360", id, f] as const,
   stores: (f: AnalyticsApiFilters) => ["analytics", "stores", f] as const,
   store: (id: string, f: AnalyticsApiFilters) => ["analytics", "store", id, f] as const,
+  segments: () => ["analytics", "segments"] as const,
+  segmentPreview: (f: AnalyticsApiFilters, d: SegmentDefinition) =>
+    ["analytics", "segment-preview", f, d] as const,
+  churnRisk: (f: AnalyticsApiFilters, days: number) =>
+    ["analytics", "churn-risk", f, days] as const,
 };
 
 function useReady(): boolean {
@@ -122,6 +134,73 @@ export function useStoreDetail(id: string, f: AnalyticsApiFilters) {
     queryKey: analyticsKeys.store(id, f),
     queryFn: () => analytics.store(id, f),
     enabled: ready && !!id,
+    placeholderData: keepPreviousData,
+  });
+}
+
+// ---- AN-004 segments -------------------------------------------------------------------------
+/** C32: what a definition selects right now. Disabled while the builder is empty. */
+export function useSegmentPreview(
+  f: AnalyticsApiFilters,
+  definition: SegmentDefinition,
+  enabled = true,
+) {
+  const ready = useReady();
+  return useQuery({
+    queryKey: analyticsKeys.segmentPreview(f, definition),
+    queryFn: () => analytics.segmentPreview(f, definition),
+    enabled: ready && enabled,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useSavedSegments(enabled = true) {
+  const ready = useReady();
+  return useQuery({
+    queryKey: analyticsKeys.segments(),
+    queryFn: analytics.savedSegments,
+    enabled: ready && enabled,
+  });
+}
+
+/** Create, rename / redefine or delete a saved segment; the list refetches after each. */
+export function useSaveSegment(f: AnalyticsApiFilters) {
+  const qc = useQueryClient();
+  const done = () => void qc.invalidateQueries({ queryKey: analyticsKeys.segments() });
+  const create = useMutation({
+    mutationFn: (body: {
+      name: string;
+      description: string | null;
+      definition: SegmentDefinition;
+    }) => analytics.createSegment(f, body),
+    onSuccess: done,
+  });
+  const update = useMutation({
+    mutationFn: ({
+      id,
+      ...body
+    }: {
+      id: string;
+      name?: string;
+      description?: string | null;
+      definition?: SegmentDefinition;
+    }) => analytics.updateSegment(id, f, body),
+    onSuccess: done,
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) => analytics.deleteSegment(id),
+    onSuccess: done,
+  });
+  return { create, update, remove };
+}
+
+/** AN-004 churn-risk list (prior customers with no purchase or visit in `days`). */
+export function useChurnRisk(f: AnalyticsApiFilters, days: number, enabled = true) {
+  const ready = useReady();
+  return useQuery({
+    queryKey: analyticsKeys.churnRisk(f, days),
+    queryFn: () => analytics.churnRisk(f, { days, limit: 50 }),
+    enabled: ready && enabled,
     placeholderData: keepPreviousData,
   });
 }

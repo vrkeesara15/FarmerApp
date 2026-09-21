@@ -242,6 +242,35 @@ function StoreDetail({ id }: { id: string }) {
         </Section>
       </div>
 
+      <Section title={t("storeDetail.salesByBrand")} testId="sales-by-brand">
+        {data ? (
+          data.sales_by_brand.length ? (
+            <BarCompare
+              label={t("storeDetail.salesByBrand")}
+              data={data.sales_by_brand.map((b) => ({
+                brand: b.own_brand ? `${b.brand} (${t("brand.own")})` : b.brand,
+                own: b.own_brand ? 1 : 0,
+                sales: b.net_sales_paise,
+                margin: b.gross_margin_paise,
+              }))}
+              categoryKey="brand"
+              layout="horizontal"
+              series={[
+                { key: "sales", label: t("stores.columns.netSales"), color: CHART_SERIES[0] },
+                { key: "margin", label: t("stores.columns.grossMargin"), color: CHART.reference },
+              ]}
+              colorFor={(r) => (r.own ? CHART.ownBrand : CHART_SERIES[0])}
+              valueFormat={formatInrShort}
+              height={Math.max(220, data.sales_by_brand.length * 40)}
+            />
+          ) : (
+            <EmptyState title={t("storeDetail.noSalesTitle")} help={t("storeDetail.noSalesHelp")} />
+          )
+        ) : (
+          <SectionSkeleton />
+        )}
+      </Section>
+
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Section
           title={t("storeDetail.creditAgeing")}
@@ -288,6 +317,10 @@ function StoreDetail({ id }: { id: string }) {
                 <dd className="tnum text-right">{formatDecimal(data.stock.turns, 2)}</dd>
                 <dt className="text-text-muted">{t("storeDetail.turnsAnnualised")}</dt>
                 <dd className="tnum text-right">{formatDecimal(data.stock.turns_annualised, 1)}</dd>
+                <dt className="text-text-muted">{t("storeDetail.stockoutDays")}</dt>
+                <dd className="tnum text-right" data-testid="stockout-days">
+                  {data.stock.stockout_days}
+                </dd>
               </dl>
               <h3 className="text-small font-semibold text-text-secondary">
                 {t("storeDetail.stockouts", { n: data.stock.stockouts.length })}
@@ -295,9 +328,27 @@ function StoreDetail({ id }: { id: string }) {
               {data.stock.stockouts.length ? (
                 <ul className="flex flex-col gap-1 text-small" data-testid="stockouts">
                   {data.stock.stockouts.map((s) => (
-                    <li key={s.sku_id} className="flex items-center gap-2">
-                      <AlertTriangle className="size-4 text-warning" aria-hidden="true" />
-                      {s.product_name} · {s.pack}
+                    <li key={s.sku_id} className="flex items-start gap-2">
+                      <AlertTriangle
+                        className={cn(
+                          "mt-0.5 size-4 shrink-0",
+                          s.currently_out ? "text-danger" : "text-warning",
+                        )}
+                        aria-hidden="true"
+                      />
+                      <span className="flex flex-col">
+                        <span>
+                          {s.product_name} · {s.pack}
+                        </span>
+                        <span className="tnum text-text-muted">
+                          {t(
+                            s.currently_out
+                              ? "storeDetail.stockoutNowDays"
+                              : "storeDetail.stockoutPastDays",
+                            { n: s.days_out_of_stock },
+                          )}
+                        </span>
+                      </span>
                     </li>
                   ))}
                 </ul>

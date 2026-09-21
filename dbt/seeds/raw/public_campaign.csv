@@ -1,0 +1,8 @@
+id,tenant_id,channel,status,template_key,scheduled_at,started_at,finished_at,attribution_days,holdout_pct,audience_size,created_by,created_at,updated_at,deleted_at,_ds_uuid,_ds_source_timestamp
+c1,t1,sms,sending,dlt_offer_01,2026-09-01 03:30:00,2026-09-01 04:00:00,,14,20,4,u-owner,2026-08-30 06:00:00,2026-09-01 04:00:00,,ds-campaign-1a,1788235200000
+c1,t1,sms,sent,dlt_offer_01,2026-09-01 03:30:00,2026-09-01 04:00:00,2026-09-01 04:10:00,14,20,4,u-owner,2026-08-30 06:00:00,2026-09-01 04:15:00,,ds-campaign-1b,1788236100000
+c2,t1,whatsapp,sent,wa_reminder_01,2026-09-14 04:30:00,2026-09-14 05:00:00,2026-09-14 05:10:00,7,0,2,u-owner,2026-09-13 06:00:00,2026-09-14 05:10:00,,ds-campaign-2,1789362600000
+c3,t1,push,sent,,2026-09-07 03:30:00,2026-09-07 04:00:00,2026-09-07 04:30:00,14,0,2,u-admin,2026-09-06 06:00:00,2026-09-07 04:30:00,,ds-campaign-3,1788755400000
+c4,t2,sms,sent,dlt_offer_02,2026-09-08 03:30:00,2026-09-08 04:00:00,2026-09-08 04:05:00,14,0,1,u2-owner,2026-09-07 06:00:00,2026-09-08 04:05:00,,ds-campaign-4,1788840300000
+c5,t1,whatsapp,scheduled,wa_reminder_01,2026-09-20 03:30:00,,,14,0,1,u-owner,2026-09-14 06:00:00,2026-09-14 06:00:00,,ds-campaign-5,1789365600000
+c6,t1,sms,cancelled,dlt_offer_01,2026-09-03 03:30:00,2026-09-03 04:00:00,,14,0,1,u-owner,2026-09-02 06:00:00,2026-09-04 04:00:00,2026-09-04 04:00:00,ds-campaign-6,1788494400000

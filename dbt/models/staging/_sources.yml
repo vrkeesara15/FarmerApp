@@ -84,3 +84,9 @@ sources:
         columns: [{name: id}, {name: tenant_id}, {name: rule_id}, {name: subject_type}, {name: subject_id}, {name: severity}, {name: status}, {name: scope_cluster_id}, {name: scope_store_id}, {name: sla_due_at}, {name: resolved_at}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
       - name: public_flag_event
         columns: [{name: id}, {name: tenant_id}, {name: flag_id}, {name: kind}, {name: to_status}, {name: label}, {name: created_at}]
+      - name: public_campaign
+        description: AN-008 campaigns. name / segment / messages / notes are NOT replicated (free text and the audience definition stay in Postgres).
+        columns: [{name: id}, {name: tenant_id}, {name: channel}, {name: status}, {name: template_key}, {name: scheduled_at}, {name: started_at}, {name: finished_at}, {name: attribution_days}, {name: holdout_pct}, {name: audience_size}, {name: created_by}, {name: created_at}, {name: updated_at}, {name: deleted_at}]
+      - name: public_campaign_recipient
+        description: AN-008 per-farmer delivery bookkeeping. provider_ref / dlt_template_id / notification_id / error are NOT replicated.
+        columns: [{name: id}, {name: tenant_id}, {name: campaign_id}, {name: farmer_id}, {name: arm}, {name: language}, {name: status}, {name: skip_reason}, {name: sent_at}, {name: delivered_at}, {name: opened_at}, {name: created_at}, {name: updated_at}, {name: deleted_at}]

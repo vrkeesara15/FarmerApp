@@ -2,6 +2,45 @@
 version: 2
 
 seeds:
+  - name: public_campaign
+    config:
+      column_types:
+        id: varchar
+        tenant_id: varchar
+        channel: varchar
+        status: varchar
+        template_key: varchar
+        scheduled_at: timestamp
+        started_at: timestamp
+        finished_at: timestamp
+        attribution_days: bigint
+        holdout_pct: bigint
+        audience_size: bigint
+        created_by: varchar
+        created_at: timestamp
+        updated_at: timestamp
+        deleted_at: timestamp
+        _ds_uuid: varchar
+        _ds_source_timestamp: bigint
+  - name: public_campaign_recipient
+    config:
+      column_types:
+        id: varchar
+        tenant_id: varchar
+        campaign_id: varchar
+        farmer_id: varchar
+        arm: varchar
+        language: varchar
+        status: varchar
+        skip_reason: varchar
+        sent_at: timestamp
+        delivered_at: timestamp
+        opened_at: timestamp
+        created_at: timestamp
+        updated_at: timestamp
+        deleted_at: timestamp
+        _ds_uuid: varchar
+        _ds_source_timestamp: bigint
   - name: public_cluster
     config:
       column_types:

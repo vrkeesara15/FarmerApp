@@ -9,6 +9,8 @@ Over the diagnoses requested in the last ``days`` (IST days, default 30) of the 
 * review SLA — escalations reviewed, within 24 h of entering the queue (the expert request,
   else the request), average and median review hours, the open queue and how much of it is
   past 24 h;
+* ``evaluation_alert_drop_points`` -- the DX-011 alert threshold the console shows next to
+  the latest run's delta;
 * ``by_source`` / ``by_status`` counts, ``top_unknowns`` (out-of-scope cases by crop and
   reason, DX-010) and the latest DX-011 evaluation run with its delta.
 
@@ -34,6 +36,7 @@ from farmerapp.mlops.schemas import (
     UnknownOut,
 )
 from farmerapp.payments.config import IST
+from farmerapp.tenants.settings import get_tenant_settings
 
 REVIEW_SLA_HOURS = 24
 _ESCALATED = {
@@ -117,6 +120,8 @@ async def quality_summary(
     }
     top = sorted(unknowns.items(), key=lambda kv: (-kv[1], str(kv[0][0]), kv[0][1]))[:10]
     evaluation = await latest_evaluation(session, tenant_id)
+    alert_points = (await get_tenant_settings(session, tenant_id)).diagnosis_evaluation
+
     corpus = by_source.get(DiagnosisSource.CORPUS.value, 0)
     return QualityOut(
         days=days,
@@ -150,6 +155,7 @@ async def quality_summary(
             for (crop_id, reason), cases in top
         ],
         latest_evaluation=EvaluationSummaryOut.from_row(evaluation) if evaluation else None,
+        evaluation_alert_drop_points=alert_points.alert_drop_points,
     )
 
 

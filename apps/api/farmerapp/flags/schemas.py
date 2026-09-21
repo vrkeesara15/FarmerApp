@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -284,6 +284,58 @@ class AssignIn(BaseModel):
     note: str | None = Field(default=None, max_length=2000)
 
 
+class RuleVolumeOut(BaseModel):
+    """AN-009: one rule's flag volume, resolution time and VA-006 precision."""
+
+    rule_id: str
+    title: str | None
+    total: int
+    open: int
+    resolved: int
+    false_positives: int
+    false_positive_rate: float | None
+    median_resolution_hours: float | None
+    p90_resolution_hours: float | None
+    precision: float | None = Field(
+        description="VA-006 precision over the last four weeks of resolutions."
+    )
+    precision_resolved: int = Field(description="Labelled resolutions behind `precision`.")
+
+
+class RepeatSubjectOut(BaseModel):
+    """AN-009 repeat offender: one subject flagged more than once in the window."""
+
+    subject_type: str
+    subject_id: uuid.UUID
+    title: str | None = Field(description="Title of the newest flag on the subject.")
+    flags: int
+    open_flags: int
+    rules: list[str]
+    last_at: datetime
+
+
+class FlagSummaryOut(BaseModel):
+    """AN-009 data quality over the flags raised in the last `days` IST days."""
+
+    days: int
+    from_date: date
+    to_date: date
+    total: int
+    open: int
+    resolved: int
+    overdue: int = Field(description="Unresolved and past the SLA.")
+    by_severity: dict[str, int]
+    by_subject_type: dict[str, int]
+    by_rule: list[RuleVolumeOut]
+    median_resolution_hours: float | None
+    p90_resolution_hours: float | None
+    false_positive_rate: float | None
+    repeat_min: int
+    repeat_subjects: list[RepeatSubjectOut]
+    precision_floor: float
+    precision_window_weeks: int
+
+
 __all__ = [
     "AssignIn",
     "AutomatedSummaryOut",
@@ -298,11 +350,14 @@ __all__ = [
     "FlagEventOut",
     "FlagOut",
     "FlagPage",
+    "FlagSummaryOut",
+    "RepeatSubjectOut",
     "RuleEnableIn",
     "RuleOverrideOut",
     "RulePrecisionOut",
     "RuleQualityList",
     "RuleQualityOut",
+    "RuleVolumeOut",
     "SubjectFlagDetailOut",
     "SubjectFlagOut",
     "SubjectFlagPage",
