@@ -36,12 +36,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.platform_admin.errors import PlanLimitExceededError
 from farmerapp.platform_admin.models import UsageCounter
-
-#: The Core table behind the ORM class: counters are written with Core so the FA-006 audit listener (an ORM
-#: ``before_flush`` hook) is not involved — see the module docstring.
-_COUNTER: Table = UsageCounter.__table__  # type: ignore[assignment]
 from farmerapp.platform_admin.plans import MONTHLY, TOTAL_PERIOD, Metric, PlanLimits
 from farmerapp.platform_admin.state import get_tenant_state
+
+#: The Core table behind the ORM class: counters are written with Core so the FA-006 audit
+#: listener (an ORM ``before_flush`` hook) is not involved — see the module docstring.
+_COUNTER: Table = UsageCounter.__table__  # type: ignore[assignment]
 
 #: Metric -> the SQL that recomputes it from the source tables (``recount`` only).
 _SOURCE_SQL: Mapping[Metric, str] = {

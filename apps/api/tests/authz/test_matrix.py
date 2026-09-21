@@ -794,17 +794,6 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
     "GET /v1/admin/tenants/{id}/statements/{period}/csv": RouteFixture(
         path_params=lambda ctx: {"id": NO_SUCH_ID, "period": "2026-09"}
     ),
-    # NF-013 data-principal request handling (docs/prs/M7-security-privacy.md); outcomes in
-    # tests/privacy. An unknown ticket id is a 404 for an allowed role and 403 for the rest.
-    "GET /v1/admin/data-requests/{id}/export": RouteFixture(
-        path_params=lambda _ctx: {"id": NO_SUCH_ID}
-    ),
-    "POST /v1/admin/data-requests/{id}/apply-correction": RouteFixture(
-        path_params=lambda _ctx: {"id": NO_SUCH_ID}, step_up=True
-    ),
-    "POST /v1/admin/data-requests/{id}/erase": RouteFixture(
-        path_params=lambda _ctx: {"id": NO_SUCH_ID}, step_up=True
-    ),
     "POST /v1/policies/location/accept": RouteFixture(
         body=lambda _ctx: {
             "version": "2026-09-v1",
@@ -812,17 +801,6 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
             "device_id": "matrix",
             "app_version": "0.2.0",
         }
-    ),
-    # M7 NF-013 data-subject rights (outcomes in tests/privacy). An unknown ticket id is a
-    # 404 for every allowed role; the two writes are SEC-028 step-up actions.
-    "GET /v1/admin/data-requests/{id}/export": RouteFixture(
-        path_params=lambda _ctx: {"id": NO_SUCH_ID}
-    ),
-    "POST /v1/admin/data-requests/{id}/apply-correction": RouteFixture(
-        path_params=lambda _ctx: {"id": NO_SUCH_ID}, step_up=True
-    ),
-    "POST /v1/admin/data-requests/{id}/erase": RouteFixture(
-        path_params=lambda _ctx: {"id": NO_SUCH_ID}, step_up=True
     ),
     # M8 (FM-012, FM-013, AN-016): outcomes in tests/market, tests/referrals, tests/nlq.
     "GET /v1/farmers/{id}/mandi-prices": RouteFixture(path_params=_target_farmer_id),
