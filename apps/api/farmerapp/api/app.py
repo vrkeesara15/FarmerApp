@@ -243,6 +243,7 @@ def create_app(
     v1.include_router(corpus_routes.router)
     v1.include_router(privacy_routes.me_router)
     v1.include_router(privacy_routes.admin_router)
+    v1.include_router(privacy_routes.public_router)
     # M7 field P1: push + inbox (FA-007), day timeline and gap reasons (VV-008), travel
     # allowance and claims (FA-023), beat plans (FA-018), my performance (FA-024), demo plots
     # (FA-026) and farmer meetings (FA-027).

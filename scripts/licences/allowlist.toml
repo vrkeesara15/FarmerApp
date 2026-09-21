@@ -1,0 +1,206 @@
+# SEC-007 — licence allowlist for everything FarmerApp ships.
+# SPEC 11.1: "License compliance (no AGPL in shipped apps)".
+#
+# Policy and rationale: docs/licence-policy.md. Run the gate with
+#   python3 scripts/licences/check_licences.py --ecosystem all
+#
+# `allowed`  SPDX ids (or SPDX-ish names, see [aliases]) we accept anywhere.
+# `denied`   licences that fail the build outright, for every artefact.
+# `[[exceptions]]` per-package escape hatches, each with a reason and a review date.
+#
+# Every entry is an SPDX identifier. Non-SPDX strings reported by the
+# ecosystem tooling (e.g. pip's classifier names) are mapped in [aliases]
+# below; anything neither allowed, denied nor aliased is reported as
+# `unknown` and fails unless an exception covers it.
+
+allowed = [
+  # Permissive, no reciprocal obligations beyond attribution.
+  "0BSD",
+  "Apache-2.0",
+  "Artistic-2.0",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "BSD-3-Clause-Clear",
+  "BlueOak-1.0.0",
+  "CC0-1.0",
+  "ISC",
+  "MIT",
+  "MIT-0",
+  "MIT-CMU",
+  "MIT-Modern-Variant",
+  "NCSA",
+  "PSF-2.0",
+  "Python-2.0",
+  "Unicode-3.0",
+  "Unicode-DFS-2016",
+  "Unlicense",
+  "WTFPL",
+  "Zlib",
+  # Weak/file-level copyleft. MPL-2.0 and EPL-2.0 reciprocate per *file*: we
+  # never modify upstream sources in place, so no obligation reaches our code.
+  # See docs/licence-policy.md#weak-copyleft.
+  "CDDL-1.0",
+  "EPL-2.0",
+  "MPL-2.0",
+  # Public-domain-equivalent dedications used by a few pub.dev packages.
+  "LicenseRef-PublicDomain",
+  # `source: sdk` entries in pubspec.lock (flutter, flutter_test,
+  # flutter_localizations, flutter_web_plugins, sky_engine). These are the
+  # Flutter SDK itself, BSD-3-Clause, not pub.dev packages, so there is no pub
+  # cache directory to read a LICENSE from. The engine's own third-party
+  # notices are compiled into the app and surfaced by Flutter's
+  # LicenseRegistry (the "Licences" page of the about dialog).
+  "LicenseRef-FlutterSDK",
+]
+
+# These fail the gate for every artefact — API image, console bundle and the
+# two Flutter apps. See docs/licence-policy.md#denied.
+#
+# AGPL is the headline ban (SPEC 11.1): §13 makes network *interaction* a
+# trigger for source disclosure, which our hosted API would hit even without
+# distributing a binary.
+#
+# LGPL sits here deliberately: it is allowed only per-package, through an
+# exception with `overrides_denied = true`, because whether it is safe depends
+# on the artefact (dynamic linking in the API container vs. AOT static linking
+# in a Flutter app). See docs/licence-policy.md#lgpl.
+denied = [
+  "AGPL-1.0",
+  "AGPL-1.0-only",
+  "AGPL-1.0-or-later",
+  "AGPL-3.0",
+  "AGPL-3.0-only",
+  "AGPL-3.0-or-later",
+  "BUSL-1.1",
+  "CC-BY-NC-4.0",
+  "CC-BY-NC-SA-4.0",
+  "CC-BY-SA-4.0",
+  "Commons-Clause",
+  "EUPL-1.2",
+  "GPL-1.0",
+  "GPL-1.0-only",
+  "GPL-1.0-or-later",
+  "GPL-2.0",
+  "GPL-2.0-only",
+  "GPL-2.0-or-later",
+  "GPL-3.0",
+  "GPL-3.0-only",
+  "GPL-3.0-or-later",
+  "LGPL-2.0",
+  "LGPL-2.0-only",
+  "LGPL-2.0-or-later",
+  "LGPL-2.1",
+  "LGPL-2.1-only",
+  "LGPL-2.1-or-later",
+  "LGPL-3.0",
+  "LGPL-3.0-only",
+  "LGPL-3.0-or-later",
+  "OSL-3.0",
+  "SSPL-1.0",
+  "UNLICENSED",
+]
+
+# Any licence string starting with one of these (after normalisation) is denied
+# even if it is not spelled out above — catches new AGPL/SSPL spellings.
+denied_prefixes = ["AGPL", "SSPL", "CC-BY-NC", "Commons-Clause", "Business-Source"]
+
+# Normalisation table: reported string (lowercased, whitespace-collapsed) ->
+# SPDX id. pip reports Trove classifier names, npm mostly reports SPDX, pub.dev
+# reports nothing at all (we read LICENSE text instead).
+[aliases]
+"mit license" = "MIT"
+"the mit license" = "MIT"
+"mit/x11" = "MIT"
+"expat" = "MIT"
+"apache software license" = "Apache-2.0"
+"apache license 2.0" = "Apache-2.0"
+"apache license, version 2.0" = "Apache-2.0"
+"apache license version 2.0" = "Apache-2.0"
+"apache 2.0" = "Apache-2.0"
+"apache-2" = "Apache-2.0"
+"asl 2.0" = "Apache-2.0"
+"bsd license" = "BSD-3-Clause"
+"bsd" = "BSD-3-Clause"
+"new bsd license" = "BSD-3-Clause"
+"3-clause bsd license" = "BSD-3-Clause"
+"bsd 3-clause" = "BSD-3-Clause"
+"simplified bsd license" = "BSD-2-Clause"
+"2-clause bsd license" = "BSD-2-Clause"
+"bsd 2-clause" = "BSD-2-Clause"
+"isc license (iscl)" = "ISC"
+"isc license" = "ISC"
+"python software foundation license" = "PSF-2.0"
+"psf" = "PSF-2.0"
+"python-2.0.1" = "Python-2.0"
+"mozilla public license 2.0 (mpl 2.0)" = "MPL-2.0"
+"mozilla public license 2.0" = "MPL-2.0"
+"mpl 2.0" = "MPL-2.0"
+"eclipse public license 2.0" = "EPL-2.0"
+"the unlicense (unlicense)" = "Unlicense"
+"public domain" = "LicenseRef-PublicDomain"
+"cc0 1.0 universal" = "CC0-1.0"
+"zlib/libpng license" = "Zlib"
+"gnu general public license v2 (gplv2)" = "GPL-2.0-only"
+"gnu general public license v3 (gplv3)" = "GPL-3.0-only"
+"gnu lesser general public license v3 (lgplv3)" = "LGPL-3.0-only"
+"gnu lesser general public license v2 or later (lgplv2+)" = "LGPL-2.1-or-later"
+"gnu affero general public license v3" = "AGPL-3.0-only"
+"gnu affero general public license v3 or later (agplv3+)" = "AGPL-3.0-or-later"
+# Noise pip-licenses emits alongside a real licence; dropped before evaluation.
+"dfsg approved" = "__drop__"
+"osi approved" = "__drop__"
+"free for non-commercial use" = "CC-BY-NC-4.0"
+
+# ---------------------------------------------------------------------------
+# Exceptions
+# ---------------------------------------------------------------------------
+# One entry per package whose reported licence is missing, non-SPDX, or denied.
+#   package         exact name or an fnmatch glob (platform-specific npm
+#                   packages differ between a macOS laptop and ubuntu CI)
+#   ecosystem       python | node | dart  (or "*" )
+#   licence         the licence AS REPORTED by the tooling, for drift detection:
+#                   if upstream relicenses, the exception stops matching and
+#                   the gate fires again. "*" accepts any reported value.
+#   reason          why this is safe for the artefact that ships it
+#   reviewed_on     ISO date of the last human review (re-review yearly)
+#   overrides_denied  true only when the licence is on the `denied` list
+#
+# Adding one: docs/licence-policy.md#exceptions (engineering lead reviews).
+
+[[exceptions]]
+package = "fpdf2"
+ecosystem = "python"
+licence = "LGPL-3.0-only"
+overrides_denied = true
+reason = """fpdf2 is imported, unmodified, by the API's advisory-PDF renderer. \
+It ships only inside the api/worker/jobs container images, which are run as a \
+hosted service and never conveyed to a third party, so LGPL-3.0 §4 \
+(distribution of a combined work) is not triggered. Even if the image were \
+conveyed, the linkage is a plain Python import from site-packages: a recipient \
+can replace fpdf2 in /opt/venv and relink. Never vendor or patch fpdf2 in \
+tree — that would make it a modified work and the exception void."""
+reviewed_on = "2026-09-19"
+
+[[exceptions]]
+package = "@img/sharp-libvips-*"
+ecosystem = "node"
+licence = "LGPL-3.0-or-later"
+overrides_denied = true
+reason = """Prebuilt libvips binaries pulled in as an optional, \
+platform-specific peer of `sharp` (Next.js image optimisation). They are \
+separate .so/.dylib files loaded at runtime by sharp's addon — dynamic linking \
+under LGPL-3.0 §4 — and are not part of the browser bundle we serve to users. \
+The console image ships the Next.js standalone server only; libvips is \
+replaceable in node_modules by anyone who receives the image."""
+reviewed_on = "2026-09-19"
+
+[[exceptions]]
+package = "caniuse-lite"
+ecosystem = "node"
+licence = "CC-BY-4.0"
+reason = """Browser-support *data* (not code) used by browserslist/autoprefixer \
+at build time to pick CSS prefixes. CC-BY-4.0 is attribution-only and imposes \
+no share-alike obligation; nothing from this package reaches the shipped \
+bundle. Attribution is carried in the package's own LICENSE inside \
+node_modules."""
+reviewed_on = "2026-09-19"

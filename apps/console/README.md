@@ -4,17 +4,17 @@ Next.js 15 (App Router) · TypeScript strict (`noUncheckedIndexedAccess`) · Tai
 
 ## Scripts
 
-| Script                    | What it does                                                                                                                                       |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`             | Dev server (uses the in-app mock API at `/api/mock` unless `NEXT_PUBLIC_API_URL` is set)                                                           |
-| `npm run build` / `start` | Production build (runs `prebuild` = `tokens`) / serve                                                                                              |
-| `npm run lint`            | ESLint (next/core-web-vitals + typescript) **and** `scripts/lint-strings.mjs` (no hard-coded UI strings)                                           |
-| `npm run typecheck`       | `tsc --noEmit`                                                                                                                                     |
-| `npm run test`            | Vitest (jsdom + Testing Library)                                                                                                                   |
-| `npm run test:e2e`        | Playwright smoke against `next start` + mock API. Build first (`npm run build`) or set `PW_BUILD=1`. Needs `npx playwright install chromium` once. |
-| `npm run check`           | `lint && typecheck && test && build` — what the root `Makefile` and `ci-console.yml` run                                                           |
-| `npm run size`            | Prints `.next/static` bundle sizes; fails if `SIZE_LIMIT_KB` is set and exceeded                                                                   |
-| `npm run tokens`          | Regenerates `app/tokens.css` from `../../design/tokens.json`                                                                                       |
+| Script                    | What it does                                                                                                                                                                                              |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`             | Dev server (uses the in-app mock API at `/api/mock` unless `NEXT_PUBLIC_API_URL` is set)                                                                                                                  |
+| `npm run build` / `start` | Production build (runs `prebuild` = `tokens`) / serve                                                                                                                                                     |
+| `npm run lint`            | ESLint (next/core-web-vitals + typescript, `no-explicit-any` as an error) **and** `scripts/lint-strings.mjs` (no hard-coded UI strings) **and** `scripts/lint-dangerous-html.mjs` (no new raw-HTML sinks) |
+| `npm run typecheck`       | `tsc --noEmit`                                                                                                                                                                                            |
+| `npm run test`            | Vitest (jsdom + Testing Library)                                                                                                                                                                          |
+| `npm run test:e2e`        | Playwright smoke against `next start` + mock API. Build first (`npm run build`) or set `PW_BUILD=1`. Needs `npx playwright install chromium` once.                                                        |
+| `npm run check`           | `lint && typecheck && test && build` — what the root `Makefile` and `ci-console.yml` run                                                                                                                  |
+| `npm run size`            | Prints `.next/static` bundle sizes; fails if `SIZE_LIMIT_KB` is set and exceeded                                                                                                                          |
+| `npm run tokens`          | Regenerates `app/tokens.css` from `../../design/tokens.json`                                                                                                                                              |
 
 ## Design system
 
@@ -36,6 +36,36 @@ All UI strings live in `messages/en.json` (source of truth and the type). `te/kn
 
 1. adding an `i18n-ignore` comment on the same or previous line (JSX comment or `//`), or
 2. adding a path prefix to `ALLOW_PATHS` in `scripts/lint-strings.mjs` (currently `app/design/`, `components/ui/`, `e2e/`; `*.test.tsx` are skipped).
+
+## Security headers (SEC-022)
+
+Strict CSP with a per-request nonce, plus the rest of the hardening headers. Split by whether a header depends on the request:
+
+| Where                                                                               | Header(s)                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `middleware.ts` (per request)                                                       | `Content-Security-Policy` — a fresh base64 nonce (`crypto.getRandomValues`) is set on the **forwarded request** headers (so Next stamps it on its own bootstrap scripts) and on the **response**; the nonce also travels as `x-nonce`, which `app/layout.tsx` reads with `headers()` and passes to the two pre-hydration scripts (`themeInitScript`, `localeInitScript`). |
+| `next.config.ts` `headers()` (every route, `/api/*` and `/_next/static/*` included) | `Strict-Transport-Security` (production only), `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-Frame-Options`, `Cross-Origin-Opener-Policy`                                                                                                                                                                                                         |
+
+The policy itself lives in `lib/security-headers.ts` (pure builders, unit-tested in `lib/security-headers.test.ts`, asserted end to end in `e2e/security-headers.spec.ts`). Production value, nonce elided:
+
+```
+default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; frame-src 'none';
+form-action 'self'; script-src 'self' 'nonce-<n>' 'strict-dynamic'; style-src 'self' 'unsafe-inline';
+img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' <NEXT_PUBLIC_API_URL origin>;
+media-src 'self'; manifest-src 'self'; worker-src 'self' blob:; upgrade-insecure-requests
+```
+
+Three deliberate relaxations, and nothing else:
+
+1. **`style-src 'unsafe-inline'`** — Recharts, Leaflet and `next/font` set inline `style` **attributes** on elements they create. Style attributes cannot carry a nonce, and adding a nonce to `style-src` would switch the `unsafe-inline` fallback off and break every chart and map. Scripts stay nonce-only.
+2. **`img-src https:`** — tenant branding logos (`branding.logo_blob_uri`), evidence / diagnosis photos (short-lived signed blob URLs) and map tiles (`NEXT_PUBLIC_MAP_TILE_URL` overrides the OpenStreetMap default) come from hosts the tenant configures at runtime, so the host set is not fixed.
+3. **Development only** — `'unsafe-eval'` and `ws:` for the dev server's HMR (`NODE_ENV !== "production"`); HSTS is skipped there so plain-http localhost keeps working.
+
+Output encoding: React escapes everything it renders, and `npm run lint:html` (`scripts/lint-dangerous-html.mjs`, part of `npm run lint`) fails on any new `dangerouslySetInnerHTML`, `innerHTML` / `outerHTML` assignment or `document.write`. The allowlist holds exactly one entry: the two bootstrap scripts in `app/layout.tsx`.
+
+## Data-principal requests (NF-013)
+
+C104 `/admin/data-requests` — the staff queue for DPDP access / correction / erasure / grievance requests (owner and tenant admin only, `lib/nav.ts` + `components/admin/AdminSubNav.tsx`). Closest statutory deadline first with an overdue badge; the detail panel offers Start, Complete and Reject (resolution note required), **Apply correction** (shows the requested field → value diff), **Run erasure** (shows the returned `erased` classes and the ones retained by law, e.g. financial records for 8 financial years) and **Download export** (pretty JSON preview + file download). The two destructive calls are `x-step-up: true` and reuse the SEC-028 dialog. Client: `lib/data-requests.ts` (zod-validated) and `lib/hooks/data-requests.ts`; mock: `lib/mock/admin.ts` seeds one request of each type (`dr-0001`…`dr-0006`).
 
 ## API
 

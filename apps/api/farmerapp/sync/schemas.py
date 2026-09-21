@@ -53,7 +53,9 @@ class SyncOpIn(BaseModel):
 
 class SyncRequest(BaseModel):
     device_id: str = Field(min_length=1, max_length=128)
-    cursor: str | None = Field(default=None, description="Opaque cursor from a previous sync.")
+    cursor: str | None = Field(
+        default=None, max_length=512, description="Opaque cursor from a previous sync."
+    )
     ops: list[SyncOpIn] = Field(default_factory=list, max_length=MAX_OPS)
 
 

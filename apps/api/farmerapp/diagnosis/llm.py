@@ -30,6 +30,7 @@ the append-only ``llm_call_log`` (kept one year, SPEC 3.4).
 from __future__ import annotations
 
 import base64
+import dataclasses
 import hashlib
 import json
 import time
@@ -42,6 +43,12 @@ import anthropic
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from farmerapp.logging import get_logger
+from farmerapp.pii.llm_guard import (
+    DIAGNOSIS_PROMPT_FIELDS,
+    PromptPiiError,
+    assert_no_exif,
+    guard_prompt,
+)
 
 log = get_logger("farmerapp.diagnosis.llm")
 
@@ -208,7 +215,33 @@ def context_text(request: LlmRequest) -> str:
     return "\n".join(lines)
 
 
+GUARD_SITE = "diagnosis.fallback"
+
+
+def guard_request(request: LlmRequest) -> None:
+    """SEC-027: the shared guard, run before the prompt leaves the process.
+
+    Three assertions: the request carries exactly the reviewed fields
+    (``DIAGNOSIS_PROMPT_FIELDS`` — adding one to ``LlmRequest`` fails here until it is
+    reviewed), the rendered context text carries nothing person-shaped, and every image was
+    re-encoded by ``images.strip_for_llm`` so no EXIF / GPS block survives.
+    """
+    fields = {f.name for f in dataclasses.fields(request)}
+    if fields != set(DIAGNOSIS_PROMPT_FIELDS):
+        raise PromptPiiError(
+            GUARD_SITE,
+            [
+                f"unreviewed prompt field {n!r}"
+                for n in sorted(fields ^ set(DIAGNOSIS_PROMPT_FIELDS))
+            ],
+        )
+    guard_prompt({"text": context_text(request)}, where=GUARD_SITE)
+    for image in request.images:
+        assert_no_exif(image.data, where=f"{GUARD_SITE}:{image.sha256[:12]}")
+
+
 def build_messages(request: LlmRequest) -> list[dict[str, Any]]:
+    guard_request(request)
     content: list[dict[str, Any]] = [
         {
             "type": "image",
@@ -226,6 +259,7 @@ def build_messages(request: LlmRequest) -> list[dict[str, Any]]:
 
 def loggable_prompt(request: LlmRequest, *, max_tokens: int, effort: str) -> dict[str, Any]:
     """The prompt as logged: no image bytes (SEC-027), their references instead."""
+    guard_request(request)
     return {
         "system": SYSTEM_PROMPT,
         "images": [

@@ -52,6 +52,12 @@ Other targets: `make test-api`, `make test-console`, `make test-mobile`, `make p
 - [CLAUDE.md](CLAUDE.md) — working rules, stack lock, human-only gates
 - [infra/README.md](infra/README.md) — bootstrap order, plan/apply rules
 - [docs/runbooks/](docs/runbooks/README.md) — runbooks to write before pilot
+- [docs/dpdp.md](docs/dpdp.md) — DPDP compliance note: lawful basis, the four data-principal
+  rights, the erasure exception, cross-border egress (NF-011, NF-013)
+- [docs/retention.md](docs/retention.md) — what is kept, for how long, and which job does it
+  (NF-012)
+- [docs/licence-policy.md](docs/licence-policy.md) — allowed and denied licences, and how to
+  add an exception (SEC-007)
 
 ## Delivery
 

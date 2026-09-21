@@ -86,11 +86,31 @@ interface StepUpState {
   lockedUntil: number;
 }
 
+/** NF-013 data-principal request (DPDP). Same shape as the API's `DataRequestOut`. */
+interface DataRequest {
+  id: string;
+  type: "deletion" | "access" | "correction" | "grievance";
+  status: "received" | "in_progress" | "completed" | "rejected";
+  user_id: string;
+  farmer_id: string | null;
+  reason: string | null;
+  subject: string | null;
+  requested_changes: Record<string, string> | null;
+  due_by: string;
+  handled_by: string | null;
+  handled_at: string | null;
+  resolution_note: string | null;
+  created_at: string;
+  updated_at: string;
+  version: number;
+}
+
 interface Db {
   users: User[];
   devices: Device[];
   settings: Json;
   audit: AuditRow[];
+  dataRequests: DataRequest[];
   tokens: Map<string, { userId: string; expiresAt: number }>;
   stepUp: Map<string, StepUpState>;
   sessions: Map<string, number>;
@@ -279,6 +299,7 @@ function seed(): Db {
     devices,
     settings,
     audit,
+    dataRequests: seedDataRequests(),
     tokens: new Map(),
     stepUp: new Map(),
     sessions: new Map([
@@ -317,6 +338,116 @@ function auditRow(
     trace_id: `trace-${n}`,
     created_at: iso(msAgo),
   };
+}
+
+/**
+ * NF-013 queue seed: one request of every type, two already handled, one deletion past its
+ * statutory deadline (so the overdue badge and the oldest-due-first order are visible).
+ * `iso()` takes milliseconds ago, so a negative argument is a future deadline.
+ */
+function seedDataRequests(): DataRequest[] {
+  const row = (
+    r: Omit<DataRequest, "version" | "updated_at"> & { updated_at?: string },
+  ): DataRequest => ({ ...r, updated_at: r.updated_at ?? r.created_at, version: 1 });
+  return [
+    row({
+      id: "dr-0001",
+      type: "deletion",
+      status: "received",
+      user_id: "u-farmer-ramesh",
+      farmer_id: "farmer-ramesh",
+      reason: "Ramesh Yadav asked us to delete his account after moving to another dealer.",
+      subject: null,
+      requested_changes: null,
+      due_by: iso(3 * D),
+      handled_by: null,
+      handled_at: null,
+      resolution_note: null,
+      created_at: iso(33 * D),
+    }),
+    row({
+      id: "dr-0002",
+      type: "access",
+      status: "received",
+      user_id: "u-farmer-sunita",
+      farmer_id: "farmer-sunita",
+      reason: "Sunita Bai wants a copy of everything we hold about her.",
+      subject: null,
+      requested_changes: null,
+      due_by: iso(-6 * D),
+      handled_by: null,
+      handled_at: null,
+      resolution_note: null,
+      created_at: iso(24 * D),
+    }),
+    row({
+      id: "dr-0003",
+      type: "correction",
+      status: "in_progress",
+      user_id: "u-farmer-imran",
+      farmer_id: "farmer-imran",
+      reason: "The village and the spelling of the name are wrong on the receipts.",
+      subject: null,
+      requested_changes: {
+        name: "Imran Shaikh",
+        village: "Kothapally",
+        phone: "+919000000123",
+      },
+      due_by: iso(-11 * D),
+      handled_by: "u-tenant_admin",
+      handled_at: iso(1 * D),
+      resolution_note: null,
+      created_at: iso(19 * D),
+      updated_at: iso(1 * D),
+    }),
+    row({
+      id: "dr-0004",
+      type: "grievance",
+      status: "received",
+      user_id: "u-farmer-lakshmi",
+      farmer_id: "farmer-lakshmi",
+      reason: "Campaign messages keep arriving after the farmer withdrew consent.",
+      subject: "Campaign messages after withdrawing consent",
+      requested_changes: null,
+      due_by: iso(-18 * D),
+      handled_by: null,
+      handled_at: null,
+      resolution_note: null,
+      created_at: iso(12 * D),
+    }),
+    row({
+      id: "dr-0005",
+      type: "access",
+      status: "completed",
+      user_id: "u-field_officer",
+      farmer_id: null,
+      reason: "Field officer asked for his own location history.",
+      subject: null,
+      requested_changes: null,
+      due_by: iso(12 * D),
+      handled_by: "u-owner",
+      handled_at: iso(14 * D),
+      resolution_note: "Export shared over the registered number.",
+      created_at: iso(42 * D),
+      updated_at: iso(14 * D),
+    }),
+    row({
+      id: "dr-0006",
+      type: "grievance",
+      status: "rejected",
+      user_id: "u-farmer-kiran",
+      farmer_id: "farmer-kiran",
+      reason: "Complaint about a price, not about personal data.",
+      subject: "Price complaint",
+      requested_changes: null,
+      due_by: iso(20 * D),
+      handled_by: "u-tenant_admin",
+      handled_at: iso(22 * D),
+      resolution_note: "Not a data-protection grievance; routed to the store manager.",
+      created_at: iso(50 * D),
+      updated_at: iso(22 * D),
+    }),
+  ];
 }
 
 let db: Db = seed();
@@ -575,8 +706,175 @@ const csvCell = (v: unknown): string => {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
+// ---- data-principal requests (NF-013) --------------------------------------------------------
+const DATA_REQUEST_ROLES = ["owner", "tenant_admin"];
+
+/** Allowed status moves; anything else is 409 `invalid_transition` (the API's rule). */
+const TRANSITIONS: Record<DataRequest["status"], ReadonlyArray<DataRequest["status"]>> = {
+  received: ["in_progress", "rejected"],
+  in_progress: ["completed", "rejected"],
+  completed: [],
+  rejected: [],
+};
+
+/** `overdue` is derived by the API on read; the stored row only carries the deadline. */
+const withOverdue = (r: DataRequest): Json => ({
+  ...r,
+  overdue:
+    (r.status === "received" || r.status === "in_progress") && Date.parse(r.due_by) <= Date.now(),
+});
+
+const touch = (r: DataRequest, actor: MockActor): void => {
+  r.updated_at = new Date().toISOString();
+  r.version += 1;
+  r.handled_by = actor.id;
+  r.handled_at = r.updated_at;
+};
+
+/**
+ * `/v1/admin/data-requests*`. Erasure keeps the classes the law requires us to keep: GST
+ * invoices and ledger entries stay for 8 financial years (SPEC 11 retention), so the operator
+ * can see that "delete everything" never silently drops the books.
+ */
+function handleDataRequests(
+  method: string,
+  path: string[],
+  query: URLSearchParams,
+  body: Json,
+  actor: MockActor,
+  headers: Headers,
+): MockResult {
+  const id = path[2];
+  const action = path[3];
+  if (!DATA_REQUEST_ROLES.includes(actor.role)) return forbidden();
+
+  if (id === undefined) {
+    if (method !== "GET") return problem(404, "not_found", "No such route.");
+    const type = query.get("type");
+    const status = query.get("status");
+    const rows = db.dataRequests
+      .filter((r) => (!type || r.type === type) && (!status || r.status === status))
+      .sort((a, b) => a.due_by.localeCompare(b.due_by) || a.id.localeCompare(b.id))
+      .map(withOverdue);
+    return page(rows, query);
+  }
+
+  const request = db.dataRequests.find((r) => r.id === id);
+  if (!request) return notFound("Data request");
+
+  if (action === undefined && method === "PATCH") {
+    const next = String(body.status ?? "");
+    if (!TRANSITIONS[request.status])
+      return problem(422, "validation_error", "Unknown status.", {
+        errors: [{ loc: ["body", "status"], msg: "invalid", type: "enum" }],
+      });
+    if (!(TRANSITIONS[request.status] as readonly string[]).includes(next))
+      return problem(
+        409,
+        "invalid_transition",
+        `A ${request.status} request cannot move to ${next || "(nothing)"}.`,
+      );
+    const before = { status: request.status };
+    request.status = next as DataRequest["status"];
+    const note = typeof body.note === "string" ? body.note.trim() : "";
+    if (note) request.resolution_note = note;
+    touch(request, actor);
+    recordAudit(actor, "data_request.update", "data_request", request.id, before, {
+      status: request.status,
+      resolution_note: request.resolution_note,
+    });
+    return ok(withOverdue(request));
+  }
+
+  if (action === "apply-correction" && method === "POST") {
+    if (request.type !== "correction")
+      return problem(409, "invalid_transition", "Only a correction request can be applied.");
+    if (request.status === "completed" || request.status === "rejected")
+      return problem(409, "invalid_transition", "This request is already closed.");
+    const blocked = stepUpOk(headers, actor) ? null : stepUpRequired();
+    if (blocked) return blocked;
+    const applied = { ...(request.requested_changes ?? {}) };
+    request.status = "completed";
+    request.resolution_note = `Applied ${Object.keys(applied).length} corrected field(s).`;
+    touch(request, actor);
+    recordAudit(actor, "data_request.apply_correction", "data_request", request.id, null, applied);
+    return ok({ applied, request: withOverdue(request) });
+  }
+
+  if (action === "erase" && method === "POST") {
+    if (request.type !== "deletion")
+      return problem(409, "invalid_transition", "Only a deletion request can be erased.");
+    if (request.status === "completed" || request.status === "rejected")
+      return problem(409, "invalid_transition", "This request is already closed.");
+    const blocked = stepUpOk(headers, actor) ? null : stepUpRequired();
+    if (blocked) return blocked;
+    const erased = [
+      "farmer_profile",
+      "farmer_contact",
+      "consent_history",
+      "visit_photos",
+      "diagnosis_images",
+      "campaign_messages",
+      "device_bindings",
+    ];
+    const retained = [
+      {
+        class: "financial_records",
+        until: new Date(Date.now() + 8 * 365 * D).toISOString(),
+        reason: "GST invoices and ledger entries are kept for 8 financial years.",
+      },
+      {
+        class: "audit_log",
+        until: new Date(Date.now() + 8 * 365 * D).toISOString(),
+        reason: "Tamper-evident audit rows cannot be deleted; the farmer id is pseudonymised.",
+      },
+    ];
+    request.status = "completed";
+    request.resolution_note = `Erased ${erased.length} data classes; ${retained.length} retained by law.`;
+    touch(request, actor);
+    recordAudit(actor, "data_request.erase", "data_request", request.id, null, {
+      erased,
+      retained: retained.map((r) => r.class),
+    });
+    return ok({ erased, retained, request: withOverdue(request) });
+  }
+
+  if (action === "export" && method === "GET") {
+    recordAudit(actor, "data_request.export", "data_request", request.id, null, {
+      farmer_id: request.farmer_id,
+    });
+    return ok({
+      generated_at: new Date().toISOString(),
+      request_id: request.id,
+      data_principal: {
+        user_id: request.user_id,
+        farmer_id: request.farmer_id,
+        name: mockUserName(request.user_id) ?? "Sunita Bai",
+        phone: "+91******4321",
+        language: "te",
+      },
+      consents: [
+        { purpose: "service", version: "2026-09-v1", granted_at: iso(120 * D), withdrawn_at: null },
+        {
+          purpose: "marketing",
+          version: "2026-09-v1",
+          granted_at: iso(120 * D),
+          withdrawn_at: iso(20 * D),
+        },
+      ],
+      farms: [{ id: "plot-1", crop: "cotton", area_acres: 3.5, village: "Kothapally" }],
+      orders: [{ id: "ord-1", placed_at: iso(60 * D), total_paise: 452_000, status: "delivered" }],
+      visits: [{ id: "visit-1", at: iso(58 * D), officer: "Ravi Kumar", verified: true }],
+      diagnoses: [{ id: "dx-1", at: iso(45 * D), crop: "cotton", problem: "Aphids" }],
+      messages: [{ id: "msg-1", at: iso(21 * D), channel: "whatsapp", campaign: "Kharif offers" }],
+    });
+  }
+
+  return problem(404, "not_found", "No such route.");
+}
+
 // ---- handler ---------------------------------------------------------------------------------
-/** `/auth/step-up*`, `/users*`, `/settings`, `/audit-logs*`; null for other routes. */
+/** `/auth/step-up*`, `/users*`, `/settings`, `/audit-logs*`, `/admin/data-requests*`. */
 export function handleAdmin(
   method: string,
   path: string[],
@@ -587,8 +885,11 @@ export function handleAdmin(
 ): MockResult | null {
   const [a, b, c, d, e] = path;
   const isStepUp = a === "auth" && b === "step-up";
-  if (!isStepUp && a !== "users" && a !== "settings" && a !== "audit-logs") return null;
+  const isDataRequests = a === "admin" && b === "data-requests";
+  if (!isStepUp && !isDataRequests && a !== "users" && a !== "settings" && a !== "audit-logs")
+    return null;
   if (!actor) return problem(401, "unauthenticated", "Bearer token required.");
+  if (isDataRequests) return handleDataRequests(method, path, query, body, actor, headers);
   const role = actor.role;
   const allow = (roles: readonly string[]) => roles.includes(role);
   const now = Date.now();

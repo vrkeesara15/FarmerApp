@@ -91,6 +91,13 @@ class OtpChannel(StrEnum):
     WHATSAPP = "whatsapp"
 
 
+class OtpBlockScope(StrEnum):
+    """SEC-021: what an ``otp_block`` row blocks (the value itself is only ever hashed)."""
+
+    PHONE = "phone"
+    IP = "ip"
+
+
 def _in(values: type[StrEnum]) -> str:
     return ", ".join(f"'{v.value}'" for v in values)
 
@@ -164,6 +171,30 @@ class OtpChallenge(Base, BaseColumns):
     provider_ref: Mapped[str | None] = mapped_column(String(64), nullable=True)
     user_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
     device_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    #: SEC-021: the client IP the send came from, for the per-IP velocity rule. Never logged.
+    request_ip: Mapped[str | None] = mapped_column(String(45), nullable=True)
+
+
+class OtpBlock(Base, BaseColumns):
+    """SEC-021 abuse block list: a hashed phone or IP that may not request codes for a while.
+
+    Written by ``farmerapp.auth.otp_abuse`` when a velocity rule breaks; ``strikes`` doubles
+    the window each time, which is the repeat-abuser rule. ``key_hash`` is
+    ``HMAC(otp_pepper, scope || value)`` so the table holds no phone and no IP in the clear.
+    """
+
+    __tablename__ = "otp_block"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "key_hash", name="uq_otp_block_tenant_id_key_hash"),
+        CheckConstraint(f"scope IN ({_in(OtpBlockScope)})", name="scope"),
+        Index("ix_otp_block_blocked_until", "tenant_id", "blocked_until"),
+    )
+
+    scope: Mapped[str] = mapped_column(String(8), nullable=False)
+    key_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    reason: Mapped[str] = mapped_column(String(32), nullable=False)
+    strikes: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    blocked_until: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class RefreshToken(Base, BaseColumns):

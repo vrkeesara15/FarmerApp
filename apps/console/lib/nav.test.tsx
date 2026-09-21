@@ -115,6 +115,33 @@ describe("role-based nav (SPEC 2.6)", () => {
     ]);
   });
 
+  it("NF-013: data requests are for owners and tenant admins only", () => {
+    for (const role of ["owner", "tenant_admin"])
+      expect(canSeeRoute("/admin/data-requests", role)).toBe(true);
+    for (const role of [
+      "director",
+      "auditor",
+      "cluster_head",
+      "store_manager",
+      "accountant",
+      "field_officer",
+      "agronomist",
+      "farmer",
+    ])
+      expect(canSeeRoute("/admin/data-requests", role)).toBe(false);
+    const withRequests = [
+      ...ITEMS,
+      { href: "/admin/data-requests", label: "data-requests", icon: null },
+    ];
+    expect(visibleNavItems(withRequests, "tenant_admin").map((i) => i.href)).toEqual([
+      ...ALL,
+      "/admin/data-requests",
+    ]);
+    expect(visibleNavItems(withRequests, "auditor").map((i) => i.href)).toEqual(
+      without("/settings"),
+    );
+  });
+
   it("binds the TopBar date range only on the analytics dashboards", () => {
     for (const p of ["/home", "/field-team/off-1/replay", "/farmers/f1", "/stores"])
       expect(isAnalyticsRoute(p)).toBe(true);

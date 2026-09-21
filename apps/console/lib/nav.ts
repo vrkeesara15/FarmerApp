@@ -6,6 +6,7 @@
  */
 
 import { AUDIT_ROLES, SETTINGS_ROLES, USER_READ_ROLES } from "./admin";
+import { DATA_REQUEST_ROLES } from "./data-requests";
 import { FLAG_READ_ROLES } from "./flags";
 
 export const OWNER_HOME_ROLES = [
@@ -88,6 +89,7 @@ export const ROUTE_ROLES: Readonly<Record<string, readonly string[]>> = {
   "/admin/users": USER_READ_ROLES,
   "/settings": SETTINGS_ROLES,
   "/admin/audit": AUDIT_ROLES,
+  "/admin/data-requests": DATA_REQUEST_ROLES,
 };
 
 /** Dashboards whose filters live in the URL (AN-011); the TopBar date range binds to them. */

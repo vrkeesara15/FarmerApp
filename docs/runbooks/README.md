@@ -24,6 +24,11 @@ commands, verification, communication, follow-up. Rehearse each one in stg befor
 Reference: [observability.md](observability.md) — channels, severities, SLOs, dashboards and the
 structured-log field contract the log-based metrics rely on.
 
+Not alert-driven, but the same shape — a pipeline gate blocks a release instead of an alert
+firing: [Mobile release security scan (SEC-008)](mobile-security-scan.md) (mobile lead) —
+what the manifest, obfuscation, secret and MobSF gates in `mobile-release.yml` assert, how to
+reproduce each on a local release APK, and how to record an accepted finding.
+
 ## Severity and channels (SPEC 12.3)
 
 | Severity | Examples | Channel | Response |

@@ -61,7 +61,7 @@ class ProductCreate(_Strict):
     category: ProductCategory
     hsn: str | None = Field(default=None, max_length=8, description="4, 6 or 8 digits.")
     gst_rate_bp: int = Field(description="Basis points: one of 0, 500, 1200, 1800, 2800.")
-    description: str | None = None
+    description: str | None = Field(default=None, max_length=4000)
     active_ingredient: str | None = Field(default=None, max_length=500)
     formulation: str | None = Field(default=None, max_length=64)
     names: dict[str, str] = Field(default_factory=dict)
@@ -87,7 +87,7 @@ class ProductUpdate(_Strict):
     category: ProductCategory | None = None
     hsn: str | None = Field(default=None, max_length=8)
     gst_rate_bp: int | None = None
-    description: str | None = None
+    description: str | None = Field(default=None, max_length=4000)
     active_ingredient: str | None = Field(default=None, max_length=500)
     formulation: str | None = Field(default=None, max_length=64)
     names: dict[str, str] | None = None
@@ -177,8 +177,8 @@ class _ClaimFields(_Strict):
     dose_unit: DoseUnit
     dose_per_tank_15l: str | None = Field(default=None, max_length=64)
     phi_days: int = Field(ge=0, le=365, description="Pre-harvest interval in days.")
-    ppe_text: str | None = None
-    safety_text: str | None = None
+    ppe_text: str | None = Field(default=None, max_length=2000)
+    safety_text: str | None = Field(default=None, max_length=2000)
     source_ref: str = Field(min_length=1, max_length=200, description="CIB&RC reference.")
     efficacy_tier: int | None = Field(default=None, ge=1, le=3)
 
@@ -197,8 +197,8 @@ class LabelClaimUpdate(_Strict):
     dose_unit: DoseUnit | None = None
     dose_per_tank_15l: str | None = Field(default=None, max_length=64)
     phi_days: int | None = Field(default=None, ge=0, le=365)
-    ppe_text: str | None = None
-    safety_text: str | None = None
+    ppe_text: str | None = Field(default=None, max_length=2000)
+    safety_text: str | None = Field(default=None, max_length=2000)
     source_ref: str | None = Field(default=None, min_length=1, max_length=200)
     efficacy_tier: int | None = Field(default=None, ge=1, le=3)
     version: int | None = None

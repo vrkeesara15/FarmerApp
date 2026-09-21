@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AUDIT_ROLES, SETTINGS_ROLES, USER_READ_ROLES } from "@/lib/admin";
+import { DATA_REQUEST_ROLES } from "@/lib/data-requests";
 import { useT } from "@/lib/i18n-client";
 import { useSession } from "@/lib/session-context";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,11 @@ export function AdminSubNav() {
     { href: "/admin/users", label: t("nav.users"), roles: USER_READ_ROLES },
     { href: "/settings", label: t("nav.settings"), roles: SETTINGS_ROLES },
     { href: "/admin/audit", label: t("nav.audit"), roles: AUDIT_ROLES },
+    {
+      href: "/admin/data-requests",
+      label: t("nav.dataRequests"),
+      roles: DATA_REQUEST_ROLES,
+    },
   ].filter((l) => !role || l.roles.includes(role));
   return (
     <nav aria-label={t("admin.subnav")} className="flex gap-1 border-b border-border">

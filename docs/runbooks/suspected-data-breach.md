@@ -48,3 +48,18 @@ Legal clocks (TODO-LEGAL: confirm with counsel before the pilot and keep the con
 
 - Postmortem within 5 working days; yearly rehearsal of this runbook (SPEC 11.4: incident response runbook tested once a year).
 - SCC setup (human gate): activate Security Command Center Standard on the organisation, set `scc_notifications_enabled = true` and `org_id` in `infra/bootstrap`, and connect the `scc-findings.security-channel` subscription to the security Slack channel (relay needs a Slack webhook, created by a human).
+
+## Rehearsal log
+
+SPEC 11.4 requires this runbook to be tested once a year, and NF-013 requires it to exist at
+all. A rehearsal is a table-top walk of steps 1-6 with the owner and one engineer, against a
+made-up finding, timing how long each step takes and writing down what was unclear. Record
+every drill here — an empty table is itself the finding.
+
+| Date | Scenario | Participants | Time to step 4 (assess) | What we changed afterwards |
+|---|---|---|---|---|
+| _(none yet)_ | | | | |
+
+Related: [docs/dpdp.md](../dpdp.md) (what the Act requires of us and where each control lives),
+[data-subject-erasure.md](data-subject-erasure.md) (the request path, which a breach often
+triggers a wave of).

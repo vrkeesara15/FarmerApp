@@ -245,14 +245,20 @@ test("C103: audit filters, diff and CSV export behind step-up", async ({ page })
   await page.goto("/admin/audit");
   await expect(page.getByRole("heading", { level: 1, name: "Audit log" })).toBeVisible();
   await page.getByLabel("Entity", { exact: true }).fill("device");
-  await page.getByRole("button", { name: "Apply" }).click();
+  await page
+    .getByTestId("audit-filters")
+    .getByRole("button", { name: "Apply", exact: true })
+    .click();
   await page.waitForURL(/\/admin\/audit\?entity=device$/);
   const rows = page.getByTestId("data-table").locator("tbody tr");
   await expect(rows.first()).toContainText("device.");
   for (const text of await rows.allTextContents()) expect(text).toMatch(/device\./);
 
   await page.getByLabel("Action", { exact: true }).fill("device.report_lost");
-  await page.getByRole("button", { name: "Apply" }).click();
+  await page
+    .getByTestId("audit-filters")
+    .getByRole("button", { name: "Apply", exact: true })
+    .click();
   const lost = page.getByRole("row").filter({ hasText: "device.report_lost" }).first();
   await lost.getByRole("button", { name: /Show changes/ }).click();
   const diff = page.getByTestId("audit-diff");

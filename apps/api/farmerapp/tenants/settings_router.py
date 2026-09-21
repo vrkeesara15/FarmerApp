@@ -100,11 +100,15 @@ class FeaturesPatch(BaseModel):
 class BrandingPatch(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    app_name_agent: str | None = None
-    app_name_farmer: str | None = None
-    primary_colour: str | None = None
-    logo_blob_uri: str | None = None
-    support_phone: str | None = None
+    # SEC-022: every string is length-bounded here, at the request boundary, so an oversized
+    # value never reaches the parser. *Format* stays with `Branding` one layer down, which is
+    # what produces the 422 `invalid_settings` problem with per-field errors the console
+    # renders — duplicating its patterns here would change that contract for no security gain.
+    app_name_agent: str | None = Field(default=None, min_length=1, max_length=40)
+    app_name_farmer: str | None = Field(default=None, min_length=1, max_length=40)
+    primary_colour: str | None = Field(default=None, min_length=1, max_length=32)
+    logo_blob_uri: str | None = Field(default=None, min_length=1, max_length=512)
+    support_phone: str | None = Field(default=None, min_length=1, max_length=32)
 
 
 class SettingsPatch(BaseModel):
@@ -112,13 +116,15 @@ class SettingsPatch(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    consent_version: str | None = None
+    consent_version: str | None = Field(default=None, min_length=1, max_length=32)
     geofence_radius_m: int | None = Field(default=None, description="10-2000 m.")
     meeting_point_radius_m: int | None = Field(default=None, description="10-2000 m or null.")
     min_visit_duration_s: int | None = Field(default=None, description="0-86400 s.")
-    auto_duty_end_local_time: str | None = Field(default=None, description="HH:MM (IST).")
+    auto_duty_end_local_time: str | None = Field(
+        default=None, min_length=1, max_length=8, description="HH:MM (IST)."
+    )
     idle_end_minutes: int | None = Field(default=None, description="5-720 min.")
-    location_policy_version: str | None = None
+    location_policy_version: str | None = Field(default=None, min_length=1, max_length=32)
     sampling: SamplingPatch | None = None
     ta_rate_per_km_paise: int | None = Field(default=None, description="0-10000 paise.")
     ta_daily_km_cap: int | None = Field(default=None, description="FA-023 1-1000 km a day.")
@@ -128,15 +134,15 @@ class SettingsPatch(BaseModel):
     credit_due_days: int | None = Field(default=None, description="1-730 days.")
     day_close_variance_threshold_paise: int | None = None
     webhook_replay_window_s: int | None = Field(default=None, description="30-86400 s.")
-    legal_name: str | None = None
+    legal_name: str | None = Field(default=None, min_length=1, max_length=200)
     gstin_by_state: dict[str, str] | None = None
-    invoice_prefix: str | None = None
+    invoice_prefix: str | None = Field(default=None, min_length=1, max_length=16)
     working_days: list[int] | None = Field(
         default=None, description="OPS-007 ISO weekdays 1 (Mon) - 7 (Sun)."
     )
     holidays: list[date] | None = Field(default=None, description="OPS-007 YYYY-MM-DD dates.")
     day_close_deadline_local_time: str | None = Field(
-        default=None, description="OPS-007 HH:MM (IST)."
+        default=None, min_length=1, max_length=8, description="OPS-007 HH:MM (IST)."
     )
     languages_enabled: list[Language] | None = None
     default_language: Language | None = None

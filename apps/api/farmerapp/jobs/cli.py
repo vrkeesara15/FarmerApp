@@ -8,6 +8,7 @@ import uuid
 
 import typer
 
+from farmerapp import retention
 from farmerapp.duty import auto_end as duty_jobs
 from farmerapp.jobs import purge_audit_logs as purge_mod
 from farmerapp.jobs import purge_expired as expired_mod
@@ -106,6 +107,38 @@ def purge_expired(
             f"purge-expired: tenant={report.tenant_id} upload_sessions={report.upload_sessions} "
             f"upload_chunks={report.upload_chunks} idempotency_keys={report.idempotency_keys}"
         )
+
+
+@cli.command("retention-sweep")
+def retention_sweep(
+    tenant_id: list[uuid.UUID] = typer.Option(  # noqa: B008
+        ..., "--tenant-id", help="Tenant(s) to sweep (repeatable)."
+    ),
+    retention_class: list[str] = typer.Option(  # noqa: B008
+        [], "--class", help="Only these classes (see --help for the list)."
+    ),
+    apply: bool = typer.Option(
+        False, "--apply", help="Actually delete. Without it nothing is deleted (NF-012)."
+    ),
+) -> None:
+    """NF-012: report every retention class and, with --apply, purge what the runtime role may.
+
+    Dry run by default. Financial records (8 years) are a floor and are never deleted here;
+    audit logs and location points name the job that owns their purge.
+    """
+    _setup()
+    reports = asyncio.run(
+        retention.run_sweep(tenant_id, apply=apply, classes=tuple(retention_class))
+    )
+    for report in reports:
+        mode = "apply" if report.applied else "dry-run"
+        typer.echo(f"retention-sweep ({mode}): tenant={report.tenant_id}")
+        for entry in report.classes:
+            suffix = f" -> {entry.deferred_to}" if entry.deferred_to else ""
+            typer.echo(
+                f"  {entry.name:<18} {entry.action:<8} {entry.days:>5}d "
+                f"due={entry.due:<7} deleted={entry.deleted}{suffix}"
+            )
 
 
 @cli.command("ensure-partitions")
