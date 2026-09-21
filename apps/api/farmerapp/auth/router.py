@@ -48,11 +48,21 @@ me_router = APIRouter(tags=["me"])
         (403, "user_disabled"),
         (423, "otp_locked"),
         (429, "otp_rate_limited"),
+        (403, "otp_country_blocked"),
+        (429, "otp_blocked"),
+        (429, "otp_cost_limited"),
     ),
 )
-async def send_otp(body: OtpSendRequest, session: DbSession, services: Services) -> OtpSendResponse:
+async def send_otp(
+    request: Request, body: OtpSendRequest, session: DbSession, services: Services
+) -> OtpSendResponse:
     result = await services.otp.send(
-        session, phone=body.phone, purpose=OtpPurpose(body.purpose), device_id=body.device_id
+        session,
+        phone=body.phone,
+        purpose=OtpPurpose(body.purpose),
+        device_id=body.device_id,
+        # SEC-021: the per-IP velocity rule and the abuse block list need the caller's IP.
+        request_ip=audit.client_ip(request),
     )
     settings = services.settings
     return OtpSendResponse(
@@ -212,13 +222,26 @@ async def get_me(user: Annotated[User, require_roles(*Role)], session: DbSession
     summary="SEC-028: send a re-authentication code to the caller's own phone",
     status_code=status.HTTP_202_ACCEPTED,
     response_model=OtpSendResponse,
-    responses=problem_responses((423, "otp_locked"), (429, "otp_rate_limited")),
+    responses=problem_responses(
+        (423, "otp_locked"),
+        (429, "otp_rate_limited"),
+        (403, "otp_country_blocked"),
+        (429, "otp_blocked"),
+        (429, "otp_cost_limited"),
+    ),
 )
 async def send_step_up(
-    user: Annotated[User, require_roles(*Role)], session: DbSession, services: Services
+    request: Request,
+    user: Annotated[User, require_roles(*Role)],
+    session: DbSession,
+    services: Services,
 ) -> OtpSendResponse:
     result = await services.otp.send(
-        session, phone=user.phone, purpose=OtpPurpose.STEP_UP, tenant_id=user.tenant_id
+        session,
+        phone=user.phone,
+        purpose=OtpPurpose.STEP_UP,
+        tenant_id=user.tenant_id,
+        request_ip=audit.client_ip(request),
     )
     settings = services.settings
     return OtpSendResponse(

@@ -2,7 +2,11 @@
 
 * 6-digit code from ``secrets``; stored as HMAC-SHA256(pepper, challenge_id || code).
 * 5-minute validity; 5 wrong attempts lock the phone for 15 minutes.
-* 3 resends per 15-minute window per phone (SPEC FA-001; SEC-021 velocity).
+* 3 resends per 15-minute window per phone (SPEC FA-001).
+* SEC-021 SMS pumping protection before every send (``farmerapp.auth.otp_abuse``): the
+  number's country must be allowed (India only by default), neither the number nor the
+  client IP may be on the abuse block list, per-phone (24 h) and per-IP (1 h) velocity caps
+  hold, and the tenant's hourly send budget is watched (alert, then breaker).
 * Single use: verification consumes the challenge; a resend supersedes the previous one.
 * Delivery: SMS first; if the provider has not confirmed delivery within 30 s, the same code
   goes out by WhatsApp (delayed check via the scheduler seam).
@@ -22,6 +26,7 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from farmerapp.auth import otp_abuse
 from farmerapp.auth.errors import (
     OtpExpiredError,
     OtpInvalidError,
@@ -143,6 +148,7 @@ class OtpService:
         purpose: OtpPurpose = OtpPurpose.LOGIN,
         device_id: str | None = None,
         tenant_id: uuid.UUID | None = None,
+        request_ip: str | None = None,
     ) -> SendResult:
         settings = self._s.settings
         now = self._now
@@ -160,6 +166,15 @@ class OtpService:
         if tenant_id is None:
             raise ValueError("tenant_id is required for non-login purposes")
         await set_tenant(session, tenant_id)
+        # SEC-021: country, block list, velocity and the hourly cost guard, in that order.
+        await otp_abuse.check_send(
+            session,
+            tenant_id=tenant_id,
+            phone=phone,
+            request_ip=request_ip,
+            now=now,
+            settings=settings,
+        )
 
         latest = await self._latest(session, phone, purpose)
         locked = self._lock_remaining(latest, now)
@@ -197,6 +212,7 @@ class OtpService:
             channel=OtpChannel.SMS,
             user_id=user.id if user else None,
             device_id=device_id,
+            request_ip=request_ip,
         )
         session.add(challenge)
 

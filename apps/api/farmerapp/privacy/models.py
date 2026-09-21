@@ -1,12 +1,15 @@
 """``data_request`` — data-principal requests (FM-015, NF-013 groundwork; Alembic 0027).
 
 One table for the DPDP rights the apps and console expose: ``deletion`` (FM-015 "delete my
-account and data"), ``access`` and ``correction`` (NF-013). A request is a ticket: it is
+account and data"), ``access``, ``correction`` and ``grievance`` (NF-013). A request is a
+ticket: it is
 ``received`` with a ``due_by`` (30 days, the policy timeline), handled by a tenant admin or
 owner (``in_progress`` -> ``completed`` / ``rejected`` with ``handled_by`` / ``handled_at``
 and a note). The erasure itself is a human-reviewed operation (retention of financial
 records, SPEC NF-012, overrides deletion) — this table is the auditable queue, not the
-deleter.
+deleter — but since M7 it *drives* one: ``POST /v1/admin/data-requests/{id}/erase`` runs
+``farmerapp.privacy.erasure``, which anonymises the principal and records, on the ticket,
+which record classes had to be kept and why (financial records, 8 years).
 """
 
 from __future__ import annotations
@@ -16,6 +19,7 @@ from datetime import datetime
 from enum import StrEnum
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, String, Text, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from farmerapp.catalog.models import sql_in
@@ -29,6 +33,7 @@ class DataRequestType(StrEnum):
     DELETION = "deletion"
     ACCESS = "access"
     CORRECTION = "correction"
+    GRIEVANCE = "grievance"
 
 
 class DataRequestStatus(StrEnum):
@@ -83,6 +88,13 @@ class DataRequest(Base, BaseColumns):
     )
     handled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     resolution_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: grievance: the one-line subject and the body (NF-013 grievance redressal).
+    subject: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: correction: ``{field: new value}`` the principal asks for; staff apply it verbatim.
+    requested_changes: Mapped[dict[str, str] | None] = mapped_column(JSONB, nullable=True)
+    #: erasure: what the run anonymised and what it had to keep (NF-012 financial records).
+    erasure_report: Mapped[dict[str, object] | None] = mapped_column(JSONB, nullable=True)
 
 
 __all__ = [

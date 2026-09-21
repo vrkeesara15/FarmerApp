@@ -54,7 +54,7 @@ paths:
           content:
             application/problem+json: {}
         '403':
-          description: '`user_disabled`'
+          description: '`user_disabled`, `otp_country_blocked`'
           content:
             application/problem+json: {}
         '423':
@@ -62,7 +62,7 @@ paths:
           content:
             application/problem+json: {}
         '429':
-          description: '`otp_rate_limited`'
+          description: '`otp_rate_limited`, `otp_blocked`, `otp_cost_limited`'
           content:
             application/problem+json: {}
       x-public: true
@@ -230,15 +230,15 @@ paths:
           content:
             application/problem+json: {}
         '429':
-          description: '`otp_rate_limited`'
+          description: '`otp_rate_limited`, `otp_blocked`, `otp_cost_limited`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`otp_country_blocked`, `forbidden`'
           content:
             application/problem+json: {}
         '401':
           description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
-          content:
-            application/problem+json: {}
-        '403':
-          description: '`forbidden`'
           content:
             application/problem+json: {}
       x-roles:
@@ -9662,6 +9662,175 @@ paths:
       - owner
       - store_manager
       - tenant_admin
+  /v1/me/data-export:
+    get:
+      tags:
+      - privacy
+      summary: 'NF-013 right of access: everything this company holds about me, as JSON'
+      operationId: exportMyData
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Exportmydata
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/me/data-requests:
+    get:
+      tags:
+      - privacy
+      summary: 'NF-013: my own access / correction / erasure / grievance tickets'
+      operationId: listMyDataRequests
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/DeletionRequestOut'
+                type: array
+                title: Response Listmydatarequests
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/me/correction-request:
+    post:
+      tags:
+      - privacy
+      summary: 'NF-013 right to correction: ask for my own details to be corrected'
+      operationId: requestCorrection
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorrectionRequestIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionRequestOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/me/grievance:
+    post:
+      tags:
+      - privacy
+      summary: 'NF-013 grievance redressal: raise a complaint about how my data is handled'
+      operationId: raiseGrievance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrievanceIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionRequestOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - accountant
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
   /v1/admin/data-requests:
     get:
       tags:
@@ -9788,6 +9957,200 @@ paths:
       x-roles:
       - owner
       - tenant_admin
+  /v1/admin/data-requests/{id}/export:
+    get:
+      tags:
+      - privacy
+      summary: 'NF-013: the access-right document for the principal of this ticket'
+      operationId: exportDataRequestSubject
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Exportdatarequestsubject
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - owner
+      - tenant_admin
+  /v1/admin/data-requests/{id}/apply-correction:
+    post:
+      tags:
+      - privacy
+      summary: 'NF-013: apply a correction request to the principal''s record (step-up; audited)'
+      operationId: applyDataRequestCorrection
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrectionAppliedOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_transition`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - owner
+      - tenant_admin
+  /v1/admin/data-requests/{id}/erase:
+    post:
+      tags:
+      - privacy
+      summary: 'NF-013: anonymise the principal, keeping what NF-012 requires (step-up; audited)'
+      operationId: eraseDataRequestSubject
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErasureOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_transition`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-step-up: true
+      x-roles:
+      - owner
+      - tenant_admin
+  /v1/admin/data-requests/retention-exceptions:
+    get:
+      tags:
+      - privacy
+      summary: 'NF-012 / NF-013: what an erasure must keep, and for how long'
+      operationId: listRetentionExceptions
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  additionalProperties: true
+                  type: object
+                type: array
+                title: Response Listretentionexceptions
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - owner
+      - tenant_admin
+  /v1/privacy/contact:
+    get:
+      tags:
+      - privacy
+      summary: 'NF-013: the grievance-redressal contact and the rights a data principal has'
+      operationId: getGrievanceContact
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrievanceContactOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      x-public: true
   /v1/notifications:
     get:
       tags:
@@ -14196,26 +14559,36 @@ components:
         app_name_agent:
           anyOf:
           - type: string
+            maxLength: 40
+            minLength: 1
           - type: 'null'
           title: App Name Agent
         app_name_farmer:
           anyOf:
           - type: string
+            maxLength: 40
+            minLength: 1
           - type: 'null'
           title: App Name Farmer
         primary_colour:
           anyOf:
           - type: string
+            maxLength: 32
+            minLength: 1
           - type: 'null'
           title: Primary Colour
         logo_blob_uri:
           anyOf:
           - type: string
+            maxLength: 512
+            minLength: 1
           - type: 'null'
           title: Logo Blob Uri
         support_phone:
           anyOf:
           - type: string
+            maxLength: 32
+            minLength: 1
           - type: 'null'
           title: Support Phone
       additionalProperties: false
@@ -15508,6 +15881,41 @@ components:
       - current
       - items
       title: CorpusVersionsOut
+    CorrectionAppliedOut:
+      properties:
+        applied:
+          additionalProperties:
+            type: string
+          type: object
+          title: Applied
+        request:
+          $ref: '#/components/schemas/DataRequestOut'
+      type: object
+      required:
+      - applied
+      - request
+      title: CorrectionAppliedOut
+    CorrectionRequestIn:
+      properties:
+        changes:
+          additionalProperties:
+            type: string
+          type: object
+          maxProperties: 5
+          minProperties: 1
+          title: Changes
+        reason:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Reason
+      additionalProperties: false
+      type: object
+      required:
+      - changes
+      title: CorrectionRequestIn
+      description: 'NF-013: ``{field: new value}``, restricted to the principal''s own fields (SEC-022).'
     CountAmount:
       properties:
         count:
@@ -16277,6 +16685,29 @@ components:
           - type: string
           - type: 'null'
           title: Reason
+        subject:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+        requested_changes:
+          anyOf:
+          - additionalProperties:
+              type: string
+            type: object
+          - type: 'null'
+          title: Requested Changes
+        erasure_report:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Erasure Report
         due_by:
           type: string
           format: date-time
@@ -16359,6 +16790,7 @@ components:
       - deletion
       - access
       - correction
+      - grievance
       title: DataRequestType
     DataRequestUpdate:
       properties:
@@ -18161,6 +18593,31 @@ components:
       - debit
       - credit
       title: EntryType
+    ErasureOut:
+      properties:
+        erased:
+          items:
+            type: string
+          type: array
+          title: Erased
+        retained:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Retained
+        already_erased:
+          type: boolean
+          title: Already Erased
+        request:
+          $ref: '#/components/schemas/DataRequestOut'
+      type: object
+      required:
+      - erased
+      - retained
+      - already_erased
+      - request
+      title: ErasureOut
     EvaluationListOut:
       properties:
         items:
@@ -20245,6 +20702,52 @@ components:
       - coordinates
       title: GeoJsonPolygon
       description: 'A GeoJSON Polygon: one outer ring (holes are not accepted for farm boundaries).'
+    GrievanceContactOut:
+      properties:
+        officer_name:
+          type: string
+          title: Officer Name
+        email:
+          type: string
+          title: Email
+        phone:
+          type: string
+          title: Phone
+        response_days:
+          type: integer
+          title: Response Days
+        rights:
+          items:
+            type: string
+          type: array
+          title: Rights
+      type: object
+      required:
+      - officer_name
+      - email
+      - phone
+      - response_days
+      - rights
+      title: GrievanceContactOut
+      description: 'NF-013: who to complain to, shown in the apps and the console.'
+    GrievanceIn:
+      properties:
+        subject:
+          type: string
+          maxLength: 200
+          minLength: 3
+          title: Subject
+        message:
+          type: string
+          maxLength: 4000
+          minLength: 3
+          title: Message
+      additionalProperties: false
+      type: object
+      required:
+      - subject
+      - message
+      title: GrievanceIn
     HealthResponse:
       properties:
         status:
@@ -21081,11 +21584,13 @@ components:
         ppe_text:
           anyOf:
           - type: string
+            maxLength: 2000
           - type: 'null'
           title: Ppe Text
         safety_text:
           anyOf:
           - type: string
+            maxLength: 2000
           - type: 'null'
           title: Safety Text
         source_ref:
@@ -21320,11 +21825,13 @@ components:
         ppe_text:
           anyOf:
           - type: string
+            maxLength: 2000
           - type: 'null'
           title: Ppe Text
         safety_text:
           anyOf:
           - type: string
+            maxLength: 2000
           - type: 'null'
           title: Safety Text
         source_ref:
@@ -25194,6 +25701,7 @@ components:
         description:
           anyOf:
           - type: string
+            maxLength: 4000
           - type: 'null'
           title: Description
         active_ingredient:
@@ -25374,6 +25882,7 @@ components:
         description:
           anyOf:
           - type: string
+            maxLength: 4000
           - type: 'null'
           title: Description
         active_ingredient:
@@ -27547,6 +28056,8 @@ components:
         consent_version:
           anyOf:
           - type: string
+            maxLength: 32
+            minLength: 1
           - type: 'null'
           title: Consent Version
         geofence_radius_m:
@@ -27570,6 +28081,8 @@ components:
         auto_duty_end_local_time:
           anyOf:
           - type: string
+            maxLength: 8
+            minLength: 1
           - type: 'null'
           title: Auto Duty End Local Time
           description: HH:MM (IST).
@@ -27582,6 +28095,8 @@ components:
         location_policy_version:
           anyOf:
           - type: string
+            maxLength: 32
+            minLength: 1
           - type: 'null'
           title: Location Policy Version
         sampling:
@@ -27637,6 +28152,8 @@ components:
         legal_name:
           anyOf:
           - type: string
+            maxLength: 200
+            minLength: 1
           - type: 'null'
           title: Legal Name
         gstin_by_state:
@@ -27649,6 +28166,8 @@ components:
         invoice_prefix:
           anyOf:
           - type: string
+            maxLength: 16
+            minLength: 1
           - type: 'null'
           title: Invoice Prefix
         working_days:
@@ -27671,6 +28190,8 @@ components:
         day_close_deadline_local_time:
           anyOf:
           - type: string
+            maxLength: 8
+            minLength: 1
           - type: 'null'
           title: Day Close Deadline Local Time
           description: OPS-007 HH:MM (IST).
@@ -29129,6 +29650,7 @@ components:
         cursor:
           anyOf:
           - type: string
+            maxLength: 512
           - type: 'null'
           title: Cursor
           description: Opaque cursor from a previous sync.

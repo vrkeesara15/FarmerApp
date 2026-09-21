@@ -15,6 +15,7 @@ import {
   Leaf,
   Package,
   ScrollText,
+  Scale,
   Settings,
   Store,
   Users,
@@ -109,6 +110,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     { href: "/admin/users", label: t("nav.users"), icon: <UserCog /> },
     { href: "/settings", label: t("nav.settings"), icon: <Settings /> },
     { href: "/admin/audit", label: t("nav.audit"), icon: <ScrollText /> },
+    { href: "/admin/data-requests", label: t("nav.dataRequests"), icon: <Scale /> },
     { href: "/design", label: t("nav.design"), icon: <Palette /> },
   ];
   // Role-based nav (SPEC 2.6, lib/nav.ts ROUTE_ROLES): hide what the signed-in role cannot read.

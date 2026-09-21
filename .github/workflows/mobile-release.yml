@@ -95,40 +95,113 @@ jobs:
             --obfuscate --split-debug-info=build/symbols
           ls -la build/app/outputs/bundle/release/
 
-      - name: Release build is not debuggable (SEC-008)
+      # Every gate below inspects the *shipped bytes*. The AAB's manifest is
+      # binary XML (AXML), so grepping it for the ASCII string "debuggable"
+      # proves nothing either way; instead we assemble the universal APK Play
+      # would install and read it with the Android SDK's own tools.
+      - name: Build universal APK for the security gates (SEC-008)
         working-directory: apps/mobile/apps/${{ steps.app.outputs.app }}
-        run: |
-          aab=build/app/outputs/bundle/release/app-release.aab
-          unzip -p "$aab" base/manifest/AndroidManifest.xml > manifest.bin || true
-          if grep -aq 'debuggable' manifest.bin; then
-            echo "::error::android:debuggable found in release manifest"; exit 1
-          fi
-
-      - name: MobSF scan (SEC-008)
-        working-directory: apps/mobile/apps/${{ steps.app.outputs.app }}
+        env:
+          BUNDLETOOL_VERSION: "1.18.1"
         run: |
           set -euo pipefail
-          aab=build/app/outputs/bundle/release/app-release.aab
-          docker run -d --name mobsf -p 8000:8000 -e MOBSF_API_KEY=ci opensecurity/mobile-security-framework-mobsf:latest
-          for _ in $(seq 1 60); do curl -sf http://localhost:8000/api/v1/scans -H "Authorization: ci" >/dev/null && break; sleep 3; done
-          up=$(curl -sf -F "file=@${aab}" http://localhost:8000/api/v1/upload -H "Authorization: ci")
-          hash=$(echo "$up" | python3 -c 'import json,sys; print(json.load(sys.stdin)["hash"])')
-          curl -sf -X POST http://localhost:8000/api/v1/scan -H "Authorization: ci" -d "hash=${hash}" > /dev/null
-          curl -sf -X POST http://localhost:8000/api/v1/report_json -H "Authorization: ci" -d "hash=${hash}" > mobsf-report.json
-          python3 - <<'PY'
-          import json, os, sys
-          r = json.load(open("mobsf-report.json"))
-          high = [f for f in r.get("code_analysis", {}).get("findings", {}).values() if f.get("metadata", {}).get("severity") == "high"]
-          high += [f for f in r.get("manifest_analysis", {}).get("manifest_findings", []) if f.get("severity") == "high"]
-          secrets = r.get("secrets", [])
-          print(f"MobSF: {len(high)} high findings, {len(secrets)} possible hardcoded secrets, security score {r.get('appsec', {}).get('security_score')}")
-          limit = int(os.environ.get("MOBSF_HIGH_LIMIT", "0"))
-          if len(high) > limit or secrets:
-              for f in high: print("HIGH:", f.get("title") or f.get("metadata", {}).get("description"))
-              for s in secrets: print("SECRET:", s)
-              sys.exit(1)
-          PY
+          curl -sSfL -o "$RUNNER_TEMP/bundletool.jar" \
+            "https://github.com/google/bundletool/releases/download/${BUNDLETOOL_VERSION}/bundletool-all-${BUNDLETOOL_VERSION}.jar"
+          # A throwaway key: this APK is only ever read by the gates below and
+          # is never installed or published. The real upload key stays untouched.
+          keytool -genkeypair -v -keystore "$RUNNER_TEMP/analysis.jks" \
+            -storepass analysis -keypass analysis -alias analysis \
+            -keyalg RSA -keysize 2048 -validity 1 -dname "CN=apk analysis" >/dev/null
+          java -jar "$RUNNER_TEMP/bundletool.jar" build-apks \
+            --bundle=build/app/outputs/bundle/release/app-release.aab \
+            --output="$RUNNER_TEMP/universal.apks" --mode=universal --overwrite \
+            --ks="$RUNNER_TEMP/analysis.jks" --ks-pass=pass:analysis \
+            --ks-key-alias=analysis --key-pass=pass:analysis
+          unzip -o -q "$RUNNER_TEMP/universal.apks" -d "$RUNNER_TEMP/universal"
+          mv "$RUNNER_TEMP/universal/universal.apk" build/app-release-universal.apk
+          ls -la build/app-release-universal.apk
+
+      # aapt2 dump xmltree on the merged manifest: android:debuggable absent or
+      # false, allowBackup=false, data-extraction + backup rules and a network
+      # security config present, no global cleartext. Exits 2 (failing the job)
+      # when aapt2 is missing — it never passes by accident.
+      #
+      # android:extractNativeLibs is deliberately *true* here
+      # (useLegacyPackaging in build.gradle.kts, FM-014 APK budget), so it is
+      # not asserted false; see docs/runbooks/mobile-security-scan.md.
+      - name: Release manifest gate — not debuggable (SEC-008)
+        working-directory: apps/mobile/apps/${{ steps.app.outputs.app }}
+        run: ../../tool/check_release_manifest.sh build/app-release-universal.apk
+
+      - name: Obfuscation gate — Dart symbols split out, R8 on (SEC-008)
+        working-directory: apps/mobile/apps/${{ steps.app.outputs.app }}
+        run: |
+          "$GITHUB_WORKSPACE/scripts/mobile/apk_obfuscation_check.sh" \
+            build/app-release-universal.apk \
+            build/symbols \
+            android/app/build.gradle.kts
+
+      - name: Secrets gate — nothing credential-shaped in the APK (SEC-008)
+        working-directory: apps/mobile/apps/${{ steps.app.outputs.app }}
+        run: |
+          "$GITHUB_WORKSPACE/scripts/mobile/apk_secret_scan.sh" \
+            build/app-release-universal.apk \
+            "$GITHUB_WORKSPACE/.env.example"
+
+      # MobSF runs entirely from the free OSS docker image — no account, no
+      # paid tier. If the image cannot be pulled or the API never comes up the
+      # job FAILS; set the repository variable MOBSF_OPTIONAL=true only as a
+      # deliberate, documented escape hatch (docs/runbooks/mobile-security-scan.md).
+      - name: MobSF scan (SEC-008)
+        working-directory: apps/mobile/apps/${{ steps.app.outputs.app }}
+        env:
+          MOBSF_OPTIONAL: ${{ vars.MOBSF_OPTIONAL }}
+          MOBSF_IMAGE: opensecurity/mobile-security-framework-mobsf:latest
+          MOBSF_API_KEY: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -uo pipefail
+          apk=build/app-release-universal.apk
+
+          unavailable() {
+            echo "::error::MobSF could not run: $*"
+            if [ "${MOBSF_OPTIONAL:-}" = "true" ]; then
+              echo "::warning::vars.MOBSF_OPTIONAL=true — continuing without the MobSF scan."
+              docker logs mobsf 2>&1 | tail -40 || true
+              docker rm -f mobsf >/dev/null 2>&1 || true
+              exit 0
+            fi
+            docker logs mobsf 2>&1 | tail -40 || true
+            docker rm -f mobsf >/dev/null 2>&1 || true
+            exit 1
+          }
+
+          docker pull "$MOBSF_IMAGE" || unavailable "docker pull $MOBSF_IMAGE failed"
+          docker run -d --name mobsf -p 8000:8000 \
+            -e MOBSF_API_KEY="$MOBSF_API_KEY" "$MOBSF_IMAGE" \
+            || unavailable "docker run failed"
+
+          ready=""
+          for _ in $(seq 1 80); do
+            if curl -sf http://localhost:8000/api/v1/scans -H "Authorization: $MOBSF_API_KEY" >/dev/null; then
+              ready=yes; break
+            fi
+            sleep 3
+          done
+          [ -n "$ready" ] || unavailable "the API did not answer within 4 minutes"
+
+          set -e
+          # MobSF analyses the APK, not the AAB: the gates above and MobSF then
+          # look at exactly the same bytes.
+          up=$(curl -sf -F "file=@${apk}" http://localhost:8000/api/v1/upload -H "Authorization: $MOBSF_API_KEY")
+          hash=$(printf '%s' "$up" | python3 -c 'import json,sys; print(json.load(sys.stdin)["hash"])')
+          curl -sf -X POST http://localhost:8000/api/v1/scan \
+            -H "Authorization: $MOBSF_API_KEY" -d "hash=${hash}" >/dev/null
+          curl -sf -X POST http://localhost:8000/api/v1/report_json \
+            -H "Authorization: $MOBSF_API_KEY" -d "hash=${hash}" > mobsf-report.json
           docker rm -f mobsf >/dev/null
+
+          # MOBSF_HIGH_LIMIT comes from the workflow env; the gate reads it.
+          python3 "$GITHUB_WORKSPACE/scripts/mobile/mobsf_gate.py" mobsf-report.json
 
       - uses: actions/upload-artifact@v4
         if: always()

@@ -61,7 +61,8 @@
     "reports": "Reports and exports",
     "cropHealth": "Crop health",
     "models": "Model releases",
-    "segments": "Segments"
+    "segments": "Segments",
+    "dataRequests": "Data requests"
   },
   "topbar": {
     "searchPlaceholder": "Search farmer phone or name, officer, order id",
@@ -2326,5 +2327,107 @@
     "repeatEmpty": "No subject was flagged more than once.",
     "emptyTitle": "No flags to summarise",
     "emptyHelp": "Once the validation agents raise flags, their quality shows here."
+  },
+  "dataRequests": {
+    "title": "Data requests",
+    "subtitle": "Access, correction, erasure and grievance requests from data principals. The closest deadline is on top.",
+    "filters": "Data request filters",
+    "emptyTitle": "No data requests match these filters",
+    "emptyHelp": "Change the type or status filter to see more.",
+    "queueCaption": "Data requests, closest deadline first",
+    "overdue": "Overdue",
+    "dueBy": "Due {date}",
+    "selectTitle": "Select a request",
+    "selectHelp": "Pick a row to read it and act on it.",
+    "stepUpNote": "You will be asked for a one-time code.",
+    "columns": {
+      "type": "Type",
+      "summary": "Request",
+      "status": "Status",
+      "due": "Due (IST)"
+    },
+    "type": {
+      "deletion": "Erasure",
+      "access": "Access",
+      "correction": "Correction",
+      "grievance": "Grievance"
+    },
+    "status": {
+      "received": "Received",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "rejected": "Rejected"
+    },
+    "fields": {
+      "requester": "Requested by",
+      "farmer": "Farmer",
+      "reason": "In their words",
+      "subject": "Subject",
+      "created": "Received (IST)",
+      "due": "Due (IST)",
+      "handledBy": "Handled by",
+      "handledAt": "Handled (IST)",
+      "resolution": "Resolution note"
+    },
+    "actions": {
+      "start": "Start",
+      "complete": "Complete",
+      "reject": "Reject",
+      "applyCorrection": "Apply correction",
+      "runErasure": "Run erasure",
+      "downloadExport": "Download export",
+      "open": "Open the {type} request"
+    },
+    "note": {
+      "label": "Resolution note (required)",
+      "help": "The note is stored with the request and shown in the audit log.",
+      "required": "Add a note that explains the decision."
+    },
+    "start": {
+      "title": "Start work on this request?",
+      "help": "The request moves to In progress and is assigned to you.",
+      "confirm": "Start",
+      "done": "Request moved to In progress"
+    },
+    "complete": {
+      "title": "Complete this request?",
+      "help": "Say what was done for the data principal.",
+      "confirm": "Complete",
+      "done": "Request completed"
+    },
+    "reject": {
+      "title": "Reject this request?",
+      "help": "Say why the request cannot be met. The data principal can escalate.",
+      "confirm": "Reject",
+      "done": "Request rejected"
+    },
+    "correction": {
+      "title": "Apply the requested corrections?",
+      "help": "These fields are overwritten on the farmer record. The change is audited.",
+      "confirm": "Apply correction",
+      "requested": "Requested changes",
+      "field": "Field",
+      "value": "New value",
+      "none": "This request does not list any field to correct.",
+      "appliedTitle": "Corrections applied",
+      "done": "{n} field(s) corrected"
+    },
+    "erasure": {
+      "title": "Erase this data principal's data?",
+      "help": "Personal data is deleted. Records the law requires us to keep are retained and listed afterwards. This cannot be undone.",
+      "confirm": "Run erasure",
+      "done": "Erasure completed",
+      "reportTitle": "Erasure report",
+      "erasedTitle": "Erased",
+      "retainedTitle": "Retained by law",
+      "retainedHelp": "These classes are kept because a statute requires it; they are not visible on staff screens.",
+      "retainedUntil": "Kept until {date}"
+    },
+    "export": {
+      "title": "Data export",
+      "help": "The machine-readable copy handed to the data principal. Downloading is audited.",
+      "done": "Export downloaded",
+      "previewTitle": "Export preview"
+    }
   }
 }

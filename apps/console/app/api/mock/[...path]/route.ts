@@ -22,7 +22,9 @@ import { handleMlops, resetMockMlops } from "@/lib/mock/mlops";
  * (`mock-access-<role>-<ts>`, `mock-refresh-<role>-<ts>-<rand>`) so a refresh keeps it.
  * `/v1/catalog/*` (WC-005) is served by lib/mock/catalog.ts; `/v1/analytics/*` and
  * `/v1/clusters` (M4) by lib/mock/analytics.ts; `/v1/flags*` (WC-010) by lib/mock/flags.ts; `/v1/auth/step-up*`,
- * `/v1/users*`, `/v1/settings*` and `/v1/audit-logs*` (SEC-028, WC-011, WC-012, WC-103) by
+ * `/v1/users*`, `/v1/settings*`, `/v1/audit-logs*` and `/v1/admin/data-requests*` (SEC-028,
+ * WC-011, WC-012, WC-103, NF-013 — list / PATCH status / apply-correction / erase / export,
+ * seeded with one request of each of the four types) by
  * lib/mock/admin.ts; `/v1/diagnoses*`, `/v1/corpus/*` and `/v1/uploads*` (WC-006, WC-007, NF-003) by
  * lib/mock/diagnosis.ts; `/v1/campaigns*`, `/v1/targets`, `/v1/incentive*`, `/v1/travel/*`,
  * `/v1/exports*` and `/v1/report-schedules*` (WC-008, WC-009, WC-013, AN-008) by

@@ -29,6 +29,9 @@ const eslintConfig = [
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
+      // NF-016: `strict: true` in tsconfig plus no `any` escape hatch. `next/typescript` only
+      // warns; the console has zero violations, so it is an error here (rest args included).
+      "@typescript-eslint/no-explicit-any": ["error", { ignoreRestArgs: false }],
     },
   },
 ];

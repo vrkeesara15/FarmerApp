@@ -1,6 +1,8 @@
 # SPEC 11.1 pipeline security checks, on every PR and nightly (02:30 IST).
 #   SEC-001 gitleaks   SEC-002 semgrep   SEC-003 osv-scanner
-#   SEC-004/005 trivy (fs + IaC config)   SEC-007 license check (no AGPL)
+#   SEC-004/005 trivy (fs + IaC config)
+#   SEC-007 licence compliance (no AGPL in shipped apps) — scripts/licences/,
+#           policy in docs/licence-policy.md
 name: security
 
 on:
@@ -106,10 +108,13 @@ jobs:
             --skip-git
             ./
 
-  licenses:
-    name: license check, no AGPL (SEC-007)
+  # scripts/licences/check_licences.py is the gate; scripts/licences/allowlist.toml
+  # is the policy (allowed SPDX ids, denied ids, reviewed per-package exceptions).
+  # Rationale and the exception process: docs/licence-policy.md.
+  licences:
+    name: licence compliance, no AGPL in shipped apps (SEC-007)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -117,28 +122,50 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Python (apps/api)
-        if: hashFiles('apps/api/pyproject.toml') != ''
-        working-directory: apps/api
-        run: |
-          pip install -q -e . pip-licenses
-          pip-licenses --format=markdown --with-urls
-          pip-licenses --fail-on="GNU Affero General Public License v3;AGPL-3.0;AGPL-3.0-only;AGPL-3.0-or-later;GNU Affero General Public License v3 or later (AGPLv3+)"
+      # uv gives us the *shipped runtime* dependency set (uv export --no-dev),
+      # so pytest/ruff/mypy are not judged as if we shipped them.
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
 
       - uses: actions/setup-node@v4
-        if: hashFiles('apps/console/package-lock.json') != ''
         with:
           node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/console/package-lock.json
 
-      - name: Node (apps/console)
-        if: hashFiles('apps/console/package-lock.json') != ''
+      # Same action/channel as ci-mobile.yml; `flutter pub get` populates the
+      # pub cache the dart scan reads LICENSE files from.
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Sync apps/api (runtime deps only)
+        working-directory: apps/api
+        run: uv sync --frozen --no-dev
+
+      - name: Install apps/console production deps
         working-directory: apps/console
-        run: |
-          npm ci --ignore-scripts
-          npx --yes license-checker --production --summary --failOn "AGPL-1.0;AGPL-3.0;AGPL-3.0-only;AGPL-3.0-or-later"
+        run: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
 
-      - name: Dart (apps/mobile)
-        if: hashFiles('apps/mobile/apps/farmer/pubspec.yaml') != ''
+      - name: Resolve pub packages
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      # --strict: an ecosystem we cannot scan fails the job. A licence gate
+      # that silently scans nothing is worse than no gate at all.
+      - name: Check licences (python, node, dart)
         run: |
-          # pub.dev packages declare licenses in LICENSE files; grep resolved packages for AGPL.
-          echo "Dart license scan runs in ci-mobile once tool/check.sh includes it (TODO SEC-007)."
+          python3 scripts/licences/check_licences.py \
+            --ecosystem all --strict --json licence-report.json
+
+      - name: Upload licence report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: licence-report
+          path: licence-report.json
+          if-no-files-found: warn
+          retention-days: 90

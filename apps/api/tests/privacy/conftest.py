@@ -1,3 +1,3 @@
 from __future__ import annotations
 
-from tests.authz.conftest import bearer, world  # noqa: F401  (fixtures re-exported)
+from tests.authz.conftest import bearer, step_up, world  # noqa: F401  (re-exported)

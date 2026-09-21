@@ -454,6 +454,50 @@ class Settings(BaseSettings):
         default=30, description="Send by WhatsApp if SMS is not confirmed delivered by then."
     )
 
+    # --- Auth: SMS pumping protection (SEC-021) ---------------------------------
+    # An OTP send costs money and an attacker's revenue: "SMS pumping" farms premium
+    # international numbers. Four layers, all tenant-safe and all tested
+    # (farmerapp/auth/otp_abuse.py, tests/auth/test_otp_abuse.py).
+    otp_allowed_country_codes: list[str] = Field(
+        default=["+91"],
+        description="SEC-021: E.164 country prefixes an OTP may be sent to. India only by "
+        "default; adding a country is a deliberate change, not a config accident.",
+    )
+    otp_blocked_country_codes: list[str] = Field(
+        default=[],
+        description="SEC-021: prefixes refused even when the allow list would permit them "
+        "(a country turned into a pumping source mid-incident).",
+    )
+    otp_max_sends_per_phone_day: int = Field(
+        default=10,
+        ge=1,
+        description="SEC-021 velocity: sends to one number per 24 h, across purposes and "
+        "resend windows (the 3-per-15-min resend limit only covers one window).",
+    )
+    otp_max_sends_per_ip_hour: int = Field(
+        default=20,
+        ge=1,
+        description="SEC-021 velocity: sends from one client IP per hour, across phones.",
+    )
+    otp_abuse_block_seconds: int = Field(
+        default=86_400,
+        ge=60,
+        description="SEC-021: how long a phone or IP that broke a velocity rule stays on the "
+        "block list (repeat abusers). Doubled on every further breach, capped at 30 days.",
+    )
+    otp_cost_alert_per_hour: int = Field(
+        default=200,
+        ge=1,
+        description="SEC-021 cost guard: tenant sends per hour above which an "
+        "`otp_cost_alert` ERROR is logged (OPS alert; never blocks a login).",
+    )
+    otp_cost_block_per_hour: int = Field(
+        default=2_000,
+        ge=1,
+        description="SEC-021 cost guard: tenant sends per hour at which new sends are "
+        "refused (429 `otp_cost_limited`). The circuit breaker behind the alert.",
+    )
+
     # --- Auth: JWT (SEC-020) -----------------------------------------------------
     jwt_signing_key: str = Field(
         default=DEV_JWT_SIGNING_KEY,
@@ -473,6 +517,23 @@ class Settings(BaseSettings):
         le=60,
         description="WC-011 / SEC-025: how long an instance caches a device's status (lost / "
         "revoked) before re-reading it. At most 60 s, so revocation lands well within 5 min.",
+    )
+
+    # --- DPDP data-principal rights (NF-013) ---------------------------------------
+    # The grievance-redressal contact the apps and the console show, and that
+    # ``GET /v1/privacy/contact`` returns. Not a secret; a tenant may override the name and
+    # e-mail in its own settings once WC-012 carries them.
+    grievance_officer_name: str = Field(
+        default="Grievance Officer", description="NF-013: who a data principal may complain to."
+    )
+    grievance_officer_email: str = Field(
+        default="grievance@farmerapp.in", description="NF-013 grievance contact e-mail."
+    )
+    grievance_officer_phone: str = Field(
+        default="+911800000000", description="NF-013 grievance contact phone."
+    )
+    grievance_response_days: int = Field(
+        default=30, ge=1, le=90, description="NF-013 / FM-015: we answer within this many days."
     )
 
     # --- CORS (console origin) ----------------------------------------------------

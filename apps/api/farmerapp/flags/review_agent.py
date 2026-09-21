@@ -5,8 +5,10 @@ written by an LLM from the flag's evidence bundle only (SPEC 6.1 "Review agent")
 id, the evidence records (``{type, id}``), the metrics, and the *number* of map points,
 polygons and photos. Nothing else is read for the prompt — no records are looked up, no
 names, no coordinates, no photos, and not the flag title (a rule may put a name in it,
-VA-F02). SEC-027: metrics are scrubbed (keys that carry names, phones, addresses dropped;
-phone-like digit runs masked to their last four digits; record ids left intact).
+VA-F02). SEC-027: metrics are scrubbed and the finished bundle is re-checked by the shared
+guard ``farmerapp.pii.llm_guard`` (keys that carry names, phones or addresses dropped;
+phone-like digit runs masked to their last four digits; record ids left intact) — the same
+guard the DX-004 diagnosis fallback uses, so both prompts obey one rule.
 
 **Citations** (``validate_answer``): the model returns ``summary_lines`` (exactly three),
 ``suggested_action`` and ``cited_record_ids``. Every cited id must be an id of the bundle
@@ -37,7 +39,6 @@ from __future__ import annotations
 
 import contextlib
 import json
-import re
 import time
 import uuid
 from collections.abc import Callable, Iterable, Sequence
@@ -56,6 +57,14 @@ from farmerapp.diagnosis.llm import PROVIDER_ANTHROPIC, LlmCallRecord
 from farmerapp.diagnosis.models import LlmCallLog
 from farmerapp.flags.models import Flag, FlagSummary, SummaryStatus
 from farmerapp.logging import get_logger
+from farmerapp.pii.llm_guard import (
+    FLAG_BUNDLE_KEYS,
+    UUID_RE,
+    PromptPiiError,
+    guard_prompt,
+    mask_text,
+    scrub,
+)
 from farmerapp.rules.loader import RuleSet, get_rule_set
 from farmerapp.settings import Settings, get_settings
 from farmerapp.worker.messages import PubSubMessage
@@ -86,75 +95,11 @@ SYSTEM_PROMPT = (
     "ids that appear in the bundle. Never invent ids, names or numbers."
 )
 
-_UUID_RE = re.compile(
-    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
-)
-_PHONE_RE = re.compile(r"\+?\d[\d \-]{7,}\d")
-_PII_KEYS = frozenset(
-    {
-        "name",
-        "names",
-        "phone",
-        "phones",
-        "phone_number",
-        "mobile",
-        "address",
-        "landmark",
-        "email",
-        "otp",
-        "code",
-        "device",
-        "device_id",
-    }
-)
+#: Record ids are the only identifiers a prompt may carry (SEC-027, farmerapp.pii.llm_guard).
+_UUID_RE = UUID_RE
 
 
 # --------------------------------------------------------------------------- the bundle
-def _mask_digits(text: str) -> str:
-    def mask(match: re.Match[str]) -> str:
-        digits = re.sub(r"\D", "", match.group(0))
-        if len(digits) < 10:  # dates (2026-09-18) and short numbers are not phones
-            return match.group(0)
-        return "******" + digits[-4:]
-
-    return _PHONE_RE.sub(mask, text)
-
-
-def mask_text(text: str) -> str:
-    """Mask phone-like digit runs, leaving record ids (UUIDs) untouched (SEC-027)."""
-    out: list[str] = []
-    last = 0
-    for match in _UUID_RE.finditer(text):
-        out.append(_mask_digits(text[last : match.start()]))
-        out.append(match.group(0))
-        last = match.end()
-    out.append(_mask_digits(text[last:]))
-    return "".join(out)
-
-
-def _pii_key(key: str) -> bool:
-    lowered = key.lower()
-    if lowered.endswith("_last4"):  # already masked to four digits
-        return False
-    return (
-        lowered in _PII_KEYS
-        or lowered.endswith("_name")
-        or lowered.endswith("_names")
-        or "phone" in lowered
-    )
-
-
-def scrub(value: Any) -> Any:
-    """Drop PII keys and mask phone numbers anywhere in a JSON value."""
-    if isinstance(value, dict):
-        return {str(k): scrub(v) for k, v in value.items() if not _pii_key(str(k))}
-    if isinstance(value, list):
-        return [scrub(v) for v in value]
-    if isinstance(value, str):
-        return mask_text(value)
-    return value
-
-
 def _ids_in(value: Any) -> set[str]:
     if isinstance(value, dict):
         return set().union(*(_ids_in(v) for v in value.values())) if value else set()
@@ -204,6 +149,15 @@ def build_bundle(flag: Flag, *, rule_title: str | None) -> EvidenceBundle:
         },
         "photos": len(raw.get("photos") or []),
     }
+    # SEC-027: the one guard both LLM paths share. The bundle's shape is pinned
+    # (FLAG_BUNDLE_KEYS) and its content re-checked after scrubbing, so a rule that starts
+    # putting a name or a phone in its evidence fails here instead of reaching the provider.
+    if set(payload) != set(FLAG_BUNDLE_KEYS):
+        raise PromptPiiError(
+            "flags.summary",
+            [f"unreviewed bundle key {k!r}" for k in sorted(set(payload) ^ set(FLAG_BUNDLE_KEYS))],
+        )
+    guard_prompt(payload, where="flags.summary")
     allowed = {r["id"].lower() for r in records if r["id"]}
     allowed.add(str(flag.subject_id).lower())
     allowed |= _ids_in(metrics)
