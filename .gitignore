@@ -42,3 +42,5 @@ build/
 
 # NF-005 latency suite output (make perf-api)
 apps/api/perf-report.md
+apps/api/scale-report.md
+apps/api/onboarding-report.md

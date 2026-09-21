@@ -27,6 +27,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from farmerapp.db import audit
 from farmerapp.db.session import job_session, set_tenant
 from farmerapp.logging import get_logger
+from farmerapp.platform_admin.plans import effective_retention_days
+from farmerapp.platform_admin.state import get_tenant_state
 from farmerapp.retention.policy import POLICY, RetentionAction, RetentionClass, policy_for
 
 log = get_logger("farmerapp.retention")
@@ -115,8 +117,12 @@ async def sweep_class(
     tenant_id: uuid.UUID,
     now: datetime,
     apply: bool,
+    days: int | None = None,
 ) -> ClassReport:
-    cutoff = now - timedelta(days=entry.days)
+    # WC-014: a plan may *lengthen* a retention window (``plans.effective_retention_days``);
+    # it can never shorten one, so a cheaper plan cannot buy a shorter DPDP promise.
+    window = entry.days if days is None else days
+    cutoff = now - timedelta(days=window)
     deferred = _deferred_to(entry)
     may_delete = apply and not deferred
     tables: list[TableReport] = []
@@ -129,7 +135,7 @@ async def sweep_class(
     report = ClassReport(
         name=entry.name,
         action=entry.action,
-        days=entry.days,
+        days=window,
         cutoff=cutoff,
         tables=tuple(tables),
         applied=may_delete,
@@ -141,7 +147,7 @@ async def sweep_class(
         tenant_id=str(tenant_id),
         retention_class=entry.name,
         action=str(entry.action),
-        days=entry.days,
+        days=window,
         cutoff=cutoff.isoformat(),
         rows_due=report.due,
         rows_deleted=report.deleted,
@@ -171,9 +177,17 @@ async def sweep(
     moment = now or datetime.now(UTC)
     wanted = [policy_for(name) for name in classes] if classes else list(POLICY)
     report = SweepReport(tenant_id=tenant_id, now=moment, applied=apply)
+    state = await get_tenant_state(session, tenant_id)  # WC-014 plan retention overrides
     for entry in wanted:
         report.classes.append(
-            await sweep_class(session, entry, tenant_id=tenant_id, now=moment, apply=apply)
+            await sweep_class(
+                session,
+                entry,
+                tenant_id=tenant_id,
+                now=moment,
+                apply=apply,
+                days=effective_retention_days(entry, state.limits),
+            )
         )
     log.info(
         "retention_sweep",

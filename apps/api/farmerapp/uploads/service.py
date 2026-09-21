@@ -20,6 +20,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from farmerapp.api.errors import AppError, ForbiddenError, NotFoundError
 from farmerapp.auth.models import User, UserRole
+from farmerapp.platform_admin import usage
+from farmerapp.platform_admin.plans import Metric
+from farmerapp.platform_admin.state import get_tenant_state
 from farmerapp.settings import Settings
 from farmerapp.uploads.blobstore import BlobStore, blob_key
 from farmerapp.uploads.models import UploadChunk, UploadPurpose, UploadSession, UploadStatus
@@ -118,6 +121,16 @@ def _status_out(upload: UploadSession, received: list[int]) -> UploadStatusOut:
     )
 
 
+def is_photo(content_type: str) -> bool:
+    """What the WC-014 ``photos`` metric counts: any image, whatever its purpose.
+
+    The NF-007 target of 20 million photos is a storage and egress number, and every image an
+    app uploads lands in the photos bucket, so the metric follows the media type rather than
+    the upload purpose. A PDF receipt is not a photo.
+    """
+    return content_type.lower().startswith("image/")
+
+
 async def init_upload(
     session: AsyncSession, actor: User, body: UploadInit, *, settings: Settings
 ) -> UploadStatusOut:
@@ -128,6 +141,11 @@ async def init_upload(
         raise ForbiddenError(f"This role cannot upload {body.purpose!s} files.")
     if body.size_bytes > settings.upload_max_bytes:
         raise UploadTooLargeError(f"Uploads are capped at {settings.upload_max_bytes} bytes.")
+    # WC-014: refuse a photo the plan has no room for *before* the device spends the bytes
+    # (the counter moves on completion, so an abandoned upload is not billed).
+    if is_photo(body.content_type):
+        state = await get_tenant_state(session, actor.tenant_id)
+        await usage.check(session, actor.tenant_id, Metric.PHOTOS, state.limits, plan=state.plan)
     now = _now()
     upload = UploadSession(
         tenant_id=actor.tenant_id,
@@ -231,6 +249,8 @@ async def complete_upload(
     upload.status = UploadStatus.COMPLETE
     upload.blob_uri = uri
     upload.completed_at = _now()
+    if is_photo(upload.content_type):  # WC-014 photos-per-month counter
+        await usage.record(session, upload.tenant_id, Metric.PHOTOS, 1)
     await session.execute(delete(UploadChunk).where(UploadChunk.upload_id == upload.id))
     await session.flush()
     return UploadCompleteOut(

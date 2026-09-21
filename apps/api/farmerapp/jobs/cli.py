@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import time
 import uuid
+from typing import Any
 
 import typer
 
@@ -792,6 +793,62 @@ def activate_encoder(
             f"activate-encoder: tenant={r.tenant_id} encoder={r.encoder} images={r.images} "
             f"previous={r.previous}"
         )
+
+
+# --------------------------------------------------------------------------- M8 WC-014
+@cli.command("usage-recount")
+def usage_recount(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        [], "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable). Default: all."
+    ),
+) -> None:
+    """WC-014: recompute the usage counters from the source tables, one tenant at a time.
+
+    The counters are maintained incrementally on the creation paths; this job exists to
+    backfill a tenant that predates them and to prove they have not drifted. It is the only
+    place that runs ``count(*)`` over a tenant's farmers or photos, which is why it is a job
+    and not a request.
+    """
+    from farmerapp.platform_admin.jobs import run_recount
+
+    _setup()
+    for report in asyncio.run(_recount(tenant)):
+        typer.echo(f"usage-recount: tenant={report.tenant_id} counts={report.counts}")
+    _ = run_recount
+
+
+async def _recount(tenant: list[str]) -> list[Any]:
+    from farmerapp.platform_admin.jobs import all_tenant_ids, run_recount
+
+    ids = _tenants(tenant) if tenant else [tid async for tid, _slug in all_tenant_ids()]
+    return await run_recount(ids)
+
+
+@cli.command("billing-statements")
+def billing_statements(
+    tenant: list[str] = typer.Option(  # noqa: B008
+        [], "--tenant", "--tenant-id", help="Tenant id or demo slug (repeatable). Default: all."
+    ),
+    period: str | None = typer.Option(None, help="Billing month YYYY-MM (default: this month)."),
+) -> None:
+    """WC-014: generate each tenant's monthly usage statement (counts and overage).
+
+    Charging is a documented port, not an implementation: nothing here talks to a payment
+    provider (see docs/prs/M8-tenant-admin.md, "Payment port").
+    """
+    _setup()
+    for report in asyncio.run(_statements(tenant, period)):
+        typer.echo(
+            f"billing-statements: tenant={report.tenant_id} period={report.period} "
+            f"total_paise={report.total_paise} overage_paise={report.overage_paise}"
+        )
+
+
+async def _statements(tenant: list[str], period: str | None) -> list[Any]:
+    from farmerapp.platform_admin.jobs import all_tenant_ids, run_statements
+
+    ids = _tenants(tenant) if tenant else [tid async for tid, _slug in all_tenant_ids()]
+    return await run_statements(ids, period=period)
 
 
 # M7 growth jobs (WC-008, WC-009, WC-013, AN-015, ST-004, ST-008) register themselves on `cli`.

@@ -229,6 +229,11 @@ async def write_llm_logs(
     *,
     now: datetime,
 ) -> None:
+    if calls:  # WC-014: the monthly LLM-call counter (usage + billing)
+        from farmerapp.platform_admin import usage
+        from farmerapp.platform_admin.plans import Metric
+
+        await usage.record(session, tenant_id, Metric.LLM_CALLS, len(calls), when=now)
     for call in calls:
         session.add(
             LlmCallLog(
@@ -416,6 +421,19 @@ async def _llm_request(
     return request, problems
 
 
+async def _llm_within_plan(session: AsyncSession, tenant_id: uuid.UUID) -> bool:
+    """Has the tenant an LLM call left this month (WC-014)? Unlimited plans short-circuit."""
+    from farmerapp.platform_admin import usage
+    from farmerapp.platform_admin.plans import Metric
+    from farmerapp.platform_admin.state import get_tenant_state
+
+    state = await get_tenant_state(session, tenant_id)
+    limit = state.limits.limit_for(Metric.LLM_CALLS)
+    if limit is None:
+        return True
+    return await usage.current(session, tenant_id, Metric.LLM_CALLS) < limit
+
+
 async def decide_case(
     session: AsyncSession,
     services: DiagnosisServices,
@@ -470,6 +488,15 @@ async def decide_case(
             crop_id=problem.crop_id,
         )
 
+    # WC-014: the plan caps LLM calls per month. A farmer's advice is never *failed* by a
+    # commercial limit — going over means the vision fallback is skipped and the answer stays
+    # "no confident match" (DX-004's own outcome when the LLM is unavailable), recorded as
+    # `plan_limit` so the console and the statement can both explain it. This is the one
+    # creation path that does not raise `plan_limit_exceeded`, and the reason is deliberate.
+    if not await _llm_within_plan(session, tenant_id):
+        scores["llm"] = {"skipped": "plan_limit"}
+        log.warning("llm_skipped_plan_limit", tenant_id=str(tenant_id))
+        return Verdict(DiagnosisStatus.OUT_OF_SCOPE, reason=OutOfScope.NO_MATCH, scores=scores)
     # Medium / low: the LLM chooses among the candidates or says "unknown" (DX-004).
     request, problems = await _llm_request(session, case, decision)
     try:

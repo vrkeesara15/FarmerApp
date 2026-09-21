@@ -40,6 +40,8 @@ from farmerapp.db import audit
 from farmerapp.db.audit import DEVICE_HEADER
 from farmerapp.logging import get_logger
 from farmerapp.pii.lookup import phone_match
+from farmerapp.platform_admin import usage
+from farmerapp.platform_admin.plans import Metric
 from farmerapp.tenants.models import Cluster, Store
 from farmerapp.tenants.settings import get_tenant_settings
 from farmerapp.users.schemas import (
@@ -190,7 +192,11 @@ async def list_users(
     response_model=UserOut,
     openapi_extra=STEP_UP_OPENAPI,
     responses=problem_responses(
-        _STEP_UP, (403, "role_not_grantable"), (409, "phone_taken"), (422, "invalid_assignment")
+        _STEP_UP,
+        (403, "role_not_grantable"),
+        (409, "phone_taken"),
+        (409, "plan_limit_exceeded"),  # WC-014
+        (422, "invalid_assignment"),
     ),
 )
 async def create_user(
@@ -206,6 +212,10 @@ async def create_user(
     )
     if taken is not None:
         raise PhoneTakenError("A user with this phone number already exists.")
+    # WC-014: field officers are what a plan is sized and priced by (SPEC 7: 5,000 officers
+    # across 50 tenants); other staff roles are not capped.
+    if UserRole(body.role) is UserRole.FIELD_OFFICER:
+        await usage.check_and_record(session, actor.tenant_id, Metric.OFFICERS)
     settings = await get_tenant_settings(session, actor.tenant_id)
     language = body.language or settings.default_language
     user = User(
@@ -269,6 +279,14 @@ async def update_user(
         _guard_self(actor, user)
         _guard_owner(actor, user.role, changes.get("role"))
     now = services.clock.now()
+    # WC-014: keep the officer counter honest when a role moves in or out of field_officer.
+    new_role = changes.get("role")
+    if new_role is not None and new_role != user.role:
+        was, becomes = UserRole(user.role), UserRole(new_role)
+        if becomes is UserRole.FIELD_OFFICER and was is not UserRole.FIELD_OFFICER:
+            await usage.check_and_record(session, user.tenant_id, Metric.OFFICERS)
+        elif was is UserRole.FIELD_OFFICER and becomes is not UserRole.FIELD_OFFICER:
+            await usage.record(session, user.tenant_id, Metric.OFFICERS, -1)
     disabling = changes.get("status") == UserStatus.DISABLED and user.status != UserStatus.DISABLED
     for field, value in changes.items():
         if field != "status" or not disabling:

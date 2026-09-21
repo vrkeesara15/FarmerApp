@@ -56,7 +56,7 @@ def get_blob_store(request: Request) -> BlobStore:
     summary="Start a resumable upload (256 KB chunks)",
     status_code=status.HTTP_201_CREATED,
     response_model=UploadStatusOut,
-    responses=problem_responses((422, "upload_too_large")),
+    responses=problem_responses((422, "upload_too_large"), (409, "plan_limit_exceeded")),
 )
 async def init_upload(
     body: UploadInit,

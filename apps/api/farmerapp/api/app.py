@@ -59,6 +59,7 @@ from farmerapp.payments import webhooks as webhook_routes
 from farmerapp.payments.service import PaymentServices, build_payment_services
 from farmerapp.performance import router as performance_routes
 from farmerapp.performance.ports import IncentivePort
+from farmerapp.platform_admin import router as platform_admin_routes
 from farmerapp.policies import router as policy_routes
 from farmerapp.privacy import router as privacy_routes
 from farmerapp.rules import events as rule_events
@@ -267,6 +268,9 @@ def create_app(
     v1.include_router(reorder_routes.router)
     # M7 farmer P1: crop calendar, weather, outbreak alerts, crop health (FM-007..009, AN-006).
     v1.include_router(advisory_routes.router)
+    # M8 WC-014: platform tenant administration (plans, limits, usage, billing). The only
+    # cross-tenant routes in the API; guarded by `platform_admin` in the platform tenant.
+    v1.include_router(platform_admin_routes.router)
     app.include_router(v1)
 
     # FA-002: refuse to start unless every route declares a role policy (or is public), and

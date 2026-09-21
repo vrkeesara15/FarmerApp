@@ -42,6 +42,8 @@ from farmerapp.campaigns.schemas import (
 )
 from farmerapp.campaigns.segments import Segment, SegmentContext, count_segment
 from farmerapp.farmers.models import Farmer
+from farmerapp.platform_admin import usage
+from farmerapp.platform_admin.plans import Metric
 
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 
@@ -107,7 +109,9 @@ async def list_campaigns(
     summary="Create a draft campaign (segment, channel, messages per language)",
     status_code=status.HTTP_201_CREATED,
     response_model=CampaignOut,
-    responses=problem_responses((404, "not_found"), (422, "idempotency_key_reuse")),
+    responses=problem_responses(
+        (404, "not_found"), (409, "plan_limit_exceeded"), (422, "idempotency_key_reuse")
+    ),
 )
 @idempotent(status_code=status.HTTP_201_CREATED)
 async def create_campaign(
@@ -116,6 +120,8 @@ async def create_campaign(
     actor: Annotated[User, require_roles(*WRITE_ROLES)],
     session: DbSession,
 ) -> CampaignOut:
+    # WC-014: campaigns per month are a plan limit (SMS / WhatsApp spend follows them).
+    await usage.check_and_record(session, actor.tenant_id, Metric.CAMPAIGNS)
     segment = body.segment
     if body.saved_segment_id is not None:
         # AN-004: the campaign takes a copy, so editing the saved segment later never

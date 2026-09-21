@@ -12,7 +12,7 @@ UV        := uv
 UV_RUN    := cd $(API_DIR) && $(UV) run
 CORE_SERVICES := db pubsub gcs mockserver
 
-.PHONY: help up down db db-roles seed migrate openapi test-api test-api-fast perf-api test-console test-mobile \
+.PHONY: help up down db db-roles seed migrate openapi test-api test-api-fast perf-api scale-api test-console test-mobile \
         check-api check-console check-mobile check-infra check-dbt check plan-dev logs \
         dbt dbt-dev dbt-freshness
 
@@ -83,6 +83,14 @@ test-api-fast: db $(API_DIR)/.venv/.synced ## pytest in parallel without coverag
 perf-api: db $(API_DIR)/.venv/.synced ## NF-005 API latency suite: p95 of hot reads / writes
 	cd $(API_DIR) && FARMERAPP_PERF=1 PERF_REPORT=perf-report.md $(UV) run pytest -n 1 --no-cov \
 	  -m perf tests/perf; status=$$?; cat perf-report.md 2>/dev/null; exit $$status
+
+# NF-007 scale suite (not in test-api / check-api): one tenant at 1/50th of the SPEC 7 target
+# (100 officers, 40,000 farmers, 400,000 photo rows), measured and EXPLAINed. One xdist worker
+# = a database of its own, cloned from the migrated template and dropped afterwards.
+# Report: apps/api/scale-report.md (SCALE_SAMPLES / SCALE_CONCURRENCY override the defaults).
+scale-api: db $(API_DIR)/.venv/.synced ## NF-007 scale suite: hot paths and query plans at 1/50th of target
+	cd $(API_DIR) && FARMERAPP_SCALE=1 SCALE_REPORT=scale-report.md $(UV) run pytest -n 1 --no-cov \
+	  -m scale tests/scale; status=$$?; cat scale-report.md 2>/dev/null; exit $$status
 
 check-api: $(API_DIR)/.venv/.synced ## ruff, mypy strict, rules, pytest, openapi diff, bandit, pip-audit
 	$(UV_RUN) ruff check .

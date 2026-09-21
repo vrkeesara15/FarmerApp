@@ -41,6 +41,9 @@ class Operation:
     public: bool
     roles: frozenset[str]
     self_param: str | None
+    #: WC-014: a platform-level route (``x-platform``). These are the only cross-tenant
+    #: operations in the contract, so the cross-tenant assertions below do not apply to them.
+    platform: bool = False
 
     @property
     def id(self) -> str:
@@ -66,6 +69,7 @@ def load_operations() -> list[Operation]:
                     public=bool(op.get("x-public", False)),
                     roles=frozenset(op.get("x-roles", ())),
                     self_param=op.get("x-self"),
+                    platform=bool(op.get("x-platform", False)),
                 )
             )
     return ops
@@ -74,7 +78,10 @@ def load_operations() -> list[Operation]:
 OPERATIONS = load_operations()
 PROTECTED = [op for op in OPERATIONS if not op.public]
 PUBLIC = [op for op in OPERATIONS if op.public]
-WITH_ID = [op for op in PROTECTED if op.has_path_params]
+# A platform route reaching another tenant is the point of it (WC-014), so it is excluded
+# from the cross-tenant and collection-isolation assertions; ``tests/platform/test_authz.py``
+# proves instead that nobody but a ``platform_admin`` in the platform tenant reaches one.
+WITH_ID = [op for op in PROTECTED if op.has_path_params and not op.platform]
 
 
 # --------------------------------------------------------------------------- fixtures table
@@ -148,6 +155,11 @@ def _farmer_body(ctx: Ctx) -> dict[str, Any]:
 
 
 NO_SUCH_ID = "00000000-0000-0000-0000-000000000000"
+
+
+def _tenant_id(_ctx: Ctx) -> dict[str, str]:
+    """WC-014 routes address a *tenant*; an unregistered id is a 404 for the platform admin."""
+    return {"id": NO_SUCH_ID}
 
 
 def _signed_webhook(ctx: Ctx) -> tuple[bytes, dict[str, str]]:
@@ -742,6 +754,44 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
         body=lambda _ctx: {"decision": "approve"},
         step_up=True,
     ),
+    # WC-014 platform administration. The tenant id of a demo tenant is *not* in the platform
+    # registry, so an allowed caller gets 404 and a denied one still gets 403 — which is
+    # exactly what the matrix asserts.
+    "POST /v1/admin/tenants": RouteFixture(
+        body=lambda _ctx: {
+            "name": "Matrix Agri",
+            "slug": "matrix-agri",
+            "plan": "pilot",
+            "primary_contact_name": "Matrix Admin",
+            "primary_contact_phone": "+919000199001",
+        },
+        step_up=True,
+    ),
+    "GET /v1/admin/tenants/{id}": RouteFixture(path_params=_tenant_id),
+    "PATCH /v1/admin/tenants/{id}": RouteFixture(
+        path_params=_tenant_id, body=lambda _ctx: {"notes": "matrix"}, step_up=True
+    ),
+    "POST /v1/admin/tenants/{id}/invite": RouteFixture(path_params=_tenant_id, step_up=True),
+    "POST /v1/admin/tenants/{id}/suspend": RouteFixture(path_params=_tenant_id, step_up=True),
+    "POST /v1/admin/tenants/{id}/resume": RouteFixture(path_params=_tenant_id, step_up=True),
+    "POST /v1/admin/tenants/{id}/archive": RouteFixture(path_params=_tenant_id, step_up=True),
+    "GET /v1/admin/tenants/{id}/usage": RouteFixture(path_params=_tenant_id),
+    "POST /v1/admin/tenants/{id}/statements": RouteFixture(path_params=_tenant_id, step_up=True),
+    "GET /v1/admin/tenants/{id}/statements": RouteFixture(path_params=_tenant_id),
+    "GET /v1/admin/tenants/{id}/statements/{period}/csv": RouteFixture(
+        path_params=lambda ctx: {"id": NO_SUCH_ID, "period": "2026-09"}
+    ),
+    # NF-013 data-principal request handling (docs/prs/M7-security-privacy.md); outcomes in
+    # tests/privacy. An unknown ticket id is a 404 for an allowed role and 403 for the rest.
+    "GET /v1/admin/data-requests/{id}/export": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}
+    ),
+    "POST /v1/admin/data-requests/{id}/apply-correction": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, step_up=True
+    ),
+    "POST /v1/admin/data-requests/{id}/erase": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, step_up=True
+    ),
     "POST /v1/policies/location/accept": RouteFixture(
         body=lambda _ctx: {
             "version": "2026-09-v1",
@@ -889,7 +939,9 @@ async def test_cross_tenant_id_is_not_found(
     _no_tenant_leak(resp, world.b)
 
 
-LISTS = [op for op in PROTECTED if op.method == "get" and not op.has_path_params]
+LISTS = [
+    op for op in PROTECTED if op.method == "get" and not op.has_path_params and not op.platform
+]
 
 
 @pytest.mark.parametrize("op", LISTS, ids=[op.id for op in LISTS])
@@ -905,7 +957,13 @@ async def test_collections_never_contain_other_tenants(
     ):
         return  # file downloads (CSV export): the leak check above covers them
     body = resp.json()
-    for item in body.get("items", []):
+    # Most collections are enveloped (`{"items": [...]}`); a few return the bare array
+    # (NF-013 `GET /v1/me/data-requests`, `.../retention-exceptions`). Check both shapes so a
+    # bare array is inspected row by row rather than blowing up on `.get`.
+    items = body if isinstance(body, list) else body.get("items", [])
+    for item in items:
+        if not isinstance(item, dict):
+            continue
         assert item.get("tenant_id", str(world.a.tenant.id)) == str(world.a.tenant.id)
 
 

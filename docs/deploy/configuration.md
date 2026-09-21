@@ -100,7 +100,8 @@ unless
 
 "more jobs that fit" = `floor((ceiling - total) / (jobs pool_size + max_overflow))`: how many
 Cloud Run jobs may still be added before the plan precondition fails. **Every environment has
-room for at least four more jobs** (M7 API integration): stg was at 79 of 80 once the farmer P1
+room for at least four more jobs** (M7 API integration; M8's `usage-recount` and
+`billing-statements` will take two of them when they are scheduled): stg was at 79 of 80 once the farmer P1
 jobs landed, so `sql_max_connections` went 100 -> 125 there and 200 -> 250 in prd. The pools
 stay at the validated minimum (`pool_size + max_overflow >= 2`) — a tenant-bound session plus
 the PII key load need both connections, so shrinking them is not an option. dev already had room
@@ -111,6 +112,16 @@ primary *and* the read replica, which carries the same flag), so the stg and prd
 human-only and belong in a maintenance window. Nothing else changes: the flag is the only
 value that moves, the rendered env of api / worker / jobs is identical, and no service is
 redeployed.
+
+**NF-007 (50 tenants).** Adding tenants adds no pools — a pool belongs to a *process*, not to
+a tenant, and the WC-014 jobs iterate the platform registry one tenant per transaction
+(`farmerapp.platform_admin.jobs`). What more tenants add is concurrent requests, which raises
+`max_instances`, which is what the budget is a function of. `terraform test` in
+`infra/modules/db_budget` now carries the SaaS shape as two cases: at api 60 / worker 40 /
+17 jobs the plan **refuses** prd's current `sql_max_connections = 250` (314 > 200) and fits at
+500 (314 of 400). Raising the flag restarts the primary and the replica, so it stays the human
+gate below. Re-measure before the SaaS milestone (docs/perf/NF-007.md, "What must be
+re-measured in the cloud").
 
 dev and stg set `max_instances` in their tfvars (dev api 3 / worker 2, stg api 5 /
 worker 5; console and embed lowered alike); prd keeps the defaults (api 20, worker 20). To scale
@@ -184,6 +195,10 @@ two URLs are used exactly as before.
 | `JWT_ALGORITHM` / `JWT_ISSUER` | default | `HS256` / `farmerapp` | A | no |
 | `ACCESS_TOKEN_TTL_SECONDS` / `REFRESH_TOKEN_TTL_SECONDS` / `STEP_UP_TOKEN_TTL_SECONDS` / `SECURITY_CACHE_TTL_SECONDS` | default | 900 / 30 d / 300 / 30 | A | no |
 | `CORS_ORIGINS` | TF | `["https://console.<domain>"]` | A | yes |
+| `OTP_ALLOWED_COUNTRY_CODES` / `OTP_BLOCKED_COUNTRY_CODES` | default | `["+91"]` / `[]` — SEC-021 SMS-pumping guard: India only; adding a country is a deliberate change | A | no |
+| `OTP_MAX_SENDS_PER_PHONE_DAY` / `OTP_MAX_SENDS_PER_IP_HOUR` / `OTP_ABUSE_BLOCK_SECONDS` | default | 10 / 20 / 86400 (doubled per repeat breach, capped at 30 d) | A | no |
+| `OTP_COST_ALERT_PER_HOUR` / `OTP_COST_BLOCK_PER_HOUR` | default | 200 / 2000 tenant sends per hour: the first logs `otp_cost_alert`, the second refuses (429 `otp_cost_limited`) | A | no |
+| `GRIEVANCE_OFFICER_NAME` / `GRIEVANCE_OFFICER_EMAIL` / `GRIEVANCE_OFFICER_PHONE` / `GRIEVANCE_RESPONSE_DAYS` | TF | `Grievance Officer` / `grievance@farmerapp.in` / `+911800000000` / 30 — NF-013 contact shown by `GET /v1/privacy/contact`; **set the real ones before pilot** | A | yes |
 
 Worker Pub/Sub push auth: the worker has no setting for it. Each `<topic>.worker` push
 subscription sends an OIDC token of `farmerapp-pubsub-push` with audience = the worker's

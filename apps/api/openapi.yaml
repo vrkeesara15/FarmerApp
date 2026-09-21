@@ -250,6 +250,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/auth/step-up:
@@ -303,6 +304,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/me:
@@ -341,6 +343,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/users:
@@ -436,7 +439,7 @@ paths:
           content:
             application/problem+json: {}
         '409':
-          description: '`phone_taken`'
+          description: '`phone_taken`, `plan_limit_exceeded`'
           content:
             application/problem+json: {}
         '422':
@@ -820,6 +823,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/farmers:
@@ -933,7 +937,7 @@ paths:
           content:
             application/problem+json: {}
         '409':
-          description: '`farmer_phone_exists`, `version_conflict`'
+          description: '`farmer_phone_exists`, `plan_limit_exceeded`, `version_conflict`'
           content:
             application/problem+json: {}
         '422':
@@ -1297,7 +1301,7 @@ paths:
           content:
             application/problem+json: {}
         '409':
-          description: '`farmer_phone_exists`, `version_conflict`'
+          description: '`farmer_phone_exists`, `plan_limit_exceeded`, `version_conflict`'
           content:
             application/problem+json: {}
         '422':
@@ -2659,6 +2663,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/policies/location/accept:
@@ -2707,6 +2712,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/sync:
@@ -2815,6 +2821,10 @@ paths:
                 $ref: '#/components/schemas/Problem'
         '422':
           description: '`upload_too_large`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`plan_limit_exceeded`'
           content:
             application/problem+json: {}
         '401':
@@ -3072,6 +3082,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/audit-logs:
@@ -3444,6 +3455,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/clusters:
@@ -3481,6 +3493,7 @@ paths:
       - director
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/catalog/products:
@@ -3594,6 +3607,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
     post:
@@ -3697,6 +3711,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
     patch:
@@ -3852,6 +3867,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
     post:
@@ -3938,6 +3954,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/catalog/pests:
@@ -3986,6 +4003,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/catalog/stores:
@@ -4431,6 +4449,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/catalog/price-lists:
@@ -6903,6 +6922,7 @@ paths:
       - director
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/flags/mine/{id}:
@@ -6952,6 +6972,7 @@ paths:
       - director
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/flags/mine/{id}/explanations:
@@ -7011,6 +7032,7 @@ paths:
       - director
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/flags/rules:
@@ -9093,6 +9115,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/models/releases:
@@ -10260,6 +10283,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
     post:
@@ -10303,6 +10327,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/me/data-export:
@@ -10343,6 +10368,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/me/data-requests:
@@ -10384,6 +10410,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/me/correction-request:
@@ -10428,6 +10455,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/me/grievance:
@@ -10472,6 +10500,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/admin/data-requests:
@@ -10865,6 +10894,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/notifications/read-all:
@@ -10903,6 +10933,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/notifications/{id}/read:
@@ -10953,6 +10984,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/devices/me/push-token:
@@ -10997,6 +11029,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/devices/me/push-token/remove:
@@ -11041,6 +11074,7 @@ paths:
       - farmer
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/me/day:
@@ -12432,6 +12466,10 @@ paths:
           description: '`not_found`'
           content:
             application/problem+json: {}
+        '409':
+          description: '`plan_limit_exceeded`'
+          content:
+            application/problem+json: {}
         '422':
           description: '`idempotency_key_reuse`'
           content:
@@ -13270,6 +13308,7 @@ paths:
       - director
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/exports:
@@ -13323,6 +13362,7 @@ paths:
       - director
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
     get:
@@ -13385,6 +13425,7 @@ paths:
       - director
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/exports/{id}:
@@ -13434,6 +13475,7 @@ paths:
       - director
       - field_officer
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/report-schedules:
@@ -13469,6 +13511,7 @@ paths:
       - cluster_head
       - director
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
     post:
@@ -13520,6 +13563,7 @@ paths:
       - cluster_head
       - director
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/report-schedules/{id}:
@@ -13580,6 +13624,7 @@ paths:
       - cluster_head
       - director
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
     delete:
@@ -13622,6 +13667,7 @@ paths:
       - cluster_head
       - director
       - owner
+      - platform_admin
       - store_manager
       - tenant_admin
   /v1/stores/{id}/reorder-levels:
@@ -14218,6 +14264,601 @@ paths:
       - director
       - owner
       - tenant_admin
+  /v1/admin/plans:
+    get:
+      tags:
+      - platform admin
+      summary: The plan catalogue with its limits and overage prices
+      operationId: listPlans
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-platform: true
+      x-roles:
+      - platform_admin
+  /v1/admin/tenants:
+    post:
+      tags:
+      - platform admin
+      summary: Create and provision a tenant (WC-014)
+      operationId: createTenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantCreated'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`tenant_slug_taken`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`unknown_plan`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-platform: true
+      x-step-up: true
+      x-roles:
+      - platform_admin
+    get:
+      tags:
+      - platform admin
+      summary: Every tenant on the platform
+      operationId: listTenants
+      parameters:
+      - name: tenant_status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/TenantStatus'
+          - type: 'null'
+          title: Tenant Status
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-platform: true
+      x-roles:
+      - platform_admin
+  /v1/admin/tenants/{id}:
+    get:
+      tags:
+      - platform admin
+      summary: One tenant's registry record
+      operationId: getTenant
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: The tenant's id.
+          title: Id
+        description: The tenant's id.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-platform: true
+      x-roles:
+      - platform_admin
+    patch:
+      tags:
+      - platform admin
+      summary: Change a tenant's plan, limits, contact or notes
+      operationId: updateTenant
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: The tenant's id.
+          title: Id
+        description: The tenant's id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`unknown_plan`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-platform: true
+      x-step-up: true
+      x-roles:
+      - platform_admin
+  /v1/admin/tenants/{id}/invite:
+    post:
+      tags:
+      - platform admin
+      summary: Send the primary contact their login code (the follow-up invite)
+      operationId: inviteTenantAdmin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: The tenant's id.
+          title: Id
+        description: The tenant's id.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InviteOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-platform: true
+      x-step-up: true
+      x-roles:
+      - platform_admin
+  /v1/admin/tenants/{id}/suspend:
+    post:
+      tags:
+      - platform admin
+      summary: Suspend a tenant (reversible)
+      operationId: suspendTenant
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: The tenant's id.
+          title: Id
+        description: The tenant's id.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/StatusChange'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_tenant_state`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-platform: true
+      x-step-up: true
+      x-roles:
+      - platform_admin
+  /v1/admin/tenants/{id}/resume:
+    post:
+      tags:
+      - platform admin
+      summary: Resume a suspended tenant
+      operationId: resumeTenant
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: The tenant's id.
+          title: Id
+        description: The tenant's id.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/StatusChange'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_tenant_state`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-platform: true
+      x-step-up: true
+      x-roles:
+      - platform_admin
+  /v1/admin/tenants/{id}/archive:
+    post:
+      tags:
+      - platform admin
+      summary: Archive a tenant (terminal)
+      operationId: archiveTenant
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: The tenant's id.
+          title: Id
+        description: The tenant's id.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/StatusChange'
+              - type: 'null'
+              title: Body
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`invalid_tenant_state`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-platform: true
+      x-step-up: true
+      x-roles:
+      - platform_admin
+  /v1/admin/tenants/{id}/usage:
+    get:
+      tags:
+      - platform admin
+      summary: Usage counters against the plan limits
+      operationId: getTenantUsage
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: The tenant's id.
+          title: Id
+        description: The tenant's id.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-platform: true
+      x-roles:
+      - platform_admin
+  /v1/admin/tenants/{id}/statements:
+    post:
+      tags:
+      - platform admin
+      summary: Generate (or regenerate) a tenant's monthly usage statement
+      operationId: generateStatement
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: The tenant's id.
+          title: Id
+        description: The tenant's id.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/StatementRequest'
+              - type: 'null'
+              title: Body
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatementOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
+            `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-platform: true
+      x-step-up: true
+      x-roles:
+      - platform_admin
+    get:
+      tags:
+      - platform admin
+      summary: A tenant's usage statements, newest first
+      operationId: listStatements
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: The tenant's id.
+          title: Id
+        description: The tenant's id.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatementList'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-platform: true
+      x-roles:
+      - platform_admin
+  /v1/admin/tenants/{id}/statements/{period}/csv:
+    get:
+      tags:
+      - platform admin
+      summary: One statement as CSV
+      operationId: getStatementCsv
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          description: The tenant's id.
+          title: Id
+        description: The tenant's id.
+      - name: period
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^\d{4}-(0[1-9]|1[0-2])$
+          description: '`YYYY-MM`.'
+          title: Period
+        description: '`YYYY-MM`.'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            text/csv:
+              schema:
+                type: string
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-platform: true
+      x-roles:
+      - platform_admin
 components:
   schemas:
     AccountingSettings:
@@ -22015,6 +22656,30 @@ components:
       - amount_paise
       - reasons
       title: IncentiveOut
+    InviteOut:
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        channel:
+          type: string
+          title: Channel
+        resends_left:
+          type: integer
+          title: Resends Left
+      type: object
+      required:
+      - tenant_id
+      - user_id
+      - channel
+      - resends_left
+      title: InviteOut
+      description: 'The follow-up invite: an OTP on its way to the primary contact''s phone.'
     InvoiceLineOut:
       properties:
         sl:
@@ -23488,6 +24153,17 @@ components:
       required:
       - items
       title: MeetingPage
+    Metric:
+      type: string
+      enum:
+      - officers
+      - farmers
+      - stores
+      - photos
+      - campaigns
+      - llm_calls
+      title: Metric
+      description: What a plan limits and what ``usage_counter`` counts.
     ModeTotal:
       properties:
         mode:
@@ -26124,6 +26800,90 @@ components:
       type: object
       title: PhotoQualityIn
       description: What the on-device check (DX-001 / NF-004) measured on the photo.
+    PlanLimits:
+      properties:
+        officers:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Officers
+        farmers:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Farmers
+        stores:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Stores
+        photos_per_month:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Photos Per Month
+        campaigns_per_month:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Campaigns Per Month
+        llm_calls_per_month:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Llm Calls Per Month
+        retention_overrides:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Retention Overrides
+      additionalProperties: false
+      type: object
+      title: PlanLimits
+      description: Caps of one plan. ``None`` = unlimited.
+    PlanList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/PlanOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: PlanList
+    PlanOut:
+      properties:
+        name:
+          type: string
+          title: Name
+        title:
+          type: string
+          title: Title
+        limits:
+          $ref: '#/components/schemas/PlanLimits'
+        base_price_paise:
+          type: integer
+          title: Base Price Paise
+        overage_paise:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Overage Paise
+      type: object
+      required:
+      - name
+      - title
+      - limits
+      - base_price_paise
+      - overage_paise
+      title: PlanOut
     PnlMonthOut:
       properties:
         month:
@@ -30019,6 +30779,121 @@ components:
       - min_relative_humidity_pct
       - max_relative_humidity_pct
       title: SprayWindowOut
+    StatementLineOut:
+      properties:
+        metric:
+          type: string
+          title: Metric
+        period:
+          type: string
+          title: Period
+        used:
+          type: integer
+          title: Used
+        included:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Included
+        overage:
+          type: integer
+          title: Overage
+        unit_price_paise:
+          type: integer
+          title: Unit Price Paise
+        amount_paise:
+          type: integer
+          title: Amount Paise
+      type: object
+      required:
+      - metric
+      - period
+      - used
+      - included
+      - overage
+      - unit_price_paise
+      - amount_paise
+      title: StatementLineOut
+    StatementList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/StatementOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: StatementList
+    StatementOut:
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        period:
+          type: string
+          title: Period
+        plan:
+          type: string
+          title: Plan
+        generated_at:
+          type: string
+          format: date-time
+          title: Generated At
+        lines:
+          items:
+            $ref: '#/components/schemas/StatementLineOut'
+          type: array
+          title: Lines
+        base_price_paise:
+          type: integer
+          title: Base Price Paise
+        overage_paise:
+          type: integer
+          title: Overage Paise
+        total_paise:
+          type: integer
+          title: Total Paise
+        external_invoice_ref:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: External Invoice Ref
+      type: object
+      required:
+      - tenant_id
+      - period
+      - plan
+      - generated_at
+      - lines
+      - base_price_paise
+      - overage_paise
+      - total_paise
+      - external_invoice_ref
+      title: StatementOut
+    StatementRequest:
+      properties:
+        period:
+          anyOf:
+          - type: string
+            pattern: ^\d{4}-(0[1-9]|1[0-2])$
+          - type: 'null'
+          title: Period
+      additionalProperties: false
+      type: object
+      title: StatementRequest
+    StatusChange:
+      properties:
+        reason:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Reason
+      additionalProperties: false
+      type: object
+      title: StatusChange
     StepUpTokenResponse:
       properties:
         step_up_token:
@@ -31539,6 +32414,207 @@ components:
       additionalProperties: false
       type: object
       title: TemplateUpdate
+    TenantCreate:
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          minLength: 2
+          title: Name
+        slug:
+          type: string
+          maxLength: 50
+          minLength: 3
+          title: Slug
+        plan:
+          type: string
+          title: Plan
+          default: pilot
+        region:
+          type: string
+          title: Region
+          default: asia-south1
+        primary_contact_name:
+          type: string
+          maxLength: 200
+          minLength: 2
+          title: Primary Contact Name
+        primary_contact_phone:
+          type: string
+          pattern: ^\+91[6-9]\d{9}$
+          title: Primary Contact Phone
+        languages:
+          items:
+            type: string
+            enum:
+            - en
+            - te
+            - kn
+            - hi
+            - mr
+          type: array
+          title: Languages
+        default_language:
+          type: string
+          enum:
+          - en
+          - te
+          - kn
+          - hi
+          - mr
+          title: Default Language
+          default: en
+        branding:
+          $ref: '#/components/schemas/Branding'
+        plan_limits:
+          anyOf:
+          - $ref: '#/components/schemas/PlanLimits'
+          - type: 'null'
+        disabled_rules:
+          items:
+            type: string
+          type: array
+          maxItems: 64
+          title: Disabled Rules
+        notes:
+          anyOf:
+          - type: string
+            maxLength: 1000
+          - type: 'null'
+          title: Notes
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - slug
+      - primary_contact_name
+      - primary_contact_phone
+      title: TenantCreate
+      description: 'WC-014: everything needed to make a tenant usable, in one body.'
+    TenantCreated:
+      properties:
+        tenant:
+          $ref: '#/components/schemas/TenantOut'
+        admin_user_id:
+          type: string
+          format: uuid
+          title: Admin User Id
+        store_id:
+          type: string
+          format: uuid
+          title: Store Id
+        cluster_id:
+          type: string
+          format: uuid
+          title: Cluster Id
+        created:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Created
+        elapsed_ms:
+          type: integer
+          title: Elapsed Ms
+      type: object
+      required:
+      - tenant
+      - admin_user_id
+      - store_id
+      - cluster_id
+      - created
+      - elapsed_ms
+      title: TenantCreated
+      description: What one ``POST /v1/admin/tenants`` produced, so the operator can act immediately.
+    TenantList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/TenantOut'
+          type: array
+          title: Items
+      type: object
+      required:
+      - items
+      title: TenantList
+    TenantOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        slug:
+          type: string
+          title: Slug
+        name:
+          type: string
+          title: Name
+        plan:
+          type: string
+          title: Plan
+        status:
+          $ref: '#/components/schemas/TenantStatus'
+        region:
+          type: string
+          title: Region
+        primary_contact_user_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Primary Contact User Id
+        primary_contact_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Primary Contact Name
+        plan_limits:
+          additionalProperties: true
+          type: object
+          title: Plan Limits
+        provisioned:
+          additionalProperties: true
+          type: object
+          title: Provisioned
+        provisioned_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Provisioned At
+        suspended_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Suspended At
+        archived_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Archived At
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+      type: object
+      required:
+      - id
+      - slug
+      - name
+      - plan
+      - status
+      - region
+      - primary_contact_user_id
+      - primary_contact_name
+      - plan_limits
+      - provisioned
+      - provisioned_at
+      - suspended_at
+      - archived_at
+      - notes
+      title: TenantOut
     TenantSettings:
       properties:
         consent_version:
@@ -31742,6 +32818,52 @@ components:
           $ref: '#/components/schemas/Branding'
       type: object
       title: TenantSettings
+    TenantStatus:
+      type: string
+      enum:
+      - active
+      - suspended
+      - archived
+      title: TenantStatus
+      description: 'WC-014 lifecycle. ``archived`` is terminal: data is kept for retention, access is
+        gone.'
+    TenantUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 2
+          - type: 'null'
+          title: Name
+        plan:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Plan
+        plan_limits:
+          anyOf:
+          - $ref: '#/components/schemas/PlanLimits'
+          - type: 'null'
+        primary_contact_name:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 2
+          - type: 'null'
+          title: Primary Contact Name
+        notes:
+          anyOf:
+          - type: string
+            maxLength: 1000
+          - type: 'null'
+          title: Notes
+      additionalProperties: false
+      type: object
+      title: TenantUpdate
+      description: 'Plan, limits, contact name and notes. Slug and region never change (they are in
+
+        invoice numbers and in the residency promise).'
     ThresholdIn:
       properties:
         crop_id:
@@ -32447,6 +33569,63 @@ components:
       - received_chunks
       - expires_at
       title: UploadStatusOut
+    UsageMetricOut:
+      properties:
+        metric:
+          $ref: '#/components/schemas/Metric'
+        period:
+          type: string
+          title: Period
+        used:
+          type: integer
+          title: Used
+        limit:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Limit
+        remaining:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Remaining
+        over:
+          type: integer
+          title: Over
+      type: object
+      required:
+      - metric
+      - period
+      - used
+      - limit
+      - remaining
+      - over
+      title: UsageMetricOut
+    UsageOut:
+      properties:
+        tenant_id:
+          type: string
+          format: uuid
+          title: Tenant Id
+        plan:
+          type: string
+          title: Plan
+        as_of:
+          type: string
+          format: date-time
+          title: As Of
+        metrics:
+          items:
+            $ref: '#/components/schemas/UsageMetricOut'
+          type: array
+          title: Metrics
+      type: object
+      required:
+      - tenant_id
+      - plan
+      - as_of
+      - metrics
+      title: UsageOut
     UserCreate:
       properties:
         phone:
@@ -32633,8 +33812,22 @@ components:
       - agronomist
       - tenant_admin
       - farmer
+      - platform_admin
       title: UserRole
-      description: The ten roles from FA-002.
+      description: 'The ten roles from FA-002, plus WC-014''s platform-level role.
+
+
+        ``platform_admin`` sits *above* ``tenant_admin`` and outside every customer tenant: it only
+
+        ever exists in the platform tenant (``farmerapp.platform_admin.models.PLATFORM_TENANT_ID``)
+
+        and the dependency that guards ``/v1/admin/tenants`` checks both the role and that tenant,
+
+        so a tenant that somehow acquired the role string still reaches nothing. It is *not* in the
+
+        SPEC 2.6 permissions matrix because it has no access to tenant data at all
+
+        (``auth.scope.DEFAULT_VISIBILITY`` gives it ``NONE``).'
     UserStatus:
       type: string
       enum:

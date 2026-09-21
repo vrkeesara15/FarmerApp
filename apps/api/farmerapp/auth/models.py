@@ -32,7 +32,15 @@ from farmerapp.pii.fields import EncryptedField, mask_phone
 
 
 class UserRole(StrEnum):
-    """The ten roles from FA-002."""
+    """The ten roles from FA-002, plus WC-014's platform-level role.
+
+    ``platform_admin`` sits *above* ``tenant_admin`` and outside every customer tenant: it only
+    ever exists in the platform tenant (``farmerapp.platform_admin.models.PLATFORM_TENANT_ID``)
+    and the dependency that guards ``/v1/admin/tenants`` checks both the role and that tenant,
+    so a tenant that somehow acquired the role string still reaches nothing. It is *not* in the
+    SPEC 2.6 permissions matrix because it has no access to tenant data at all
+    (``auth.scope.DEFAULT_VISIBILITY`` gives it ``NONE``).
+    """
 
     OWNER = "owner"
     DIRECTOR = "director"
@@ -44,6 +52,7 @@ class UserRole(StrEnum):
     AGRONOMIST = "agronomist"
     TENANT_ADMIN = "tenant_admin"
     FARMER = "farmer"
+    PLATFORM_ADMIN = "platform_admin"  # WC-014, platform level (see the class docstring)
 
 
 class UserStatus(StrEnum):

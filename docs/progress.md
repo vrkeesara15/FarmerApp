@@ -231,8 +231,8 @@ Milestone column follows SPEC §14.1. Each row records files changed when done.
 | ID | Requirement | Status | Notes |
 |---|---|---|---|
 | FA-008 | Tenant branding | todo | |
-| WC-014 | Tenant admin | todo | |
-| NF-007 | Scale target | todo | |
+| WC-014 | Tenant admin | in-progress | 2026-09-21, branch `feat/M8-tenant-admin`. |
+| NF-007 | Scale target | in-progress | 2026-09-21, branch `feat/M8-tenant-admin`. |
 | AN-016 | NL questions over marts | todo | |
 | FM-012 | Mandi prices | todo | |
 | FM-013 | Referral | todo | |
