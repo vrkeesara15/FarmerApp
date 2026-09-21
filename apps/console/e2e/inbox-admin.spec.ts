@@ -81,7 +81,13 @@ test("C71: the officer adds an explanation to a flag about them", async ({ page 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Registration burst");
   // The subject reviews nothing.
   await expect(page.getByTestId("flag-actions")).toHaveCount(0);
-  await page.getByLabel("Explain what happened").fill(EXPLANATION);
+  // The textarea is controlled by React state, and `fill` only guarantees the DOM value and
+  // the input event. On a loaded machine the state commit can land after the click, which
+  // submits an empty body and shows "Required". Wait for the value to be readable back, which
+  // is only true once React has re-rendered from its own state.
+  const explainBox = page.getByLabel("Explain what happened");
+  await explainBox.fill(EXPLANATION);
+  await expect(explainBox).toHaveValue(EXPLANATION);
   await page.getByRole("button", { name: "Send explanation" }).click();
   await expect(
     page.getByTestId("subject-explanation").filter({ hasText: EXPLANATION }),
@@ -137,9 +143,10 @@ test("C71: evidence map and photos, escalate with a note, history shows it", asy
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: "Escalate" }).click();
   await expect(dialog.getByText("Add a note that explains the decision.")).toBeVisible();
-  await dialog
-    .getByLabel("Note (required)")
-    .fill("Same device used by two officers; auditor to check.");
+  const note = dialog.getByLabel("Note (required)");
+  await note.fill("Same device used by two officers; auditor to check.");
+  // Same controlled-input commit as the explanation above.
+  await expect(note).toHaveValue("Same device used by two officers; auditor to check.");
   await dialog.getByRole("button", { name: "Escalate" }).click();
   await expect(dialog).toBeHidden();
   await expect(page.getByTestId("flag-status").first()).toHaveText("Escalated");
