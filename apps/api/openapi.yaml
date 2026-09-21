@@ -14264,55 +14264,25 @@ paths:
       - director
       - owner
       - tenant_admin
-<<<<<<< HEAD
   /v1/admin/plans:
     get:
       tags:
       - platform admin
       summary: The plan catalogue with its limits and overage prices
       operationId: listPlans
-=======
-  /v1/me/mandi-prices:
-    get:
-      tags:
-      - market
-      summary: 'FM-012: mandi prices for the farmer''s own crops, with the date and the source'
-      operationId: getMyMandiPrices
-      parameters:
-      - name: markets
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 10
-          minimum: 1
-          default: 5
-          title: Markets
->>>>>>> feat/M8-market-referral-nlq
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-<<<<<<< HEAD
                 $ref: '#/components/schemas/PlanList'
-=======
-                $ref: '#/components/schemas/MandiPricesOut'
->>>>>>> feat/M8-market-referral-nlq
         default:
           description: Error (RFC 9457 problem+json)
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-<<<<<<< HEAD
-=======
-        '404':
-          description: '`not_found`'
-          content:
-            application/problem+json: {}
->>>>>>> feat/M8-market-referral-nlq
         '401':
           description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
@@ -14321,7 +14291,6 @@ paths:
           description: '`forbidden`'
           content:
             application/problem+json: {}
-<<<<<<< HEAD
       x-platform: true
       x-roles:
       - platform_admin
@@ -14339,51 +14308,17 @@ paths:
               $ref: '#/components/schemas/TenantCreate'
       responses:
         '201':
-=======
-      x-roles:
-      - farmer
-  /v1/farmers/{id}/mandi-prices:
-    get:
-      tags:
-      - market
-      summary: 'FM-012: mandi prices for one farmer''s crops (staff in scope, or the farmer)'
-      operationId: getFarmerMandiPrices
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-          title: Id
-      - name: markets
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 10
-          minimum: 1
-          default: 5
-          title: Markets
-      responses:
-        '200':
->>>>>>> feat/M8-market-referral-nlq
           description: Successful Response
           content:
             application/json:
               schema:
-<<<<<<< HEAD
                 $ref: '#/components/schemas/TenantCreated'
-=======
-                $ref: '#/components/schemas/MandiPricesOut'
->>>>>>> feat/M8-market-referral-nlq
         default:
           description: Error (RFC 9457 problem+json)
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-<<<<<<< HEAD
         '401':
           description: '`step_up_required`, `unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`,
             `device_wipe_required`'
@@ -14395,21 +14330,12 @@ paths:
             application/problem+json: {}
         '422':
           description: '`unknown_plan`'
-=======
-        '404':
-          description: '`not_found`'
-          content:
-            application/problem+json: {}
-        '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
->>>>>>> feat/M8-market-referral-nlq
           content:
             application/problem+json: {}
         '403':
           description: '`forbidden`'
           content:
             application/problem+json: {}
-<<<<<<< HEAD
       x-platform: true
       x-step-up: true
       x-roles:
@@ -14421,199 +14347,20 @@ paths:
       operationId: listTenants
       parameters:
       - name: tenant_status
-=======
-      x-roles:
-      - agronomist
-      - auditor
-      - cluster_head
-      - director
-      - farmer
-      - field_officer
-      - owner
-      - store_manager
-      - tenant_admin
-  /v1/me/referral:
-    get:
-      tags:
-      - referrals
-      summary: 'FM-013: the farmer''s invite code, share link, reward and referrals'
-      operationId: getMyReferral
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MyReferralOut'
-        default:
-          description: Error (RFC 9457 problem+json)
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        '404':
-          description: '`not_found`'
-          content:
-            application/problem+json: {}
-        '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
-          content:
-            application/problem+json: {}
-        '403':
-          description: '`forbidden`'
-          content:
-            application/problem+json: {}
-      x-roles:
-      - farmer
-  /v1/me/referral/invites:
-    post:
-      tags:
-      - referrals
-      summary: 'FM-013: record an invite the farmer is about to share'
-      operationId: createReferralInvite
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReferralInviteIn'
-        required: true
-      responses:
-        '201':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReferralOut'
-        default:
-          description: Error (RFC 9457 problem+json)
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        '404':
-          description: '`not_found`'
-          content:
-            application/problem+json: {}
-        '422':
-          description: '`referral_disabled`, `referral_self`'
-          content:
-            application/problem+json: {}
-        '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
-          content:
-            application/problem+json: {}
-        '403':
-          description: '`forbidden`'
-          content:
-            application/problem+json: {}
-      x-roles:
-      - farmer
-  /v1/me/referral/claim:
-    post:
-      tags:
-      - referrals
-      summary: 'FM-013: the invited farmer applies the code from the invite link'
-      operationId: claimReferral
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReferralClaimIn'
-        required: true
-      responses:
-        '201':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReferralOut'
-        default:
-          description: Error (RFC 9457 problem+json)
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-        '404':
-          description: '`not_found`'
-          content:
-            application/problem+json: {}
-        '409':
-          description: '`referral_already_attributed`'
-          content:
-            application/problem+json: {}
-        '422':
-          description: '`referral_code_unknown`, `referral_disabled`, `referral_self`, `referral_window_closed`'
-          content:
-            application/problem+json: {}
-        '401':
-          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
-          content:
-            application/problem+json: {}
-        '403':
-          description: '`forbidden`'
-          content:
-            application/problem+json: {}
-      x-roles:
-      - farmer
-  /v1/referrals:
-    get:
-      tags:
-      - referrals
-      summary: 'FM-013: referrals, newest first (a store manager sees their own store)'
-      operationId: listReferrals
-      parameters:
-      - name: store_id
->>>>>>> feat/M8-market-referral-nlq
         in: query
         required: false
         schema:
           anyOf:
-<<<<<<< HEAD
           - $ref: '#/components/schemas/TenantStatus'
           - type: 'null'
           title: Tenant Status
-=======
-          - type: string
-            format: uuid
-          - type: 'null'
-          title: Store Id
-      - name: status
-        in: query
-        required: false
-        schema:
-          anyOf:
-          - $ref: '#/components/schemas/ReferralStatus'
-          - type: 'null'
-          title: Status
-      - name: limit
-        in: query
-        required: false
-        schema:
-          type: integer
-          maximum: 200
-          minimum: 1
-          default: 50
-          title: Limit
-      - name: offset
-        in: query
-        required: false
-        schema:
-          type: integer
-          minimum: 0
-          default: 0
-          title: Offset
->>>>>>> feat/M8-market-referral-nlq
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-<<<<<<< HEAD
                 $ref: '#/components/schemas/TenantList'
-=======
-                $ref: '#/components/schemas/ReferralListOut'
->>>>>>> feat/M8-market-referral-nlq
         default:
           description: Error (RFC 9457 problem+json)
           content:
@@ -14628,7 +14375,6 @@ paths:
           description: '`forbidden`'
           content:
             application/problem+json: {}
-<<<<<<< HEAD
       x-platform: true
       x-roles:
       - platform_admin
@@ -14648,32 +14394,13 @@ paths:
           description: The tenant's id.
           title: Id
         description: The tenant's id.
-=======
-      x-roles:
-      - auditor
-      - cluster_head
-      - director
-      - owner
-      - store_manager
-      - tenant_admin
-  /v1/referrals/summary:
-    get:
-      tags:
-      - referrals
-      summary: 'FM-013: referrals per store for the console'
-      operationId: getReferralSummary
->>>>>>> feat/M8-market-referral-nlq
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-<<<<<<< HEAD
                 $ref: '#/components/schemas/TenantOut'
-=======
-                $ref: '#/components/schemas/ReferralSummaryOut'
->>>>>>> feat/M8-market-referral-nlq
         default:
           description: Error (RFC 9457 problem+json)
           content:
@@ -14688,7 +14415,6 @@ paths:
           description: '`forbidden`'
           content:
             application/problem+json: {}
-<<<<<<< HEAD
       x-platform: true
       x-roles:
       - platform_admin
@@ -14697,21 +14423,6 @@ paths:
       - platform admin
       summary: Change a tenant's plan, limits, contact or notes
       operationId: updateTenant
-=======
-      x-roles:
-      - auditor
-      - cluster_head
-      - director
-      - owner
-      - store_manager
-      - tenant_admin
-  /v1/referrals/{id}/reward:
-    post:
-      tags:
-      - referrals
-      summary: 'FM-013: mark an attributed referral as rewarded'
-      operationId: rewardReferral
->>>>>>> feat/M8-market-referral-nlq
       parameters:
       - name: id
         in: path
@@ -14719,30 +14430,21 @@ paths:
         schema:
           type: string
           format: uuid
-<<<<<<< HEAD
           description: The tenant's id.
           title: Id
         description: The tenant's id.
-=======
-          title: Id
->>>>>>> feat/M8-market-referral-nlq
       requestBody:
         required: true
         content:
           application/json:
             schema:
-<<<<<<< HEAD
               $ref: '#/components/schemas/TenantUpdate'
-=======
-              $ref: '#/components/schemas/ReferralRewardIn'
->>>>>>> feat/M8-market-referral-nlq
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-<<<<<<< HEAD
                 $ref: '#/components/schemas/TenantOut'
         default:
           description: Error (RFC 9457 problem+json)
@@ -15136,9 +14838,6 @@ paths:
             text/csv:
               schema:
                 type: string
-=======
-                $ref: '#/components/schemas/ReferralOut'
->>>>>>> feat/M8-market-referral-nlq
         default:
           description: Error (RFC 9457 problem+json)
           content:
@@ -15149,13 +14848,6 @@ paths:
           description: '`not_found`'
           content:
             application/problem+json: {}
-<<<<<<< HEAD
-=======
-        '409':
-          description: '`referral_not_attributed`'
-          content:
-            application/problem+json: {}
->>>>>>> feat/M8-market-referral-nlq
         '401':
           description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
           content:
@@ -15164,11 +14856,385 @@ paths:
           description: '`forbidden`'
           content:
             application/problem+json: {}
-<<<<<<< HEAD
       x-platform: true
       x-roles:
       - platform_admin
-=======
+  /v1/me/mandi-prices:
+    get:
+      tags:
+      - market
+      summary: 'FM-012: mandi prices for the farmer''s own crops, with the date and the source'
+      operationId: getMyMandiPrices
+      parameters:
+      - name: markets
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 10
+          minimum: 1
+          default: 5
+          title: Markets
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MandiPricesOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
+  /v1/farmers/{id}/mandi-prices:
+    get:
+      tags:
+      - market
+      summary: 'FM-012: mandi prices for one farmer''s crops (staff in scope, or the farmer)'
+      operationId: getFarmerMandiPrices
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      - name: markets
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 10
+          minimum: 1
+          default: 5
+          title: Markets
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MandiPricesOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - agronomist
+      - auditor
+      - cluster_head
+      - director
+      - farmer
+      - field_officer
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/me/referral:
+    get:
+      tags:
+      - referrals
+      summary: 'FM-013: the farmer''s invite code, share link, reward and referrals'
+      operationId: getMyReferral
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyReferralOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
+  /v1/me/referral/invites:
+    post:
+      tags:
+      - referrals
+      summary: 'FM-013: record an invite the farmer is about to share'
+      operationId: createReferralInvite
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReferralInviteIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`referral_disabled`, `referral_self`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
+  /v1/me/referral/claim:
+    post:
+      tags:
+      - referrals
+      summary: 'FM-013: the invited farmer applies the code from the invite link'
+      operationId: claimReferral
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReferralClaimIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`referral_already_attributed`'
+          content:
+            application/problem+json: {}
+        '422':
+          description: '`referral_code_unknown`, `referral_disabled`, `referral_self`, `referral_window_closed`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - farmer
+  /v1/referrals:
+    get:
+      tags:
+      - referrals
+      summary: 'FM-013: referrals, newest first (a store manager sees their own store)'
+      operationId: listReferrals
+      parameters:
+      - name: store_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Store Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/ReferralStatus'
+          - type: 'null'
+          title: Status
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralListOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/referrals/summary:
+    get:
+      tags:
+      - referrals
+      summary: 'FM-013: referrals per store for the console'
+      operationId: getReferralSummary
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralSummaryOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
+      x-roles:
+      - auditor
+      - cluster_head
+      - director
+      - owner
+      - store_manager
+      - tenant_admin
+  /v1/referrals/{id}/reward:
+    post:
+      tags:
+      - referrals
+      summary: 'FM-013: mark an attributed referral as rewarded'
+      operationId: rewardReferral
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReferralRewardIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralOut'
+        default:
+          description: Error (RFC 9457 problem+json)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: '`not_found`'
+          content:
+            application/problem+json: {}
+        '409':
+          description: '`referral_not_attributed`'
+          content:
+            application/problem+json: {}
+        '401':
+          description: '`unauthenticated`, `token_expired`, `user_disabled`, `session_revoked`, `device_wipe_required`'
+          content:
+            application/problem+json: {}
+        '403':
+          description: '`forbidden`'
+          content:
+            application/problem+json: {}
       x-roles:
       - owner
       - store_manager
@@ -15245,7 +15311,6 @@ paths:
       - cluster_head
       - director
       - owner
->>>>>>> feat/M8-market-referral-nlq
 components:
   schemas:
     AccountingSettings:

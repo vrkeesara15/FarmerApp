@@ -795,7 +795,6 @@ def activate_encoder(
         )
 
 
-<<<<<<< HEAD
 # --------------------------------------------------------------------------- M8 WC-014
 @cli.command("usage-recount")
 def usage_recount(
@@ -852,7 +851,6 @@ async def _statements(tenant: list[str], period: str | None) -> list[Any]:
     return await run_statements(ids, period=period)
 
 
-=======
 @cli.command("mandi-prices")
 def mandi_prices(
     tenant: list[str] = typer.Option(  # noqa: B008
@@ -873,7 +871,6 @@ def mandi_prices(
         )
 
 
->>>>>>> feat/M8-market-referral-nlq
 # M7 growth jobs (WC-008, WC-009, WC-013, AN-015, ST-004, ST-008) register themselves on `cli`.
 from farmerapp.jobs import growth as _growth  # noqa: E402, F401
 

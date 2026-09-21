@@ -93,26 +93,17 @@ def _public(row: Any) -> dict[str, Any]:
 async def _rows(
     session: AsyncSession, section: ExportSection, key: uuid.UUID
 ) -> list[dict[str, Any]]:
-<<<<<<< HEAD
     # B608: the only interpolations are identifiers from the declarative SECTIONS constant
     # above — never a request value — and each goes through _quote. The principal's id is the
     # bound :key parameter. Same judgement, and the same markers, as farmerapp/mlops/reembed.py.
-=======
-    # nosec B608 (both): identifiers come from the reviewed export sections and go through
-    # _quote; every value is a bound parameter.
->>>>>>> feat/M8-market-referral-nlq
     where = (
         f"{_quote(section.key)} IN (SELECT id FROM farm WHERE farmer_id = :key)"  # nosec B608
         if section.key_of == "farms"
         else f"{_quote(section.key)} = :key"
     )
     stmt = text(
-<<<<<<< HEAD
         f"SELECT * FROM {_quote(section.table)} "  # nosec B608
         f"WHERE {where} ORDER BY {_quote(section.order_by)}"
-=======
-        f"SELECT * FROM {_quote(section.table)} WHERE {where} ORDER BY {_quote(section.order_by)}"  # nosec B608
->>>>>>> feat/M8-market-referral-nlq
     )
     result = await session.execute(stmt, {"key": key})
     return [_public(row) for row in result]

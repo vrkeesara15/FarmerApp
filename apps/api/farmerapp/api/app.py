@@ -271,17 +271,14 @@ def create_app(
     v1.include_router(reorder_routes.router)
     # M7 farmer P1: crop calendar, weather, outbreak alerts, crop health (FM-007..009, AN-006).
     v1.include_router(advisory_routes.router)
-<<<<<<< HEAD
     # M8 WC-014: platform tenant administration (plans, limits, usage, billing). The only
     # cross-tenant routes in the API; guarded by `platform_admin` in the platform tenant.
     v1.include_router(platform_admin_routes.router)
-=======
     # M8: mandi prices (FM-012), referrals (FM-013), natural-language questions (AN-016).
     v1.include_router(market_routes.router)
     v1.include_router(referral_routes.me_router)
     v1.include_router(referral_routes.router)
     v1.include_router(nlq_routes.router)
->>>>>>> feat/M8-market-referral-nlq
     app.include_router(v1)
 
     # FA-002: refuse to start unless every route declares a role policy (or is public), and
