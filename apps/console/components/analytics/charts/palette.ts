@@ -15,7 +15,10 @@ export const CHART_SERIES = [
 ] as const;
 
 export const CHART = {
-  grid: "var(--color-border)",
+  // NF-009 split `border` into `border.default` (decorative) and `border.strong` (control
+  // boundaries, 5.51:1). A chart grid line is decorative: it carries no state and the series
+  // and axis labels are what have to meet contrast.
+  grid: "var(--color-border-default)",
   axis: "var(--color-text-muted)",
   text: "var(--color-text)",
   surface: "var(--color-surface)",

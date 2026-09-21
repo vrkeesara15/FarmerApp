@@ -181,6 +181,12 @@ two URLs are used exactly as before.
 | `WHATSAPP_PROVIDER_URL` | SM `otp-whatsapp-provider-url` | the WhatsApp gateway endpoint | A | yes |
 | `OTP_DEV_CODE` | local | `123456` locally | local (allowed, but not set, in dev) | **forbidden** in stg / prd (prd guard) |
 | `OTP_TTL_SECONDS` / `OTP_MAX_ATTEMPTS` / `OTP_LOCKOUT_SECONDS` / `OTP_MAX_RESENDS` / `OTP_RESEND_WINDOW_SECONDS` / `OTP_RESEND_AFTER_SECONDS` / `OTP_WHATSAPP_FALLBACK_SECONDS` | default | 300 / 5 / 900 / 3 / 900 / 30 / 30 | A | no |
+| `OTP_ALLOWED_COUNTRY_CODES` / `OTP_BLOCKED_COUNTRY_CODES` | default | `["+91"]` / `[]` — SEC-021: the E.164 prefixes a send may go to, and the prefixes refused even when the allow list would permit them. An unknown number never reaches a provider. | A | no |
+| `OTP_MAX_SENDS_PER_PHONE_DAY` / `OTP_MAX_SENDS_PER_IP_HOUR` | default | 10 / 20 — SEC-021 SMS-pumping velocity, behind FA-001's 3 resends per 15 min. Breaking either is `429 otp_rate_limited` and writes a block row. | A | no |
+| `OTP_ABUSE_BLOCK_SECONDS` | default | 86400 — the first block window; it doubles on every strike, capped at 30 days. | A | no |
+| `OTP_COST_ALERT_PER_HOUR` / `OTP_COST_BLOCK_PER_HOUR` | default | 200 / 2000 — SEC-021 cost guard: tenant sends per hour that log an `otp_cost_alert` (never refuses a login) and, above the second, refuse new sends (`429 otp_cost_limited`). | A | no |
+| `GRIEVANCE_OFFICER_NAME` / `GRIEVANCE_OFFICER_EMAIL` / `GRIEVANCE_OFFICER_PHONE` | TF | NF-013: served by the public `GET /v1/privacy/contact`. The shipped defaults are placeholders — **the real officer and contact details are a human gate** (TODO-LEGAL, docs/dpdp.md). | A | no (but set before pilot) |
+| `GRIEVANCE_RESPONSE_DAYS` | default | 30 — the DPDP response commitment the same endpoint publishes. | A | no |
 | `JWT_ALGORITHM` / `JWT_ISSUER` | default | `HS256` / `farmerapp` | A | no |
 | `ACCESS_TOKEN_TTL_SECONDS` / `REFRESH_TOKEN_TTL_SECONDS` / `STEP_UP_TOKEN_TTL_SECONDS` / `SECURITY_CACHE_TTL_SECONDS` | default | 900 / 30 d / 300 / 30 | A | no |
 | `CORS_ORIGINS` | TF | `["https://console.<domain>"]` | A | yes |

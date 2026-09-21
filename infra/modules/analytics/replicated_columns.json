@@ -25,5 +25,7 @@
   "corpus_problem": ["id", "tenant_id", "pest_or_disease_id", "crop_id", "problem_type", "status", "created_at", "updated_at", "deleted_at"],
   "pest_or_disease": ["id", "tenant_id", "code", "name", "type", "crop_id", "created_at", "updated_at", "deleted_at"],
   "flag": ["id", "tenant_id", "rule_id", "subject_type", "subject_id", "severity", "status", "scope_cluster_id", "scope_store_id", "sla_due_at", "resolved_at", "created_at", "updated_at", "deleted_at"],
-  "flag_event": ["id", "tenant_id", "flag_id", "kind", "to_status", "label", "created_at"]
+  "flag_event": ["id", "tenant_id", "flag_id", "kind", "to_status", "label", "created_at"],
+  "campaign": ["id", "tenant_id", "channel", "status", "template_key", "scheduled_at", "started_at", "finished_at", "attribution_days", "holdout_pct", "audience_size", "created_by", "created_at", "updated_at", "deleted_at"],
+  "campaign_recipient": ["id", "tenant_id", "campaign_id", "farmer_id", "arm", "language", "status", "skip_reason", "sent_at", "delivered_at", "opened_at", "created_at", "updated_at", "deleted_at"]
 }

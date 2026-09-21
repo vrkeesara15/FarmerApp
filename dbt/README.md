@@ -161,8 +161,9 @@ BigQuery client must add it on every query (to be enforced in the console wiring
 
 Add it to `infra/modules/analytics/replicated_columns.json` **and** `models/staging/_sources.yml`
 (and the seed header), never a PII column; `scripts/check_replication.py` fails otherwise. A table
-dbt models before its Terraform change lands sits in that script's `PENDING_REPLICATION` (today:
-`campaign`, `campaign_recipient` for AN-008) — it is checked like any other table, and moving it to
-`replicated_columns.json` with the stream update is what empties the dict. After
+dbt models before its Terraform change lands can sit in that script's `PENDING_REPLICATION` — it is
+checked like any other table, and moving it to `replicated_columns.json` with the stream update is
+what empties the dict. The dict is **empty today**: `campaign` and `campaign_recipient` (AN-008)
+were the last two and are now in the allowlist, so all 28 replicated tables are in one place. After
 the Terraform apply, re-run `python3 infra/scripts/datastream_sql.py --part owner` on the
 instance (grants, policy, publication: `docs/runbooks/datastream-cdc-setup.md`).

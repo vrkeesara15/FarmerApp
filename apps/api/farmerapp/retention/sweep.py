@@ -83,14 +83,19 @@ def _quote(identifier: str) -> str:
     return '"' + identifier.replace('"', '""') + '"'
 
 
+#: B608 on the two statements below: ``table`` and ``column`` are identifiers from the
+#: :mod:`farmerapp.retention.policy` constants — a closed set, never a request value — and both
+#: go through :func:`_quote`. The cutoff is a bound parameter. Same judgement, and the same
+#: markers, as ``farmerapp/mlops/reembed.py``.
 async def _count(session: AsyncSession, table: str, column: str, cutoff: datetime) -> int:
-    stmt = text(f"SELECT count(*) FROM {_quote(table)} WHERE {_quote(column)} < :cutoff")
+    stmt = text(f"SELECT count(*) FROM {_quote(table)} WHERE {_quote(column)} < :cutoff")  # nosec B608
     return int((await session.scalar(stmt, {"cutoff": cutoff})) or 0)
 
 
 async def _delete(session: AsyncSession, table: str, column: str, cutoff: datetime) -> int:
     result = await session.execute(
-        text(f"DELETE FROM {_quote(table)} WHERE {_quote(column)} < :cutoff"), {"cutoff": cutoff}
+        text(f"DELETE FROM {_quote(table)} WHERE {_quote(column)} < :cutoff"),  # nosec B608
+        {"cutoff": cutoff},
     )
     return int(getattr(result, "rowcount", 0) or 0)
 

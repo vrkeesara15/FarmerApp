@@ -679,6 +679,19 @@ ROUTE_FIXTURES: dict[str, RouteFixture] = {
     "PATCH /v1/admin/data-requests/{id}": RouteFixture(
         path_params=lambda _ctx: {"id": NO_SUCH_ID}, body=lambda _ctx: {"status": "in_progress"}
     ),
+    # NF-013 rights served by staff. None takes a body: the correction's field diff and the
+    # erasure's retained report come off the ticket itself. Both writes are SEC-028 step-up,
+    # so the matrix has to send a step-up token or every allowed role would 401 on that
+    # instead of reaching the authz decision. Outcomes in tests/privacy.
+    "GET /v1/admin/data-requests/{id}/export": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}
+    ),
+    "POST /v1/admin/data-requests/{id}/apply-correction": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, step_up=True
+    ),
+    "POST /v1/admin/data-requests/{id}/erase": RouteFixture(
+        path_params=lambda _ctx: {"id": NO_SUCH_ID}, step_up=True
+    ),
     # M7 field P1 (FA-007, VV-008, FA-023, FA-026, FA-027): an unknown id is a 404 for every
     # allowed role; outcomes in tests/notifications, tests/duty, tests/travel,
     # tests/demo_plots and tests/meetings.
@@ -905,7 +918,13 @@ async def test_collections_never_contain_other_tenants(
     ):
         return  # file downloads (CSV export): the leak check above covers them
     body = resp.json()
-    for item in body.get("items", []):
+    # Most collections are enveloped (`{"items": [...]}`); a few return the bare array
+    # (NF-013 `GET /v1/me/data-requests`, `.../retention-exceptions`). Check both shapes, so a
+    # bare array is inspected row by row rather than silently skipped.
+    items = body if isinstance(body, list) else body.get("items", [])
+    for item in items:
+        if not isinstance(item, dict):
+            continue
         assert item.get("tenant_id", str(world.a.tenant.id)) == str(world.a.tenant.id)
 
 

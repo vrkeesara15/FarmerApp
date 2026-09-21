@@ -27,7 +27,13 @@ const config: Config = {
           secondary: "var(--color-text-secondary)",
           muted: "var(--color-text-muted)",
         },
-        border: "var(--color-border)",
+        // NF-009 split the one `border` token in two. `border-border` stays the decorative
+        // hairline (rows, card edges); `border-border-strong` is the 5.51:1 boundary WCAG
+        // 1.4.11 requires of an interactive control (text field, outlined button).
+        border: {
+          DEFAULT: "var(--color-border-default)",
+          strong: "var(--color-border-strong)",
+        },
         surface: "var(--color-surface)",
         background: "var(--color-background)",
         success: { DEFAULT: "var(--color-success)", container: "var(--color-success-container)" },

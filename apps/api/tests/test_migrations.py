@@ -43,6 +43,7 @@ OTP_COLUMNS = BASE_COLUMNS | {
     "provider_ref",
     "user_id",
     "device_id",
+    "request_ip",  # 0040 (SEC-021 per-IP send velocity)
 }
 REFRESH_COLUMNS = BASE_COLUMNS | {
     "user_id",
